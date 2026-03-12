@@ -1,25 +1,91 @@
 using System.Text.Json;
 using Unilyze;
 
-if (args.Length == 0)
+var opts = ParseOptions(args);
+
+if (opts.ContainsKey("-h") || opts.ContainsKey("--help") || (args.Length == 1 && args[0] is "help"))
+    return PrintUsage();
+if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1 && args[0] is "version"))
+    return PrintVersion();
+var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
+var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
+var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
+var prefix = opts.GetValueOrDefault("--prefix");
+var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
+var scope = opts.GetValueOrDefault("-s") ?? opts.GetValueOrDefault("--scope") ?? "types";
+var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
+
+// Determine output format: explicit -f > output extension > default (html)
+OutputFormat format;
+try { format = ResolveFormat(formatStr, output); }
+catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 1; }
+
+try
 {
-    PrintUsage();
+    // Source: existing JSON or fresh analysis
+    string json;
+    AnalysisResult result;
+
+    if (input != null)
+    {
+        json = File.ReadAllText(input);
+        result = JsonSerializer.Deserialize(json, AnalysisJsonContext.Default.AnalysisResult)
+                 ?? throw new InvalidOperationException("Failed to parse JSON input");
+    }
+    else
+    {
+        result = BuildAnalysisResult(path!, prefix, assembly);
+        json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+    }
+
+    // Generate output
+    var asmdefs = result.Assemblies.Select(a => new AsmdefInfo(a.Name, a.Directory, a.References)).ToList();
+
+    if (format == OutputFormat.Html)
+    {
+        var htmlPath = output ?? Path.Combine(Path.GetTempPath(), $"unilyze-{Path.GetFileName(result.ProjectPath)}.html");
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath);
+        File.WriteAllText(htmlPath, html);
+        Console.Error.WriteLine($"Written to {htmlPath}");
+
+        var jsonPath = Path.ChangeExtension(htmlPath, ".json");
+        File.WriteAllText(jsonPath, json);
+        Console.Error.WriteLine($"Written to {jsonPath}");
+
+        if (output == null)
+            OpenInBrowser(htmlPath);
+
+        return 0;
+    }
+
+    if (format == OutputFormat.Json)
+        return WriteOutput(json, output);
+
+    var content = (scope, format) switch
+    {
+        ("assembly", OutputFormat.Csv) => Formatters.AssemblyToCsv(asmdefs, prefix),
+        ("assembly", OutputFormat.Mermaid) => Formatters.AssemblyToMermaid(asmdefs, prefix),
+        ("assembly", OutputFormat.Dot) => Formatters.AssemblyToDot(asmdefs, prefix),
+        ("types", OutputFormat.Csv) => Formatters.TypesToCsv(result.Types, result.Dependencies, result.TypeMetrics),
+        ("types", OutputFormat.Mermaid) => Formatters.TypesToMermaid(result.Types, result.Dependencies),
+        ("types", OutputFormat.Dot) => Formatters.TypesToDot(result.Types, result.Dependencies),
+        _ => (string?)null
+    };
+
+    if (content == null)
+    {
+        Console.Error.WriteLine($"Unsupported combination: scope='{scope}', format='{format.ToString().ToLower()}'");
+        return 1;
+    }
+
+    return WriteOutput(content, output);
+}
+catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine(ex.Message);
     return 1;
 }
-
-var command = args[0];
-var opts = ParseOptions(args[1..]);
-
-return command switch
-{
-    "analyze" => RunAnalyze(opts),
-    "format" => RunFormat(opts),
-    "assembly" => RunAssembly(opts),
-    "types" => RunTypes(opts),
-    "diagram" => RunDiagram(opts),
-    "-h" or "--help" or "help" => PrintUsage(),
-    _ => Error($"Unknown command: {command}")
-};
 
 // --- Core analysis ---
 
@@ -81,251 +147,7 @@ static IReadOnlyList<AsmdefInfo> FilterAssemblies(
     return asmdefs.ToList();
 }
 
-// --- Commands ---
-
-static int RunAnalyze(Dictionary<string, string> opts)
-{
-    var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
-    var prefix = opts.GetValueOrDefault("--prefix");
-    var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
-    var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
-
-    try
-    {
-        var result = BuildAnalysisResult(path, prefix, assembly);
-        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
-        return WriteOutput(json, output);
-    }
-    catch (InvalidOperationException ex)
-    {
-        Console.Error.WriteLine(ex.Message);
-        return 1;
-    }
-}
-
-static int RunFormat(Dictionary<string, string> opts)
-{
-    var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
-    var format = ParseFormat(opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format") ?? "csv");
-    var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
-    var scope = opts.GetValueOrDefault("-s") ?? opts.GetValueOrDefault("--scope") ?? "types";
-
-    if (input == null)
-    {
-        Console.Error.WriteLine("format command requires -i <json-file>");
-        return 1;
-    }
-
-    if (format is OutputFormat.Drawio or OutputFormat.Html && output == null)
-    {
-        Console.Error.WriteLine($"{format.ToString().ToLower()} format requires -o <file>");
-        return 1;
-    }
-
-    var json = File.ReadAllText(input);
-    var result = JsonSerializer.Deserialize(json, AnalysisJsonContext.Default.AnalysisResult);
-    if (result == null)
-    {
-        Console.Error.WriteLine("Failed to parse JSON input");
-        return 1;
-    }
-
-    var asmdefs = result.Assemblies.Select(a => new AsmdefInfo(a.Name, a.Directory, a.References)).ToList();
-
-    var content = (scope, format) switch
-    {
-        ("assembly", OutputFormat.Csv) => Formatters.AssemblyToCsv(asmdefs, null),
-        ("assembly", OutputFormat.Mermaid) => Formatters.AssemblyToMermaid(asmdefs, null),
-        ("assembly", OutputFormat.Dot) => Formatters.AssemblyToDot(asmdefs, null),
-        ("types", OutputFormat.Csv) => Formatters.TypesToCsv(result.Types, result.Dependencies, result.TypeMetrics),
-        ("types", OutputFormat.Mermaid) => Formatters.TypesToMermaid(result.Types, result.Dependencies),
-        ("types", OutputFormat.Dot) => Formatters.TypesToDot(result.Types, result.Dependencies),
-        ("types", OutputFormat.Drawio) => DrawioFormatter.TypesToDrawio(result.Types, result.Dependencies, result.TypeMetrics),
-        (_, OutputFormat.Drawio) when scope == "diagram" => FormatDiagram(result, asmdefs, output!),
-        (_, OutputFormat.Html) => HtmlFormatter.Generate(json, result.ProjectPath),
-        _ => ""
-    };
-
-    return WriteOutput(content, output);
-}
-
-static string FormatDiagram(AnalysisResult result, IReadOnlyList<AsmdefInfo> asmdefs, string output)
-{
-    var typesByAssembly = result.Types
-        .GroupBy(t => t.Assembly)
-        .ToDictionary(g => g.Key, g => (IReadOnlyList<TypeNodeInfo>)g.ToList());
-    var metrics = result.Assemblies.Select(a => a.Metrics).ToList();
-    var healthMetrics = result.Assemblies
-        .Where(a => a.HealthMetrics != null)
-        .ToDictionary(a => a.Name, a => a.HealthMetrics!);
-    return DrawioFormatter.GenerateMultiPage(
-        asmdefs, metrics, typesByAssembly, result.Dependencies, null,
-        healthMetrics, result.TypeMetrics);
-}
-
-// --- Legacy shortcut commands ---
-
-static int RunAssembly(Dictionary<string, string> opts)
-{
-    var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
-    var format = ParseFormat(opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format") ?? "csv");
-    var prefix = opts.GetValueOrDefault("--prefix");
-    var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
-
-    if (format == OutputFormat.Drawio && output == null)
-    {
-        Console.Error.WriteLine("drawio format requires -o <file>");
-        return 1;
-    }
-
-    var assetsDir = ResolveAssetsDir(path);
-    var asmdefs = AsmdefInfo.Discover(assetsDir);
-
-    if (asmdefs.Count == 0)
-    {
-        Console.Error.WriteLine($"No .asmdef files found under {assetsDir}");
-        return 1;
-    }
-
-    prefix ??= DetectCommonPrefix(asmdefs);
-
-    if (format == OutputFormat.Drawio)
-    {
-        var filtered = prefix != null
-            ? asmdefs.Where(a => a.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList()
-            : asmdefs.ToList();
-        var allTypes = new List<TypeNodeInfo>();
-        var metrics = filtered.Select(a =>
-        {
-            var types = TypeAnalyzer.AnalyzeDirectory(a.Directory, a.Name);
-            allTypes.AddRange(types);
-            return AssemblyMetrics.Compute(a.Name, types);
-        }).ToList();
-        var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
-        var healthDict = filtered
-            .Select(a => (a.Name, Health: CodeHealthCalculator.ComputeAssemblyHealth(
-                typeMetrics.Where(m => m.Assembly == a.Name).ToList())))
-            .Where(x => x.Health != null)
-            .ToDictionary(x => x.Name, x => x.Health!);
-
-        return WriteOutput(DrawioFormatter.AssemblyToDrawio(asmdefs, metrics, prefix, healthDict), output);
-    }
-
-    var result = format switch
-    {
-        OutputFormat.Csv => Formatters.AssemblyToCsv(asmdefs, prefix),
-        OutputFormat.Mermaid => Formatters.AssemblyToMermaid(asmdefs, prefix),
-        OutputFormat.Dot => Formatters.AssemblyToDot(asmdefs, prefix),
-        _ => ""
-    };
-    return WriteOutput(result, output);
-}
-
-static int RunTypes(Dictionary<string, string> opts)
-{
-    var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
-    var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
-    var format = ParseFormat(opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format") ?? "csv");
-    var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
-
-    if (format == OutputFormat.Drawio && output == null)
-    {
-        Console.Error.WriteLine("drawio format requires -o <file>");
-        return 1;
-    }
-
-    var assetsDir = ResolveAssetsDir(path);
-    var asmdefs = AsmdefInfo.Discover(assetsDir);
-
-    if (asmdefs.Count == 0)
-    {
-        Console.Error.WriteLine($"No .asmdef files found under {assetsDir}");
-        return 1;
-    }
-
-    IReadOnlyList<AsmdefInfo> targets = assembly != null
-        ? asmdefs.Where(a => a.Name.Equals(assembly, StringComparison.OrdinalIgnoreCase)
-                             || a.Name.EndsWith("." + assembly, StringComparison.OrdinalIgnoreCase))
-            .ToList()
-        : asmdefs;
-
-    if (targets.Count == 0)
-    {
-        Console.Error.WriteLine($"Assembly '{assembly}' not found. Available:");
-        foreach (var a in asmdefs)
-            Console.Error.WriteLine($"  {a.Name}");
-        return 1;
-    }
-
-    var allTypes = new List<TypeNodeInfo>();
-    foreach (var asm in targets)
-        allTypes.AddRange(TypeAnalyzer.AnalyzeDirectory(asm.Directory, asm.Name));
-
-    var deps = TypeAnalyzer.BuildDependencies(allTypes);
-
-    var result = format switch
-    {
-        OutputFormat.Csv => Formatters.TypesToCsv(allTypes, deps),
-        OutputFormat.Mermaid => Formatters.TypesToMermaid(allTypes, deps),
-        OutputFormat.Dot => Formatters.TypesToDot(allTypes, deps),
-        OutputFormat.Drawio => DrawioFormatter.TypesToDrawio(allTypes, deps),
-        _ => ""
-    };
-    return WriteOutput(result, output);
-}
-
-static int RunDiagram(Dictionary<string, string> opts)
-{
-    var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
-    var prefix = opts.GetValueOrDefault("--prefix");
-    var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
-
-    if (output == null)
-    {
-        Console.Error.WriteLine("diagram command requires -o <file>");
-        return 1;
-    }
-
-    var assetsDir = ResolveAssetsDir(path);
-    var asmdefs = AsmdefInfo.Discover(assetsDir);
-
-    if (asmdefs.Count == 0)
-    {
-        Console.Error.WriteLine($"No .asmdef files found under {assetsDir}");
-        return 1;
-    }
-
-    prefix ??= DetectCommonPrefix(asmdefs);
-
-    var filtered = prefix != null
-        ? asmdefs.Where(a => a.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList()
-        : asmdefs.ToList();
-
-    var typesByAssembly = new Dictionary<string, IReadOnlyList<TypeNodeInfo>>();
-    var allTypes = new List<TypeNodeInfo>();
-    foreach (var asm in filtered)
-    {
-        var types = TypeAnalyzer.AnalyzeDirectory(asm.Directory, asm.Name);
-        typesByAssembly[asm.Name] = types;
-        allTypes.AddRange(types);
-    }
-
-    var allDeps = TypeAnalyzer.BuildDependencies(allTypes);
-    var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
-    var metrics = filtered.Select(a =>
-        AssemblyMetrics.Compute(a.Name, typesByAssembly.GetValueOrDefault(a.Name) ?? [])).ToList();
-    var healthDict = filtered
-        .Select(a => (a.Name, Health: CodeHealthCalculator.ComputeAssemblyHealth(
-            typeMetrics.Where(m => m.Assembly == a.Name).ToList())))
-        .Where(x => x.Health != null)
-        .ToDictionary(x => x.Name, x => x.Health!);
-
-    var result = DrawioFormatter.GenerateMultiPage(
-        asmdefs, metrics, typesByAssembly, allDeps, prefix, healthDict, typeMetrics);
-    return WriteOutput(result, output);
-}
-
-// --- Shared helpers ---
+// --- Helpers ---
 
 static int WriteOutput(string content, string? outputPath)
 {
@@ -339,42 +161,79 @@ static int WriteOutput(string content, string? outputPath)
     return 0;
 }
 
-static int PrintUsage()
+static int PrintVersion()
 {
-    Console.WriteLine("""
-        unilyze - Dependency graph generator for Unity projects
-
-        Usage:
-          unilyze analyze  -p <path> [--prefix <prefix>] [-a <assembly>] [-o <file>]
-          unilyze format   -i <json> [-f csv|mermaid|dot|drawio] [-s assembly|types|diagram] [-o <file>]
-          unilyze assembly [-p <path>] [-f csv|mermaid|dot|drawio] [--prefix <prefix>] [-o <file>]
-          unilyze types    [-p <path>] [-f csv|mermaid|dot|drawio] [-a <assembly>] [-o <file>]
-          unilyze diagram  -p <path> [--prefix <prefix>] -o <file>
-
-        Commands:
-          analyze     Analyze project and output JSON intermediate format
-          format      Convert JSON to visualization format
-          assembly    Generate assembly (asmdef) dependency graph (shortcut)
-          types       Generate type dependency graph (shortcut)
-          diagram     Generate multi-page draw.io diagram (shortcut)
-
-        Options:
-          -p, --path      Unity project root or Assets directory (default: .)
-          -f, --format    Output format: csv, mermaid, dot, drawio (default: csv)
-          -a, --assembly  Assembly name to analyze (e.g. App.Domain)
-              --prefix    Filter asmdef names by prefix (auto-detected if omitted)
-          -o, --output    Output file path (required for drawio format and diagram command)
-          -i, --input     Input JSON file (for format command)
-          -s, --scope     Format scope: assembly, types, diagram (default: types)
-        """);
+    Console.WriteLine($"unilyze {typeof(TypeAnalyzer).Assembly.GetName().Version?.ToString(3) ?? "0.1.0"}");
     return 0;
 }
 
-static int Error(string msg)
+static int PrintUsage()
 {
-    Console.Error.WriteLine(msg);
-    PrintUsage();
-    return 1;
+    Console.WriteLine("""
+unilyze - Static analyzer for Unity projects
+
+Usage:
+  unilyze                                  Analyze current directory and open in browser
+  unilyze -p <path>                        Analyze project and open in browser
+  unilyze -p <path> -o graph.html          Save HTML viewer (+ JSON) to file
+  unilyze -p <path> -f json                Output JSON to stdout
+  unilyze -p <path> -f csv                 Output CSV to stdout
+  unilyze -i result.json -o graph.html     Generate HTML from existing JSON
+
+Options:
+  -p, --path      Unity project root or Assets directory (default: .)
+  -i, --input     Use existing JSON instead of analyzing
+  -o, --output    Output file path (format inferred from extension: .html, .json)
+  -f, --format    Output format: html, json, csv, mermaid, dot (default: html)
+  -a, --assembly  Filter by assembly name (e.g. App.Domain)
+      --prefix    Filter asmdef names by prefix (auto-detected if omitted)
+  -s, --scope     Scope: types, assembly (default: types)
+  -v, --version   Show version
+  -h, --help      Show this help
+""");
+    return 0;
+}
+
+static OutputFormat ResolveFormat(string? formatStr, string? output)
+{
+    if (formatStr != null)
+    {
+        return formatStr.ToLowerInvariant() switch
+        {
+            "json" => OutputFormat.Json,
+            "html" => OutputFormat.Html,
+            "csv" => OutputFormat.Csv,
+            "mermaid" => OutputFormat.Mermaid,
+            "dot" => OutputFormat.Dot,
+            _ => throw new ArgumentException($"Unknown format: '{formatStr}'. Valid formats: json, html, csv, mermaid, dot")
+        };
+    }
+
+    if (output != null)
+    {
+        return Path.GetExtension(output).ToLowerInvariant() switch
+        {
+            ".html" or ".htm" => OutputFormat.Html,
+            ".json" => OutputFormat.Json,
+            ".csv" => OutputFormat.Csv,
+            ".md" => OutputFormat.Mermaid,
+            ".dot" or ".gv" => OutputFormat.Dot,
+            _ => OutputFormat.Json
+        };
+    }
+
+    return OutputFormat.Html;
+}
+
+static void OpenInBrowser(string path)
+{
+    var url = "file://" + Path.GetFullPath(path);
+    if (OperatingSystem.IsMacOS())
+        System.Diagnostics.Process.Start("open", url);
+    else if (OperatingSystem.IsWindows())
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+    else if (OperatingSystem.IsLinux())
+        System.Diagnostics.Process.Start("xdg-open", url);
 }
 
 static string ResolveAssetsDir(string path)
@@ -385,16 +244,6 @@ static string ResolveAssetsDir(string path)
         return path;
     return path;
 }
-
-static OutputFormat ParseFormat(string s) => s.ToLowerInvariant() switch
-{
-    "csv" => OutputFormat.Csv,
-    "mermaid" => OutputFormat.Mermaid,
-    "dot" => OutputFormat.Dot,
-    "drawio" => OutputFormat.Drawio,
-    "html" => OutputFormat.Html,
-    _ => OutputFormat.Csv
-};
 
 static string? DetectCommonPrefix(IReadOnlyList<AsmdefInfo> asmdefs)
 {
@@ -415,10 +264,15 @@ static Dictionary<string, string> ParseOptions(string[] args)
     var opts = new Dictionary<string, string>();
     for (var i = 0; i < args.Length; i++)
     {
-        if (args[i].StartsWith('-') && i + 1 < args.Length)
+        if (args[i].StartsWith('-'))
         {
-            opts[args[i]] = args[i + 1];
-            i++;
+            if (args[i] is "-h" or "--help" or "-v" or "--version")
+                opts[args[i]] = "true";
+            else if (i + 1 < args.Length)
+            {
+                opts[args[i]] = args[i + 1];
+                i++;
+            }
         }
     }
     return opts;

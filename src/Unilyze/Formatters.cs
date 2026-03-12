@@ -5,11 +5,11 @@ namespace Unilyze;
 
 public enum OutputFormat
 {
+    Json,
+    Html,
     Csv,
     Mermaid,
-    Dot,
-    Drawio,
-    Html
+    Dot
 }
 
 public static class Formatters
@@ -78,7 +78,9 @@ public static class Formatters
         IReadOnlyList<TypeMetrics>? typeMetrics = null)
     {
         var sb = new StringBuilder();
-        var metricsDict = (typeMetrics ?? []).ToDictionary(m => m.TypeName);
+        var metricsDict = new Dictionary<string, TypeMetrics>();
+        foreach (var m in typeMetrics ?? [])
+            metricsDict.TryAdd(m.TypeName, m);
 
         sb.AppendLine("Name,Kind,Assembly,Members,Dependencies,CognitiveComplexity(avg),CognitiveComplexity(max),CodeHealth");
 
