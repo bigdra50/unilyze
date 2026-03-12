@@ -94,12 +94,17 @@ static AnalysisResult BuildAnalysisResult(string path, string? prefix, string? a
     var assetsDir = ResolveAssetsDir(path);
     var asmdefs = AsmdefInfo.Discover(assetsDir);
 
+    IReadOnlyList<AsmdefInfo> targets;
     if (asmdefs.Count == 0)
-        throw new InvalidOperationException($"No .asmdef files found under {assetsDir}");
-
-    prefix ??= DetectCommonPrefix(asmdefs);
-
-    var targets = FilterAssemblies(asmdefs, prefix, assemblyFilter);
+    {
+        // No .asmdef files: treat entire directory as a single assembly
+        targets = [new AsmdefInfo("Assembly-CSharp", assetsDir, [])];
+    }
+    else
+    {
+        prefix ??= DetectCommonPrefix(asmdefs);
+        targets = FilterAssemblies(asmdefs, prefix, assemblyFilter);
+    }
 
     var allTypes = new List<TypeNodeInfo>();
     foreach (var asm in targets)
