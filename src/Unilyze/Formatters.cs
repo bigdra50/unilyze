@@ -1,7 +1,7 @@
 using System.Text;
 using System.Web;
 
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public enum OutputFormat
 {

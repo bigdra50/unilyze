@@ -1,5 +1,5 @@
 using System.Text.Json;
-using UnityRoslynGraph;
+using Unilyze;
 
 if (args.Length == 0)
 {
@@ -342,14 +342,14 @@ static int WriteOutput(string content, string? outputPath)
 static int PrintUsage()
 {
     Console.WriteLine("""
-        unity-roslyn-graph - Dependency graph generator for Unity projects
+        unilyze - Dependency graph generator for Unity projects
 
         Usage:
-          unity-roslyn-graph analyze  -p <path> [--prefix <prefix>] [-a <assembly>] [-o <file>]
-          unity-roslyn-graph format   -i <json> [-f csv|mermaid|dot|drawio] [-s assembly|types|diagram] [-o <file>]
-          unity-roslyn-graph assembly [-p <path>] [-f csv|mermaid|dot|drawio] [--prefix <prefix>] [-o <file>]
-          unity-roslyn-graph types    [-p <path>] [-f csv|mermaid|dot|drawio] [-a <assembly>] [-o <file>]
-          unity-roslyn-graph diagram  -p <path> [--prefix <prefix>] -o <file>
+          unilyze analyze  -p <path> [--prefix <prefix>] [-a <assembly>] [-o <file>]
+          unilyze format   -i <json> [-f csv|mermaid|dot|drawio] [-s assembly|types|diagram] [-o <file>]
+          unilyze assembly [-p <path>] [-f csv|mermaid|dot|drawio] [--prefix <prefix>] [-o <file>]
+          unilyze types    [-p <path>] [-f csv|mermaid|dot|drawio] [-a <assembly>] [-o <file>]
+          unilyze diagram  -p <path> [--prefix <prefix>] -o <file>
 
         Commands:
           analyze     Analyze project and output JSON intermediate format

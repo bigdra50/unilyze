@@ -2,7 +2,7 @@ using System.Text;
 using System.Web;
 using System.Xml.Linq;
 
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public static class DrawioFormatter
 {
@@ -442,7 +442,7 @@ public static class DrawioFormatter
     static string WrapMxfile(IReadOnlyList<XElement> pages)
     {
         var mxfile = new XElement("mxfile",
-            new XAttribute("host", "unity-roslyn-graph"),
+            new XAttribute("host", "unilyze"),
             new XAttribute("type", "device"),
             pages);
 

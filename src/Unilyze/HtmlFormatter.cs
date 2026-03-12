@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public static class HtmlFormatter
 {

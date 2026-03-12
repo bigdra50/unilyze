@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public sealed record AnalysisResult(
     string ProjectPath,

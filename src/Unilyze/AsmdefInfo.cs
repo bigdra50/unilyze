@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public sealed record AsmdefInfo(string Name, string Directory, IReadOnlyList<string> References)
 {

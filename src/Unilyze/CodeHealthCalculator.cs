@@ -1,4 +1,4 @@
-namespace UnityRoslynGraph;
+namespace Unilyze;
 
 public sealed record MethodMetrics(
     string MethodName,
