@@ -12,7 +12,6 @@ var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
 var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
-var scope = opts.GetValueOrDefault("-s") ?? opts.GetValueOrDefault("--scope") ?? "types";
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 
 // Determine output format: explicit -f > output extension > default (html)
@@ -39,8 +38,6 @@ try
     }
 
     // Generate output
-    var asmdefs = result.Assemblies.Select(a => new AsmdefInfo(a.Name, a.Directory, a.References)).ToList();
-
     if (format == OutputFormat.Html)
     {
         var htmlPath = output ?? Path.Combine(Path.GetTempPath(), $"unilyze-{Path.GetFileName(result.ProjectPath)}.html");
@@ -62,24 +59,8 @@ try
     if (format == OutputFormat.Json)
         return WriteOutput(json, output);
 
-    var content = (scope, format) switch
-    {
-        ("assembly", OutputFormat.Csv) => Formatters.AssemblyToCsv(asmdefs, prefix),
-        ("assembly", OutputFormat.Mermaid) => Formatters.AssemblyToMermaid(asmdefs, prefix),
-        ("assembly", OutputFormat.Dot) => Formatters.AssemblyToDot(asmdefs, prefix),
-        ("types", OutputFormat.Csv) => Formatters.TypesToCsv(result.Types, result.Dependencies, result.TypeMetrics),
-        ("types", OutputFormat.Mermaid) => Formatters.TypesToMermaid(result.Types, result.Dependencies),
-        ("types", OutputFormat.Dot) => Formatters.TypesToDot(result.Types, result.Dependencies),
-        _ => (string?)null
-    };
-
-    if (content == null)
-    {
-        Console.Error.WriteLine($"Unsupported combination: scope='{scope}', format='{format.ToString().ToLower()}'");
-        return 1;
-    }
-
-    return WriteOutput(content, output);
+    Console.Error.WriteLine($"Unsupported format: '{format.ToString().ToLower()}'");
+    return 1;
 }
 catch (InvalidOperationException ex)
 {
@@ -182,17 +163,15 @@ Usage:
   unilyze -p <path>                        Analyze project and open in browser
   unilyze -p <path> -o graph.html          Save HTML viewer (+ JSON) to file
   unilyze -p <path> -f json                Output JSON to stdout
-  unilyze -p <path> -f csv                 Output CSV to stdout
   unilyze -i result.json -o graph.html     Generate HTML from existing JSON
 
 Options:
   -p, --path      Unity project root or Assets directory (default: .)
   -i, --input     Use existing JSON instead of analyzing
   -o, --output    Output file path (format inferred from extension: .html, .json)
-  -f, --format    Output format: html, json, csv, mermaid, dot (default: html)
+  -f, --format    Output format: html, json (default: html)
   -a, --assembly  Filter by assembly name (e.g. App.Domain)
       --prefix    Filter asmdef names by prefix (auto-detected if omitted)
-  -s, --scope     Scope: types, assembly (default: types)
   -v, --version   Show version
   -h, --help      Show this help
 """);
@@ -207,10 +186,7 @@ static OutputFormat ResolveFormat(string? formatStr, string? output)
         {
             "json" => OutputFormat.Json,
             "html" => OutputFormat.Html,
-            "csv" => OutputFormat.Csv,
-            "mermaid" => OutputFormat.Mermaid,
-            "dot" => OutputFormat.Dot,
-            _ => throw new ArgumentException($"Unknown format: '{formatStr}'. Valid formats: json, html, csv, mermaid, dot")
+            _ => throw new ArgumentException($"Unknown format: '{formatStr}'. Valid formats: json, html")
         };
     }
 
@@ -220,9 +196,6 @@ static OutputFormat ResolveFormat(string? formatStr, string? output)
         {
             ".html" or ".htm" => OutputFormat.Html,
             ".json" => OutputFormat.Json,
-            ".csv" => OutputFormat.Csv,
-            ".md" => OutputFormat.Mermaid,
-            ".dot" or ".gv" => OutputFormat.Dot,
             _ => OutputFormat.Json
         };
     }

@@ -37,9 +37,6 @@ unilyze -p ~/MyUnityProject -f json -o result.json
 # 既存 JSON から HTML を再生成
 unilyze -i result.json -o graph.html
 
-# CSV を stdout に出力
-unilyze -p ~/MyUnityProject -f csv
-
 # アセンブリを絞り込み
 unilyze -p ~/MyUnityProject -a App.Domain
 
@@ -54,10 +51,9 @@ unilyze -p ~/MyUnityProject --prefix "App."
 | `-p, --path` | Unity プロジェクトルート | `.` |
 | `-i, --input` | 既存の JSON を入力として使用 | - |
 | `-o, --output` | 出力先（拡張子で形式を推定） | ブラウザで開く |
-| `-f, --format` | 出力形式: `html`, `json`, `csv`, `mermaid`, `dot` | `html` |
+| `-f, --format` | 出力形式: `html`, `json` | `html` |
 | `-a, --assembly` | 解析対象のアセンブリ名 | 全アセンブリ |
 | `--prefix` | asmdef 名のフィルタプレフィックス | 自動検出 |
-| `-s, --scope` | スコープ: `types`, `assembly` | `types` |
 
 ## What it analyzes
 
