@@ -40,7 +40,8 @@ public sealed record TypeNodeInfo(
     string Assembly,
     string FilePath,
     bool IsNested,
-    int LineCount = 0);
+    int LineCount = 0,
+    int? StartLine = null);
 
 public sealed record MemberInfo(
     string Name,
@@ -52,7 +53,9 @@ public sealed record MemberInfo(
     int? CognitiveComplexity = null,
     int? CyclomaticComplexity = null,
     int? MaxNestingDepth = null,
-    int LineCount = 0);
+    int LineCount = 0,
+    int? StartLine = null,
+    double? HalsteadVolume = null);
 
 public sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
@@ -63,8 +66,14 @@ public static class TypeAnalyzer
     public static IReadOnlyList<TypeNodeInfo> AnalyzeDirectory(string directory, string assemblyName)
         => AnalyzeDirectoryWithTrees(directory, assemblyName).Types;
 
-    public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(string directory, string assemblyName)
+    public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(
+        string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null)
     {
+        var parseOptions = CSharpParseOptions.Default
+            .WithLanguageVersion(LanguageVersion.Latest);
+        if (preprocessorSymbols is { Count: > 0 })
+            parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
+
         var csFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories);
         var rawTypes = new List<TypeNodeInfo>();
         var trees = new List<SyntaxTree>();
@@ -72,7 +81,7 @@ public static class TypeAnalyzer
         foreach (var file in csFiles)
         {
             var source = File.ReadAllText(file);
-            var tree = CSharpSyntaxTree.ParseText(source, path: file);
+            var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: file);
             trees.Add(tree);
             var root = tree.GetRoot();
             rawTypes.AddRange(ExtractTypes(root, assemblyName, file));
@@ -91,68 +100,78 @@ public static class TypeAnalyzer
 
     static IEnumerable<TypeNodeInfo> ExtractTypes(SyntaxNode root, string assemblyName, string filePath)
     {
+        foreach (var t in ExtractTypeDeclarations(root, assemblyName, filePath)) yield return t;
+        foreach (var t in ExtractEnumDeclarations(root, assemblyName, filePath)) yield return t;
+        foreach (var t in ExtractDelegateDeclarations(root, assemblyName, filePath)) yield return t;
+    }
+
+    static IEnumerable<TypeNodeInfo> ExtractTypeDeclarations(SyntaxNode root, string assemblyName, string filePath)
+    {
         foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
         {
             var name = typeDecl.Identifier.Text;
             if (typeDecl.TypeParameterList is { } tpl)
                 name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
 
-            var kind = typeDecl switch
-            {
-                RecordDeclarationSyntax r => r.ClassOrStructKeyword.Text == "struct" ? "record struct" : "record",
-                ClassDeclarationSyntax => "class",
-                StructDeclarationSyntax => "struct",
-                InterfaceDeclarationSyntax => "interface",
-                _ => "type"
-            };
-
+            var kind = GetTypeKind(typeDecl);
             var ns = GetNamespace(typeDecl);
             var modifiers = GetModifiers(typeDecl.Modifiers);
             var attributes = GetAttributeInfos(typeDecl.AttributeLists);
             var genericConstraints = ExtractGenericConstraints(typeDecl);
             var isNested = typeDecl.Parent is TypeDeclarationSyntax;
 
-            // BaseList: store raw (resolution deferred to phase 2)
-            var baseListItems = new List<string>();
-            if (typeDecl.BaseList is { } baseList)
-                baseListItems.AddRange(baseList.Types.Select(t => t.Type.ToString()));
+            var baseListItems = typeDecl.BaseList is { } baseList
+                ? baseList.Types.Select(t => t.Type.ToString()).ToList()
+                : [];
 
             var members = ExtractMembers(typeDecl).ToList();
             var ctorParams = ExtractConstructorParams(typeDecl).ToList();
+            AddRecordParameters(typeDecl, members, ctorParams);
 
-            if (typeDecl is RecordDeclarationSyntax record && record.ParameterList is { } paramList)
-            {
-                foreach (var param in paramList.Parameters)
-                {
-                    var paramType = param.Type?.ToString() ?? "unknown";
-                    var paramName = param.Identifier.Text;
-                    ctorParams.Add(paramType);
-                    members.Add(new MemberInfo(paramName, paramType, "Property", [], [], []));
-                }
-            }
-
-            // Temporarily: first item as BaseType, rest as Interfaces (will be corrected in phase 2)
-            string? baseType = null;
-            var interfaces = new List<string>();
-            if (baseListItems.Count > 0 && typeDecl is not InterfaceDeclarationSyntax)
-            {
-                baseType = baseListItems[0];
-                interfaces.AddRange(baseListItems.Skip(1));
-            }
-            else
-            {
-                interfaces.AddRange(baseListItems);
-            }
+            var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
 
             var typeSpan = typeDecl.GetLocation().GetLineSpan();
             var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
+            var typeStartLine = typeSpan.StartLinePosition.Line + 1;
 
             yield return new TypeNodeInfo(
                 name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount);
+                attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine);
         }
+    }
 
-        // N6: Enum extraction with base type and values
+    static string GetTypeKind(TypeDeclarationSyntax typeDecl) => typeDecl switch
+    {
+        RecordDeclarationSyntax r => r.ClassOrStructKeyword.Text == "struct" ? "record struct" : "record",
+        ClassDeclarationSyntax => "class",
+        StructDeclarationSyntax => "struct",
+        InterfaceDeclarationSyntax => "interface",
+        _ => "type"
+    };
+
+    static void AddRecordParameters(TypeDeclarationSyntax typeDecl, List<MemberInfo> members, List<string> ctorParams)
+    {
+        if (typeDecl is not RecordDeclarationSyntax { ParameterList: { } paramList })
+            return;
+
+        foreach (var param in paramList.Parameters)
+        {
+            var paramType = param.Type?.ToString() ?? "unknown";
+            ctorParams.Add(paramType);
+            members.Add(new MemberInfo(param.Identifier.Text, paramType, "Property", [], [], []));
+        }
+    }
+
+    static (string? BaseType, List<string> Interfaces) SplitBaseList(List<string> baseListItems, bool isInterface)
+    {
+        if (baseListItems.Count == 0 || isInterface)
+            return (null, baseListItems);
+
+        return (baseListItems[0], baseListItems[1..]);
+    }
+
+    static IEnumerable<TypeNodeInfo> ExtractEnumDeclarations(SyntaxNode root, string assemblyName, string filePath)
+    {
         foreach (var enumDecl in root.DescendantNodes().OfType<EnumDeclarationSyntax>())
         {
             var ns = GetNamespace(enumDecl);
@@ -177,13 +196,16 @@ public static class TypeAnalyzer
 
             var enumSpan = enumDecl.GetLocation().GetLineSpan();
             var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
+            var enumStartLine = enumSpan.StartLinePosition.Line + 1;
 
             yield return new TypeNodeInfo(
                 enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
-                attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount);
+                attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine);
         }
+    }
 
-        // N1: Delegate declarations
+    static IEnumerable<TypeNodeInfo> ExtractDelegateDeclarations(SyntaxNode root, string assemblyName, string filePath)
+    {
         foreach (var delDecl in root.DescendantNodes().OfType<DelegateDeclarationSyntax>())
         {
             var name = delDecl.Identifier.Text;
@@ -212,10 +234,11 @@ public static class TypeAnalyzer
 
             var delSpan = delDecl.GetLocation().GetLineSpan();
             var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
+            var delStartLine = delSpan.StartLinePosition.Line + 1;
 
             yield return new TypeNodeInfo(
                 name, ns, "delegate", modifiers, null, [], members, [],
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount);
+                attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine);
         }
     }
 
@@ -300,20 +323,7 @@ public static class TypeAnalyzer
                     break;
 
                 case MethodDeclarationSyntax method:
-                    var methodParams = method.ParameterList.Parameters
-                        .Select(p => new ParameterInfo(
-                            p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-                        .ToList();
-                    var bodyNode = (SyntaxNode?)method.Body ?? method.ExpressionBody;
-                    var cogCC = bodyNode != null ? CognitiveComplexity.Calculate(bodyNode) : 0;
-                    var cycCC = bodyNode != null ? CyclomaticComplexity.Calculate(bodyNode) : 1;
-                    var nestDepth = bodyNode != null ? NestingDepth.Calculate(bodyNode) : 0;
-                    var methodSpan = method.GetLocation().GetLineSpan();
-                    var methodLineCount = methodSpan.EndLinePosition.Line - methodSpan.StartLinePosition.Line + 1;
-                    yield return new MemberInfo(
-                        method.Identifier.Text, method.ReturnType.ToString(), "Method",
-                        GetModifiers(method.Modifiers), methodParams,
-                        GetAttributeInfos(method.AttributeLists), cogCC, cycCC, nestDepth, methodLineCount);
+                    yield return CreateMethodMember(method);
                     break;
 
                 // N2: Event declarations
@@ -368,9 +378,60 @@ public static class TypeAnalyzer
             .ToList();
     }
 
-    // --- Dependency building ---
+    static MemberInfo CreateMethodMember(MethodDeclarationSyntax method)
+    {
+        var methodParams = method.ParameterList.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList();
+        var bodyNode = (SyntaxNode?)method.Body ?? method.ExpressionBody;
+        var (cogCC, cycCC, nestDepth, halsteadVolume) = MethodMetricsCalculator.Calculate(bodyNode);
+        var methodSpan = method.GetLocation().GetLineSpan();
+        var methodLineCount = methodSpan.EndLinePosition.Line - methodSpan.StartLinePosition.Line + 1;
+        var methodStartLine = methodSpan.StartLinePosition.Line + 1;
+        return new MemberInfo(
+            method.Identifier.Text, method.ReturnType.ToString(), "Method",
+            GetModifiers(method.Modifiers), methodParams,
+            GetAttributeInfos(method.AttributeLists), cogCC, cycCC, nestDepth, methodLineCount, methodStartLine,
+            halsteadVolume);
+    }
 
-    public static IReadOnlyList<TypeDependency> BuildDependencies(IReadOnlyList<TypeNodeInfo> types)
+    // --- Helpers ---
+
+    static string GetNamespace(SyntaxNode node)
+    {
+        var ns = node.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+        return ns?.Name.ToString() ?? "";
+    }
+
+    static IReadOnlyList<string> GetModifiers(SyntaxTokenList modifiers)
+        => modifiers.Select(m => m.Text).ToList();
+
+    // N5: Attribute extraction with arguments
+    static IReadOnlyList<AttributeInfo> GetAttributeInfos(SyntaxList<AttributeListSyntax> attributeLists)
+    {
+        return attributeLists.SelectMany(al => al.Attributes).Select(a =>
+        {
+            Dictionary<string, string>? args = null;
+            if (a.ArgumentList is { Arguments.Count: > 0 })
+            {
+                args = new Dictionary<string, string>();
+                foreach (var arg in a.ArgumentList.Arguments)
+                {
+                    var key = arg.NameEquals?.Name.ToString()
+                           ?? arg.NameColon?.Name.ToString()
+                           ?? $"arg{args.Count}";
+                    args[key] = arg.Expression.ToString();
+                }
+            }
+
+            return new AttributeInfo(a.Name.ToString(), args);
+        }).ToList();
+    }
+}
+
+static class DependencyBuilder
+{
+    public static IReadOnlyList<TypeDependency> Build(IReadOnlyList<TypeNodeInfo> types)
     {
         var knownTypes = new HashSet<string>(types.Select(t => t.Name.Split('<')[0]));
         var deps = new List<TypeDependency>();
@@ -385,47 +446,55 @@ public static class TypeAnalyzer
             foreach (var iface in type.Interfaces)
                 AddDepsForTypeName(fromName, iface, DependencyKind.InterfaceImpl, knownTypes, deps);
 
-            foreach (var member in type.Members)
-            {
-                var kind = member.MemberKind switch
-                {
-                    "Field" => DependencyKind.FieldType,
-                    "Property" => DependencyKind.PropertyType,
-                    "Method" => DependencyKind.ReturnType,
-                    "Event" => DependencyKind.EventType,
-                    "Indexer" => DependencyKind.PropertyType,
-                    _ => DependencyKind.FieldType
-                };
-                AddDepsForTypeName(fromName, member.Type, kind, knownTypes, deps);
-
-                foreach (var param in member.Parameters)
-                    AddDepsForTypeName(fromName, param.Type, DependencyKind.MethodParam, knownTypes, deps);
-            }
-
-            foreach (var ctorParam in type.ConstructorParams)
-                AddDepsForTypeName(fromName, ctorParam, DependencyKind.ConstructorParam, knownTypes, deps);
-
-            // N4: Generic constraint dependencies
-            foreach (var constraint in type.GenericConstraints)
-            {
-                foreach (var c in constraint.Constraints)
-                {
-                    var constraintType = c.TrimEnd('?');
-                    if (constraintType is "class" or "struct" or "notnull" or "unmanaged" or "new()")
-                        continue;
-                    AddDepsForTypeName(fromName, constraintType, DependencyKind.GenericConstraint, knownTypes, deps);
-                }
-            }
+            CollectMemberDeps(fromName, type, knownTypes, deps);
+            CollectConstraintDeps(fromName, type, knownTypes, deps);
         }
 
-        // B3: Self-referencing filter + dedup
         return deps
             .Where(d => d.FromType != d.ToType)
             .Distinct()
             .ToList();
     }
 
-    // B1: Extract ALL type names from a type string (recursive for generics)
+    static void CollectMemberDeps(string fromName, TypeNodeInfo type,
+        HashSet<string> knownTypes, List<TypeDependency> deps)
+    {
+        foreach (var member in type.Members)
+        {
+            var kind = member.MemberKind switch
+            {
+                "Field" => DependencyKind.FieldType,
+                "Property" => DependencyKind.PropertyType,
+                "Method" => DependencyKind.ReturnType,
+                "Event" => DependencyKind.EventType,
+                "Indexer" => DependencyKind.PropertyType,
+                _ => DependencyKind.FieldType
+            };
+            AddDepsForTypeName(fromName, member.Type, kind, knownTypes, deps);
+
+            foreach (var param in member.Parameters)
+                AddDepsForTypeName(fromName, param.Type, DependencyKind.MethodParam, knownTypes, deps);
+        }
+
+        foreach (var ctorParam in type.ConstructorParams)
+            AddDepsForTypeName(fromName, ctorParam, DependencyKind.ConstructorParam, knownTypes, deps);
+    }
+
+    static void CollectConstraintDeps(string fromName, TypeNodeInfo type,
+        HashSet<string> knownTypes, List<TypeDependency> deps)
+    {
+        foreach (var constraint in type.GenericConstraints)
+        {
+            foreach (var c in constraint.Constraints)
+            {
+                var constraintType = c.TrimEnd('?');
+                if (constraintType is "class" or "struct" or "notnull" or "unmanaged" or "new()")
+                    continue;
+                AddDepsForTypeName(fromName, constraintType, DependencyKind.GenericConstraint, knownTypes, deps);
+            }
+        }
+    }
+
     static void AddDepsForTypeName(string fromType, string typeName, DependencyKind kind,
         HashSet<string> knownTypes, List<TypeDependency> deps)
     {
@@ -483,38 +552,5 @@ public static class TypeAnalyzer
 
         result.Add(args[start..].Trim());
         return result.ToArray();
-    }
-
-    // --- Helpers ---
-
-    static string GetNamespace(SyntaxNode node)
-    {
-        var ns = node.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
-        return ns?.Name.ToString() ?? "";
-    }
-
-    static IReadOnlyList<string> GetModifiers(SyntaxTokenList modifiers)
-        => modifiers.Select(m => m.Text).ToList();
-
-    // N5: Attribute extraction with arguments
-    static IReadOnlyList<AttributeInfo> GetAttributeInfos(SyntaxList<AttributeListSyntax> attributeLists)
-    {
-        return attributeLists.SelectMany(al => al.Attributes).Select(a =>
-        {
-            Dictionary<string, string>? args = null;
-            if (a.ArgumentList is { Arguments.Count: > 0 })
-            {
-                args = new Dictionary<string, string>();
-                foreach (var arg in a.ArgumentList.Arguments)
-                {
-                    var key = arg.NameEquals?.Name.ToString()
-                           ?? arg.NameColon?.Name.ToString()
-                           ?? $"arg{args.Count}";
-                    args[key] = arg.Expression.ToString();
-                }
-            }
-
-            return new AttributeInfo(a.Name.ToString(), args);
-        }).ToList();
     }
 }

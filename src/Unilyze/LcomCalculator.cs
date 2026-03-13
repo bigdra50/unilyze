@@ -9,71 +9,70 @@ public static class LcomCalculator
     /// <summary>
     /// LCOM-HS (Henderson-Sellers variant).
     /// Returns 0.0 (fully cohesive) to 1.0+ (no cohesion).
-    /// Returns null for types with 0-1 methods or 0 fields.
+    /// Returns null for types with 0-1 instance methods or 0 instance fields.
     /// </summary>
     public static double? Calculate(TypeDeclarationSyntax typeDecl, SemanticModel? model)
     {
-        var fields = CollectFields(typeDecl);
+        var fields = CollectInstanceFields(typeDecl);
         if (fields.Count == 0) return null;
 
-        var methods = typeDecl.Members.OfType<MethodDeclarationSyntax>().ToList();
-        if (methods.Count <= 1) return null;
+        var methodBodies = new List<SyntaxNode?>();
+        foreach (var method in typeDecl.Members.OfType<MethodDeclarationSyntax>()
+            .Where(m => !m.Modifiers.Any(SyntaxKind.StaticKeyword)))
+            methodBodies.Add((SyntaxNode?)method.Body ?? method.ExpressionBody);
+        foreach (var ctor in typeDecl.Members.OfType<ConstructorDeclarationSyntax>()
+            .Where(c => !c.Modifiers.Any(SyntaxKind.StaticKeyword)))
+            methodBodies.Add((SyntaxNode?)ctor.Body ?? ctor.ExpressionBody);
 
-        var fieldAccess = new Dictionary<string, HashSet<string>>();
-        foreach (var method in methods)
+        if (methodBodies.Count <= 1) return null;
+
+        INamedTypeSymbol? containingType = null;
+        if (model is not null)
+            containingType = model.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
+
+        var fieldAccessSets = new List<HashSet<string>>(methodBodies.Count);
+        foreach (var body in methodBodies)
         {
             var accessed = model is not null
-                ? CollectFieldAccessesSemantic(method, model, fields)
-                : CollectFieldAccessesSyntactic(method, fields);
-            fieldAccess[method.Identifier.Text] = accessed;
+                ? CollectFieldAccessesSemantic(body, model, fields, containingType)
+                : CollectFieldAccessesSyntactic(body, fields);
+            fieldAccessSets.Add(accessed);
         }
 
-        // LCOM-HS = (avg(fieldAccessCount) - m) / (1 - m)
-        // where m = number of methods, fieldAccessCount = methods accessing each field
-        var m = methods.Count;
+        // LCOM-HS = (1/a * SUM(mA(f)) - m) / (1 - m)
+        // a = field count, m = method count, mA(f) = methods accessing field f
+        var m = methodBodies.Count;
         var totalAccess = 0.0;
         foreach (var field in fields)
         {
-            var count = fieldAccess.Values.Count(accessedFields => accessedFields.Contains(field));
+            var count = fieldAccessSets.Count(set => set.Contains(field));
             totalAccess += count;
         }
 
         var avgAccess = totalAccess / fields.Count;
-        if (m <= 1) return null;
-
         var lcom = (avgAccess - m) / (1.0 - m);
         return Math.Round(Math.Max(0.0, lcom), 2);
     }
 
-    static HashSet<string> CollectFields(TypeDeclarationSyntax typeDecl)
+    static HashSet<string> CollectInstanceFields(TypeDeclarationSyntax typeDecl)
     {
         var fields = new HashSet<string>();
 
         foreach (var field in typeDecl.Members.OfType<FieldDeclarationSyntax>())
         {
+            if (field.Modifiers.Any(SyntaxKind.StaticKeyword)) continue;
             foreach (var variable in field.Declaration.Variables)
                 fields.Add(variable.Identifier.Text);
-        }
-
-        // Auto-properties with backing fields
-        foreach (var prop in typeDecl.Members.OfType<PropertyDeclarationSyntax>())
-        {
-            if (prop.AccessorList?.Accessors.Any(a =>
-                a.Body is null && a.ExpressionBody is null &&
-                a.IsKind(SyntaxKind.GetAccessorDeclaration)) == true)
-            {
-                fields.Add(prop.Identifier.Text);
-            }
         }
 
         return fields;
     }
 
     static HashSet<string> CollectFieldAccessesSemantic(
-        MethodDeclarationSyntax method, SemanticModel model, HashSet<string> fields)
+        SyntaxNode? body, SemanticModel model, HashSet<string> fields,
+        INamedTypeSymbol? containingType)
     {
         var accessed = new HashSet<string>();
-        var body = (SyntaxNode?)method.Body ?? method.ExpressionBody;
         if (body is null) return accessed;
 
         foreach (var identifier in body.DescendantNodes().OfType<IdentifierNameSyntax>())
@@ -85,12 +84,18 @@ public static class LcomCalculator
             switch (symbol)
             {
                 case IFieldSymbol fieldSymbol
-                    when fields.Contains(fieldSymbol.Name):
+                    when fields.Contains(fieldSymbol.Name)
+                    && (containingType is null
+                        || SymbolEqualityComparer.Default.Equals(
+                            fieldSymbol.ContainingType, containingType)):
                     accessed.Add(fieldSymbol.Name);
                     break;
 
                 case IPropertySymbol propSymbol
-                    when fields.Contains(propSymbol.Name):
+                    when fields.Contains(propSymbol.Name)
+                    && (containingType is null
+                        || SymbolEqualityComparer.Default.Equals(
+                            propSymbol.ContainingType, containingType)):
                     accessed.Add(propSymbol.Name);
                     break;
             }
@@ -100,10 +105,9 @@ public static class LcomCalculator
     }
 
     static HashSet<string> CollectFieldAccessesSyntactic(
-        MethodDeclarationSyntax method, HashSet<string> fields)
+        SyntaxNode? body, HashSet<string> fields)
     {
         var accessed = new HashSet<string>();
-        var body = (SyntaxNode?)method.Body ?? method.ExpressionBody;
         if (body is null) return accessed;
 
         foreach (var identifier in body.DescendantNodes().OfType<IdentifierNameSyntax>())

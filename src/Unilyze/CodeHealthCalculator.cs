@@ -6,10 +6,13 @@ public sealed record MethodMetrics(
     int CyclomaticComplexity,
     int MaxNestingDepth,
     int ParameterCount,
-    int LineCount);
+    int LineCount,
+    int? StartLine = null,
+    double? MaintainabilityIndex = null);
 
 public sealed record TypeMetrics(
     string TypeName,
+    string Namespace,
     string Assembly,
     int LineCount,
     int MethodCount,
@@ -22,7 +25,16 @@ public sealed record TypeMetrics(
     double CodeHealth,
     IReadOnlyList<MethodMetrics> Methods,
     double? Lcom = null,
-    IReadOnlyList<CodeSmell>? CodeSmells = null);
+    int? Cbo = null,
+    int? Dit = null,
+    int? AfferentCoupling = null,
+    int? EfferentCoupling = null,
+    double? Instability = null,
+    double? AverageMaintainabilityIndex = null,
+    double? MinMaintainabilityIndex = null,
+    IReadOnlyList<CodeSmell>? CodeSmells = null,
+    string? FilePath = null,
+    int? StartLine = null);
 
 public sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,
@@ -65,13 +77,22 @@ public static class CodeHealthCalculator
     {
         var methods = type.Members
             .Where(m => m.MemberKind == "Method" && m.CognitiveComplexity.HasValue)
-            .Select(m => new MethodMetrics(
-                m.Name,
-                m.CognitiveComplexity!.Value,
-                m.CyclomaticComplexity ?? 1,
-                m.MaxNestingDepth ?? 0,
-                m.Parameters.Count,
-                m.LineCount))
+            .Select(m =>
+            {
+                var mi = m.HalsteadVolume.HasValue
+                    ? HalsteadCalculator.ComputeMaintainabilityIndex(
+                        m.HalsteadVolume.Value, m.CyclomaticComplexity ?? 1, m.LineCount)
+                    : (double?)null;
+                return new MethodMetrics(
+                    m.Name,
+                    m.CognitiveComplexity!.Value,
+                    m.CyclomaticComplexity ?? 1,
+                    m.MaxNestingDepth ?? 0,
+                    m.Parameters.Count,
+                    m.LineCount,
+                    m.StartLine,
+                    mi.HasValue ? Math.Round(mi.Value, 1) : null);
+            })
             .ToList();
 
         var methodCount = methods.Count;
@@ -84,8 +105,17 @@ public static class CodeHealthCalculator
 
         var health = CalculateHealthScore(avgCogCc, maxCogCc, type.LineCount, methodCount, maxNesting, excessiveParams);
 
+        var methodsWithMI = methods.Where(m => m.MaintainabilityIndex.HasValue).ToList();
+        var avgMI = methodsWithMI.Count > 0
+            ? Math.Round(methodsWithMI.Average(m => m.MaintainabilityIndex!.Value), 1)
+            : (double?)null;
+        var minMI = methodsWithMI.Count > 0
+            ? Math.Round(methodsWithMI.Min(m => m.MaintainabilityIndex!.Value), 1)
+            : (double?)null;
+
         return new TypeMetrics(
             type.Name,
+            type.Namespace,
             type.Assembly,
             type.LineCount,
             methodCount,
@@ -96,10 +126,14 @@ public static class CodeHealthCalculator
             maxCycCc,
             excessiveParams,
             Math.Round(health, 1),
-            methods);
+            methods,
+            AverageMaintainabilityIndex: avgMI,
+            MinMaintainabilityIndex: minMI,
+            FilePath: type.FilePath,
+            StartLine: type.StartLine);
     }
 
-    static double CalculateHealthScore(
+    internal static double CalculateHealthScore(
         double avgCc, int maxCc, int lineCount,
         int methodCount, int maxNesting, int excessiveParams)
     {
@@ -120,7 +154,7 @@ public static class CodeHealthCalculator
 
     // Linear interpolation: value <= low10 -> 10, value >= high1 -> 1
     // Between low10..low5 -> 10..5, between low5..high1 -> 5..1
-    static double Interpolate(double value, double low10, double low5, double high5, double high1)
+    internal static double Interpolate(double value, double low10, double low5, double high5, double high1)
     {
         if (value <= low10) return 10.0;
         if (value >= high1) return 1.0;

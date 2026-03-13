@@ -11,6 +11,12 @@ public static class CognitiveComplexity
         if (body == null) return 0;
         var state = new State();
         Walk(body, state, nesting: 0);
+
+        // Direct recursion: +1 if the method calls itself
+        var methodName = GetEnclosingMethodName(body);
+        if (methodName != null && HasDirectRecursion(body, methodName))
+            state.Total += 1;
+
         return state.Total;
     }
 
@@ -25,6 +31,10 @@ public static class CognitiveComplexity
     {
         foreach (var child in node.ChildNodes())
         {
+            // Reset operator tracking between sibling nodes
+            // so independent statements don't share LastBinaryOp state
+            state.LastBinaryOp = SyntaxKind.None;
+
             switch (child)
             {
                 case IfStatementSyntax ifStmt:
@@ -64,6 +74,26 @@ public static class CognitiveComplexity
                     HandleBinaryExpression(binary, state, nesting);
                     break;
 
+                case IsPatternExpressionSyntax isPattern:
+                    WalkExpression(isPattern.Expression, state, nesting);
+                    WalkPattern(isPattern.Pattern, state, nesting);
+                    break;
+
+                case LocalFunctionStatementSyntax localFunc:
+                    if (localFunc.Modifiers.Any(SyntaxKind.StaticKeyword))
+                    {
+                        // static local functions are calculated independently
+                        // They don't contribute to the parent method's complexity
+                        // (their own complexity is tracked separately)
+                        var independentState = new State();
+                        Walk(localFunc.Body ?? (SyntaxNode?)localFunc.ExpressionBody ?? child, independentState, nesting: 0);
+                    }
+                    else
+                    {
+                        Walk(child, state, nesting);
+                    }
+                    break;
+
                 // Nesting increasers without structural increment
                 case LambdaExpressionSyntax:
                 case AnonymousMethodExpressionSyntax:
@@ -95,6 +125,7 @@ public static class CognitiveComplexity
             if (elseClause.Statement is IfStatementSyntax elseIf)
             {
                 // else if: +1 structural only (no nesting increment)
+                state.LastBinaryOp = SyntaxKind.None;
                 state.Total += 1;
                 if (elseIf.Condition != null)
                     WalkExpression(elseIf.Condition, state, nesting + 1);
@@ -114,14 +145,21 @@ public static class CognitiveComplexity
 
     static void WalkExpression(SyntaxNode node, State state, int nesting)
     {
-        // Walk expression tree looking for binary logical operators
-        foreach (var child in node.ChildNodes())
+        if (node is BinaryExpressionSyntax binary)
         {
-            if (child is BinaryExpressionSyntax binary)
-                HandleBinaryExpression(binary, state, nesting);
-            else
-                WalkExpression(child, state, nesting);
+            HandleBinaryExpression(binary, state, nesting);
+            return;
         }
+
+        if (node is IsPatternExpressionSyntax isPattern)
+        {
+            WalkExpression(isPattern.Expression, state, nesting);
+            WalkPattern(isPattern.Pattern, state, nesting);
+            return;
+        }
+
+        foreach (var child in node.ChildNodes())
+            WalkExpression(child, state, nesting);
     }
 
     static void HandleBinaryExpression(BinaryExpressionSyntax binary, State state, int nesting)
@@ -138,11 +176,14 @@ public static class CognitiveComplexity
 
             // Walk left, then right
             WalkLogicalOperand(binary.Left, state, nesting);
+            // Restore current operator context so the right subtree
+            // sees a kind change if it contains a different operator
+            state.LastBinaryOp = kind;
             WalkLogicalOperand(binary.Right, state, nesting);
         }
         else if (binary.IsKind(SyntaxKind.CoalesceExpression))
         {
-            state.Total += 1; // ?? operator
+            // ?? is shorthand — no increment per SonarSource spec
             Walk(binary, state, nesting);
         }
         else
@@ -163,10 +204,116 @@ public static class CognitiveComplexity
             }
         }
 
+        if (operand is IsPatternExpressionSyntax isPattern)
+        {
+            WalkExpression(isPattern.Expression, state, nesting);
+            WalkPattern(isPattern.Pattern, state, nesting);
+            return;
+        }
+
         // Reset operator tracking after non-logical expression
         var saved = state.LastBinaryOp;
         state.LastBinaryOp = SyntaxKind.None;
         Walk(operand, state, nesting);
+        state.LastBinaryOp = saved;
+    }
+
+    static void WalkPattern(PatternSyntax pattern, State state, int nesting)
+    {
+        switch (pattern)
+        {
+            case BinaryPatternSyntax binaryPattern:
+                HandlePatternCombinator(binaryPattern, state, nesting);
+                break;
+            case ParenthesizedPatternSyntax paren:
+                WalkPattern(paren.Pattern, state, nesting);
+                break;
+            case UnaryPatternSyntax unary:
+                WalkPattern(unary.Pattern, state, nesting);
+                break;
+            case RecursivePatternSyntax recursive:
+                WalkRecursiveSubpatterns(recursive, state, nesting);
+                break;
+        }
+    }
+
+    static void WalkRecursiveSubpatterns(RecursivePatternSyntax recursive, State state, int nesting)
+    {
+        foreach (var sub in recursive.PositionalPatternClause?.Subpatterns
+                            ?? Enumerable.Empty<SubpatternSyntax>())
+            if (sub.Pattern != null)
+                WalkPattern(sub.Pattern, state, nesting);
+        foreach (var sub in recursive.PropertyPatternClause?.Subpatterns
+                            ?? Enumerable.Empty<SubpatternSyntax>())
+            if (sub.Pattern != null)
+                WalkPattern(sub.Pattern, state, nesting);
+    }
+
+    static string? GetEnclosingMethodName(SyntaxNode body)
+    {
+        var parent = body.Parent;
+        return parent switch
+        {
+            MethodDeclarationSyntax method => method.Identifier.Text,
+            LocalFunctionStatementSyntax local => local.Identifier.Text,
+            _ => null,
+        };
+    }
+
+    static bool HasDirectRecursion(SyntaxNode body, string methodName)
+    {
+        foreach (var invocation in body.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            var name = invocation.Expression switch
+            {
+                IdentifierNameSyntax id => id.Identifier.Text,
+                MemberAccessExpressionSyntax { Name: IdentifierNameSyntax id }
+                    when invocation.Expression is MemberAccessExpressionSyntax ma
+                    && ma.Expression is ThisExpressionSyntax => id.Identifier.Text,
+                _ => null,
+            };
+            if (name == methodName) return true;
+        }
+        return false;
+    }
+
+    static void HandlePatternCombinator(BinaryPatternSyntax pattern, State state, int nesting)
+    {
+        // Map or -> BarBarToken, and -> AmpersandAmpersandToken
+        // so they share tracking with || and && respectively
+        var mappedKind = pattern.IsKind(SyntaxKind.OrPattern)
+            ? SyntaxKind.BarBarToken
+            : SyntaxKind.AmpersandAmpersandToken;
+
+        if (state.LastBinaryOp != mappedKind)
+        {
+            state.Total += 1;
+            state.LastBinaryOp = mappedKind;
+        }
+
+        // Walk left
+        WalkPatternOperand(pattern.Left, state, nesting, mappedKind);
+        // Restore context for right subtree
+        state.LastBinaryOp = mappedKind;
+        // Walk right
+        WalkPatternOperand(pattern.Right, state, nesting, mappedKind);
+    }
+
+    static void WalkPatternOperand(PatternSyntax pattern, State state, int nesting, SyntaxKind parentKind)
+    {
+        // Unwrap parenthesized patterns
+        while (pattern is ParenthesizedPatternSyntax paren)
+            pattern = paren.Pattern;
+
+        if (pattern is BinaryPatternSyntax inner)
+        {
+            HandlePatternCombinator(inner, state, nesting);
+            return;
+        }
+
+        var saved = state.LastBinaryOp;
+        state.LastBinaryOp = SyntaxKind.None;
+        WalkPattern(pattern, state, nesting);
         state.LastBinaryOp = saved;
     }
 }

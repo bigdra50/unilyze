@@ -6,7 +6,7 @@ namespace Unilyze;
 
 public static class CyclomaticComplexity
 {
-    public static int Calculate(SyntaxNode? body)
+    public static int Calculate(SyntaxNode? body, SemanticModel? model = null)
     {
         if (body is null) return 1;
 
@@ -37,6 +37,14 @@ public static class CyclomaticComplexity
                     count++;
                     break;
 
+                case BinaryExpressionSyntax binary2
+                    when model is not null
+                      && (binary2.IsKind(SyntaxKind.BitwiseAndExpression)
+                       || binary2.IsKind(SyntaxKind.BitwiseOrExpression))
+                      && IsBooleanType(binary2.Left, model):
+                    count++;
+                    break;
+
                 case GotoStatementSyntax:
                     count++;
                     break;
@@ -44,5 +52,11 @@ public static class CyclomaticComplexity
         }
 
         return count;
+    }
+
+    static bool IsBooleanType(ExpressionSyntax expression, SemanticModel model)
+    {
+        var typeInfo = model.GetTypeInfo(expression);
+        return typeInfo.Type?.SpecialType == SpecialType.System_Boolean;
     }
 }

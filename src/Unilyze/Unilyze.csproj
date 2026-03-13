@@ -17,6 +17,9 @@
     <PackageTags>unity;roslyn;static-analysis;code-quality;dependency-graph</PackageTags>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="Unilyze.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>

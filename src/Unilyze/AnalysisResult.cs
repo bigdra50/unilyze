@@ -10,7 +10,8 @@ public sealed record AnalysisResult(
     IReadOnlyList<TypeNodeInfo> Types,
     IReadOnlyList<TypeDependency> Dependencies,
     IReadOnlyList<TypeMetrics>? TypeMetrics = null,
-    string? AnalysisLevel = null);
+    string? AnalysisLevel = null,
+    IReadOnlyList<CyclicDependency>? CyclicDependencies = null);
 
 public sealed record AssemblyInfo(
     string Name,
@@ -26,6 +27,13 @@ public sealed record AssemblyInfo(
     Converters = [
         typeof(JsonStringEnumConverter<DependencyKind>),
         typeof(JsonStringEnumConverter<CodeSmellKind>),
-        typeof(JsonStringEnumConverter<SmellSeverity>)])]
+        typeof(JsonStringEnumConverter<SmellSeverity>),
+        typeof(JsonStringEnumConverter<ChangeStatus>),
+        typeof(JsonStringEnumConverter<CycleLevel>)])]
 [JsonSerializable(typeof(AnalysisResult))]
+[JsonSerializable(typeof(DiffResult))]
+[JsonSerializable(typeof(HotspotResult))]
+[JsonSerializable(typeof(TrendResult))]
+[JsonSerializable(typeof(MetricDelta<int>))]
+[JsonSerializable(typeof(MetricDelta<double>))]
 internal partial class AnalysisJsonContext : JsonSerializerContext;
