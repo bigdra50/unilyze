@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Suppress SonarAnalyzer build-time diagnostics; we use it programmatically in tests -->
+    <NoWarn>$(NoWarn);S1144;S125;S3885;S6966;S1481;S1244</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.20.0.135146"
+                      GeneratePathProperty="true"
+                      ExcludeAssets="analyzers" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Unilyze\Unilyze.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(PkgSonarAnalyzer_CSharp)/analyzers/SonarAnalyzer.CSharp.dll"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="SonarAnalyzer.CSharp.dll"
+          Visible="false" />
+  </ItemGroup>
+</Project>
