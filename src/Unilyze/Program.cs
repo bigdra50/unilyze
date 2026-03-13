@@ -88,12 +88,28 @@ static AnalysisResult BuildAnalysisResult(string path, string? prefix, string? a
     }
 
     var allTypes = new List<TypeNodeInfo>();
+    var allSyntaxTrees = new List<Microsoft.CodeAnalysis.SyntaxTree>();
     foreach (var asm in targets)
-        allTypes.AddRange(TypeAnalyzer.AnalyzeDirectory(asm.Directory, asm.Name));
+    {
+        var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(asm.Directory, asm.Name);
+        allTypes.AddRange(result.Types);
+        allSyntaxTrees.AddRange(result.SyntaxTrees);
+    }
 
     var deps = TypeAnalyzer.BuildDependencies(allTypes);
 
     var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
+
+    // Build Compilation for SemanticModel-based analysis (LCOM etc.)
+    var projectRoot = ResolveProjectRoot(path);
+    var compilationResult = CompilationFactory.Create(projectRoot, allSyntaxTrees);
+    var analysisLevel = compilationResult.Level.ToString();
+
+    if (compilationResult.Level != AnalysisLevel.SyntaxOnly)
+        Console.Error.WriteLine($"Analysis level: {analysisLevel}");
+
+    // Compute LCOM and code smells with SemanticModel when available
+    typeMetrics = EnrichWithSemanticAnalysis(typeMetrics, allTypes, allSyntaxTrees, compilationResult);
 
     var assemblyInfos = targets.Select(a =>
     {
@@ -110,7 +126,95 @@ static AnalysisResult BuildAnalysisResult(string path, string? prefix, string? a
         assemblyInfos,
         allTypes,
         deps,
-        typeMetrics);
+        typeMetrics,
+        analysisLevel);
+}
+
+static IReadOnlyList<TypeMetrics> EnrichWithSemanticAnalysis(
+    IReadOnlyList<TypeMetrics> typeMetrics,
+    IReadOnlyList<TypeNodeInfo> allTypes,
+    IReadOnlyList<Microsoft.CodeAnalysis.SyntaxTree> syntaxTrees,
+    CompilationResult compilationResult)
+{
+    // O(1) lookups
+    var treeByPath = new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>(StringComparer.Ordinal);
+    var sourceSet = compilationResult.Compilation?.SyntaxTrees ?? syntaxTrees;
+    foreach (var tree in sourceSet)
+    {
+        if (!string.IsNullOrEmpty(tree.FilePath))
+            treeByPath.TryAdd(tree.FilePath, tree);
+    }
+
+    var typeInfoByName = new Dictionary<string, TypeNodeInfo>();
+    foreach (var t in allTypes)
+        typeInfoByName.TryAdd(t.Name, t);
+
+    // Build typeName -> TypeDeclarationSyntax lookup
+    var typeDeclLookup = new Dictionary<string, Microsoft.CodeAnalysis.CSharp.Syntax.TypeDeclarationSyntax>();
+    foreach (var type in allTypes)
+    {
+        if (type.Kind is "enum" or "delegate") continue;
+        if (!treeByPath.TryGetValue(type.FilePath, out var tree)) continue;
+
+        var root = tree.GetRoot();
+        var baseName = type.Name.Split('<')[0];
+        var typeDecl = root.DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.TypeDeclarationSyntax>()
+            .FirstOrDefault(td => td.Identifier.Text == baseName);
+        if (typeDecl is not null)
+            typeDeclLookup.TryAdd(type.Name, typeDecl);
+    }
+
+    // SemanticModel cache (one per tree)
+    var modelCache = new Dictionary<Microsoft.CodeAnalysis.SyntaxTree, Microsoft.CodeAnalysis.SemanticModel>();
+
+    var enriched = new List<TypeMetrics>(typeMetrics.Count);
+    foreach (var metrics in typeMetrics)
+    {
+        double? lcom = null;
+        if (typeDeclLookup.TryGetValue(metrics.TypeName, out var typeDecl))
+        {
+            Microsoft.CodeAnalysis.SemanticModel? model = null;
+            if (compilationResult.Compilation is not null)
+            {
+                var tree = typeDecl.SyntaxTree;
+                if (!modelCache.TryGetValue(tree, out model))
+                {
+                    model = compilationResult.Compilation.GetSemanticModel(tree);
+                    modelCache[tree] = model;
+                }
+            }
+
+            lcom = LcomCalculator.Calculate(typeDecl, model);
+        }
+
+        typeInfoByName.TryGetValue(metrics.TypeName, out var typeInfo);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo!, lcom);
+
+        enriched.Add(metrics with
+        {
+            Lcom = lcom,
+            CodeSmells = smells.Count > 0 ? smells : null
+        });
+    }
+
+    return enriched;
+}
+
+static string ResolveProjectRoot(string path)
+{
+    // Walk up to find ProjectSettings/ProjectVersion.txt
+    var dir = Path.GetFullPath(path);
+    for (var i = 0; i < 5; i++)
+    {
+        if (File.Exists(Path.Combine(dir, "ProjectSettings", "ProjectVersion.txt")))
+            return dir;
+        var parent = Directory.GetParent(dir)?.FullName;
+        if (parent is null || parent == dir) break;
+        dir = parent;
+    }
+
+    return Path.GetFullPath(path);
 }
 
 static IReadOnlyList<AsmdefInfo> FilterAssemblies(

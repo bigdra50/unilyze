@@ -9,7 +9,8 @@ public sealed record AnalysisResult(
     IReadOnlyList<AssemblyInfo> Assemblies,
     IReadOnlyList<TypeNodeInfo> Types,
     IReadOnlyList<TypeDependency> Dependencies,
-    IReadOnlyList<TypeMetrics>? TypeMetrics = null);
+    IReadOnlyList<TypeMetrics>? TypeMetrics = null,
+    string? AnalysisLevel = null);
 
 public sealed record AssemblyInfo(
     string Name,
@@ -22,6 +23,9 @@ public sealed record AssemblyInfo(
     WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    Converters = [typeof(JsonStringEnumConverter<DependencyKind>)])]
+    Converters = [
+        typeof(JsonStringEnumConverter<DependencyKind>),
+        typeof(JsonStringEnumConverter<CodeSmellKind>),
+        typeof(JsonStringEnumConverter<SmellSeverity>)])]
 [JsonSerializable(typeof(AnalysisResult))]
 internal partial class AnalysisJsonContext : JsonSerializerContext;

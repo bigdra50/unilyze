@@ -713,11 +713,17 @@ badgeEl.addEventListener('mouseover',e=>{
     if(!m) return;
     h='<div class="bh" style="color:'+healthColor(m.codeHealth)+'">'+esc(m.typeName)+'</div>';
     h+='<div class="br"><span class="bk">health</span><span class="bv" style="color:'+healthColor(m.codeHealth)+'">'+m.codeHealth+'</span></div>';
-    h+='<div class="br"><span class="bk">CC</span><span class="bv">avg '+m.averageCognitiveComplexity+' / max '+m.maxCognitiveComplexity+'</span></div>';
+    h+='<div class="br"><span class="bk">CogCC</span><span class="bv">avg '+m.averageCognitiveComplexity+' / max '+m.maxCognitiveComplexity+'</span></div>';
+    h+='<div class="br"><span class="bk">CycCC</span><span class="bv">avg '+m.averageCyclomaticComplexity+' / max '+m.maxCyclomaticComplexity+'</span></div>';
+    h+='<div class="br"><span class="bk">nest</span><span class="bv">max '+m.maxNestingDepth+'</span></div>';
     h+='<div class="br"><span class="bk">LOC</span><span class="bv">'+m.lineCount+'</span></div>';
     h+='<div class="br"><span class="bk">methods</span><span class="bv">'+m.methodCount+'</span></div>';
+    if(m.lcom!=null)
+      h+='<div class="br"><span class="bk">LCOM</span><span class="bv'+(m.lcom>=0.8?' bw':'')+'">'+(+m.lcom).toFixed(2)+'</span></div>';
     if(m.excessiveParameterMethodCount>0)
       h+='<div class="br"><span class="bk">!</span><span class="bw">'+m.excessiveParameterMethodCount+' methods >4 params</span></div>';
+    if(m.codeSmells&&m.codeSmells.length)
+      h+='<div class="br"><span class="bk">smells</span><span class="bw">'+m.codeSmells.length+'</span></div>';
   }
   btipEl.innerHTML=h;
   const r=b.getBoundingClientRect();
@@ -751,11 +757,23 @@ cy.on('tap','node[nodeType="type"]',e=>{
     h+='<div class="section-title">Code Health</div>';
     h+='<div class="member"><span class="badge" style="background:'+hcol+';color:#0b0f19;font-weight:600">'+mx.codeHealth+'</span>';
     h+='<span class="n">Score</span></div>';
-    h+='<div class="member"><span class="badge">CC</span><span class="n">avg '+mx.averageCognitiveComplexity+' / max '+mx.maxCognitiveComplexity+'</span></div>';
+    h+='<div class="member"><span class="badge">CogCC</span><span class="n">avg '+mx.averageCognitiveComplexity+' / max '+mx.maxCognitiveComplexity+'</span></div>';
+    h+='<div class="member"><span class="badge">CycCC</span><span class="n">avg '+mx.averageCyclomaticComplexity+' / max '+mx.maxCyclomaticComplexity+'</span></div>';
+    h+='<div class="member"><span class="badge">Nest</span><span class="n">max '+mx.maxNestingDepth+'</span></div>';
     h+='<div class="member"><span class="badge">LOC</span><span class="n">'+mx.lineCount+' lines</span></div>';
     h+='<div class="member"><span class="badge">M</span><span class="n">'+mx.methodCount+' methods</span></div>';
+    if(mx.lcom!=null)
+      h+='<div class="member"><span class="badge"'+(mx.lcom>=0.8?' style="color:#f97583"':'')+'>LCOM</span><span class="n">'+(+mx.lcom).toFixed(2)+'</span></div>';
     if(mx.excessiveParameterMethodCount>0)
       h+='<div class="member"><span class="badge" style="color:#f97583">!</span><span class="n">'+mx.excessiveParameterMethodCount+' methods with >4 params</span></div>';
+    if(mx.codeSmells&&mx.codeSmells.length){
+      h+='<div class="section-title">Code Smells ('+mx.codeSmells.length+')</div>';
+      mx.codeSmells.forEach(s=>{
+        const sc=s.severity==='Critical'?'#ff7b72':'#e3b341';
+        h+='<div class="member"><span class="badge" style="color:'+sc+'">'+s.severity[0]+'</span>';
+        h+='<span class="n">'+esc(s.kind)+(s.methodName?' &middot; '+esc(s.methodName):'')+' &middot; '+esc(s.message)+'</span></div>';
+      });
+    }
   }
 
   if(t.baseType){h+='<div class="section-title">Base Type</div>';
@@ -774,7 +792,10 @@ cy.on('tap','node[nodeType="type"]',e=>{
       let ccBadge='';
       if(m.cognitiveComplexity!=null){
         const ccCol=m.cognitiveComplexity>15?'#f97583':m.cognitiveComplexity>8?'#e3b341':'#7ee787';
-        ccBadge='<span class="badge" style="color:'+ccCol+'">CC:'+m.cognitiveComplexity+'</span>';
+        ccBadge='<span class="badge" style="color:'+ccCol+'">CogCC:'+m.cognitiveComplexity+'</span>';
+        if(m.cyclomaticComplexity!=null) ccBadge+='<span class="badge">CycCC:'+m.cyclomaticComplexity+'</span>';
+        if(m.maxNestingDepth!=null&&m.maxNestingDepth>0) ccBadge+='<span class="badge">D:'+m.maxNestingDepth+'</span>';
+        if(m.lineCount>0) ccBadge+='<span class="badge">'+m.lineCount+'L</span>';
       }
       h+='<div class="member"><span class="badge">'+m.memberKind[0]+'</span>';
       h+=ccBadge;
@@ -907,7 +928,12 @@ function showTip(node,px,py){
     h+='<div class="tm">'+esc(mods+' '+t.kind)+' in '+esc(t.namespace||'(global)');
     if(tmx) h+=' &middot; Health: <span style="color:'+healthColor(tmx.codeHealth)+'">'+tmx.codeHealth+'</span>';
     h+='</div>';
-    if(tmx) h+='<div class="tl"><span class="tk">CC</span><span class="tn">avg '+tmx.averageCognitiveComplexity+' / max '+tmx.maxCognitiveComplexity+'</span></div>';
+    if(tmx){
+      h+='<div class="tl"><span class="tk">CogCC</span><span class="tn">avg '+tmx.averageCognitiveComplexity+' / max '+tmx.maxCognitiveComplexity+'</span></div>';
+      h+='<div class="tl"><span class="tk">CycCC</span><span class="tn">avg '+tmx.averageCyclomaticComplexity+' / max '+tmx.maxCyclomaticComplexity+'</span></div>';
+      if(tmx.lcom!=null) h+='<div class="tl"><span class="tk">LCOM</span><span class="tn">'+(+tmx.lcom).toFixed(2)+'</span></div>';
+      if(tmx.codeSmells&&tmx.codeSmells.length) h+='<div class="tl"><span class="tk" style="color:#f97583">smells</span><span class="tn">'+tmx.codeSmells.length+'</span></div>';
+    }
     if(t.baseType) h+='<div class="tl"><span class="tk">base</span><span class="tt">'+esc(t.baseType)+'</span></div>';
     if(t.interfaces&&t.interfaces.length)
       h+='<div class="tl"><span class="tk">impl</span><span class="tt">'+esc(t.interfaces.join(', '))+'</span></div>';

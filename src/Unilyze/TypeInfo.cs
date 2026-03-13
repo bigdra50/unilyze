@@ -49,19 +49,31 @@ public sealed record MemberInfo(
     IReadOnlyList<string> Modifiers,
     IReadOnlyList<ParameterInfo> Parameters,
     IReadOnlyList<AttributeInfo> Attributes,
-    int? CognitiveComplexity = null);
+    int? CognitiveComplexity = null,
+    int? CyclomaticComplexity = null,
+    int? MaxNestingDepth = null,
+    int LineCount = 0);
+
+public sealed record AnalyzeDirectoryResult(
+    IReadOnlyList<TypeNodeInfo> Types,
+    IReadOnlyList<SyntaxTree> SyntaxTrees);
 
 public static class TypeAnalyzer
 {
     public static IReadOnlyList<TypeNodeInfo> AnalyzeDirectory(string directory, string assemblyName)
+        => AnalyzeDirectoryWithTrees(directory, assemblyName).Types;
+
+    public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(string directory, string assemblyName)
     {
         var csFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories);
         var rawTypes = new List<TypeNodeInfo>();
+        var trees = new List<SyntaxTree>();
 
         foreach (var file in csFiles)
         {
             var source = File.ReadAllText(file);
             var tree = CSharpSyntaxTree.ParseText(source, path: file);
+            trees.Add(tree);
             var root = tree.GetRoot();
             rawTypes.AddRange(ExtractTypes(root, assemblyName, file));
         }
@@ -72,7 +84,7 @@ public static class TypeAnalyzer
         var resolved = rawTypes.Select(t => ResolveBaseTypes(t, knownInterfaces)).ToList();
 
         // B4: partial マージ
-        return MergePartialTypes(resolved);
+        return new AnalyzeDirectoryResult(MergePartialTypes(resolved), trees);
     }
 
     // --- Phase 1: Raw extraction ---
@@ -293,11 +305,15 @@ public static class TypeAnalyzer
                             p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
                         .ToList();
                     var bodyNode = (SyntaxNode?)method.Body ?? method.ExpressionBody;
-                    var cc = bodyNode != null ? CognitiveComplexity.Calculate(bodyNode) : 0;
+                    var cogCC = bodyNode != null ? CognitiveComplexity.Calculate(bodyNode) : 0;
+                    var cycCC = bodyNode != null ? CyclomaticComplexity.Calculate(bodyNode) : 1;
+                    var nestDepth = bodyNode != null ? NestingDepth.Calculate(bodyNode) : 0;
+                    var methodSpan = method.GetLocation().GetLineSpan();
+                    var methodLineCount = methodSpan.EndLinePosition.Line - methodSpan.StartLinePosition.Line + 1;
                     yield return new MemberInfo(
                         method.Identifier.Text, method.ReturnType.ToString(), "Method",
                         GetModifiers(method.Modifiers), methodParams,
-                        GetAttributeInfos(method.AttributeLists), cc);
+                        GetAttributeInfos(method.AttributeLists), cogCC, cycCC, nestDepth, methodLineCount);
                     break;
 
                 // N2: Event declarations

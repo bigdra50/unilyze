@@ -3,6 +3,8 @@ namespace Unilyze;
 public sealed record MethodMetrics(
     string MethodName,
     int CognitiveComplexity,
+    int CyclomaticComplexity,
+    int MaxNestingDepth,
     int ParameterCount,
     int LineCount);
 
@@ -14,9 +16,13 @@ public sealed record TypeMetrics(
     int MaxNestingDepth,
     double AverageCognitiveComplexity,
     int MaxCognitiveComplexity,
+    double AverageCyclomaticComplexity,
+    int MaxCyclomaticComplexity,
     int ExcessiveParameterMethodCount,
     double CodeHealth,
-    IReadOnlyList<MethodMetrics> Methods);
+    IReadOnlyList<MethodMetrics> Methods,
+    double? Lcom = null,
+    IReadOnlyList<CodeSmell>? CodeSmells = null);
 
 public sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,
@@ -62,17 +68,21 @@ public static class CodeHealthCalculator
             .Select(m => new MethodMetrics(
                 m.Name,
                 m.CognitiveComplexity!.Value,
+                m.CyclomaticComplexity ?? 1,
+                m.MaxNestingDepth ?? 0,
                 m.Parameters.Count,
-                0))
+                m.LineCount))
             .ToList();
 
         var methodCount = methods.Count;
-        var avgCc = methodCount > 0 ? methods.Average(m => (double)m.CognitiveComplexity) : 0.0;
-        var maxCc = methodCount > 0 ? methods.Max(m => m.CognitiveComplexity) : 0;
+        var avgCogCc = methodCount > 0 ? methods.Average(m => (double)m.CognitiveComplexity) : 0.0;
+        var maxCogCc = methodCount > 0 ? methods.Max(m => m.CognitiveComplexity) : 0;
+        var avgCycCc = methodCount > 0 ? methods.Average(m => (double)m.CyclomaticComplexity) : 0.0;
+        var maxCycCc = methodCount > 0 ? methods.Max(m => m.CyclomaticComplexity) : 0;
         var excessiveParams = methods.Count(m => m.ParameterCount > 4);
-        var maxNesting = EstimateMaxNestingDepth(type);
+        var maxNesting = methodCount > 0 ? methods.Max(m => m.MaxNestingDepth) : 0;
 
-        var health = CalculateHealthScore(avgCc, maxCc, type.LineCount, methodCount, maxNesting, excessiveParams);
+        var health = CalculateHealthScore(avgCogCc, maxCogCc, type.LineCount, methodCount, maxNesting, excessiveParams);
 
         return new TypeMetrics(
             type.Name,
@@ -80,8 +90,10 @@ public static class CodeHealthCalculator
             type.LineCount,
             methodCount,
             maxNesting,
-            Math.Round(avgCc, 1),
-            maxCc,
+            Math.Round(avgCogCc, 1),
+            maxCogCc,
+            Math.Round(avgCycCc, 1),
+            maxCycCc,
             excessiveParams,
             Math.Round(health, 1),
             methods);
@@ -124,26 +136,4 @@ public static class CodeHealthCalculator
         }
     }
 
-    static int EstimateMaxNestingDepth(TypeNodeInfo type)
-    {
-        // Use CC as a proxy: high CC implies deep nesting
-        // A rough heuristic: max nesting ~ sqrt(maxCC)
-        var maxCc = type.Members
-            .Where(m => m.CognitiveComplexity.HasValue)
-            .Select(m => m.CognitiveComplexity!.Value)
-            .DefaultIfEmpty(0)
-            .Max();
-
-        return maxCc switch
-        {
-            0 => 0,
-            <= 3 => 1,
-            <= 8 => 2,
-            <= 15 => 3,
-            <= 25 => 4,
-            <= 40 => 5,
-            <= 60 => 6,
-            _ => 7
-        };
-    }
 }
