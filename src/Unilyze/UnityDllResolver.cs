@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Unilyze;
 
 public enum AnalysisLevel
@@ -51,7 +53,22 @@ public static class UnityDllResolver
 
         paths.AddRange(packageDlls);
 
-        return new ResolvedDlls(level, paths.Distinct().ToList());
+        return new ResolvedDlls(level, paths.Distinct(StringComparer.OrdinalIgnoreCase).ToList());
+    }
+
+    public static IReadOnlyList<string> GetPreprocessorDefines(string projectRoot)
+    {
+        var version = DetectUnityVersion(projectRoot);
+        if (version is null) return [];
+
+        var defines = new List<string> { "UNITY_EDITOR" };
+
+        // Parse major version from "2022.3.45f1" or "6000.3.0f1"
+        var dotIndex = version.IndexOf('.');
+        if (dotIndex > 0 && int.TryParse(version[..dotIndex], out _))
+            defines.Add($"UNITY_{version[..dotIndex]}");
+
+        return defines;
     }
 
     static string? DetectUnityVersion(string projectRoot)
@@ -81,7 +98,9 @@ public static class UnityDllResolver
     static IEnumerable<string> GetHubEditorRoots()
     {
         // 1. Environment variable (highest priority)
-        var envPath = Environment.GetEnvironmentVariable("UNITY_EDITOR_PATH");
+        // Points to the parent directory containing version folders (e.g. /Applications/Unity/Hub/Editor)
+        var envPath = Environment.GetEnvironmentVariable("UNILYZE_EDITORS_ROOT")
+                   ?? Environment.GetEnvironmentVariable("UNITY_EDITOR_PATH");
         if (!string.IsNullOrEmpty(envPath))
             yield return envPath;
 
@@ -94,52 +113,67 @@ public static class UnityDllResolver
                 yield return secondaryPath;
         }
 
-        // 3. Default Hub install locations
-        if (OperatingSystem.IsMacOS())
+        // 3. Default Hub install locations (OS-specific)
+        foreach (var root in GetDefaultEditorRoots())
+            yield return root;
+    }
+
+    static IEnumerable<string> GetDefaultEditorRoots()
+    {
+        var roots = OperatingSystem.IsMacOS() ? GetMacEditorRoots()
+                  : OperatingSystem.IsLinux() ? GetLinuxEditorRoots()
+                  : OperatingSystem.IsWindows() ? GetWindowsDriveEditorRoots()
+                  : Enumerable.Empty<string>();
+
+        foreach (var root in roots)
+            yield return root;
+    }
+
+    static IEnumerable<string> GetMacEditorRoots()
+    {
+        yield return "/Applications/Unity/Hub/Editor";
+        yield return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Unity", "Hub", "Editor");
+    }
+
+    static IEnumerable<string> GetLinuxEditorRoots()
+    {
+        yield return "/opt/Unity/Hub/Editor";
+        yield return "/usr/local/Unity/Hub/Editor";
+        yield return Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Unity", "Hub", "Editor");
+    }
+
+    static IEnumerable<string> GetWindowsDriveEditorRoots()
+    {
+        // C: first for consistency with typical install location
+        yield return @"C:\Program Files\Unity\Hub\Editor";
+
+        foreach (var drive in DriveInfo.GetDrives())
         {
-            yield return "/Applications/Unity/Hub/Editor";
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            yield return Path.Combine(home, "Unity", "Hub", "Editor");
-        }
-        else if (OperatingSystem.IsWindows())
-        {
-            yield return @"C:\Program Files\Unity\Hub\Editor";
-            // Check all available drives
-            foreach (var drive in DriveInfo.GetDrives())
-            {
-                if (drive.DriveType != DriveType.Fixed) continue;
-                var path = Path.Combine(drive.Name, "Program Files", "Unity", "Hub", "Editor");
-                yield return path;
-            }
-        }
-        else if (OperatingSystem.IsLinux())
-        {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            yield return Path.Combine(home, "Unity", "Hub", "Editor");
+            if (drive.DriveType != DriveType.Fixed) continue;
+            yield return Path.Combine(drive.Name, "Program Files", "Unity", "Hub", "Editor");
         }
     }
 
     static string? GetHubConfigPath()
     {
-        string? configDir;
-        if (OperatingSystem.IsMacOS())
-        {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            configDir = Path.Combine(home, "Library", "Application Support", "UnityHub");
-        }
-        else if (OperatingSystem.IsWindows())
-        {
-            configDir = Path.Combine(
+        var configDir = GetHubConfigDir();
+        return Directory.Exists(configDir) ? configDir : null;
+    }
+
+    static string GetHubConfigDir()
+    {
+        if (OperatingSystem.IsWindows())
+            return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "UnityHub");
-        }
-        else
-        {
-            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            configDir = Path.Combine(home, ".config", "UnityHub");
-        }
 
-        return Directory.Exists(configDir) ? configDir : null;
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        return OperatingSystem.IsMacOS()
+            ? Path.Combine(home, "Library", "Application Support", "UnityHub")
+            : Path.Combine(home, ".config", "UnityHub");
     }
 
     static string? ReadHubSecondaryInstallPath(string hubConfigDir)
@@ -149,10 +183,12 @@ public static class UnityDllResolver
 
         try
         {
-            var content = File.ReadAllText(file).Trim().Trim('"');
-            return !string.IsNullOrEmpty(content) && Directory.Exists(content) ? content : null;
+            var content = File.ReadAllText(file).Trim();
+            // JSON deserialization handles escape sequences (e.g. "D:\\Unity")
+            var path = JsonSerializer.Deserialize<string>(content) ?? content.Trim('"');
+            return !string.IsNullOrEmpty(path) && Directory.Exists(path) ? path : null;
         }
-        catch
+        catch (JsonException)
         {
             return null;
         }
