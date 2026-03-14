@@ -51,8 +51,5 @@ jobs:
       - name: Pack
         run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
 
-      - name: Install tool from local package
-        run: dotnet tool install --tool-path ./artifacts/tools Unilyze --add-source ./artifacts/nupkg --version 0.1.0
-
-      - name: Smoke test
-        run: ./artifacts/tools/unilyze --version
+      - name: Release smoke
+        run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0

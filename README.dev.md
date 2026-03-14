@@ -6,17 +6,27 @@
 ## Requirements
 
 - unilyze のサポート対象は `.NET 8.0 or later`
-- 開発時は現在の target frameworks (`net8.0;net9.0;net10.0`) をビルドできる SDK を使う
-- フルのローカル test matrix を回す場合は `net8.0;net9.0;net10.0` の runtime を入れる
+- 日常開発は最新 SDK 1つでよい。現時点の標準は `.NET SDK 10.0.103`
+- フルのローカル test matrix を回す場合だけ `net8.0;net9.0;net10.0` の runtime を入れる
 
 CI matrix は `net8.0;net9.0;net10.0`。
+
+## Verified Development Environment
+
+2026-03-15 時点でローカル確認した環境:
+
+- macOS 15.5 (`arm64`)
+- .NET SDK 10.0.103
+- Microsoft.NETCore.App 10.0.3
+
+Windows は開発・検証対象に含めていない。README に記載した確認済み環境だけを外部向けの基準にする。
 
 ## Repository Map
 
 - [src/Unilyze](src/Unilyze): CLI 本体
+- [scripts/release-smoke.sh](scripts/release-smoke.sh): 標準 `.NET tool` 導線の release smoke
 - [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit テスト
 - [docs/metrics.md](docs/metrics.md): メトリクス定義
-- [tasks/nuget-publish-readiness-roadmap.md](tasks/nuget-publish-readiness-roadmap.md): 公開 readiness の整理
 - [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke
 
 ## Local Validation
@@ -26,13 +36,13 @@ CI matrix は `net8.0;net9.0;net10.0`。
 通常は以下を回せば十分。
 
 ```bash
-dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 --no-restore -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 --no-restore -v minimal
 ```
 
-全 runtime が入っている環境では `net8.0` も含めて回す。
+互換性確認をローカルでもやる場合だけ、追加で `net8.0` / `net9.0` を回す。
 
 ```bash
+dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 --no-restore -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net8.0 --no-restore -v minimal
 ```
 
@@ -40,20 +50,22 @@ restore から行う場合:
 
 ```bash
 dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
-dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 -v minimal
 ```
 
 ### Pack / Install Smoke
 
-CI では `dotnet pack` 後に `dotnet tool install` して `unilyze --version` を確認する。
+公開判定は、標準 `.NET tool` 導線を検証する [scripts/release-smoke.sh](scripts/release-smoke.sh) を基準にする。
+
+この script は `DOTNET_ROOT` を上書きしない。呼び出し元の shell 環境のまま `dotnet tool install --tool-path ...` と生成 shim の実行を確認する。
 
 ローカルの macOS では、既定の `dotnet pack` が `PackAsTool` の並列 pack 経路で停滞することがある。再現した場合は並列を切って実行する。
 
 ```bash
-dotnet msbuild src/Unilyze/Unilyze.csproj -t:Pack -p:NoBuild=true -m:1 -p:BuildInParallel=false
-dotnet tool install --tool-path ./artifacts/tools-smoke Unilyze --add-source ./src/Unilyze/nupkg --version 0.1.0
-./artifacts/tools-smoke/unilyze --version
+dotnet restore src/Unilyze/Unilyze.csproj
+dotnet build src/Unilyze/Unilyze.csproj -c Release --no-restore
+dotnet msbuild src/Unilyze/Unilyze.csproj -t:Pack -p:Configuration=Release -p:NoBuild=true -p:PackageOutputPath="$PWD/artifacts/nupkg" -m:1 -p:BuildInParallel=false
+bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 ```
 
 `dotnet pack` を通常経路で使う場合:
@@ -61,8 +73,7 @@ dotnet tool install --tool-path ./artifacts/tools-smoke Unilyze --add-source ./s
 ```bash
 dotnet restore src/Unilyze/Unilyze.csproj
 dotnet pack src/Unilyze/Unilyze.csproj -c Release -o ./artifacts/nupkg
-dotnet tool install --tool-path ./artifacts/tools-smoke Unilyze --add-source ./artifacts/nupkg --version 0.1.0
-./artifacts/tools-smoke/unilyze --version
+bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 ```
 
 ## Current Implementation Notes
@@ -108,7 +119,7 @@ dotnet tool install --tool-path ./artifacts/tools-smoke Unilyze --add-source ./a
 
 - `--no-open` でブラウザ自動起動を抑止
 - offline fallback でも types, dependencies, hotspots, cycles, assembly coupling は見える
-- graph 資産自体はまだ完全 self-contained ではない
+- graph 資産自体はまだ完全 self-contained ではない。この制約は README に明記する
 
 関連ファイル:
 
@@ -124,11 +135,11 @@ dotnet tool install --tool-path ./artifacts/tools-smoke Unilyze --add-source ./a
 4. README / docs / package metadata の説明が実装と一致していることを確認する
 5. HTML fallback と `--no-open` を壊していないことを確認する
 
-公開 readiness の詳細は [tasks/nuget-publish-readiness-roadmap.md](tasks/nuget-publish-readiness-roadmap.md) を参照。
-
 ## Known Local Caveats
 
 - macOS では `dotnet pack` の既定並列経路が停滞することがある
 - `dotnet msbuild ... -t:Pack -m:1 -p:BuildInParallel=false` は通る
 - `GenerateNuspec` 単体と `dotnet tool install` は問題なく通るので、パッケージ内容の破損ではなく pack 実行経路の問題として扱う
 - 手元に一部 runtime が入っていない場合は、その TFM の最終確認を CI に委ねる
+- CLI E2E は apphost 直叩きではなく `dotnet <Unilyze.dll>` で実行する。runtime 解決を `dotnet test` 側と揃えるため
+- 複数の `dotnet` install root が混在している環境では、release smoke が shim 実行の問題を露出させる。script 側では回避しない
