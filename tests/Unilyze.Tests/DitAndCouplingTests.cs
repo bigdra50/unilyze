@@ -88,6 +88,54 @@ public class DitAndCouplingTests
         Assert.Equal(0, CalcDitSemantic("class C { }"));
     }
 
+    [Fact]
+    public void DIT_ClassNamedImage_Syntactic_One()
+    {
+        var code = """
+            class Image { }
+            class C : Image { }
+            """;
+        Assert.Equal(1, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_ClassNamedItem_Syntactic_One()
+    {
+        var code = """
+            class Item { }
+            class C : Item { }
+            """;
+        Assert.Equal(1, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_NonPrefixedInterface_Syntactic_Zero()
+    {
+        var code = """
+            interface Comparable { }
+            class C : Comparable { }
+            """;
+        Assert.Equal(0, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_ExternalType_Syntactic_One()
+    {
+        // External type not in syntax tree: assume class (DIT=1)
+        var code = "class C : Image { }";
+        Assert.Equal(1, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_Semantic_InterfaceOnly_Zero()
+    {
+        var code = """
+            interface IFoo { }
+            class C : IFoo { }
+            """;
+        Assert.Equal(0, CalcDitSemantic(code));
+    }
+
     // --- Ca/Ce/Instability tests ---
 
     static IReadOnlyDictionary<string, CouplingInfo> CalcCoupling(
