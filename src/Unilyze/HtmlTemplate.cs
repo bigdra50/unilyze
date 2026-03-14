@@ -9,14 +9,12 @@ internal static class HtmlTemplate
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>__TITLE__ - Type Dependencies</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Recursive:wght,CASL,MONO@300..800,0..1,0..1&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0b0f19;--surface:#131825;--border:#1e2538;
   --text:#c9d1d9;--dim:#6e7681;--accent:#58a6ff;
-  --font:'Recursive',monospace;
+  --font:'SFMono-Regular','Cascadia Code','Fira Code','Consolas',monospace;
 }
 body{
   background:radial-gradient(circle,#141b2d 1px,transparent 1px) 0 0/24px 24px,var(--bg);
@@ -216,6 +214,69 @@ body{
 }
 .coup-table th{background:var(--bg);color:var(--dim);font-weight:600}
 .coup-table .hi{color:#f97583}
+body.offline-mode{height:auto;overflow:auto}
+body.offline-mode .main{min-height:calc(100vh - 70px);overflow:visible}
+body.offline-mode #cy{overflow:visible}
+body.offline-mode #badges,
+body.offline-mode .tip,
+body.offline-mode .btip,
+body.offline-mode .left-panel{display:none!important}
+body.offline-mode .panel{
+  position:fixed;top:58px;bottom:16px;right:16px;border:1px solid var(--border);
+  border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.45)
+}
+.offline-report{padding:18px;display:grid;gap:16px}
+.offline-banner{
+  border:1px solid rgba(227,179,65,.45);background:rgba(227,179,65,.08);
+  border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.6;color:var(--text)
+}
+.offline-banner b{color:#e3b341}
+.offline-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.offline-card,.offline-section{
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:14px
+}
+.offline-card .k{
+  font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:6px
+}
+.offline-card .v{font-size:22px;font-weight:700;color:var(--text)}
+.offline-card .s{margin-top:4px;font-size:11px;color:var(--dim)}
+.offline-section h2{font-size:13px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.offline-section .sub{font-size:11px;color:var(--dim);margin-bottom:10px}
+.offline-table-wrap{overflow:auto}
+.offline-table{
+  width:100%;border-collapse:collapse;font-size:11px;font-variation-settings:'MONO' 1
+}
+.offline-table th,.offline-table td{
+  padding:7px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top
+}
+.offline-table th{
+  position:sticky;top:0;background:var(--surface);color:var(--dim);font-weight:600;z-index:1
+}
+.offline-table tr:hover td{background:rgba(88,166,255,.05)}
+.offline-link{
+  color:var(--accent);cursor:pointer;text-decoration:none;background:none;border:none;
+  padding:0;font:inherit;text-align:left
+}
+.offline-link:hover{text-decoration:underline}
+.offline-pills{display:flex;gap:6px;flex-wrap:wrap}
+.offline-pill{
+  display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;
+  padding:2px 8px;font-size:10px;color:var(--text);background:var(--bg)
+}
+.offline-empty{font-size:11px;color:var(--dim)}
+.offline-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.offline-list{display:grid;gap:8px}
+.offline-item{
+  border:1px solid var(--border);border-radius:6px;padding:10px 12px;background:rgba(11,15,25,.35)
+}
+.offline-item .t{font-size:11px;color:var(--text)}
+.offline-item .m{font-size:10px;color:var(--dim);margin-top:4px}
+@media (max-width: 960px){
+  body.offline-mode .panel{
+    position:fixed;left:12px;right:12px;top:72px;bottom:12px;width:auto
+  }
+}
 </style>
 </head>
 <body>
@@ -276,6 +337,20 @@ body{
 <script>
 const DATA = __DATA_PLACEHOLDER__;
 
+function stripGenericArgs(name){
+  const v=(name||'').replace(/^global::/,'').replace(/\?$/,'');
+  const i=v.indexOf('<');
+  return i>=0 ? v.slice(0,i) : v;
+}
+function qualifiedName(ns,name){
+  const simple=stripGenericArgs(name);
+  return ns ? ns+'.'+simple : simple;
+}
+function typeKey(t){ return t.typeId || qualifiedName(t.namespace, t.name); }
+function metricKey(m){ return m.typeId || qualifiedName(m.namespace, m.typeName); }
+function depFromId(d){ return d.fromTypeId || d.fromType; }
+function depToId(d){ return d.toTypeId || d.toType; }
+
 const PAL = [
   '#58a6ff','#7ee787','#d2a8ff','#ffa657','#f97583',
   '#79c0ff','#ffd700','#f778ba','#56d364','#bc8cff','#e3b341','#a5d6ff'
@@ -306,11 +381,11 @@ asm.forEach((a,i)=>{ac[a.name]=PAL[i%PAL.length]});
 
 // Type lookup
 const tl = {};
-DATA.types.forEach(t=>{tl[t.name]=t});
+DATA.types.forEach(t=>{tl[typeKey(t)]=t});
 
 // TypeMetrics lookup
 const tm = {};
-(DATA.typeMetrics||[]).forEach(m=>{tm[m.typeName]=m});
+(DATA.typeMetrics||[]).forEach(m=>{tm[metricKey(m)]=m});
 
 function healthColor(score){
   if(score==null) return null;
@@ -321,13 +396,464 @@ function healthColor(score){
   return '#ff7b72';
 }
 
+function escapeHtml(value){
+  return String(value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function renderOfflineReport(){
+  document.body.classList.add('offline-mode');
+
+  const graphEl=document.getElementById('cy');
+  const searchEl=document.getElementById('q');
+  const statsEl=document.getElementById('st');
+  const legendEl=document.getElementById('lg');
+  const panelEl=document.getElementById('dp');
+  const panelContentEl=document.getElementById('dc');
+  const closeBtn=document.getElementById('cls');
+
+  ['bExp','bCol','bFit','bLay'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+
+  const typeStats=new Map();
+  DATA.types.forEach(t=>{
+    typeStats.set(typeKey(t),{outgoing:0,incoming:0});
+  });
+  (DATA.dependencies||[]).forEach(dep=>{
+    const fromId=depFromId(dep),toId=depToId(dep);
+    if(typeStats.has(fromId)) typeStats.get(fromId).outgoing++;
+    if(typeStats.has(toId)) typeStats.get(toId).incoming++;
+  });
+
+  const typeRows=DATA.types.map(t=>{
+    const id=typeKey(t);
+    const metrics=tm[id];
+    const stats=typeStats.get(id)||{outgoing:0,incoming:0};
+    return {
+      id,
+      name:t.name,
+      namespace:t.namespace||'(global)',
+      qualifiedName:t.qualifiedName||qualifiedName(t.namespace,t.name),
+      assembly:t.assembly,
+      kind:t.kind,
+      health:metrics?.codeHealth??null,
+      maxCogCC:metrics?.maxCognitiveComplexity??0,
+      cbo:metrics?.cbo??null,
+      dit:metrics?.dit??null,
+      smellCount:(metrics?.codeSmells||[]).length,
+      outgoing:stats.outgoing,
+      incoming:stats.incoming
+    };
+  }).sort((a,b)=>{
+    const ah=a.health??999,bh=b.health??999;
+    if(ah!==bh) return ah-bh;
+    return a.qualifiedName.localeCompare(b.qualifiedName);
+  });
+
+  const methodHotspots=[];
+  (DATA.typeMetrics||[]).forEach(typeMetric=>{
+    (typeMetric.methods||[]).forEach(method=>{
+      methodHotspots.push({
+        typeId:metricKey(typeMetric),
+        methodName:method.name,
+        typeName:typeMetric.typeName,
+        qualifiedName:typeMetric.qualifiedName||qualifiedName(typeMetric.namespace,typeMetric.typeName),
+        cogcc:method.cognitiveComplexity||0,
+        cyccc:method.cyclomaticComplexity||0,
+        loc:method.lineCount||0,
+        nest:method.maxNestingDepth||0
+      });
+    });
+  });
+  methodHotspots.sort((a,b)=>
+    (b.cogcc-a.cogcc)||
+    (b.cyccc-a.cyccc)||
+    (b.loc-a.loc)||
+    a.qualifiedName.localeCompare(b.qualifiedName));
+
+  const typeHotspots=(DATA.typeMetrics||[]).map(typeMetric=>({
+    typeId:metricKey(typeMetric),
+    typeName:typeMetric.typeName,
+    qualifiedName:typeMetric.qualifiedName||qualifiedName(typeMetric.namespace,typeMetric.typeName),
+    health:typeMetric.codeHealth??null,
+    cogcc:typeMetric.maxCognitiveComplexity||0,
+    cyccc:typeMetric.maxCyclomaticComplexity||0,
+    loc:typeMetric.lineCount||0,
+    nest:typeMetric.maxNestingDepth||0,
+    smells:(typeMetric.codeSmells||[]).length
+  })).sort((a,b)=>{
+    const ah=a.health??999,bh=b.health??999;
+    if(ah!==bh) return ah-bh;
+    return (b.cogcc-a.cogcc)||a.qualifiedName.localeCompare(b.qualifiedName);
+  });
+
+  function buildCycles(){
+    const adj=new Map();
+    DATA.types.forEach(t=>adj.set(typeKey(t),[]));
+    (DATA.dependencies||[]).forEach(dep=>{
+      const fromId=depFromId(dep),toId=depToId(dep);
+      if(adj.has(fromId)&&adj.has(toId)) adj.get(fromId).push(toId);
+    });
+
+    let index=0;
+    const stack=[];
+    const onStack=new Set();
+    const indexMap=new Map();
+    const lowMap=new Map();
+    const found=[];
+
+    function strongConnect(nodeId){
+      indexMap.set(nodeId,index);
+      lowMap.set(nodeId,index);
+      index++;
+      stack.push(nodeId);
+      onStack.add(nodeId);
+
+      (adj.get(nodeId)||[]).forEach(nextId=>{
+        if(!indexMap.has(nextId)){
+          strongConnect(nextId);
+          lowMap.set(nodeId,Math.min(lowMap.get(nodeId),lowMap.get(nextId)));
+        }
+        else if(onStack.has(nextId)){
+          lowMap.set(nodeId,Math.min(lowMap.get(nodeId),indexMap.get(nextId)));
+        }
+      });
+
+      if(lowMap.get(nodeId)===indexMap.get(nodeId)){
+        const component=[];
+        let currentId=null;
+        do{
+          currentId=stack.pop();
+          onStack.delete(currentId);
+          component.push(currentId);
+        } while(currentId!==nodeId);
+        if(component.length>1)
+          found.push(component.sort((a,b)=>(tl[a]?.name||a).localeCompare(tl[b]?.name||b)));
+      }
+    }
+
+    adj.forEach((_,nodeId)=>{
+      if(!indexMap.has(nodeId))
+        strongConnect(nodeId);
+    });
+
+    return found.sort((a,b)=>b.length-a.length);
+  }
+
+  function buildAssemblyData(){
+    const names=[...new Set(DATA.types.map(t=>t.assembly))].sort((a,b)=>a.localeCompare(b));
+    const matrix=new Map();
+    names.forEach(from=>{
+      const row=new Map();
+      names.forEach(to=>row.set(to,0));
+      matrix.set(from,row);
+    });
+
+    (DATA.dependencies||[]).forEach(dep=>{
+      const fromType=tl[depFromId(dep)];
+      const toType=tl[depToId(dep)];
+      if(!fromType||!toType||fromType.assembly===toType.assembly) return;
+      matrix.get(fromType.assembly).set(
+        toType.assembly,
+        matrix.get(fromType.assembly).get(toType.assembly)+1);
+    });
+
+    const coupling=names.map(name=>{
+      let ca=0,ce=0;
+      names.forEach(other=>{
+        if(other===name) return;
+        if(matrix.get(other).get(name)>0) ca++;
+        if(matrix.get(name).get(other)>0) ce++;
+      });
+      return {name,ca,ce,instability:ca+ce>0?ce/(ca+ce):0};
+    }).sort((a,b)=>b.instability-a.instability);
+
+    return {names,matrix,coupling};
+  }
+
+  const cycles=buildCycles();
+  const assemblyData=buildAssemblyData();
+  const avgHealthValues=(DATA.typeMetrics||[]).map(m=>m.codeHealth).filter(v=>v!=null);
+  const avgHealth=avgHealthValues.length
+    ? (avgHealthValues.reduce((sum,value)=>sum+value,0)/avgHealthValues.length).toFixed(1)
+    : null;
+
+  function renderTypeDetail(typeId){
+    const type=tl[typeId];
+    if(!type) return;
+
+    const metrics=tm[typeId];
+    const outgoing=(DATA.dependencies||[]).filter(dep=>depFromId(dep)===typeId);
+    const incoming=(DATA.dependencies||[]).filter(dep=>depToId(dep)===typeId);
+    const accent=ac[type.assembly]||'#6e7681';
+
+    let html='<h2 style="color:'+accent+'">'+escapeHtml(type.name)+'</h2>';
+    html+='<div class="meta">'+escapeHtml(type.kind)+' &middot; '+escapeHtml(type.assembly)+'</div>';
+    html+='<div class="meta">'+escapeHtml(type.qualifiedName||qualifiedName(type.namespace,type.name))+'</div>';
+
+    if(metrics){
+      html+='<div class="section-title">Metrics</div>';
+      html+='<div class="member"><span class="badge" style="color:'+healthColor(metrics.codeHealth)+'">Health</span><span class="n">'+metrics.codeHealth+'</span></div>';
+      html+='<div class="member"><span class="badge">CogCC</span><span class="n">avg '+metrics.averageCognitiveComplexity+' / max '+metrics.maxCognitiveComplexity+'</span></div>';
+      html+='<div class="member"><span class="badge">CycCC</span><span class="n">avg '+metrics.averageCyclomaticComplexity+' / max '+metrics.maxCyclomaticComplexity+'</span></div>';
+      html+='<div class="member"><span class="badge">LOC</span><span class="n">'+metrics.lineCount+' lines</span></div>';
+      html+='<div class="member"><span class="badge">M</span><span class="n">'+metrics.methodCount+' methods</span></div>';
+      if(metrics.cbo!=null)
+        html+='<div class="member"><span class="badge">CBO</span><span class="n">'+metrics.cbo+'</span></div>';
+      if(metrics.dit!=null)
+        html+='<div class="member"><span class="badge">DIT</span><span class="n">'+metrics.dit+'</span></div>';
+      if(metrics.lcom!=null)
+        html+='<div class="member"><span class="badge">LCOM</span><span class="n">'+(+metrics.lcom).toFixed(2)+'</span></div>';
+      if(metrics.instability!=null)
+        html+='<div class="member"><span class="badge">I</span><span class="n">'+(+metrics.instability).toFixed(2)+'</span></div>';
+      if(metrics.codeSmells&&metrics.codeSmells.length){
+        html+='<div class="section-title">Code Smells ('+metrics.codeSmells.length+')</div>';
+        metrics.codeSmells.forEach(smell=>{
+          html+='<div class="member"><span class="badge">'+escapeHtml(smell.severity[0])+'</span><span class="n">'+escapeHtml(smell.kind)+' &middot; '+escapeHtml(smell.message)+'</span></div>';
+        });
+      }
+    }
+
+    if(type.baseType){
+      html+='<div class="section-title">Base Type</div>';
+      html+='<div class="member"><span class="t">'+escapeHtml(type.baseType)+'</span></div>';
+    }
+
+    if(type.interfaces&&type.interfaces.length){
+      html+='<div class="section-title">Interfaces</div>';
+      type.interfaces.forEach(interfaceName=>{
+        html+='<div class="member"><span class="t">'+escapeHtml(interfaceName)+'</span></div>';
+      });
+    }
+
+    if(type.members&&type.members.length){
+      html+='<div class="section-title">Members ('+type.members.length+')</div>';
+      type.members.forEach(member=>{
+        html+='<div class="member"><span class="badge">'+escapeHtml(member.memberKind[0])+'</span><span class="n">'+escapeHtml(member.name)+'</span> <span class="t">'+escapeHtml(member.type)+'</span></div>';
+      });
+    }
+
+    if(outgoing.length){
+      html+='<div class="section-title">Depends On ('+outgoing.length+')</div>';
+      outgoing.forEach(dep=>{
+        const toType=tl[depToId(dep)];
+        html+='<div class="member"><span class="badge">'+escapeHtml(dep.kind)+'</span><span class="t">'+escapeHtml(toType?.qualifiedName||dep.toType)+'</span></div>';
+      });
+    }
+
+    if(incoming.length){
+      html+='<div class="section-title">Depended By ('+incoming.length+')</div>';
+      incoming.forEach(dep=>{
+        const fromType=tl[depFromId(dep)];
+        html+='<div class="member"><span class="badge">'+escapeHtml(dep.kind)+'</span><span class="t">'+escapeHtml(fromType?.qualifiedName||dep.fromType)+'</span></div>';
+      });
+    }
+
+    panelContentEl.innerHTML=html;
+    panelEl.classList.remove('hidden');
+  }
+
+  function renderLegend(){
+    let html='<b>Assemblies</b> ';
+    asm.forEach(assemblyInfo=>{
+      const color=ac[assemblyInfo.name]||'#6e7681';
+      html+='<div class="li"><div class="sw" style="background:'+color+'"></div>'+escapeHtml(assemblyInfo.name.split('.').pop())+'</div>';
+    });
+    html+='<div class="sep" style="width:1px;height:14px;background:#1e2538"></div><b>Edges</b> ';
+    Object.entries(DC).forEach(([kind,color])=>{
+      html+='<div class="li"><div class="el" style="border-bottom:2px solid '+color+'"></div>'+escapeHtml(kind)+'</div>';
+    });
+    legendEl.innerHTML=html;
+  }
+
+  function metricCell(value,formatter){
+    if(value==null) return '<span class="offline-empty">-</span>';
+    return formatter?formatter(value):escapeHtml(value);
+  }
+
+  function render(filterText){
+    const query=(filterText||'').trim().toLowerCase();
+    const matches=row=>!query||[
+      row.name,
+      row.namespace,
+      row.qualifiedName,
+      row.assembly,
+      row.kind
+    ].some(value=>String(value).toLowerCase().includes(query));
+
+    const filteredTypes=typeRows.filter(matches);
+    const filteredDeps=(DATA.dependencies||[])
+      .map(dep=>{
+        const fromType=tl[depFromId(dep)];
+        const toType=tl[depToId(dep)];
+        return {
+          dep,
+          fromLabel:fromType?.qualifiedName||dep.fromType,
+          toLabel:toType?.qualifiedName||dep.toType
+        };
+      })
+      .filter(item=>!query||[
+        item.fromLabel,
+        item.toLabel,
+        item.dep.kind
+      ].some(value=>String(value).toLowerCase().includes(query)));
+
+    const dependencyRows=query?filteredDeps:filteredDeps.slice(0,200);
+    const dependencyNote=!query&&filteredDeps.length>dependencyRows.length
+      ? '<div class="sub">Showing first '+dependencyRows.length+' of '+filteredDeps.length+' dependencies. Use search to narrow further.</div>'
+      : '<div class="sub">'+filteredDeps.length+' matching dependencies.</div>';
+
+    const badTypes=filteredTypes.filter(row=>row.health!=null).slice(0,10);
+    const hotMethodRows=methodHotspots
+      .filter(item=>!query||[
+        item.methodName,
+        item.typeName,
+        item.qualifiedName
+      ].some(value=>String(value).toLowerCase().includes(query)))
+      .slice(0,10);
+    const hotTypeRows=typeHotspots
+      .filter(item=>!query||[
+        item.typeName,
+        item.qualifiedName
+      ].some(value=>String(value).toLowerCase().includes(query)))
+      .slice(0,10);
+
+    graphEl.innerHTML='' +
+      '<div class="offline-report">' +
+        '<div class="offline-banner"><b>Offline report view</b><br>Interactive Cytoscape assets could not be loaded, so this viewer switched to a built-in report that still exposes types, dependencies, hotspots, cycles, and assembly coupling.</div>' +
+        '<div class="offline-grid">' +
+          '<div class="offline-card"><div class="k">Types</div><div class="v">'+DATA.types.length+'</div><div class="s">'+filteredTypes.length+' visible in current filter</div></div>' +
+          '<div class="offline-card"><div class="k">Dependencies</div><div class="v">'+DATA.dependencies.length+'</div><div class="s">'+filteredDeps.length+' visible in current filter</div></div>' +
+          '<div class="offline-card"><div class="k">Assemblies</div><div class="v">'+asm.length+'</div><div class="s">'+assemblyData.coupling.length+' coupling entries</div></div>' +
+          '<div class="offline-card"><div class="k">Avg Health</div><div class="v">'+(avgHealth??'-')+'</div><div class="s">'+cycles.length+' cycle'+(cycles.length===1?'':'s')+'</div></div>' +
+        '</div>' +
+        '<div class="offline-split" id="offline-hotspots">' +
+          '<section class="offline-section"><h2>Type Hotspots</h2><div class="sub">Lowest health types in current filter.</div>' +
+            (hotTypeRows.length
+              ? '<div class="offline-list">'+hotTypeRows.map(item=>
+                  '<div class="offline-item">' +
+                    '<button class="offline-link t" data-type-id="'+escapeHtml(item.typeId)+'">'+escapeHtml(item.qualifiedName)+'</button>' +
+                    '<div class="m">Health '+metricCell(item.health)+' · Max CogCC '+item.cogcc+' · Smells '+item.smells+'</div>' +
+                  '</div>').join('')+'</div>'
+              : '<div class="offline-empty">No type hotspots match the current filter.</div>') +
+          '</section>' +
+          '<section class="offline-section"><h2>Method Hotspots</h2><div class="sub">Highest complexity methods in current filter.</div>' +
+            (hotMethodRows.length
+              ? '<div class="offline-list">'+hotMethodRows.map(item=>
+                  '<div class="offline-item">' +
+                    '<button class="offline-link t" data-type-id="'+escapeHtml(item.typeId)+'">'+escapeHtml(item.typeName)+' :: '+escapeHtml(item.methodName)+'</button>' +
+                    '<div class="m">CogCC '+item.cogcc+' · CycCC '+item.cyccc+' · Nest '+item.nest+' · '+item.loc+' lines</div>' +
+                  '</div>').join('')+'</div>'
+              : '<div class="offline-empty">No method hotspots match the current filter.</div>') +
+          '</section>' +
+        '</div>' +
+        '<section class="offline-section" id="offline-types"><h2>Types</h2><div class="sub">Click a type to open the detail panel.</div>' +
+          '<div class="offline-table-wrap"><table class="offline-table"><thead><tr><th>Type</th><th>Assembly</th><th>Kind</th><th>Health</th><th>Max CogCC</th><th>CBO</th><th>DIT</th><th>Smells</th><th>Out</th><th>In</th></tr></thead><tbody>' +
+            (filteredTypes.length
+              ? filteredTypes.map(row=>
+                  '<tr>' +
+                    '<td><button class="offline-link" data-type-id="'+escapeHtml(row.id)+'">'+escapeHtml(row.qualifiedName)+'</button></td>' +
+                    '<td>'+escapeHtml(row.assembly)+'</td>' +
+                    '<td>'+escapeHtml(row.kind)+'</td>' +
+                    '<td>'+metricCell(row.health,value=>'<span style="color:'+healthColor(value)+'">'+escapeHtml(value)+'</span>')+'</td>' +
+                    '<td>'+row.maxCogCC+'</td>' +
+                    '<td>'+metricCell(row.cbo)+'</td>' +
+                    '<td>'+metricCell(row.dit)+'</td>' +
+                    '<td>'+row.smellCount+'</td>' +
+                    '<td>'+row.outgoing+'</td>' +
+                    '<td>'+row.incoming+'</td>' +
+                  '</tr>').join('')
+              : '<tr><td colspan="10"><span class="offline-empty">No types match the current filter.</span></td></tr>') +
+          '</tbody></table></div>' +
+        '</section>' +
+        '<section class="offline-section" id="offline-dependencies"><h2>Dependencies</h2>'+dependencyNote +
+          '<div class="offline-table-wrap"><table class="offline-table"><thead><tr><th>From</th><th>Kind</th><th>To</th></tr></thead><tbody>' +
+            (dependencyRows.length
+              ? dependencyRows.map(item=>
+                  '<tr>' +
+                    '<td><button class="offline-link" data-type-id="'+escapeHtml(depFromId(item.dep))+'">'+escapeHtml(item.fromLabel)+'</button></td>' +
+                    '<td><span class="offline-pill">'+escapeHtml(item.dep.kind)+'</span></td>' +
+                    '<td><button class="offline-link" data-type-id="'+escapeHtml(depToId(item.dep))+'">'+escapeHtml(item.toLabel)+'</button></td>' +
+                  '</tr>').join('')
+              : '<tr><td colspan="3"><span class="offline-empty">No dependencies match the current filter.</span></td></tr>') +
+          '</tbody></table></div>' +
+        '</section>' +
+        '<div class="offline-split">' +
+          '<section class="offline-section" id="offline-cycles"><h2>Cycles</h2><div class="sub">Strongly connected components across type dependencies.</div>' +
+            (cycles.length
+              ? '<div class="offline-list">'+cycles.map((cycle,index)=>
+                  '<div class="offline-item">' +
+                    '<div class="t">Cycle '+(index+1)+' · '+cycle.length+' types</div>' +
+                    '<div class="offline-pills">'+cycle.map(typeId=>
+                      '<button class="offline-link offline-pill" data-type-id="'+escapeHtml(typeId)+'">'+escapeHtml(tl[typeId]?.name||typeId)+'</button>').join('')+'</div>' +
+                  '</div>').join('')+'</div>'
+              : '<div class="offline-empty">No circular dependencies detected.</div>') +
+          '</section>' +
+          '<section class="offline-section" id="offline-assemblies"><h2>Assembly Coupling</h2><div class="sub">Cross-assembly dependency counts and instability.</div>' +
+            '<div class="offline-table-wrap"><table class="offline-table"><thead><tr><th>Assembly</th><th>Ca</th><th>Ce</th><th>Instability</th></tr></thead><tbody>' +
+              assemblyData.coupling.map(item=>
+                '<tr>' +
+                  '<td>'+escapeHtml(item.name)+'</td>' +
+                  '<td>'+item.ca+'</td>' +
+                  '<td>'+item.ce+'</td>' +
+                  '<td'+(item.instability>0.7?' style="color:#f97583"':'')+'>'+item.instability.toFixed(2)+'</td>' +
+                '</tr>').join('') +
+            '</tbody></table></div>' +
+            '<div class="offline-table-wrap" style="margin-top:12px"><table class="offline-table"><thead><tr><th></th>' +
+              assemblyData.names.map(name=>'<th>'+escapeHtml(name.split('.').pop())+'</th>').join('') +
+            '</tr></thead><tbody>' +
+              assemblyData.names.map(fromName=>
+                '<tr><th>'+escapeHtml(fromName.split('.').pop())+'</th>' +
+                  assemblyData.names.map(toName=>{
+                    if(fromName===toName) return '<td><span class="offline-empty">-</span></td>';
+                    const count=assemblyData.matrix.get(fromName).get(toName);
+                    return '<td>'+(!count?'<span class="offline-empty">0</span>':count)+'</td>';
+                  }).join('') +
+                '</tr>').join('') +
+            '</tbody></table></div>' +
+          '</section>' +
+        '</div>' +
+      '</div>';
+  }
+
+  graphEl.addEventListener('click',event=>{
+    const target=event.target.closest('[data-type-id]');
+    if(!target) return;
+    renderTypeDetail(target.dataset.typeId);
+  });
+
+  closeBtn.onclick=()=>panelEl.classList.add('hidden');
+
+  searchEl.placeholder='Search types, namespaces, assemblies, dependencies...';
+  searchEl.addEventListener('input',()=>render(searchEl.value));
+
+  document.getElementById('bHot').onclick=()=>document.getElementById('offline-hotspots')?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('bCyc').onclick=()=>document.getElementById('offline-cycles')?.scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('bAsm').onclick=()=>document.getElementById('offline-assemblies')?.scrollIntoView({behavior:'smooth',block:'start'});
+
+  let statsText=DATA.types.length+' types · '+DATA.dependencies.length+' deps · '+asm.length+' assemblies';
+  if(avgHealth!=null)
+    statsText+=' · Health: '+avgHealth;
+  if(cycles.length)
+    statsText+=' · '+cycles.length+' cycle'+(cycles.length===1?'':'s');
+  statsEl.textContent=statsText;
+
+  renderLegend();
+  render(searchEl.value);
+}
+
 // --- Namespace info (direct types per namespace) ---
 const nsInfo = new Map();
 DATA.types.forEach(t=>{
   const ns = t.namespace||'(global)';
   if(!nsInfo.has(ns)) nsInfo.set(ns,{typeIds:[],asmCounts:{}});
   const info = nsInfo.get(ns);
-  info.typeIds.push('t:'+t.name);
+  info.typeIds.push('t:'+typeKey(t));
   info.asmCounts[t.assembly]=(info.asmCounts[t.assembly]||0)+1;
 });
 nsInfo.forEach((info,ns)=>{
@@ -440,10 +966,11 @@ nsTree.forEach((node,path)=>{
 
 // Type nodes with ownerNs + health color
 DATA.types.forEach(t=>{
-  const m=tm[t.name];
+  const tk=typeKey(t);
+  const m=tm[tk];
   const hc=m?healthColor(m.codeHealth):null;
   els.push({group:'nodes',data:{
-    id:'t:'+t.name, label:t.name, nodeType:'type', kind:t.kind,
+    id:'t:'+tk, typeId:tk, label:t.name, nodeType:'type', kind:t.kind,
     assembly:t.assembly, color:ac[t.assembly]||'#6e7681',
     healthColor:hc, health:m?m.codeHealth:null,
     shape:KS[t.kind]||'round-rectangle', ownerNs:t.namespace||'(global)',
@@ -453,19 +980,25 @@ DATA.types.forEach(t=>{
 
 // Type-level edges (namespace meta-edges built dynamically in rebuild)
 DATA.dependencies.forEach((d,i)=>{
-  if(!tl[d.fromType]||!tl[d.toType]) return;
+  const fromId=depFromId(d), toId=depToId(d);
+  if(!tl[fromId]||!tl[toId]) return;
   const st=DS[d.kind]||{s:'solid',w:1,a:'vee'};
   els.push({group:'edges',data:{
-    id:'e'+i, source:'t:'+d.fromType, target:'t:'+d.toType,
+    id:'e'+i, source:'t:'+fromId, target:'t:'+toId,
     kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a
   }});
 });
 
-// --- Init Cytoscape (deferred until font loads for correct label measurement) ---
-document.fonts.ready.then(()=>{
+// --- Init Cytoscape (deferred until fonts are ready when supported) ---
+const fontReady=document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();
+fontReady.then(()=>{
+if(typeof cytoscape==='undefined'||typeof cytoscapeDagre==='undefined'){
+  renderOfflineReport();
+  return;
+}
 // Pre-measure label widths with loaded font to avoid Cytoscape clipping
 const _mc=document.createElement('canvas').getContext('2d');
-const _mf={type:'normal 10px "Recursive",monospace',ns:'600 12px "Recursive",monospace'};
+const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
 function _mw(label,font){_mc.font=font;return Math.ceil(_mc.measureText(label).width)+8;}
 els.forEach(e=>{
   if(e.group!=='nodes') return;
@@ -745,7 +1278,7 @@ function rebuildBadges(){
       const d=n.data();
       let score=null,isNs=false,nsPath=null;
       if(d.nodeType==='type'){
-        const m=tm[d.label];
+        const m=tm[d.typeId];
         if(!m) return;
         score=m.codeHealth;
       } else if(d.nodeType==='namespace'||d.nodeType==='compound'){
@@ -784,7 +1317,7 @@ function rebuildBadges(){
       b.dataset.nodeId=n.id();
       b.dataset.isNs=isNs?'1':'';
       b.dataset.nsPath=nsPath||'';
-      b.dataset.typeName=d.label||'';
+      b.dataset.typeId=d.typeId||'';
       badgeEl.appendChild(b);
     });
   });
@@ -842,7 +1375,7 @@ badgeEl.addEventListener('mouseover',e=>{
       });
     }
   } else {
-    const m=tm[b.dataset.typeName];
+    const m=tm[b.dataset.typeId];
     if(!m) return;
     h='<div class="bh" style="color:'+healthColor(m.codeHealth)+'">'+esc(m.typeName)+'</div>';
     h+='<div class="br"><span class="bk">health</span><span class="bv" style="color:'+healthColor(m.codeHealth)+'">'+m.codeHealth+'</span></div>';
@@ -885,10 +1418,11 @@ const dp=document.getElementById('dp'),dc=document.getElementById('dc');
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 cy.on('tap','node[nodeType="type"]',e=>{
-  const t=tl[e.target.data('label')];
+  const t=tl[e.target.data('typeId')];
   if(!t)return;
   const c=ac[t.assembly]||'#6e7681';
-  const mx=tm[t.name];
+  const tk=typeKey(t);
+  const mx=tm[tk];
   let h='<h2 style="color:'+c+'">'+esc(t.name)+'</h2>';
   h+='<div class="meta">'+esc(t.kind)+' &middot; '+esc(t.assembly)+'</div>';
   if(t.namespace)h+='<div class="meta">'+esc(t.namespace)+'</div>';
@@ -955,17 +1489,19 @@ cy.on('tap','node[nodeType="type"]',e=>{
       h+='<span class="t">'+esc(m.type)+'</span></div>';
     });}
 
-  const og=DATA.dependencies.filter(d=>d.fromType===t.name);
-  const ic=DATA.dependencies.filter(d=>d.toType===t.name);
+  const og=DATA.dependencies.filter(d=>depFromId(d)===tk);
+  const ic=DATA.dependencies.filter(d=>depToId(d)===tk);
   if(og.length){h+='<div class="section-title">Depends On ('+og.length+')</div>';
     og.forEach(d=>{
+      const toType=tl[depToId(d)];
       h+='<div class="member"><span class="badge" style="color:'+(DC[d.kind]||'#6e7681')+'">'+d.kind+'</span>';
-      h+='<span class="t">'+esc(d.toType)+'</span></div>';
+      h+='<span class="t">'+esc(toType?toType.name:d.toType)+'</span></div>';
     });}
   if(ic.length){h+='<div class="section-title">Depended By ('+ic.length+')</div>';
     ic.forEach(d=>{
+      const fromType=tl[depFromId(d)];
       h+='<div class="member"><span class="badge" style="color:'+(DC[d.kind]||'#6e7681')+'">'+d.kind+'</span>';
-      h+='<span class="t">'+esc(d.fromType)+'</span></div>';
+      h+='<span class="t">'+esc(fromType?fromType.name:d.fromType)+'</span></div>';
     });}
 
   dc.innerHTML=h;dp.classList.remove('hidden');
@@ -1072,10 +1608,11 @@ function showTip(node,px,py){
   const d=node.data();
   let h='';
   if(d.nodeType==='type'){
-    const t=tl[d.label];
+    const t=tl[d.typeId];
     if(!t){tip.classList.remove('show');return}
     const mods=(t.modifiers||[]).join(' ');
-    const tmx=tm[t.name];
+    const tk=typeKey(t);
+    const tmx=tm[tk];
     h+='<h3 style="color:'+(ac[t.assembly]||'#6e7681')+'">'+esc(t.name)+'</h3>';
     h+='<div class="tm">'+esc(mods+' '+t.kind)+' in '+esc(t.namespace||'(global)');
     if(tmx) h+=' &middot; Health: <span style="color:'+healthColor(tmx.codeHealth)+'">'+tmx.codeHealth+'</span>';
@@ -1093,21 +1630,27 @@ function showTip(node,px,py){
     if(t.baseType) h+='<div class="tl"><span class="tk">base</span><span class="tt">'+esc(t.baseType)+'</span></div>';
     if(t.interfaces&&t.interfaces.length)
       h+='<div class="tl"><span class="tk">impl</span><span class="tt">'+esc(t.interfaces.join(', '))+'</span></div>';
-    const refs=DATA.dependencies.filter(x=>x.fromType===t.name);
-    const usages=DATA.dependencies.filter(x=>x.toType===t.name);
+    const refs=DATA.dependencies.filter(x=>depFromId(x)===tk);
+    const usages=DATA.dependencies.filter(x=>depToId(x)===tk);
     if(refs.length){
       h+='<div class="ts">References ('+refs.length+')</div>';
-      const grouped={};refs.forEach(r=>{grouped[r.toType]=(grouped[r.toType]||0)+1});
+      const grouped={};refs.forEach(r=>{
+        const key=depToId(r);
+        grouped[key]=(grouped[key]||0)+1;
+      });
       Object.entries(grouped).slice(0,8).forEach(([n,c])=>{
-        h+='<div class="tl"><span class="tt">'+esc(n)+'</span> <span class="tk">x'+c+'</span></div>';
+        h+='<div class="tl"><span class="tt">'+esc((tl[n]&&tl[n].name)||n)+'</span> <span class="tk">x'+c+'</span></div>';
       });
       if(Object.keys(grouped).length>8) h+='<div class="tl"><span class="tk">+'+(Object.keys(grouped).length-8)+' more</span></div>';
     }
     if(usages.length){
       h+='<div class="ts">Usages ('+usages.length+')</div>';
-      const grouped={};usages.forEach(r=>{grouped[r.fromType]=(grouped[r.fromType]||0)+1});
+      const grouped={};usages.forEach(r=>{
+        const key=depFromId(r);
+        grouped[key]=(grouped[key]||0)+1;
+      });
       Object.entries(grouped).slice(0,6).forEach(([n,c])=>{
-        h+='<div class="tl"><span class="tt">'+esc(n)+'</span> <span class="tk">x'+c+'</span></div>';
+        h+='<div class="tl"><span class="tt">'+esc((tl[n]&&tl[n].name)||n)+'</span> <span class="tk">x'+c+'</span></div>';
       });
       if(Object.keys(grouped).length>6) h+='<div class="tl"><span class="tk">+'+(Object.keys(grouped).length-6)+' more</span></div>';
     }
@@ -1188,14 +1731,14 @@ function buildHotspots(){
   (DATA.typeMetrics||[]).forEach(t=>{
     (t.methods||[]).forEach(m=>{
       hotMethods.push({
-        methodName:m.name,typeName:t.typeName,
+        methodName:m.name,typeName:t.typeName,typeId:metricKey(t),
         cogcc:m.cognitiveComplexity||0,cyccc:m.cyclomaticComplexity||0,
         loc:m.lineCount||0,nest:m.maxNestingDepth||0
       });
     });
   });
   hotTypes=(DATA.typeMetrics||[]).map(t=>({
-    typeName:t.typeName,health:t.codeHealth!=null?t.codeHealth:10,
+    typeName:t.typeName,typeId:metricKey(t),health:t.codeHealth!=null?t.codeHealth:10,
     cogcc:t.maxCognitiveComplexity||0,cyccc:t.maxCyclomaticComplexity||0,
     loc:t.lineCount||0,nest:t.maxNestingDepth||0,
     lcom:t.lcom,cbo:t.cbo,dit:t.dit,mi:t.minMaintainabilityIndex,
@@ -1222,8 +1765,7 @@ function renderHotspots(tab,sortKey){
   items.forEach(it=>{
     const name=tab==='methods'?it.methodName:it.typeName;
     const sub=tab==='methods'?it.typeName:'';
-    const tName=it.typeName;
-    h+='<div class="hp-item" data-type="'+escAttr(tName)+'">';
+    h+='<div class="hp-item" data-type="'+escAttr(it.typeId)+'">';
     h+='<div class="hp-name">'+esc(name)+'</div>';
     if(sub) h+='<div class="hp-sub">'+esc(sub)+'</div>';
     h+='<div class="hp-badges">';
@@ -1245,9 +1787,10 @@ let cycles=[];
 
 function buildAdjList(){
   const adj=new Map();
-  DATA.types.forEach(t=>adj.set(t.name,[]));
+  DATA.types.forEach(t=>adj.set(typeKey(t),[]));
   (DATA.dependencies||[]).forEach(d=>{
-    if(adj.has(d.fromType)&&adj.has(d.toType)) adj.get(d.fromType).push(d.toType);
+    const fromId=depFromId(d), toId=depToId(d);
+    if(adj.has(fromId)&&adj.has(toId)) adj.get(fromId).push(toId);
   });
   return adj;
 }
@@ -1289,7 +1832,10 @@ function renderCyclePanel(){
   let h='';
   cycles.forEach((scc,i)=>{
     h+='<div class="cyc-group"><div class="cyc-title" data-idx="'+i+'">Cycle '+(i+1)+' ('+scc.length+' types)</div>';
-    scc.forEach(t=>{h+='<div class="cyc-item" data-type="'+escAttr(t)+'">'+esc(t)+'</div>';});
+    scc.forEach(t=>{
+      const info=tl[t];
+      h+='<div class="cyc-item" data-type="'+escAttr(t)+'">'+esc(info?info.name:t)+'</div>';
+    });
     h+='</div>';
   });
   list.innerHTML=h;
@@ -1313,7 +1859,7 @@ function highlightCycle(i){
       if(!n.empty()) n.removeClass('dim').addClass('cycle');
     });
     cy.edges().forEach(e=>{
-      if(!e.data('meta')&&scc.has(e.source().data('label'))&&scc.has(e.target().data('label')))
+      if(!e.data('meta')&&scc.has(e.source().data('typeId'))&&scc.has(e.target().data('typeId')))
         e.removeClass('dim').addClass('cycle-edge');
     });
     const cn=cy.nodes('.cycle');
@@ -1331,7 +1877,7 @@ function computeAsmDeps(){
   const mx=new Map();
   names.forEach(a=>{const r=new Map();names.forEach(b=>r.set(b,0));mx.set(a,r);});
   (DATA.dependencies||[]).forEach(d=>{
-    const f=tl[d.fromType],t2=tl[d.toType];
+    const f=tl[depFromId(d)],t2=tl[depToId(d)];
     if(!f||!t2||f.assembly===t2.assembly) return;
     mx.get(f.assembly).set(t2.assembly,mx.get(f.assembly).get(t2.assembly)+1);
   });

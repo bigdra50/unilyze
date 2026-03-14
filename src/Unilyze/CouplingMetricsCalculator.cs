@@ -11,34 +11,36 @@ public static class CouplingMetricsCalculator
         IReadOnlyList<TypeDependency> dependencies,
         IReadOnlyList<TypeNodeInfo> allTypes)
     {
-        var allTypeNames = new HashSet<string>(allTypes.Select(t => t.Name));
-        var (ceCount, caCount) = CountCouplings(dependencies, allTypeNames);
-        return BuildResult(allTypeNames, ceCount, caCount);
+        var allTypeIds = new HashSet<string>(allTypes.Select(TypeIdentity.GetTypeId));
+        var (ceCount, caCount) = CountCouplings(dependencies, allTypeIds);
+        return BuildResult(allTypeIds, ceCount, caCount);
     }
 
     static (Dictionary<string, int> Ce, Dictionary<string, int> Ca) CountCouplings(
-        IReadOnlyList<TypeDependency> dependencies, HashSet<string> allTypeNames)
+        IReadOnlyList<TypeDependency> dependencies, HashSet<string> allTypeIds)
     {
-        var ceCount = new Dictionary<string, int>(allTypeNames.Count);
-        var caCount = new Dictionary<string, int>(allTypeNames.Count);
-        foreach (var name in allTypeNames)
+        var ceCount = new Dictionary<string, int>(allTypeIds.Count);
+        var caCount = new Dictionary<string, int>(allTypeIds.Count);
+        foreach (var typeId in allTypeIds)
         {
-            ceCount[name] = 0;
-            caCount[name] = 0;
+            ceCount[typeId] = 0;
+            caCount[typeId] = 0;
         }
 
         var seen = new HashSet<(string From, string To)>();
         foreach (var dep in dependencies)
         {
-            if (!allTypeNames.Contains(dep.FromType) || !allTypeNames.Contains(dep.ToType))
+            if (dep.FromTypeId is null || dep.ToTypeId is null)
                 continue;
-            if (dep.FromType == dep.ToType || !seen.Add((dep.FromType, dep.ToType)))
+            if (!allTypeIds.Contains(dep.FromTypeId) || !allTypeIds.Contains(dep.ToTypeId))
+                continue;
+            if (dep.FromTypeId == dep.ToTypeId || !seen.Add((dep.FromTypeId, dep.ToTypeId)))
                 continue;
 
-            ref var ceRef = ref CollectionsMarshal.GetValueRefOrNullRef(ceCount, dep.FromType);
+            ref var ceRef = ref CollectionsMarshal.GetValueRefOrNullRef(ceCount, dep.FromTypeId);
             if (!Unsafe.IsNullRef(ref ceRef)) ceRef++;
 
-            ref var caRef = ref CollectionsMarshal.GetValueRefOrNullRef(caCount, dep.ToType);
+            ref var caRef = ref CollectionsMarshal.GetValueRefOrNullRef(caCount, dep.ToTypeId);
             if (!Unsafe.IsNullRef(ref caRef)) caRef++;
         }
 
@@ -46,16 +48,16 @@ public static class CouplingMetricsCalculator
     }
 
     static Dictionary<string, CouplingInfo> BuildResult(
-        HashSet<string> allTypeNames, Dictionary<string, int> ceCount, Dictionary<string, int> caCount)
+        HashSet<string> allTypeIds, Dictionary<string, int> ceCount, Dictionary<string, int> caCount)
     {
-        var result = new Dictionary<string, CouplingInfo>(allTypeNames.Count);
-        foreach (var name in allTypeNames)
+        var result = new Dictionary<string, CouplingInfo>(allTypeIds.Count);
+        foreach (var typeId in allTypeIds)
         {
-            var ce = ceCount[name];
-            var ca = caCount[name];
+            var ce = ceCount[typeId];
+            var ca = caCount[typeId];
             var total = ca + ce;
             var instability = total > 0 ? (double)ce / total : (double?)null;
-            result[name] = new CouplingInfo(ca, ce, instability);
+            result[typeId] = new CouplingInfo(ca, ce, instability);
         }
 
         return result;

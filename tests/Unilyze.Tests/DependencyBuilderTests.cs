@@ -4,9 +4,12 @@ public class DependencyBuilderTests
 {
     static TypeNodeInfo MakeType(string name, string? baseType = null,
         IReadOnlyList<string>? interfaces = null, IReadOnlyList<MemberInfo>? members = null,
-        IReadOnlyList<string>? ctorParams = null, IReadOnlyList<GenericConstraintInfo>? constraints = null)
-        => new(name, "", "class", [], baseType, interfaces ?? [], members ?? [],
-            ctorParams ?? [], [], constraints ?? [], null, "TestAsm", "test.cs", false);
+        IReadOnlyList<string>? ctorParams = null, IReadOnlyList<GenericConstraintInfo>? constraints = null,
+        string ns = "", string assembly = "TestAsm", string? qualifiedName = null, string? typeId = null)
+        => new(name, ns, "class", [], baseType, interfaces ?? [], members ?? [],
+            ctorParams ?? [], [], constraints ?? [], null, assembly, "test.cs", false,
+            QualifiedName: qualifiedName ?? (string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}"),
+            TypeId: typeId ?? (string.IsNullOrEmpty(ns) ? $"{assembly}::{name}" : $"{assembly}::{ns}.{name}"));
 
     [Fact]
     public void EmptyInput_ReturnsEmpty()
@@ -204,5 +207,44 @@ public class DependencyBuilderTests
         Assert.Equal("Container", dep.FromType);
         Assert.Equal("Foo", dep.ToType);
         Assert.Equal(DependencyKind.FieldType, dep.Kind);
+    }
+
+    [Fact]
+    public void DuplicateSimpleNames_ResolveWithinSameNamespace()
+    {
+        var commonService = MakeType("Service", ns: "Common", qualifiedName: "Common.Service", typeId: "TestAsm::Common.Service");
+        var otherService = MakeType("Service", ns: "Other", qualifiedName: "Other.Service", typeId: "TestAsm::Other.Service");
+        var consumer = MakeType(
+            "Consumer",
+            members: [new MemberInfo("_service", "Service", "Field", [], [], [])],
+            ns: "Common",
+            qualifiedName: "Common.Consumer",
+            typeId: "TestAsm::Common.Consumer");
+
+        var result = DependencyBuilder.Build([commonService, otherService, consumer]);
+
+        var dep = Assert.Single(result);
+        Assert.Equal("Consumer", dep.FromType);
+        Assert.Equal("Service", dep.ToType);
+        Assert.Equal("TestAsm::Common.Consumer", dep.FromTypeId);
+        Assert.Equal("TestAsm::Common.Service", dep.ToTypeId);
+    }
+
+    [Fact]
+    public void QualifiedTypeReference_ResolvesAcrossNamespacesWithoutCollision()
+    {
+        var commonService = MakeType("Service", ns: "Common", qualifiedName: "Common.Service", typeId: "TestAsm::Common.Service");
+        var otherService = MakeType("Service", ns: "Other", qualifiedName: "Other.Service", typeId: "TestAsm::Other.Service");
+        var consumer = MakeType(
+            "Consumer",
+            members: [new MemberInfo("_service", "Other.Service", "Field", [], [], [])],
+            ns: "Common",
+            qualifiedName: "Common.Consumer",
+            typeId: "TestAsm::Common.Consumer");
+
+        var result = DependencyBuilder.Build([commonService, otherService, consumer]);
+
+        var dep = Assert.Single(result);
+        Assert.Equal("TestAsm::Other.Service", dep.ToTypeId);
     }
 }

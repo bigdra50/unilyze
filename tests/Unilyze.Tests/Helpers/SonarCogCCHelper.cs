@@ -103,6 +103,7 @@ internal static class SonarCogCCHelper
                   <PropertyGroup>
                     <TargetFramework>net8.0</TargetFramework>
                     <OutputType>Library</OutputType>
+                    <LangVersion>latest</LangVersion>
                     <ImplicitUsings>enable</ImplicitUsings>
                     <Nullable>enable</Nullable>
                     <WarningsAsErrors />
@@ -121,7 +122,7 @@ internal static class SonarCogCCHelper
 
             // Parse S3776 diagnostics from build output
             // Format: "FileName.cs(line,col): warning S3776: ... from N to the 0 allowed."
-            var diagRegex = new Regex(@"(\w+\.cs)\((\d+),(\d+)\).*warning S3776:.*from (\d+) to the");
+            var diagRegex = new Regex(@"(\w+\.cs)\((\d+),(\d+)\).*(warning|error) S3776:.*from (\d+) to the");
             var results = new Dictionary<string, Dictionary<string, int>>();
 
             foreach (Match match in diagRegex.Matches(output))
@@ -129,7 +130,7 @@ internal static class SonarCogCCHelper
                 var fileName = match.Groups[1].Value;
                 var line = int.Parse(match.Groups[2].Value);
                 var col = int.Parse(match.Groups[3].Value);
-                var score = int.Parse(match.Groups[4].Value);
+                var score = int.Parse(match.Groups[5].Value);
 
                 if (!sourceFiles.TryGetValue(fileName, out var sourceCode))
                     continue;
@@ -177,7 +178,10 @@ internal static class SonarCogCCHelper
         var stdout = await process.StandardOutput.ReadToEndAsync();
         var stderr = await process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
-        return stdout + "\n" + stderr;
+        var output = stdout + "\n" + stderr;
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException($"dotnet {arguments} failed in {workDir} (exit {process.ExitCode})\n{output}");
+        return output;
     }
 
     private static string? ExtractMethodName(SyntaxNode? node)

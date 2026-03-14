@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dotnet-version: 8.0.x
+            framework: net8.0
+          - dotnet-version: 9.0.x
+            framework: net9.0
+          - dotnet-version: 10.0.x
+            framework: net10.0
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+
+      - name: Restore
+        run: dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
+
+      - name: Test
+        run: dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f ${{ matrix.framework }} --no-restore -v minimal
+
+  pack-smoke:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore src/Unilyze/Unilyze.csproj
+
+      - name: Pack
+        run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
+
+      - name: Install tool from local package
+        run: dotnet tool install --tool-path ./artifacts/tools Unilyze --add-source ./artifacts/nupkg --version 0.1.0
+
+      - name: Smoke test
+        run: ./artifacts/tools/unilyze --version

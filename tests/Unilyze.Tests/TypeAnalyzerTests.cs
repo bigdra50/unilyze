@@ -113,11 +113,25 @@ public class TypeAnalyzerTests : IDisposable
 
         var myEntity = result.Single(t => t.Name == "MyEntity");
 
-        // BaseEntity is a known class, so it stays as BaseType
         Assert.Equal("BaseEntity", myEntity.BaseType);
-
-        // IService starts with I + uppercase -> recognized as interface
         Assert.Contains("IService", myEntity.Interfaces);
+    }
+
+    [Fact]
+    public void ClassNamedLikeInterface_RemainsBaseType()
+    {
+        WriteFile("Types.cs", """
+            namespace Sample;
+
+            public class IBuilder { }
+            public class MyBuilder : IBuilder { }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+
+        var myBuilder = result.Single(t => t.Name == "MyBuilder");
+        Assert.Equal("IBuilder", myBuilder.BaseType);
+        Assert.Empty(myBuilder.Interfaces);
     }
 
     // --- 6. Partial type merging ---
@@ -151,6 +165,79 @@ public class TypeAnalyzerTests : IDisposable
         Assert.Contains("X", memberNames);
         Assert.Contains("Y", memberNames);
         Assert.Contains("DoWork", memberNames);
+    }
+
+    [Fact]
+    public void NestedTypes_WithSameSimpleName_GetDistinctTypeIds()
+    {
+        WriteFile("Nested.cs", """
+            namespace Sample;
+
+            public class OuterA
+            {
+                public class Inner { }
+            }
+
+            public class OuterB
+            {
+                public class Inner { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+
+        var innerTypes = result.Where(t => t.Name == "Inner").OrderBy(t => t.QualifiedName).ToList();
+        Assert.Equal(2, innerTypes.Count);
+        Assert.Equal("Sample.OuterA.Inner", innerTypes[0].QualifiedName);
+        Assert.Equal("Asm::Sample.OuterA+Inner", innerTypes[0].TypeId);
+        Assert.Equal("Sample.OuterB.Inner", innerTypes[1].QualifiedName);
+        Assert.Equal("Asm::Sample.OuterB+Inner", innerTypes[1].TypeId);
+    }
+
+    [Fact]
+    public void PartialNestedTypes_DoNotMergeAcrossDifferentParents()
+    {
+        WriteFile("OuterA.Part1.cs", """
+            namespace Sample;
+            public partial class OuterA
+            {
+                public partial class Inner
+                {
+                    public void A() { }
+                }
+            }
+            """);
+        WriteFile("OuterA.Part2.cs", """
+            namespace Sample;
+            public partial class OuterA
+            {
+                public partial class Inner
+                {
+                    public void B() { }
+                }
+            }
+            """);
+        WriteFile("OuterB.cs", """
+            namespace Sample;
+            public class OuterB
+            {
+                public partial class Inner
+                {
+                    public void C() { }
+                }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+
+        var innerTypes = result.Where(t => t.Name == "Inner").OrderBy(t => t.QualifiedName).ToList();
+        Assert.Equal(2, innerTypes.Count);
+
+        var outerAInner = Assert.Single(innerTypes.Where(t => t.QualifiedName == "Sample.OuterA.Inner"));
+        Assert.Equal(["A", "B"], outerAInner.Members.Select(m => m.Name).OrderBy(n => n).ToList());
+
+        var outerBInner = Assert.Single(innerTypes.Where(t => t.QualifiedName == "Sample.OuterB.Inner"));
+        Assert.Equal(["C"], outerBInner.Members.Select(m => m.Name).OrderBy(n => n).ToList());
     }
 
     // --- 7. Enum extraction ---

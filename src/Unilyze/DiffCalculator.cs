@@ -50,7 +50,7 @@ public static class DiffCalculator
         var dict = new Dictionary<string, TypeMetrics>();
         if (metrics is null) return dict;
         foreach (var m in metrics)
-            dict.TryAdd(TypeKey(m.Namespace, m.TypeName), m);
+            dict.TryAdd(TypeIdentity.GetTypeId(m), m);
         return dict;
     }
 
@@ -59,7 +59,7 @@ public static class DiffCalculator
 
     static TypeDiff ComputeTypeDiff(TypeMetrics before, TypeMetrics after)
     {
-        var key = TypeKey(after.Namespace, after.TypeName);
+        var key = BuildDisplayTypeKey(after);
         var doubleDeltas = BuildDoubleDeltas(before, after);
         var intDeltas = BuildIntDeltas(before, after);
         var methodDiffs = ComputeMethodDiffs(before.Methods, after.Methods);
@@ -254,9 +254,15 @@ public static class DiffCalculator
 
     static TypeDiff BuildOneSidedTypeDiff(TypeMetrics metrics, ChangeStatus status)
     {
-        var key = TypeKey(metrics.Namespace, metrics.TypeName);
+        var key = BuildDisplayTypeKey(metrics);
         return new TypeDiff(
             key, metrics.TypeName, metrics.Namespace, metrics.Assembly,
             status, [], [], [], null);
+    }
+
+    static string BuildDisplayTypeKey(TypeMetrics metrics)
+    {
+        var qualifiedName = TypeIdentity.GetQualifiedName(metrics);
+        return string.IsNullOrEmpty(qualifiedName) ? metrics.TypeName : qualifiedName;
     }
 }

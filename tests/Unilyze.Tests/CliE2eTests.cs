@@ -6,8 +6,8 @@ namespace Unilyze.Tests;
 public sealed class CliE2eTests : IDisposable
 {
     private readonly string _tempDir;
-    private static readonly string ProjectPath =
-        Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Unilyze", "Unilyze.csproj"));
+    private static readonly string CurrentTargetFramework = ResolveCurrentTargetFramework();
+    private static readonly string AppHostPath = ResolveAppHostPath();
 
     public CliE2eTests()
     {
@@ -25,19 +25,12 @@ public sealed class CliE2eTests : IDisposable
     {
         var psi = new ProcessStartInfo
         {
-            FileName = "dotnet",
+            FileName = AppHostPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-        psi.ArgumentList.Add("run");
-        psi.ArgumentList.Add("--project");
-        psi.ArgumentList.Add(ProjectPath);
-        psi.ArgumentList.Add("-f");
-        psi.ArgumentList.Add("net8.0");
-        psi.ArgumentList.Add("--no-build");
-        psi.ArgumentList.Add("--");
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
@@ -48,6 +41,22 @@ public sealed class CliE2eTests : IDisposable
         return (proc.ExitCode, stdout, stderr);
     }
 
+    private static string ResolveCurrentTargetFramework()
+    {
+        var baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        var tfm = Path.GetFileName(baseDir);
+        if (string.IsNullOrWhiteSpace(tfm) || !tfm.StartsWith("net", StringComparison.Ordinal))
+            throw new InvalidOperationException($"Could not infer target framework from base directory: {AppContext.BaseDirectory}");
+        return tfm;
+    }
+
+    private static string ResolveAppHostPath()
+    {
+        var fileName = OperatingSystem.IsWindows() ? "Unilyze.exe" : "Unilyze";
+        return Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Unilyze", "bin", "Debug", CurrentTargetFramework, fileName));
+    }
+
     [Fact]
     public void Help_ExitsZero()
     {
@@ -55,6 +64,7 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal(0, exitCode);
         Assert.Contains("unilyze", stdout);
         Assert.Contains("Usage:", stdout);
+        Assert.Contains("--no-open", stdout);
     }
 
     [Fact]
@@ -101,6 +111,37 @@ public sealed class CliE2eTests : IDisposable
         var fakePath = Path.Combine(_tempDir, "does-not-exist");
         var (exitCode, _, _) = Run("-p", fakePath, "-f", "json");
         Assert.NotEqual(0, exitCode);
+    }
+
+    [Fact]
+    public void HtmlFormat_NoOpen_WritesArtifactsWithoutLaunchingBrowser()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("-p", _tempDir, "--no-open");
+
+        Assert.Equal(0, exitCode);
+        var writtenLines = stderr.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.StartsWith("Written to ", StringComparison.Ordinal))
+            .ToList();
+        Assert.True(writtenLines.Count >= 2, stderr);
+
+        foreach (var line in writtenLines)
+        {
+            var path = line["Written to ".Length..];
+            Assert.True(File.Exists(path), $"Expected artifact to exist: {path}");
+        }
+    }
+
+    [Fact]
+    public void InvalidJsonInput_ExitsNonZeroWithFriendlyMessage()
+    {
+        var invalidJson = Path.Combine(_tempDir, "invalid.json");
+        File.WriteAllText(invalidJson, "{ this is not valid json }");
+
+        var (exitCode, _, stderr) = Run("-i", invalidJson, "-f", "json");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Invalid JSON input", stderr);
     }
 
     [Fact]

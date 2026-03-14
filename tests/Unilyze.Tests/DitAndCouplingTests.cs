@@ -100,12 +100,17 @@ public class DitAndCouplingTests
         return CouplingMetricsCalculator.Calculate(deps, types);
     }
 
+    static string TypeId(string typeName) => $"Asm::{typeName}";
+
+    static TypeDependency MakeDependency(string fromType, string toType, DependencyKind kind)
+        => new(fromType, toType, kind, TypeId(fromType), TypeId(toType));
+
     [Fact]
     public void Ca_NoIncoming_Zero()
     {
         var deps = new List<TypeDependency>();
         var result = CalcCoupling(deps, "A", "B");
-        Assert.Equal(0, result["A"].AfferentCoupling);
+        Assert.Equal(0, result[TypeId("A")].AfferentCoupling);
     }
 
     [Fact]
@@ -113,11 +118,11 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>
         {
-            new("A", "C", DependencyKind.FieldType),
-            new("B", "C", DependencyKind.FieldType),
+            MakeDependency("A", "C", DependencyKind.FieldType),
+            MakeDependency("B", "C", DependencyKind.FieldType),
         };
         var result = CalcCoupling(deps, "A", "B", "C");
-        Assert.Equal(2, result["C"].AfferentCoupling);
+        Assert.Equal(2, result[TypeId("C")].AfferentCoupling);
     }
 
     [Fact]
@@ -125,7 +130,7 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>();
         var result = CalcCoupling(deps, "A");
-        Assert.Equal(0, result["A"].EfferentCoupling);
+        Assert.Equal(0, result[TypeId("A")].EfferentCoupling);
     }
 
     [Fact]
@@ -133,11 +138,11 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>
         {
-            new("A", "B", DependencyKind.FieldType),
-            new("A", "C", DependencyKind.MethodParam),
+            MakeDependency("A", "B", DependencyKind.FieldType),
+            MakeDependency("A", "C", DependencyKind.MethodParam),
         };
         var result = CalcCoupling(deps, "A", "B", "C");
-        Assert.Equal(2, result["A"].EfferentCoupling);
+        Assert.Equal(2, result[TypeId("A")].EfferentCoupling);
     }
 
     [Fact]
@@ -145,11 +150,11 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>
         {
-            new("A", "B", DependencyKind.FieldType),
+            MakeDependency("A", "B", DependencyKind.FieldType),
         };
         var result = CalcCoupling(deps, "A", "B");
         // A: Ca=0, Ce=1 → I=1.0
-        Assert.Equal(1.0, result["A"].Instability);
+        Assert.Equal(1.0, result[TypeId("A")].Instability);
     }
 
     [Fact]
@@ -157,11 +162,11 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>
         {
-            new("A", "B", DependencyKind.FieldType),
+            MakeDependency("A", "B", DependencyKind.FieldType),
         };
         var result = CalcCoupling(deps, "A", "B");
         // B: Ca=1, Ce=0 → I=0.0
-        Assert.Equal(0.0, result["B"].Instability);
+        Assert.Equal(0.0, result[TypeId("B")].Instability);
     }
 
     [Fact]
@@ -169,7 +174,7 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>();
         var result = CalcCoupling(deps, "A");
-        Assert.Null(result["A"].Instability);
+        Assert.Null(result[TypeId("A")].Instability);
     }
 
     [Fact]
@@ -177,12 +182,12 @@ public class DitAndCouplingTests
     {
         var deps = new List<TypeDependency>
         {
-            new("A", "B", DependencyKind.FieldType),
-            new("C", "A", DependencyKind.FieldType),
+            MakeDependency("A", "B", DependencyKind.FieldType),
+            MakeDependency("C", "A", DependencyKind.FieldType),
         };
         var result = CalcCoupling(deps, "A", "B", "C");
         // A: Ca=1, Ce=1 → I=0.5
-        Assert.Equal(0.5, result["A"].Instability);
+        Assert.Equal(0.5, result[TypeId("A")].Instability);
     }
 
     // --- DeepInheritance smell tests ---

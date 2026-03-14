@@ -18,6 +18,15 @@ public class AsmdefInfoTests : IDisposable
         File.WriteAllText(Path.Combine(directory, fileName), json);
     }
 
+    void WriteMeta(string directory, string fileName, string guid)
+    {
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory, fileName + ".meta"), $$"""
+            fileFormatVersion: 2
+            guid: {{guid}}
+            """);
+    }
+
     public void Dispose()
     {
         foreach (var dir in _tempDirs)
@@ -84,27 +93,48 @@ public class AsmdefInfoTests : IDisposable
     }
 
     [Fact]
-    public void Discover_GuidReferences_AreSkipped()
+    public void Discover_GuidReferences_AreResolvedWhenMetaExists()
     {
-        var dir = CreateTempDir();
-        WriteAsmdef(dir, "GuidOnly.asmdef", """
+        var root = CreateTempDir();
+        var runtimeDir = Path.Combine(root, "Runtime");
+        var featureDir = Path.Combine(root, "Feature");
+
+        WriteAsmdef(runtimeDir, "Runtime.asmdef", """
             {
-                "name": "GuidOnly",
+                "name": "Runtime"
+            }
+            """);
+        WriteMeta(runtimeDir, "Runtime.asmdef", "abc123");
+
+        WriteAsmdef(featureDir, "Feature.asmdef", """
+            {
+                "name": "Feature",
                 "references": ["GUID:abc123", "GUID:def456"]
             }
             """);
 
-        var result = AsmdefInfo.Discover(dir);
+        var result = AsmdefInfo.Discover(root);
 
-        Assert.Single(result);
-        Assert.Empty(result[0].References);
+        var feature = Assert.Single(result.Where(r => r.Name == "Feature"));
+        Assert.Equal(["Runtime"], feature.References);
+        Assert.Equal(["GUID:def456"], feature.UnresolvedReferences);
     }
 
     [Fact]
-    public void Discover_MixedReferences_OnlyNamedRefsKept()
+    public void Discover_MixedReferences_KeepNamedAndResolvedRefs()
     {
-        var dir = CreateTempDir();
-        WriteAsmdef(dir, "Mixed.asmdef", """
+        var root = CreateTempDir();
+        var runtimeDir = Path.Combine(root, "Runtime");
+        var mixedDir = Path.Combine(root, "Mixed");
+
+        WriteAsmdef(runtimeDir, "NamedRef.Runtime.asmdef", """
+            {
+                "name": "NamedRef.Runtime"
+            }
+            """);
+        WriteMeta(runtimeDir, "NamedRef.Runtime.asmdef", "abc123");
+
+        WriteAsmdef(mixedDir, "Mixed.asmdef", """
             {
                 "name": "Mixed",
                 "references": [
@@ -116,12 +146,14 @@ public class AsmdefInfoTests : IDisposable
             }
             """);
 
-        var result = AsmdefInfo.Discover(dir);
+        var result = AsmdefInfo.Discover(root);
 
-        Assert.Single(result);
-        Assert.Equal(2, result[0].References.Count);
-        Assert.Equal("NamedRef.Runtime", result[0].References[0]);
-        Assert.Equal("AnotherNamed", result[0].References[1]);
+        var mixed = Assert.Single(result.Where(r => r.Name == "Mixed"));
+        Assert.Equal(3, mixed.References.Count);
+        Assert.Equal("NamedRef.Runtime", mixed.References[0]);
+        Assert.Equal("NamedRef.Runtime", mixed.References[1]);
+        Assert.Equal("AnotherNamed", mixed.References[2]);
+        Assert.Equal(["GUID:def456"], mixed.UnresolvedReferences);
     }
 
     [Fact]
@@ -148,12 +180,15 @@ public class AsmdefInfoTests : IDisposable
         WriteAsmdef(dirA, "A.asmdef", """
             {"name": "A", "references": ["B", "C"]}
             """);
+        WriteMeta(dirA, "A.asmdef", "guid-a");
         WriteAsmdef(dirB, "B.asmdef", """
-            {"name": "B", "references": ["GUID:guid1", "A"]}
+            {"name": "B", "references": ["GUID:guid-a", "A"]}
             """);
+        WriteMeta(dirB, "B.asmdef", "guid-b");
         WriteAsmdef(dirC, "C.asmdef", """
             {"name": "C"}
             """);
+        WriteMeta(dirC, "C.asmdef", "guid-c");
 
         var result = AsmdefInfo.Discover(root);
 
@@ -165,8 +200,8 @@ public class AsmdefInfoTests : IDisposable
         Assert.Contains("B", byName["A"].References);
         Assert.Contains("C", byName["A"].References);
 
-        Assert.Single(byName["B"].References);
-        Assert.Equal("A", byName["B"].References[0]);
+        Assert.Equal(["A", "A"], byName["B"].References);
+        Assert.Null(byName["B"].UnresolvedReferences);
 
         Assert.Empty(byName["C"].References);
     }

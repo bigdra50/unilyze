@@ -15,13 +15,12 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
     [Fact]
     public async Task CrossValidate_UnilyzeSourceCode()
     {
-        // Exclude Program.cs (top-level statements) and Formatters.cs (trivial enum)
+        // Exclude Program.cs because top-level statements do not compile as a library in the Sonar helper project.
         var csFiles = Directory.GetFiles(SourceDir, "*.cs")
             .Where(f =>
             {
                 var name = Path.GetFileName(f);
-                return !name.Equals("Program.cs", StringComparison.OrdinalIgnoreCase)
-                    && !name.Equals("Formatters.cs", StringComparison.OrdinalIgnoreCase);
+                return !name.Equals("Program.cs", StringComparison.OrdinalIgnoreCase);
             })
             .ToList();
 

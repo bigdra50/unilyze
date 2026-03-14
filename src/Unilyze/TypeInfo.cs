@@ -4,7 +4,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Unilyze;
 
-public sealed record TypeDependency(string FromType, string ToType, DependencyKind Kind);
+public sealed record TypeDependency(
+    string FromType,
+    string ToType,
+    DependencyKind Kind,
+    string? FromTypeId = null,
+    string? ToTypeId = null);
 
 public enum DependencyKind
 {
@@ -41,7 +46,9 @@ public sealed record TypeNodeInfo(
     string FilePath,
     bool IsNested,
     int LineCount = 0,
-    int? StartLine = null);
+    int? StartLine = null,
+    string? QualifiedName = null,
+    string? TypeId = null);
 
 public sealed record MemberInfo(
     string Name,
@@ -115,6 +122,8 @@ public static class TypeAnalyzer
 
             var kind = GetTypeKind(typeDecl);
             var ns = GetNamespace(typeDecl);
+            var qualifiedName = TypeIdentity.CreateQualifiedName(typeDecl);
+            var typeId = TypeIdentity.CreateTypeId(typeDecl, assemblyName);
             var modifiers = GetModifiers(typeDecl.Modifiers);
             var attributes = GetAttributeInfos(typeDecl.AttributeLists);
             var genericConstraints = ExtractGenericConstraints(typeDecl);
@@ -136,7 +145,8 @@ public static class TypeAnalyzer
 
             yield return new TypeNodeInfo(
                 name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine);
+                attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine,
+                qualifiedName, typeId);
         }
     }
 
@@ -175,6 +185,8 @@ public static class TypeAnalyzer
         foreach (var enumDecl in root.DescendantNodes().OfType<EnumDeclarationSyntax>())
         {
             var ns = GetNamespace(enumDecl);
+            var qualifiedName = TypeIdentity.CreateQualifiedName(enumDecl);
+            var typeId = TypeIdentity.CreateTypeId(enumDecl, assemblyName);
             var modifiers = GetModifiers(enumDecl.Modifiers);
             var attributes = GetAttributeInfos(enumDecl.AttributeLists);
             var isNested = enumDecl.Parent is TypeDeclarationSyntax;
@@ -200,7 +212,8 @@ public static class TypeAnalyzer
 
             yield return new TypeNodeInfo(
                 enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
-                attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine);
+                attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine,
+                qualifiedName, typeId);
         }
     }
 
@@ -213,6 +226,8 @@ public static class TypeAnalyzer
                 name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
 
             var ns = GetNamespace(delDecl);
+            var qualifiedName = TypeIdentity.CreateQualifiedName(delDecl);
+            var typeId = TypeIdentity.CreateTypeId(delDecl, assemblyName);
             var modifiers = GetModifiers(delDecl.Modifiers);
             var attributes = GetAttributeInfos(delDecl.AttributeLists);
             var isNested = delDecl.Parent is TypeDeclarationSyntax;
@@ -238,7 +253,8 @@ public static class TypeAnalyzer
 
             yield return new TypeNodeInfo(
                 name, ns, "delegate", modifiers, null, [], members, [],
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine);
+                attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine,
+                qualifiedName, typeId);
         }
     }
 
@@ -250,7 +266,7 @@ public static class TypeAnalyzer
         if (type.BaseType == null) return type;
 
         var baseName = type.BaseType.Split('<')[0];
-        if (knownInterfaces.Contains(baseName) || LooksLikeInterface(baseName))
+        if (knownInterfaces.Contains(baseName))
         {
             var newInterfaces = new List<string> { type.BaseType };
             newInterfaces.AddRange(type.Interfaces);
@@ -260,18 +276,11 @@ public static class TypeAnalyzer
         return type;
     }
 
-    static bool LooksLikeInterface(string name)
-    {
-        return name.Length >= 2
-            && name[0] == 'I'
-            && char.IsUpper(name[1]);
-    }
-
     // --- B4: Partial type merging ---
 
     static IReadOnlyList<TypeNodeInfo> MergePartialTypes(IReadOnlyList<TypeNodeInfo> types)
     {
-        var groups = types.GroupBy(t => (t.Name, t.Namespace, t.Assembly));
+        var groups = types.GroupBy(TypeIdentity.GetTypeId);
         var result = new List<TypeNodeInfo>();
 
         foreach (var group in groups)
@@ -433,31 +442,28 @@ static class DependencyBuilder
 {
     public static IReadOnlyList<TypeDependency> Build(IReadOnlyList<TypeNodeInfo> types)
     {
-        var knownTypes = new HashSet<string>(types.Select(t => t.Name.Split('<')[0]));
+        var knownTypes = KnownTypeIndex.Create(types);
         var deps = new List<TypeDependency>();
 
         foreach (var type in types)
         {
-            var fromName = type.Name;
-
             if (type.BaseType != null)
-                AddDepsForTypeName(fromName, type.BaseType, DependencyKind.Inheritance, knownTypes, deps);
+                AddDepsForTypeName(type, type.BaseType, DependencyKind.Inheritance, knownTypes, deps);
 
             foreach (var iface in type.Interfaces)
-                AddDepsForTypeName(fromName, iface, DependencyKind.InterfaceImpl, knownTypes, deps);
+                AddDepsForTypeName(type, iface, DependencyKind.InterfaceImpl, knownTypes, deps);
 
-            CollectMemberDeps(fromName, type, knownTypes, deps);
-            CollectConstraintDeps(fromName, type, knownTypes, deps);
+            CollectMemberDeps(type, knownTypes, deps);
+            CollectConstraintDeps(type, knownTypes, deps);
         }
 
         return deps
-            .Where(d => d.FromType != d.ToType)
+            .Where(d => d.FromTypeId != d.ToTypeId)
             .Distinct()
             .ToList();
     }
 
-    static void CollectMemberDeps(string fromName, TypeNodeInfo type,
-        HashSet<string> knownTypes, List<TypeDependency> deps)
+    static void CollectMemberDeps(TypeNodeInfo type, KnownTypeIndex knownTypes, List<TypeDependency> deps)
     {
         foreach (var member in type.Members)
         {
@@ -470,18 +476,17 @@ static class DependencyBuilder
                 "Indexer" => DependencyKind.PropertyType,
                 _ => DependencyKind.FieldType
             };
-            AddDepsForTypeName(fromName, member.Type, kind, knownTypes, deps);
+            AddDepsForTypeName(type, member.Type, kind, knownTypes, deps);
 
             foreach (var param in member.Parameters)
-                AddDepsForTypeName(fromName, param.Type, DependencyKind.MethodParam, knownTypes, deps);
+                AddDepsForTypeName(type, param.Type, DependencyKind.MethodParam, knownTypes, deps);
         }
 
         foreach (var ctorParam in type.ConstructorParams)
-            AddDepsForTypeName(fromName, ctorParam, DependencyKind.ConstructorParam, knownTypes, deps);
+            AddDepsForTypeName(type, ctorParam, DependencyKind.ConstructorParam, knownTypes, deps);
     }
 
-    static void CollectConstraintDeps(string fromName, TypeNodeInfo type,
-        HashSet<string> knownTypes, List<TypeDependency> deps)
+    static void CollectConstraintDeps(TypeNodeInfo type, KnownTypeIndex knownTypes, List<TypeDependency> deps)
     {
         foreach (var constraint in type.GenericConstraints)
         {
@@ -490,18 +495,25 @@ static class DependencyBuilder
                 var constraintType = c.TrimEnd('?');
                 if (constraintType is "class" or "struct" or "notnull" or "unmanaged" or "new()")
                     continue;
-                AddDepsForTypeName(fromName, constraintType, DependencyKind.GenericConstraint, knownTypes, deps);
+                AddDepsForTypeName(type, constraintType, DependencyKind.GenericConstraint, knownTypes, deps);
             }
         }
     }
 
-    static void AddDepsForTypeName(string fromType, string typeName, DependencyKind kind,
-        HashSet<string> knownTypes, List<TypeDependency> deps)
+    static void AddDepsForTypeName(TypeNodeInfo fromType, string typeName, DependencyKind kind,
+        KnownTypeIndex knownTypes, List<TypeDependency> deps)
     {
         foreach (var extracted in ExtractAllTypeNames(typeName))
         {
-            if (knownTypes.Contains(extracted))
-                deps.Add(new TypeDependency(fromType, extracted, kind));
+            foreach (var target in knownTypes.Resolve(fromType, extracted))
+            {
+                deps.Add(new TypeDependency(
+                    fromType.Name,
+                    target.Name,
+                    kind,
+                    TypeIdentity.GetTypeId(fromType),
+                    TypeIdentity.GetTypeId(target)));
+            }
         }
     }
 
@@ -552,5 +564,92 @@ static class DependencyBuilder
 
         result.Add(args[start..].Trim());
         return result.ToArray();
+    }
+
+    sealed class KnownTypeIndex
+    {
+        readonly Dictionary<string, TypeNodeInfo> _byId;
+        readonly Dictionary<string, List<TypeNodeInfo>> _byQualifiedName;
+        readonly Dictionary<string, List<TypeNodeInfo>> _bySimpleName;
+
+        KnownTypeIndex(
+            Dictionary<string, TypeNodeInfo> byId,
+            Dictionary<string, List<TypeNodeInfo>> byQualifiedName,
+            Dictionary<string, List<TypeNodeInfo>> bySimpleName)
+        {
+            _byId = byId;
+            _byQualifiedName = byQualifiedName;
+            _bySimpleName = bySimpleName;
+        }
+
+        public static KnownTypeIndex Create(IReadOnlyList<TypeNodeInfo> types)
+        {
+            var byId = new Dictionary<string, TypeNodeInfo>(types.Count);
+            var byQualifiedName = new Dictionary<string, List<TypeNodeInfo>>(StringComparer.Ordinal);
+            var bySimpleName = new Dictionary<string, List<TypeNodeInfo>>(StringComparer.Ordinal);
+
+            foreach (var type in types)
+            {
+                var typeId = TypeIdentity.GetTypeId(type);
+                byId.TryAdd(typeId, type);
+
+                AddToLookup(byQualifiedName, TypeIdentity.GetQualifiedName(type), type);
+                AddToLookup(bySimpleName, TypeIdentity.GetSimpleName(type), type);
+            }
+
+            return new KnownTypeIndex(byId, byQualifiedName, bySimpleName);
+        }
+
+        public IReadOnlyList<TypeNodeInfo> Resolve(TypeNodeInfo fromType, string rawTypeName)
+        {
+            var normalized = TypeIdentity.NormalizeTypeReference(rawTypeName);
+            if (string.IsNullOrWhiteSpace(normalized))
+                return [];
+
+            var exactQualified = ResolveUnique(_byQualifiedName, normalized);
+            if (exactQualified.Count > 0)
+                return exactQualified;
+
+            foreach (var prefix in TypeIdentity.GetContainingQualifiedNamePrefixes(fromType))
+            {
+                var nestedQualified = $"{prefix}.{normalized}";
+                var nestedMatch = ResolveUnique(_byQualifiedName, nestedQualified);
+                if (nestedMatch.Count > 0)
+                    return nestedMatch;
+            }
+
+            if (!string.IsNullOrEmpty(fromType.Namespace))
+            {
+                var sameNamespace = ResolveUnique(_byQualifiedName, $"{fromType.Namespace}.{normalized}");
+                if (sameNamespace.Count > 0)
+                    return sameNamespace;
+            }
+
+            var simpleName = TypeIdentity.StripGenericArgs(normalized);
+            return ResolveUnique(_bySimpleName, simpleName);
+        }
+
+        static IReadOnlyList<TypeNodeInfo> ResolveUnique(
+            Dictionary<string, List<TypeNodeInfo>> lookup,
+            string key)
+        {
+            if (!lookup.TryGetValue(key, out var matches) || matches.Count != 1)
+                return [];
+
+            return matches;
+        }
+
+        static void AddToLookup(
+            Dictionary<string, List<TypeNodeInfo>> lookup,
+            string key,
+            TypeNodeInfo type)
+        {
+            if (!lookup.TryGetValue(key, out var items))
+            {
+                items = [];
+                lookup[key] = items;
+            }
+            items.Add(type);
+        }
     }
 }

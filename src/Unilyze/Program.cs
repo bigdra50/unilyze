@@ -23,6 +23,7 @@ var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
 var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
+var noOpen = opts.ContainsKey("--no-open");
 
 // Determine output format: explicit -f > output extension > default (html)
 OutputFormat format;
@@ -60,8 +61,8 @@ try
         File.WriteAllText(jsonPath, json);
         Console.Error.WriteLine($"Written to {jsonPath}");
 
-        if (output == null)
-            OpenInBrowser(htmlPath);
+        if (output == null && !noOpen)
+            TryOpenInBrowser(htmlPath);
 
         return 0;
     }
@@ -79,6 +80,16 @@ try
     return 1;
 }
 catch (InvalidOperationException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return 1;
+}
+catch (JsonException ex)
+{
+    Console.Error.WriteLine($"Invalid JSON input: {ex.Message}");
+    return 1;
+}
+catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException)
 {
     Console.Error.WriteLine(ex.Message);
     return 1;
@@ -115,6 +126,7 @@ Usage:
   unilyze hotspot -p <path>                Identify refactoring hotspots (git churn x complexity)
   unilyze trend <dir-of-jsons>             Show quality trend across multiple snapshots
   unilyze -p <path>                        Analyze project and open in browser
+  unilyze -p <path> --no-open              Analyze project and write HTML/JSON without opening a browser
   unilyze -p <path> -o graph.html          Save HTML viewer (+ JSON) to file
   unilyze -p <path> -f json                Output JSON to stdout
   unilyze -p <path> -f sarif -o report.sarif  Output SARIF for GitHub Code Scanning
@@ -128,6 +140,7 @@ Options:
   -f, --format    Output format: html, json, sarif (default: html)
   -a, --assembly  Filter by assembly name (e.g. App.Domain)
       --prefix    Filter asmdef names by prefix (auto-detected if omitted)
+      --no-open   Do not open the generated HTML in a browser
   -v, --version   Show version
   -h, --help      Show this help
 
@@ -138,15 +151,22 @@ Subcommands:
 }
 
 
-static void OpenInBrowser(string path)
+static void TryOpenInBrowser(string path)
 {
-    var url = "file://" + Path.GetFullPath(path);
-    if (OperatingSystem.IsMacOS())
-        System.Diagnostics.Process.Start("open", url)?.Dispose();
-    else if (OperatingSystem.IsWindows())
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
-    else if (OperatingSystem.IsLinux())
-        System.Diagnostics.Process.Start("xdg-open", url)?.Dispose();
+    try
+    {
+        var url = "file://" + Path.GetFullPath(path);
+        if (OperatingSystem.IsMacOS())
+            System.Diagnostics.Process.Start("open", url)?.Dispose();
+        else if (OperatingSystem.IsWindows())
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
+        else if (OperatingSystem.IsLinux())
+            System.Diagnostics.Process.Start("xdg-open", url)?.Dispose();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Warning: Failed to open browser automatically: {ex.Message}");
+    }
 }
 
 
@@ -185,12 +205,7 @@ static int RunDiff(string[] args)
 
         return WriteOutput(json, output);
     }
-    catch (FileNotFoundException ex)
-    {
-        Console.Error.WriteLine(ex.Message);
-        return 1;
-    }
-    catch (InvalidOperationException ex)
+    catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
     {
         Console.Error.WriteLine(ex.Message);
         return 1;
@@ -285,7 +300,7 @@ static int RunHotspot(string[] args)
 
         return WriteOutput(hotspotJson, output);
     }
-    catch (InvalidOperationException ex)
+    catch (Exception ex) when (ex is InvalidOperationException or JsonException or IOException or UnauthorizedAccessException)
     {
         Console.Error.WriteLine(ex.Message);
         return 1;
@@ -437,4 +452,3 @@ static int PrintTrendUsage()
     """);
     return 0;
 }
-

@@ -29,18 +29,19 @@ internal static class AnalysisPipeline
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
 
         var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols);
+        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo);
+        var analysisLevel = compilationResult.Level.ToString();
+
+        if (compilationResult.Level != AnalysisLevel.SyntaxOnly)
+            Console.Error.WriteLine($"Analysis level: {analysisLevel}");
+
+        allTypes = ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         var deps = DependencyBuilder.Build(allTypes);
         var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
 
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
         typeMetrics = EnrichWithCouplingMetrics(typeMetrics, couplingMap);
-
-        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo);
-        var analysisLevel = compilationResult.Level.ToString();
-
-        if (compilationResult.Level != AnalysisLevel.SyntaxOnly)
-            Console.Error.WriteLine($"Analysis level: {analysisLevel}");
 
         typeMetrics = EnrichWithSemanticAnalysis(typeMetrics, allTypes, allSyntaxTrees, compilationResult);
 
@@ -117,8 +118,39 @@ internal static class AnalysisPipeline
         return (allTypes, allTrees);
     }
 
-    static string TypeKey(string ns, string name) =>
-        string.IsNullOrEmpty(ns) ? name : $"{ns}.{name}";
+    internal static IReadOnlyList<TypeNodeInfo> ResolveTypeRelationships(
+        IReadOnlyList<TypeNodeInfo> allTypes,
+        IReadOnlyList<SyntaxTree> syntaxTrees,
+        CompilationResult compilationResult)
+    {
+        if (compilationResult.Compilation is null)
+            return allTypes;
+
+        var treeByPath = BuildTreeLookup(compilationResult, syntaxTrees);
+        var typeDeclLookup = BuildTypeDeclLookup(allTypes, treeByPath);
+        var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
+        var resolved = new List<TypeNodeInfo>(allTypes.Count);
+
+        foreach (var type in allTypes)
+        {
+            if (type.Kind is "enum" or "delegate")
+            {
+                resolved.Add(type);
+                continue;
+            }
+
+            if (!typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(type), out var typeDecl))
+            {
+                resolved.Add(type);
+                continue;
+            }
+
+            var model = modelCache.GetOrAdd(typeDecl.SyntaxTree, t => compilationResult.Compilation.GetSemanticModel(t));
+            resolved.Add(ResolveExplicitBaseList(type, typeDecl, model));
+        }
+
+        return resolved;
+    }
 
     static IReadOnlyList<TypeMetrics> EnrichWithSemanticAnalysis(
         IReadOnlyList<TypeMetrics> typeMetrics,
@@ -130,7 +162,7 @@ internal static class AnalysisPipeline
 
         var typeInfoByKey = new Dictionary<string, TypeNodeInfo>();
         foreach (var t in allTypes)
-            typeInfoByKey.TryAdd(TypeKey(t.Namespace, t.Name), t);
+            typeInfoByKey.TryAdd(TypeIdentity.GetTypeId(t), t);
 
         var typeDeclLookup = BuildTypeDeclLookup(allTypes, treeByPath);
         var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
@@ -171,14 +203,46 @@ internal static class AnalysisPipeline
             if (!treeByPath.TryGetValue(normalizedPath, out var tree)) continue;
 
             var root = tree.GetRoot();
-            var baseName = type.Name.Split('<')[0];
             var typeDecl = root.DescendantNodes()
                 .OfType<TypeDeclarationSyntax>()
-                .FirstOrDefault(td => td.Identifier.Text == baseName);
+                .FirstOrDefault(td => TypeIdentity.CreateTypeId(td, type.Assembly) == TypeIdentity.GetTypeId(type));
             if (typeDecl is not null)
-                typeDeclLookup.TryAdd(TypeKey(type.Namespace, type.Name), typeDecl);
+                typeDeclLookup.TryAdd(TypeIdentity.GetTypeId(type), typeDecl);
         }
         return typeDeclLookup;
+    }
+
+    static TypeNodeInfo ResolveExplicitBaseList(
+        TypeNodeInfo type,
+        TypeDeclarationSyntax typeDecl,
+        SemanticModel model)
+    {
+        if (typeDecl.BaseList is null)
+            return type;
+
+        string? baseType = null;
+        var interfaces = new List<string>();
+
+        foreach (var baseTypeSyntax in typeDecl.BaseList.Types)
+        {
+            var typeSymbol = model.GetTypeInfo(baseTypeSyntax.Type).Type as INamedTypeSymbol;
+            var displayName = typeSymbol?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+                ?? baseTypeSyntax.Type.ToString();
+
+            if (type.Kind == "interface" || typeSymbol?.TypeKind == TypeKind.Interface)
+            {
+                interfaces.Add(displayName);
+                continue;
+            }
+
+            baseType ??= displayName;
+        }
+
+        return type with
+        {
+            BaseType = type.Kind == "interface" ? null : baseType,
+            Interfaces = interfaces.Distinct().ToList()
+        };
     }
 
     static TypeMetrics EnrichSingleType(
@@ -188,7 +252,7 @@ internal static class AnalysisPipeline
         CompilationResult compilationResult,
         ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
     {
-        var key = TypeKey(metrics.Namespace, metrics.TypeName);
+        var key = TypeIdentity.GetTypeId(metrics);
         var current = metrics;
 
         double? lcom = null;
@@ -279,7 +343,7 @@ internal static class AnalysisPipeline
         var enriched = new List<TypeMetrics>(typeMetrics.Count);
         foreach (var metrics in typeMetrics)
         {
-            if (couplingMap.TryGetValue(metrics.TypeName, out var coupling))
+            if (couplingMap.TryGetValue(TypeIdentity.GetTypeId(metrics), out var coupling))
             {
                 enriched.Add(metrics with
                 {

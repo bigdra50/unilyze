@@ -4,6 +4,7 @@ obj/
 *.suo
 .vs/
 nupkg/
+artifacts/
 
 # Skills are installed via `unilyze skills install`
 .claude/skills/

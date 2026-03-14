@@ -20,7 +20,9 @@ public class DiffCalculatorTests
         double codeHealth = 8.0,
         double? lcom = null,
         IReadOnlyList<MethodMetrics>? methods = null,
-        IReadOnlyList<CodeSmell>? smells = null)
+        IReadOnlyList<CodeSmell>? smells = null,
+        string? qualifiedName = null,
+        string? typeId = null)
     {
         methods ??= [];
         return new TypeMetrics(
@@ -30,7 +32,9 @@ public class DiffCalculatorTests
             excessiveParams, codeHealth,
             methods,
             Lcom: lcom,
-            CodeSmells: smells);
+            CodeSmells: smells,
+            QualifiedName: qualifiedName ?? (string.IsNullOrEmpty(ns) ? typeName : $"{ns}.{typeName}"),
+            TypeId: typeId ?? (string.IsNullOrEmpty(ns) ? $"{assembly}::{typeName}" : $"{assembly}::{ns}.{typeName}"));
     }
 
     static AnalysisResult MakeResult(
@@ -246,6 +250,26 @@ public class DiffCalculatorTests
         Assert.Equal(1, diff.Summary.ImprovedCount);
         Assert.Equal(1, diff.Summary.UnchangedCount);
         Assert.Equal("App.Domain.Service", diff.Improved[0].TypeKey);
+    }
+
+    [Fact]
+    public void TypeIdMatching_AvoidsAssemblyCollision()
+    {
+        var before = MakeResult([
+            MakeTypeMetrics(typeName: "Service", ns: "App.Core", assembly: "AsmA", typeId: "AsmA::App.Core.Service"),
+            MakeTypeMetrics(typeName: "Service", ns: "App.Core", assembly: "AsmB", typeId: "AsmB::App.Core.Service"),
+        ]);
+        var after = MakeResult([
+            MakeTypeMetrics(typeName: "Service", ns: "App.Core", assembly: "AsmA", avgCogCC: 1.0, maxCogCC: 1, typeId: "AsmA::App.Core.Service"),
+            MakeTypeMetrics(typeName: "Service", ns: "App.Core", assembly: "AsmB", typeId: "AsmB::App.Core.Service"),
+        ]);
+
+        var diff = DiffCalculator.Compare(before, after);
+
+        Assert.Equal(1, diff.Summary.ImprovedCount);
+        Assert.Single(diff.Improved);
+        Assert.Equal("AsmA", diff.Improved[0].Assembly);
+        Assert.Equal(1, diff.Summary.UnchangedCount);
     }
 
     // --- JSON serialization ---

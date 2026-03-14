@@ -34,7 +34,9 @@ public sealed record TypeMetrics(
     double? MinMaintainabilityIndex = null,
     IReadOnlyList<CodeSmell>? CodeSmells = null,
     string? FilePath = null,
-    int? StartLine = null);
+    int? StartLine = null,
+    string? QualifiedName = null,
+    string? TypeId = null);
 
 public sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,
@@ -130,7 +132,9 @@ public static class CodeHealthCalculator
             AverageMaintainabilityIndex: avgMI,
             MinMaintainabilityIndex: minMI,
             FilePath: type.FilePath,
-            StartLine: type.StartLine);
+            StartLine: type.StartLine,
+            QualifiedName: type.QualifiedName,
+            TypeId: type.TypeId);
     }
 
     internal static double CalculateHealthScore(
