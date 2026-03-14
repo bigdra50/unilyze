@@ -305,7 +305,7 @@ body.offline-mode .panel{
   <button class="btn" id="bCyc">Cycles</button>
   <button class="btn" id="bAsm">Assemblies</button>
   <div class="sep"></div>
-  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option></select>
+  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option><option value="elk">ELK</option></select>
   <button class="btn active" id="bEdge">Edges</button>
   <div class="spacer"></div>
   <span class="stats" id="st"></span>
@@ -351,6 +351,8 @@ body.offline-mode .panel{
 <script src="https://unpkg.com/cytoscape@3.30.4/dist/cytoscape.min.js"></script>
 <script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
 <script src="https://unpkg.com/cytoscape-dagre@2.5.0/cytoscape-dagre.js"></script>
+<script src="https://unpkg.com/elkjs@0.9.3/lib/elk.bundled.js"></script>
+<script src="https://unpkg.com/cytoscape-elk@2.3.0/dist/cytoscape-elk.js"></script>
 <script>
 const DATA = __DATA_PLACEHOLDER__;
 
@@ -1234,10 +1236,38 @@ function rebuild(){
   cy.endBatch();
 }
 
+let _layoutEngine='dagre';
+
 function layout(){
   const vis=cy.elements().filter(e=>e.style('display')!=='none');
+  if(_layoutEngine==='elk'&&typeof ELK!=='undefined'){
+    layoutElk(vis);
+  } else {
+    layoutDagre(vis);
+  }
+}
+
+function layoutDagre(vis){
   vis.layout({
     name:'dagre',rankDir:'TB',nodeSep:80,rankSep:100,edgeSep:30,
+    animate:true,animationDuration:250,fit:true,padding:40
+  }).run();
+}
+
+function layoutElk(vis){
+  vis.layout({
+    name:'elk',
+    elk:{
+      algorithm:'layered',
+      'elk.direction':'DOWN',
+      'elk.edgeRouting':'ORTHOGONAL',
+      'elk.spacing.nodeNode':'80',
+      'elk.layered.spacing.nodeNodeBetweenLayers':'100',
+      'elk.layered.spacing.edgeEdgeBetweenLayers':'30',
+      'elk.layered.spacing.edgeNodeBetweenLayers':'30',
+      'elk.layered.crossingMinimization.strategy':'LAYER_SWEEP',
+      'elk.hierarchyHandling':'INCLUDE_CHILDREN',
+    },
     animate:true,animationDuration:250,fit:true,padding:40
   }).run();
 }
@@ -1672,11 +1702,13 @@ document.getElementById('q').addEventListener('input',function(){
   },180);
 });
 
-// --- Edge Style Toggle (Bezier / Taxi) ---
+// --- Edge Style Toggle (Bezier / Taxi / ELK) ---
 document.getElementById('edgeStyle').addEventListener('change',function(){
   const mode=this.value;
+  const prevEngine=_layoutEngine;
+  _layoutEngine=(mode==='elk')?'elk':'dagre';
   cy.startBatch();
-  if(mode==='taxi'){
+  if(mode==='taxi'||mode==='elk'){
     cy.edges(':not([?meta])').style({
       'curve-style':'taxi','taxi-direction':'downward',
       'taxi-turn':20,'taxi-turn-min-distance':8
@@ -1685,6 +1717,7 @@ document.getElementById('edgeStyle').addEventListener('change',function(){
     cy.edges(':not([?meta])').removeStyle('curve-style taxi-direction taxi-turn taxi-turn-min-distance');
   }
   cy.endBatch();
+  if(_layoutEngine!==prevEngine){rebuild();layout();}
 });
 
 // --- Edge Kind Filter ---
