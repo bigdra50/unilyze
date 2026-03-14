@@ -2,6 +2,8 @@
 
 Unity プロジェクトの型依存関係とコード品質を静的解析・可視化する CLI ツール。
 
+開発者向けのビルド・テスト・リリース情報は [README.dev.md](README.dev.md) を参照。
+
 ### Requirements
 
 - .NET 8.0 or later
@@ -30,6 +32,9 @@ unilyze -p ~/MyUnityProject
 
 # HTML + JSON をファイルに保存
 unilyze -p ~/MyUnityProject -o graph.html
+
+# HTML/JSON を生成するがブラウザは開かない
+unilyze -p ~/MyUnityProject --no-open
 
 # JSON だけ出力
 unilyze -p ~/MyUnityProject -f json -o result.json
@@ -73,6 +78,7 @@ unilyze trend <dir-of-jsons> -o trend.json
 | `-f, --format` | 出力形式: `html`, `json`, `sarif` | `html` |
 | `-a, --assembly` | 解析対象のアセンブリ名 | 全アセンブリ |
 | `--prefix` | asmdef 名のフィルタプレフィックス | 自動検出 |
+| `--no-open` | HTML 生成後にブラウザを自動起動しない | `false` |
 
 ## Metrics
 
@@ -112,6 +118,8 @@ unilyze trend <dir-of-jsons> -o trend.json
 | `html` | ブラウザで依存グラフとメトリクスを可視化 |
 | `json` | エージェント連携、プログラマティック利用 |
 | `sarif` | GitHub Code Scanning、IDE 統合 |
+
+`html` 出力は通常はインタラクティブな依存グラフを表示する。外部グラフ資産をロードできない環境では、型一覧、依存関係、ホットスポット、循環依存、アセンブリ結合度を確認できる組み込みレポートビューへ自動フォールバックする。
 
 ## Analysis Levels
 
