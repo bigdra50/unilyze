@@ -1,52 +1,44 @@
 # unilyze Developer Guide
 
-`unilyze` の保守・実装・検証・リリース向けメモ。
-利用者向けの導入と使い方は [README.md](README.md) を参照。
+Maintenance, implementation, validation, and release notes for `unilyze`.
+For installation and usage, see [README.md](README.md).
+
+[日本語版 / Japanese](README.dev_JP.md)
 
 ## Requirements
 
-- unilyze のサポート対象は `.NET 8.0 or later`
-- 日常開発は最新 SDK 1つでよい。現時点の標準は `.NET SDK 10.0.103`
-- フルのローカル test matrix を回す場合だけ `net8.0;net9.0;net10.0` の runtime を入れる
+- unilyze supports `.NET 8.0 or later`
+- A single latest SDK is sufficient for daily development. Current standard: `.NET SDK 10.0.103`
+- Install `net8.0;net9.0;net10.0` runtimes only when running the full local test matrix
 
-CI matrix は `net8.0;net9.0;net10.0`。
-
-## Verified Development Environment
-
-2026-03-15 時点でローカル確認した環境:
-
-- macOS 15.5 (`arm64`)
-- .NET SDK 10.0.103
-- Microsoft.NETCore.App 10.0.3
-
-Windows は開発・検証対象に含めていない。README に記載した確認済み環境だけを外部向けの基準にする。
+CI matrix: `net8.0;net9.0;net10.0`.
 
 ## Repository Map
 
-- [src/Unilyze](src/Unilyze): CLI 本体
-- [scripts/release-smoke.sh](scripts/release-smoke.sh): 標準 `.NET tool` 導線の release smoke
-- [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit テスト
-- [docs/metrics.md](docs/metrics.md): メトリクス定義
+- [src/Unilyze](src/Unilyze): CLI main project
+- [scripts/release-smoke.sh](scripts/release-smoke.sh): Release smoke test for standard `.NET tool` workflow
+- [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit tests
+- [docs/metrics.md](docs/metrics.md): Metric definitions
 - [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke
 
 ## Local Validation
 
 ### Tests
 
-通常は以下を回せば十分。
+Running the following is normally sufficient:
 
 ```bash
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 --no-restore -v minimal
 ```
 
-互換性確認をローカルでもやる場合だけ、追加で `net8.0` / `net9.0` を回す。
+Run `net8.0` / `net9.0` additionally only for local compatibility checks:
 
 ```bash
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 --no-restore -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net8.0 --no-restore -v minimal
 ```
 
-restore から行う場合:
+To run with restore:
 
 ```bash
 dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
@@ -55,11 +47,11 @@ dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 -v minimal
 
 ### Pack / Install Smoke
 
-公開判定は、標準 `.NET tool` 導線を検証する [scripts/release-smoke.sh](scripts/release-smoke.sh) を基準にする。
+Release readiness is determined by [scripts/release-smoke.sh](scripts/release-smoke.sh), which validates the standard `.NET tool` workflow.
 
-この script は `DOTNET_ROOT` を上書きしない。呼び出し元の shell 環境のまま `dotnet tool install --tool-path ...` と生成 shim の実行を確認する。
+This script does not override `DOTNET_ROOT`. It verifies `dotnet tool install --tool-path ...` and generated shim execution in the calling shell environment.
 
-ローカルの macOS では、既定の `dotnet pack` が `PackAsTool` の並列 pack 経路で停滞することがある。再現した場合は並列を切って実行する。
+On local macOS, the default `dotnet pack` may hang on the `PackAsTool` parallel pack path. If this occurs, disable parallelism:
 
 ```bash
 dotnet restore src/Unilyze/Unilyze.csproj
@@ -68,7 +60,7 @@ dotnet msbuild src/Unilyze/Unilyze.csproj -t:Pack -p:Configuration=Release -p:No
 bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 ```
 
-`dotnet pack` を通常経路で使う場合:
+Using `dotnet pack` via the normal path:
 
 ```bash
 dotnet restore src/Unilyze/Unilyze.csproj
@@ -80,13 +72,13 @@ bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 
 ### Type Identity
 
-内部参照は単純名ではなく `TypeId` を使う。
+Internal references use `TypeId` rather than simple names.
 
-- 形式: `Assembly::Namespace.Outer+Inner`
-- 表示用途は `QualifiedName`
-- 依存、coupling、diff、HTML ノード、partial merge は `TypeId` ベース
+- Format: `Assembly::Namespace.Outer+Inner`
+- `QualifiedName` is used for display purposes
+- Dependencies, coupling, diff, HTML nodes, and partial merge are `TypeId`-based
 
-関連ファイル:
+Related files:
 
 - [src/Unilyze/TypeIdentity.cs](src/Unilyze/TypeIdentity.cs)
 - [src/Unilyze/TypeInfo.cs](src/Unilyze/TypeInfo.cs)
@@ -94,34 +86,34 @@ bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 
 ### Type Relationship Resolution
 
-`I[A-Z]` の命名ヒューリスティックは使わない。
+No `I[A-Z]` naming heuristics are used.
 
-- syntax-only では保守的に扱う
-- SemanticModel があるときは `INamedTypeSymbol.TypeKind` で base / interface を分ける
+- Treated conservatively in syntax-only mode
+- When SemanticModel is available, `INamedTypeSymbol.TypeKind` distinguishes base types from interfaces
 
-関連テスト:
+Related tests:
 
 - [tests/Unilyze.Tests/AnalysisPipelineTests.cs](tests/Unilyze.Tests/AnalysisPipelineTests.cs)
 - [tests/Unilyze.Tests/TypeAnalyzerTests.cs](tests/Unilyze.Tests/TypeAnalyzerTests.cs)
 
 ### asmdef GUID Resolution
 
-`.asmdef.meta` から GUID を引いて `references: ["GUID:..."]` を解決する。解決不能 GUID は捨てずに保持する。
+GUIDs are extracted from `.asmdef.meta` files to resolve `references: ["GUID:..."]`. Unresolvable GUIDs are retained, not discarded.
 
-関連ファイル:
+Related files:
 
 - [src/Unilyze/AsmdefInfo.cs](src/Unilyze/AsmdefInfo.cs)
 - [tests/Unilyze.Tests/AsmdefInfoTests.cs](tests/Unilyze.Tests/AsmdefInfoTests.cs)
 
 ### HTML Viewer
 
-通常は Cytoscape ベースのインタラクティブ graph を出す。外部資産が読めない環境では built-in の offline report fallback に切り替わる。
+Normally outputs a Cytoscape-based interactive graph. Falls back to a built-in offline report when external assets cannot be loaded.
 
-- `--no-open` でブラウザ自動起動を抑止
-- offline fallback でも types, dependencies, hotspots, cycles, assembly coupling は見える
-- graph 資産自体はまだ完全 self-contained ではない。この制約は README に明記する
+- `--no-open` suppresses automatic browser launch
+- The offline fallback still shows types, dependencies, hotspots, cycles, and assembly coupling
+- Graph assets are not yet fully self-contained. This limitation is documented in the README
 
-関連ファイル:
+Related files:
 
 - [src/Unilyze/Program.cs](src/Unilyze/Program.cs)
 - [src/Unilyze/HtmlTemplate.cs](src/Unilyze/HtmlTemplate.cs)
@@ -129,34 +121,34 @@ bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 
 ## Release Checklist
 
-1. `dotnet test` を `net9.0` / `net10.0` で green にする
-2. CI matrix の `net8.0` / `net9.0` / `net10.0` を green にする
-3. pack/install smoke を通す
-4. README / docs / package metadata の説明が実装と一致していることを確認する
-5. HTML fallback と `--no-open` を壊していないことを確認する
+1. Green `dotnet test` on `net9.0` / `net10.0`
+2. Green CI matrix on `net8.0` / `net9.0` / `net10.0`
+3. Pass pack/install smoke
+4. Confirm README / docs / package metadata match the implementation
+5. Confirm HTML fallback and `--no-open` are not broken
 
 ## NuGet Publish
 
-GitHub Actions から publish する。ローカルの API key 保持は前提にしない。
+Publishing is done via GitHub Actions. Local API key storage is not assumed.
 
-事前に repository secret `NUGET_API_KEY` を設定する。
+Set the repository secret `NUGET_API_KEY` beforehand.
 
-公開手順:
+Publish procedure:
 
-1. publish 対象 commit の `CI` workflow を green にする
-2. Actions の `Publish NuGet` workflow を手動実行する
-3. workflow 内で `net10.0` test、pack、release smoke、`dotnet nuget push` を順に実行する
+1. Ensure the `CI` workflow is green on the target commit
+2. Manually trigger the `Publish NuGet` workflow from Actions
+3. The workflow runs `net10.0` test, pack, release smoke, and `dotnet nuget push` in sequence
 
-publish workflow:
+Publish workflow:
 
 - [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
-- secret 名: `NUGET_API_KEY`
+- Secret name: `NUGET_API_KEY`
 
 ## Known Local Caveats
 
-- macOS では `dotnet pack` の既定並列経路が停滞することがある
-- `dotnet msbuild ... -t:Pack -m:1 -p:BuildInParallel=false` は通る
-- `GenerateNuspec` 単体と `dotnet tool install` は問題なく通るので、パッケージ内容の破損ではなく pack 実行経路の問題として扱う
-- 手元に一部 runtime が入っていない場合は、その TFM の最終確認を CI に委ねる
-- CLI E2E は apphost 直叩きではなく `dotnet <Unilyze.dll>` で実行する。runtime 解決を `dotnet test` 側と揃えるため
-- 複数の `dotnet` install root が混在している環境では、release smoke が shim 実行の問題を露出させる。script 側では回避しない
+- On macOS, the default parallel path of `dotnet pack` may hang
+- `dotnet msbuild ... -t:Pack -m:1 -p:BuildInParallel=false` works around this
+- `GenerateNuspec` alone and `dotnet tool install` work fine, so this is treated as a pack execution path issue, not package corruption
+- If some runtimes are not installed locally, defer final verification for those TFMs to CI
+- CLI E2E tests use `dotnet <Unilyze.dll>` instead of the apphost directly, to align runtime resolution with `dotnet test`
+- Environments with multiple `dotnet` install roots may expose shim execution issues in the release smoke. The script does not work around this
