@@ -1,0 +1,57 @@
+name: Publish NuGet
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Ensure API key is configured
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          if [[ -z "${NUGET_API_KEY}" ]]; then
+            echo "Repository secret NUGET_API_KEY is not set." >&2
+            exit 1
+          fi
+
+      - name: Read package version
+        id: package
+        shell: bash
+        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore tests
+        run: dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
+
+      - name: Test net10.0
+        run: dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 --no-restore -v minimal
+
+      - name: Restore package project
+        run: dotnet restore src/Unilyze/Unilyze.csproj
+
+      - name: Pack
+        run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
+
+      - name: Release smoke
+        run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version "${{ steps.package.outputs.version }}"
+
+      - name: Push package to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push ./artifacts/nupkg/*.nupkg \
+            --api-key "${NUGET_API_KEY}" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

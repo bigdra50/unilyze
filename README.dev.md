@@ -135,6 +135,23 @@ bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 4. README / docs / package metadata の説明が実装と一致していることを確認する
 5. HTML fallback と `--no-open` を壊していないことを確認する
 
+## NuGet Publish
+
+GitHub Actions から publish する。ローカルの API key 保持は前提にしない。
+
+事前に repository secret `NUGET_API_KEY` を設定する。
+
+公開手順:
+
+1. publish 対象 commit の `CI` workflow を green にする
+2. Actions の `Publish NuGet` workflow を手動実行する
+3. workflow 内で `net10.0` test、pack、release smoke、`dotnet nuget push` を順に実行する
+
+publish workflow:
+
+- [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
+- secret 名: `NUGET_API_KEY`
+
 ## Known Local Caveats
 
 - macOS では `dotnet pack` の既定並列経路が停滞することがある

@@ -48,8 +48,13 @@ jobs:
       - name: Restore
         run: dotnet restore src/Unilyze/Unilyze.csproj
 
+      - name: Read package version
+        id: package
+        shell: bash
+        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
+
       - name: Pack
         run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
 
       - name: Release smoke
-        run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
+        run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version "${{ steps.package.outputs.version }}"
