@@ -1,6 +1,9 @@
 name: Publish NuGet
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -31,6 +34,17 @@ jobs:
         id: package
         shell: bash
         run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF#refs/tags/v}"
+          pkg="${{ steps.package.outputs.version }}"
+          if [[ "$tag" != "$pkg" ]]; then
+            echo "::error::Tag v$tag does not match csproj Version $pkg"
+            exit 1
+          fi
 
       - name: Restore tests
         run: dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
