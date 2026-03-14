@@ -19,7 +19,14 @@ public static class DitCalculator
 
         var symbol = model.GetDeclaredSymbol(typeDecl) as INamedTypeSymbol;
         if (symbol is null)
+        {
+            // GetDeclaredSymbol failed: try resolving base type's TypeKind directly
+            if (typeDecl.BaseList is { Types.Count: > 0 } baseList
+                && model.GetTypeInfo(baseList.Types[0].Type).Type is INamedTypeSymbol baseSymbol)
+                return baseSymbol.TypeKind == TypeKind.Interface ? 0 : 1;
+
             return CalculateSyntactic(typeDecl);
+        }
 
         if (symbol.TypeKind is TypeKind.Struct)
             return 0;
@@ -60,7 +67,10 @@ public static class DitCalculator
             _ => firstBase.Type.ToString()
         };
 
-        if (name.Length >= 2 && name[0] == 'I' && char.IsUpper(name[1]))
+        // Check if the base type is declared as an interface in the same syntax tree
+        var root = typeDecl.SyntaxTree.GetRoot();
+        if (root.DescendantNodes().OfType<InterfaceDeclarationSyntax>()
+            .Any(iface => iface.Identifier.Text == name))
             return 0;
 
         return 1;
