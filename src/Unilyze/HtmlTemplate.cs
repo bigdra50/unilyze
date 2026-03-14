@@ -118,6 +118,8 @@ body{
 }
 .hb:hover{filter:brightness(1.2)}
 .hb-ns{font-size:11px;min-width:22px;height:22px;border-radius:11px;padding:0 6px}
+.hb-cluster{min-width:28px;height:24px;border-radius:12px;padding:0 7px;gap:3px;font-size:10px}
+.hb-cluster .hbc{font-size:7px;opacity:.8}
 .btip{
   position:absolute;pointer-events:none;z-index:25;
   background:rgba(19,24,37,.97);border:1px solid var(--border);border-radius:6px;
@@ -132,6 +134,17 @@ body{
 .btip .bk{color:var(--dim);font-size:9px;flex-shrink:0;min-width:32px}
 .btip .bv{color:var(--text)}
 .btip .bw{color:#f97583}
+.edge-filter{
+  position:absolute;top:42px;z-index:15;
+  background:var(--surface);border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;font-size:11px;box-shadow:0 4px 16px rgba(0,0,0,.5);
+  display:none;
+}
+.edge-filter.show{display:block}
+.ef-row{display:flex;align-items:center;gap:6px;padding:2px 0;cursor:pointer}
+.ef-row:hover{color:var(--accent)}
+.ef-cb{width:12px;height:12px;accent-color:var(--accent)}
+.ef-swatch{width:10px;height:2px;flex-shrink:0}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
@@ -291,6 +304,9 @@ body.offline-mode .panel{
   <button class="btn" id="bHot">Hotspots</button>
   <button class="btn" id="bCyc">Cycles</button>
   <button class="btn" id="bAsm">Assemblies</button>
+  <div class="sep"></div>
+  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option></select>
+  <button class="btn active" id="bEdge">Edges</button>
   <div class="spacer"></div>
   <span class="stats" id="st"></span>
 </div>
@@ -327,6 +343,7 @@ body.offline-mode .panel{
 <div class="legend" id="lg"></div>
 <div class="tip" id="tip"></div>
 <div class="btip" id="btip"></div>
+<div class="edge-filter" id="efPanel"></div>
 <div class="modal-overlay hidden" id="asmOv">
   <div class="modal"><div id="asmContent"></div></div>
 </div>
@@ -978,14 +995,36 @@ DATA.types.forEach(t=>{
   }});
 });
 
+// Edge opacity per kind (structural edges prominent, usage edges subtle)
+const EO={
+  Inheritance:.85,InterfaceImpl:.75,FieldType:.35,PropertyType:.35,
+  MethodParam:.28,ReturnType:.4,ConstructorParam:.45,EventType:.35,GenericConstraint:.28
+};
+
 // Type-level edges (namespace meta-edges built dynamically in rebuild)
+const _pairCount=new Map();
+DATA.dependencies.forEach((d,i)=>{
+  const fromId=depFromId(d), toId=depToId(d);
+  if(!tl[fromId]||!tl[toId]) return;
+  const pk=[fromId,toId].sort().join('|');
+  const idx=_pairCount.get(pk)||0;
+  _pairCount.set(pk,idx+1);
+});
+const _pairIdx=new Map();
 DATA.dependencies.forEach((d,i)=>{
   const fromId=depFromId(d), toId=depToId(d);
   if(!tl[fromId]||!tl[toId]) return;
   const st=DS[d.kind]||{s:'solid',w:1,a:'vee'};
+  const pk=[fromId,toId].sort().join('|');
+  const total=_pairCount.get(pk)||1;
+  const ci=_pairIdx.get(pk)||0;
+  _pairIdx.set(pk,ci+1);
+  const step=25;
+  const cpd=total<=1?0:(-((total-1)*step)/2+ci*step);
   els.push({group:'edges',data:{
     id:'e'+i, source:'t:'+fromId, target:'t:'+toId,
-    kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a
+    kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a,
+    cpd:[cpd], opa:EO[d.kind]||.45
   }});
 });
 
@@ -1040,19 +1079,22 @@ const cy = cytoscape({
     {selector:'node[nodeType="type"][kind="enum"]',style:{'background-color':'#0f1420'}},
     {selector:'edge:not([?meta])',style:{
       'line-color':'data(color)','target-arrow-color':'data(color)',
-      'target-arrow-shape':'data(ar)','arrow-scale':.8,
+      'target-arrow-shape':'data(ar)','arrow-scale':.6,
       'width':'data(w)','line-style':'data(ls)',
-      'curve-style':'taxi','taxi-direction':'downward','taxi-turn':20,'taxi-turn-min-distance':8,
-      'opacity':.55
+      'curve-style':'unbundled-bezier',
+      'control-point-distances':'data(cpd)',
+      'control-point-weights':[0.5],
+      'opacity':'data(opa)'
     }},
     {selector:'edge[?meta]',style:{
       'line-color':'#8b949e','target-arrow-color':'#8b949e',
       'target-arrow-shape':'triangle','width':1.5,'line-style':'dashed',
       'curve-style':'taxi','taxi-direction':'downward','taxi-turn':30,'taxi-turn-min-distance':10,
       'opacity':.5,
-      'label':'data(label)','font-size':9,'color':'#8b949e',
-      'text-background-color':'#0b0f19','text-background-opacity':.85,
-      'text-background-padding':2,'text-background-shape':'round-rectangle'
+      'label':'data(label)','font-size':9,'color':'#c9d1d9',
+      'text-background-color':'#131825','text-background-opacity':1,
+      'text-background-padding':4,'text-background-shape':'round-rectangle',
+      'text-margin-y':-12
     }},
     {selector:'node:selected',style:{'border-width':2.5,'border-color':'#58a6ff'}},
     {selector:'.dim',style:{'opacity':.12}},
@@ -1195,7 +1237,7 @@ function rebuild(){
 function layout(){
   const vis=cy.elements().filter(e=>e.style('display')!=='none');
   vis.layout({
-    name:'dagre',rankDir:'TB',nodeSep:50,rankSep:70,edgeSep:12,
+    name:'dagre',rankDir:'TB',nodeSep:80,rankSep:100,edgeSep:30,
     animate:true,animationDuration:250,fit:true,padding:40
   }).run();
 }
@@ -1272,7 +1314,11 @@ function rebuildBadges(){
     _snapZoom=zoom;
     const rawScale=Math.sqrt(zoom/BADGE_ZOOM_REF);
     const scale=Math.max(BADGE_SCALE_MIN,Math.min(BADGE_SCALE_MAX,rawScale));
+    const vw=badgeEl.clientWidth, vh=badgeEl.clientHeight;
+    const margin=30;
 
+    // Phase 1: collect badge data
+    const raw=[];
     cy.nodes().forEach(n=>{
       if(n.style('display')==='none') return;
       const d=n.data();
@@ -1287,25 +1333,59 @@ function rebuildBadges(){
         score=h.min; isNs=true; nsPath=d.fullLabel;
       } else return;
 
-      if(!badgeLodVisible(score, zoom)) return;
-
       const bb=n.renderedBoundingBox();
-      const margin=30;
-      const vw=badgeEl.clientWidth, vh=badgeEl.clientHeight;
       if(bb.x2<-margin||bb.x1>vw+margin||bb.y2<-margin||bb.y1>vh+margin) return;
 
       const renderedSize=(isNs?22:18)*scale;
-      if(renderedSize<BADGE_MIN_PX) return;
+      if(renderedSize<BADGE_MIN_PX&&zoom>=0.5) return;
+
+      raw.push({x:bb.x2,y:bb.y1,score,isNs,nsPath:nsPath||'',
+        nodeId:n.id(),typeId:d.typeId||'',count:1,scores:[score]});
+    });
+
+    // Phase 2: grid-based clustering when zoomed out
+    let items;
+    if(zoom<0.5&&raw.length>3){
+      const cellSize=Math.max(40, 60/Math.max(zoom,0.05));
+      const grid=new Map();
+      raw.forEach(b=>{
+        const key=Math.floor(b.x/cellSize)+','+Math.floor(b.y/cellSize);
+        if(!grid.has(key)) grid.set(key,[]);
+        grid.get(key).push(b);
+      });
+      items=[];
+      grid.forEach(cell=>{
+        if(cell.length===1){items.push(cell[0]);return}
+        let minS=Infinity,sx=0,sy=0,anyNs=false;
+        const allScores=[];
+        cell.forEach(b=>{
+          if(b.score<minS) minS=b.score;
+          sx+=b.x; sy+=b.y;
+          if(b.isNs) anyNs=true;
+          allScores.push(b.score);
+        });
+        items.push({x:sx/cell.length,y:sy/cell.length,score:minS,
+          isNs:anyNs,nsPath:'',nodeId:cell[0].nodeId,typeId:'',
+          count:cell.length,scores:allScores.sort((a,c)=>a-c)});
+      });
+    } else {
+      items=raw;
+    }
+
+    // Phase 3: render
+    items.forEach(bd=>{
+      const isCluster=bd.count>1;
+      if(!isCluster&&!badgeLodVisible(bd.score, zoom)) return;
 
       const b=document.createElement('div');
-      b.className=isNs?'hb hb-ns':'hb';
-      b.style.left=bb.x2+'px';
-      b.style.top=bb.y1+'px';
-      b.style.background=healthColor(score);
+      b.className=isCluster?'hb hb-cluster':(bd.isNs?'hb hb-ns':'hb');
+      b.style.left=bd.x+'px';
+      b.style.top=bd.y+'px';
+      b.style.background=healthColor(bd.score);
       b.style.transform='translate(50%,-50%) scale('+scale.toFixed(3)+')';
       let opacity=1;
       for(const t of LOD_THRESHOLDS){
-        if(zoom<t.zoom && score<t.maxScore){
+        if(zoom<t.zoom && bd.score<t.maxScore){
           const fadeRange=t.zoom*0.3;
           const fadeStart=t.zoom-fadeRange;
           if(zoom<fadeStart) opacity=Math.max(0.4, (zoom-fadeStart*0.5)/(fadeStart*0.5));
@@ -1313,11 +1393,24 @@ function rebuildBadges(){
         }
       }
       if(opacity<1) b.style.opacity=opacity.toFixed(2);
-      b.textContent=score>=10?'10':score.toFixed(1);
-      b.dataset.nodeId=n.id();
-      b.dataset.isNs=isNs?'1':'';
-      b.dataset.nsPath=nsPath||'';
-      b.dataset.typeId=d.typeId||'';
+
+      if(isCluster){
+        b.textContent=bd.score>=10?'10':bd.score.toFixed(1);
+        const cnt=document.createElement('span');
+        cnt.className='hbc';
+        cnt.textContent='\u00d7'+bd.count;
+        b.appendChild(cnt);
+      } else {
+        b.textContent=bd.score>=10?'10':bd.score.toFixed(1);
+      }
+
+      b.dataset.nodeId=bd.nodeId;
+      b.dataset.isNs=bd.isNs?'1':'';
+      b.dataset.nsPath=bd.nsPath;
+      b.dataset.typeId=bd.typeId;
+      b.dataset.cluster=isCluster?'1':'';
+      b.dataset.scores=isCluster?bd.scores.join(','):'';
+      b.dataset.count=bd.count;
       badgeEl.appendChild(b);
     });
   });
@@ -1359,7 +1452,20 @@ badgeEl.addEventListener('mouseover',e=>{
   const b=e.target.closest('.hb');
   if(!b) return;
   let h='';
-  if(b.dataset.isNs==='1'){
+  if(b.dataset.cluster==='1'){
+    const scores=(b.dataset.scores||'').split(',').map(Number);
+    const cnt=+b.dataset.count||scores.length;
+    const min=scores[0],max=scores[scores.length-1];
+    const avg=+(scores.reduce((a,v)=>a+v,0)/scores.length).toFixed(1);
+    const low=scores.filter(s=>s<7).length;
+    const crit=scores.filter(s=>s<4).length;
+    h='<div class="bh" style="color:'+healthColor(min)+'">Cluster ('+cnt+' badges)</div>';
+    h+='<div class="br"><span class="bk">worst</span><span class="bv" style="color:'+healthColor(min)+'">'+min.toFixed(1)+'</span></div>';
+    h+='<div class="br"><span class="bk">avg</span><span class="bv">'+avg+'</span></div>';
+    h+='<div class="br"><span class="bk">best</span><span class="bv" style="color:'+healthColor(max)+'">'+max.toFixed(1)+'</span></div>';
+    if(low>0) h+='<div class="br"><span class="bk">warn</span><span class="bw">'+low+' / '+cnt+' below 7</span></div>';
+    if(crit>0) h+='<div class="br"><span class="bk">crit</span><span class="bw">'+crit+' below 4</span></div>';
+  } else if(b.dataset.isNs==='1'){
     const d=nsHealthMap.get(b.dataset.nsPath);
     if(!d) return;
     h='<div class="bh" style="color:'+healthColor(d.min)+'">'+esc(b.dataset.nsPath)+'</div>';
@@ -1566,6 +1672,59 @@ document.getElementById('q').addEventListener('input',function(){
   },180);
 });
 
+// --- Edge Style Toggle (Bezier / Taxi) ---
+document.getElementById('edgeStyle').addEventListener('change',function(){
+  const mode=this.value;
+  cy.startBatch();
+  if(mode==='taxi'){
+    cy.edges(':not([?meta])').style({
+      'curve-style':'taxi','taxi-direction':'downward',
+      'taxi-turn':20,'taxi-turn-min-distance':8
+    });
+  } else {
+    cy.edges(':not([?meta])').removeStyle('curve-style taxi-direction taxi-turn taxi-turn-min-distance');
+  }
+  cy.endBatch();
+});
+
+// --- Edge Kind Filter ---
+const _edgeVis=new Map();
+Object.keys(DC).forEach(k=>_edgeVis.set(k,true));
+const efPanel=document.getElementById('efPanel');
+(function buildEdgeFilter(){
+  let h='';
+  Object.entries(DC).forEach(([k,c])=>{
+    const d=DS[k]||{s:'solid'};
+    h+='<label class="ef-row"><input type="checkbox" class="ef-cb" data-kind="'+k+'" checked>';
+    h+='<span class="ef-swatch" style="border-bottom:2px '+d.s+' '+c+'"></span>'+k+'</label>';
+  });
+  efPanel.innerHTML=h;
+  efPanel.addEventListener('change',e=>{
+    const cb=e.target;
+    if(!cb.dataset.kind) return;
+    _edgeVis.set(cb.dataset.kind,cb.checked);
+    applyEdgeFilter();
+  });
+})();
+function applyEdgeFilter(){
+  cy.startBatch();
+  cy.edges(':not([?meta])').forEach(e=>{
+    const vis=_edgeVis.get(e.data('kind'));
+    e.style('display',vis?'element':'none');
+  });
+  cy.endBatch();
+  markBadgesDirty();rebuildBadges();
+}
+document.getElementById('bEdge').onclick=function(){
+  const btn=this;
+  const showing=efPanel.classList.toggle('show');
+  btn.classList.toggle('active',showing);
+  if(showing){
+    const r=btn.getBoundingClientRect();
+    efPanel.style.left=r.left+'px';
+  }
+};
+
 // --- Toolbar ---
 document.getElementById('bExp').onclick=expAll;
 document.getElementById('bCol').onclick=colAll;
@@ -1704,6 +1863,17 @@ cy.on('mousemove','node',e=>{
   if(ty+th>bh-10)ty=py-th-12;
   tip.style.left=tx+'px';tip.style.top=ty+'px';
 });
+// --- Edge hover: highlight hovered edge + connected nodes only ---
+cy.on('mouseover','edge',e=>{
+  const edge=e.target;
+  edge.style({'opacity':1,'width':edge.data('w')+1.5,'z-index':999});
+  edge.connectedNodes().style({'border-width':2.5,'border-color':'#58a6ff'});
+});
+cy.on('mouseout','edge',e=>{
+  e.target.removeStyle('opacity width z-index');
+  e.target.connectedNodes().removeStyle('border-width border-color');
+});
+
 // --- Shared utility ---
 const escAttr=s=>esc(s).replace(/"/g,'&quot;');
 
