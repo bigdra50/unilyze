@@ -44,7 +44,8 @@ public static class DitCalculator
 
     static int CalculateSyntactic(TypeDeclarationSyntax typeDecl)
     {
-        if (typeDecl is InterfaceDeclarationSyntax or StructDeclarationSyntax)
+        if (typeDecl is InterfaceDeclarationSyntax or StructDeclarationSyntax
+            or RecordDeclarationSyntax { ClassOrStructKeyword.Text: "struct" })
             return 0;
 
         if (typeDecl.BaseList is null)
@@ -54,16 +55,14 @@ public static class DitCalculator
         if (firstBase is null)
             return 0;
 
+        // QualifiedNameSyntax: external type reference, skip interface check to avoid namespace collision
+        if (firstBase.Type is QualifiedNameSyntax)
+            return 1;
+
         var name = firstBase.Type switch
         {
             IdentifierNameSyntax id => id.Identifier.Text,
             GenericNameSyntax generic => generic.Identifier.Text,
-            QualifiedNameSyntax qualified => qualified.Right switch
-            {
-                IdentifierNameSyntax id => id.Identifier.Text,
-                GenericNameSyntax generic => generic.Identifier.Text,
-                _ => qualified.Right.ToString()
-            },
             _ => firstBase.Type.ToString()
         };
 

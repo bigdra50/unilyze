@@ -136,6 +136,45 @@ public class DitAndCouplingTests
         Assert.Equal(0, CalcDitSemantic(code));
     }
 
+    [Fact]
+    public void DIT_RecordStruct_Syntactic_Zero()
+    {
+        var code = "record struct C;";
+        Assert.Equal(0, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_Record_Syntactic_One()
+    {
+        var code = """
+            class Base { }
+            record C : Base;
+            """;
+        Assert.Equal(1, CalcDit(code));
+    }
+
+    [Fact]
+    public void DIT_QualifiedName_Syntactic_One()
+    {
+        // QualifiedNameSyntax bypasses interface check to avoid namespace collision
+        var code = """
+            namespace A { interface Base { } }
+            class C : A.Base { }
+            """;
+        Assert.Equal(1, CalcDit(code, "C"));
+    }
+
+    [Fact]
+    public void DIT_MultipleBaseList_Syntactic_One()
+    {
+        var code = """
+            class Base { }
+            interface IFoo { }
+            class C : Base, IFoo { }
+            """;
+        Assert.Equal(1, CalcDit(code));
+    }
+
     // --- Ca/Ce/Instability tests ---
 
     static IReadOnlyDictionary<string, CouplingInfo> CalcCoupling(
