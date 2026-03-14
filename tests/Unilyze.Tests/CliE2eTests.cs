@@ -7,7 +7,8 @@ public sealed class CliE2eTests : IDisposable
 {
     private readonly string _tempDir;
     private static readonly string CurrentTargetFramework = ResolveCurrentTargetFramework();
-    private static readonly string AppHostPath = ResolveAppHostPath();
+    private static readonly string DotnetHostPath = ResolveDotnetHostPath();
+    private static readonly string AppDllPath = ResolveAppDllPath();
 
     public CliE2eTests()
     {
@@ -25,16 +26,19 @@ public sealed class CliE2eTests : IDisposable
     {
         var psi = new ProcessStartInfo
         {
-            FileName = AppHostPath,
+            // Reuse the SDK-selected host to avoid apphost/runtime lookup mismatches in CI and local dev.
+            FileName = DotnetHostPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+        psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)!;
+        using var proc = Process.Start(psi)
+            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
         var stdout = proc.StandardOutput.ReadToEnd();
         var stderr = proc.StandardError.ReadToEnd();
         proc.WaitForExit(60_000);
@@ -50,11 +54,21 @@ public sealed class CliE2eTests : IDisposable
         return tfm;
     }
 
-    private static string ResolveAppHostPath()
+    private static string ResolveDotnetHostPath()
     {
-        var fileName = OperatingSystem.IsWindows() ? "Unilyze.exe" : "Unilyze";
-        return Path.GetFullPath(
-            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Unilyze", "bin", "Debug", CurrentTargetFramework, fileName));
+        var configured = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
+        return string.IsNullOrWhiteSpace(configured) ? "dotnet" : configured;
+    }
+
+    private static string ResolveAppDllPath()
+    {
+        var path = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "Unilyze", "bin", "Debug", CurrentTargetFramework, "Unilyze.dll"));
+
+        if (!File.Exists(path))
+            throw new FileNotFoundException($"Could not find CLI assembly under test: {path}", path);
+
+        return path;
     }
 
     [Fact]
