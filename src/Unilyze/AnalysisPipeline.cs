@@ -258,6 +258,8 @@ internal static class AnalysisPipeline
         double? lcom = null;
         int? cbo = null;
         int? dit = null;
+        typeInfoByKey.TryGetValue(key, out var typeInfo);
+
         if (typeDeclLookup.TryGetValue(key, out var typeDecl))
         {
             SemanticModel? model = null;
@@ -269,13 +271,25 @@ internal static class AnalysisPipeline
 
             lcom = LcomCalculator.Calculate(typeDecl, model);
             cbo = CboCalculator.Calculate(typeDecl, model);
-            dit = DitCalculator.Calculate(typeDecl, model);
+
+            if (model is not null)
+            {
+                dit = DitCalculator.Calculate(typeDecl, model);
+            }
+            else if (typeInfo is not null)
+            {
+                // SyntaxOnly: use TypeAnalyzer's resolved BaseType (cross-file interface resolution)
+                dit = typeInfo.Kind is "interface" or "struct" or "record struct" ? 0
+                    : typeInfo.BaseType != null ? 1 : 0;
+            }
+            else
+            {
+                dit = DitCalculator.Calculate(typeDecl, model: null);
+            }
 
             if (model is not null)
                 current = RecalculateCycCC(current, typeDecl, model);
         }
-
-        typeInfoByKey.TryGetValue(key, out var typeInfo);
         var smells = typeInfo is not null
             ? CodeSmellDetector.Detect(current, typeInfo, lcom, cbo, dit)
             : [];
