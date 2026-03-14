@@ -11,3 +11,4 @@ nupkg/
 .cursor/skills/
 .gemini/skills/
 .windsurf/skills/
+.claude/settings.local.json
