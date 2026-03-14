@@ -4,3 +4,10 @@ obj/
 *.suo
 .vs/
 nupkg/
+
+# Skills are installed via `unilyze skills install`
+.claude/skills/
+.codex/skills/
+.cursor/skills/
+.gemini/skills/
+.windsurf/skills/

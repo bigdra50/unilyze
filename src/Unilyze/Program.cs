@@ -10,6 +10,9 @@ if (args.Length >= 1 && args[0] == "trend")
 
 var opts = ProgramHelpers.ParseOptions(args);
 
+if (args.Length >= 1 && args[0] is "skills")
+    return SkillInstaller.Run(args);
+
 if (opts.ContainsKey("-h") || opts.ContainsKey("--help") || (args.Length == 1 && args[0] is "help"))
     return PrintUsage();
 if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1 && args[0] is "version"))
@@ -116,6 +119,7 @@ Usage:
   unilyze -p <path> -f json                Output JSON to stdout
   unilyze -p <path> -f sarif -o report.sarif  Output SARIF for GitHub Code Scanning
   unilyze -i result.json -o graph.html     Generate HTML from existing JSON
+  unilyze skills install --claude           Install skills for AI coding tools
 
 Options:
   -p, --path      Unity project root or Assets directory (default: .)
@@ -126,6 +130,9 @@ Options:
       --prefix    Filter asmdef names by prefix (auto-detected if omitted)
   -v, --version   Show version
   -h, --help      Show this help
+
+Subcommands:
+  skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
 """);
     return 0;
 }
