@@ -269,22 +269,35 @@ internal static class AnalysisPipeline
                 model = modelCache.GetOrAdd(tree, t => compilationResult.Compilation.GetSemanticModel(t));
             }
 
-            lcom = LcomCalculator.Calculate(typeDecl, model);
-            cbo = CboCalculator.Calculate(typeDecl, model);
+            try
+            {
+                lcom = LcomCalculator.Calculate(typeDecl, model);
+                cbo = CboCalculator.Calculate(typeDecl, model);
 
-            if (model is not null)
-            {
-                dit = DitCalculator.Calculate(typeDecl, model);
+                if (model is not null)
+                {
+                    dit = DitCalculator.Calculate(typeDecl, model);
+                }
             }
-            else if (typeInfo is not null)
+            catch (Exception)
             {
-                // SyntaxOnly: use TypeAnalyzer's resolved BaseType (cross-file interface resolution)
-                dit = typeInfo.Kind is "interface" or "struct" or "record struct" ? 0
-                    : typeInfo.BaseType != null ? 1 : 0;
+                // Roslyn internal errors (e.g. NullableWalker NRE) — fall back to syntactic analysis
+                lcom = LcomCalculator.Calculate(typeDecl, model: null);
+                cbo = CboCalculator.Calculate(typeDecl, model: null);
+                model = null;
             }
-            else
+
+            if (dit is null)
             {
-                dit = DitCalculator.Calculate(typeDecl, model: null);
+                if (typeInfo is not null)
+                {
+                    dit = typeInfo.Kind is "interface" or "struct" or "record struct" ? 0
+                        : typeInfo.BaseType != null ? 1 : 0;
+                }
+                else
+                {
+                    dit = DitCalculator.Calculate(typeDecl, model: null);
+                }
             }
 
             if (model is not null)

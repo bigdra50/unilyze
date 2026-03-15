@@ -77,8 +77,16 @@ public static class LcomCalculator
 
         foreach (var identifier in body.DescendantNodes().OfType<IdentifierNameSyntax>())
         {
-            var symbolInfo = model.GetSymbolInfo(identifier);
-            var symbol = symbolInfo.Symbol;
+            ISymbol? symbol;
+            try
+            {
+                symbol = model.GetSymbolInfo(identifier).Symbol;
+            }
+            catch (Exception)
+            {
+                // Roslyn internal errors (e.g. NullableWalker NRE) — skip this identifier
+                continue;
+            }
             if (symbol is null) continue;
 
             switch (symbol)
