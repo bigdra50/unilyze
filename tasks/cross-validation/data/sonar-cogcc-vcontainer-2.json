@@ -1,0 +1,114 @@
+[
+  {
+    "file": "Fixtures.cs",
+    "typeName": "ServiceA",
+    "methodName": "ServiceA",
+    "score": 1,
+    "line": 129
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasCircularDependency2",
+    "methodName": "HasCircularDependency2",
+    "score": 1,
+    "line": 233
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasAbstractCircularDependency2",
+    "methodName": "HasAbstractCircularDependency2",
+    "score": 1,
+    "line": 255
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasCircularDependencyMsg1",
+    "methodName": "HasCircularDependencyMsg1",
+    "score": 1,
+    "line": 266
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasCircularDependencyMsg2",
+    "methodName": "Method",
+    "score": 1,
+    "line": 278
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasAbstractCircularDependency1",
+    "methodName": "HasAbstractCircularDependency1",
+    "score": 1,
+    "line": 244
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "ServiceC",
+    "methodName": "ServiceC",
+    "score": 4,
+    "line": 157
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "ServiceB",
+    "methodName": "ServiceB",
+    "score": 1,
+    "line": 144
+  },
+  {
+    "file": "Fixtures.cs",
+    "typeName": "HasCircularDependency1",
+    "methodName": "HasCircularDependency1",
+    "score": 1,
+    "line": 222
+  },
+  {
+    "file": "CappedArrayPoolTest.cs",
+    "typeName": "CappedArrayPoolTest",
+    "methodName": "Rent_ExpandBucket",
+    "score": 2,
+    "line": 22
+  },
+  {
+    "file": "PlayerLoopRunnerTest.cs",
+    "typeName": "DisposableLoopItem",
+    "methodName": "MoveNext",
+    "score": 1,
+    "line": 24
+  },
+  {
+    "file": "PlayerLoopRunnerTest.cs",
+    "typeName": "NestedLoopItem",
+    "methodName": "MoveNext",
+    "score": 1,
+    "line": 46
+  },
+  {
+    "file": "LifetimeScopeTest.cs",
+    "typeName": "LifetimeScopeTest",
+    "methodName": "CreateWithName",
+    "score": 2,
+    "line": 230
+  },
+  {
+    "file": "ContainerTest.cs",
+    "typeName": "ContainerTest",
+    "methodName": "CircularDependency",
+    "score": 1,
+    "line": 517
+  },
+  {
+    "file": "ContainerTest.cs",
+    "typeName": "ContainerTest",
+    "methodName": "CircularDependencyWithAbstract",
+    "score": 1,
+    "line": 533
+  },
+  {
+    "file": "ContainerTest.cs",
+    "typeName": "ContainerTest",
+    "methodName": "CircularDependencyMsg",
+    "score": 1,
+    "line": 549
+  }
+]

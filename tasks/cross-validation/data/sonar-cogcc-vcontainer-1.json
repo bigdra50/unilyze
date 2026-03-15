@@ -1,0 +1,128 @@
+[
+  {
+    "file": "TypeNameHelper.cs",
+    "typeName": "TypeNameHelper",
+    "methodName": "GetTypeAlias",
+    "score": 2,
+    "line": 28
+  },
+  {
+    "file": "ParentReferencePropertyDrawer.cs",
+    "typeName": "ParentReferencePropertyDrawer",
+    "methodName": "OnGUI",
+    "score": 5,
+    "line": 26
+  },
+  {
+    "file": "VContainerDiagnosticsWindow.cs",
+    "typeName": "VContainerDiagnosticsWindow",
+    "methodName": "RenderInstancePanel",
+    "score": 5,
+    "line": 155
+  },
+  {
+    "file": "VContainerDiagnosticsWindow.cs",
+    "typeName": "VContainerDiagnosticsWindow",
+    "methodName": "RenderHeadPanel",
+    "score": 2,
+    "line": 112
+  },
+  {
+    "file": "VContainerDiagnosticsWindow.cs",
+    "typeName": "VContainerDiagnosticsWindow",
+    "methodName": "OpenWindow",
+    "score": 1,
+    "line": 21
+  },
+  {
+    "file": "VContainerDiagnosticsWindow.cs",
+    "typeName": "VContainerDiagnosticsWindow",
+    "methodName": "RenderStackTracePanel",
+    "score": 4,
+    "line": 186
+  },
+  {
+    "file": "ScriptTemplateModifier.cs",
+    "typeName": "ScriptTemplateProcessor",
+    "methodName": "OnWillCreateAsset",
+    "score": 6,
+    "line": 37
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "GetSelectedItem",
+    "score": 1,
+    "line": 130
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "OnSortedChanged",
+    "score": 5,
+    "line": 146
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "BuildRoot",
+    "score": 14,
+    "line": 170
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "RowGUI",
+    "score": 6,
+    "line": 213
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "AddDependencyItemsRecursive",
+    "score": 2,
+    "line": 271
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "DiagnosticsInfoTreeViewItem",
+    "methodName": "ContractTypesSummary",
+    "score": 1,
+    "line": 26
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "VContainerDiagnosticsInfoTreeView",
+    "methodName": "Sort",
+    "score": 13,
+    "line": 287
+  },
+  {
+    "file": "VContainerDiagnosticsTreeView.cs",
+    "typeName": "DiagnosticsInfoTreeViewItem",
+    "methodName": "RegisterSummary",
+    "score": 6,
+    "line": 39
+  },
+  {
+    "file": "VContainerInstanceTreeView.cs",
+    "typeName": "VContainerInstanceTreeView",
+    "methodName": "Stringify",
+    "score": 3,
+    "line": 16
+  },
+  {
+    "file": "VContainerInstanceTreeView.cs",
+    "typeName": "VContainerInstanceTreeView",
+    "methodName": "BuildRoot",
+    "score": 3,
+    "line": 32
+  },
+  {
+    "file": "VContainerInstanceTreeView.cs",
+    "typeName": "VContainerInstanceTreeView",
+    "methodName": "AddProperties",
+    "score": 21,
+    "line": 53
+  }
+]

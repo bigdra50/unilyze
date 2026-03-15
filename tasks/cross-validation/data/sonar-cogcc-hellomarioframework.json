@@ -1,0 +1,1451 @@
+[
+  {
+    "file": "HubRespawnPoint.cs",
+    "typeName": "HubRespawnPoint",
+    "methodName": "OnTriggerEnter",
+    "score": 1,
+    "line": 20
+  },
+  {
+    "file": "Shy.cs",
+    "typeName": "Shy",
+    "methodName": "OnStateEnter",
+    "score": 1,
+    "line": 36
+  },
+  {
+    "file": "TyFoo.cs",
+    "typeName": "TyFoo",
+    "methodName": "Start",
+    "score": 2,
+    "line": 33
+  },
+  {
+    "file": "TyFoo.cs",
+    "typeName": "TyFoo",
+    "methodName": "BlowLoop",
+    "score": 1,
+    "line": 41
+  },
+  {
+    "file": "FreezeAnimation.cs",
+    "typeName": "FreezeAnimation",
+    "methodName": "OnStateUpdate",
+    "score": 1,
+    "line": 19
+  },
+  {
+    "file": "RotatorReverse.cs",
+    "typeName": "RotatorReverse",
+    "methodName": "Start",
+    "score": 1,
+    "line": 32
+  },
+  {
+    "file": "RotatorReverse.cs",
+    "typeName": "RotatorReverse",
+    "methodName": "FixedUpdate",
+    "score": 10,
+    "line": 43
+  },
+  {
+    "file": "BulletBill.cs",
+    "typeName": "BulletBill",
+    "methodName": "FixedUpdateStompable",
+    "score": 2,
+    "line": 53
+  },
+  {
+    "file": "BulletBill.cs",
+    "typeName": "BulletBill",
+    "methodName": "OnCollisionStayStompable",
+    "score": 5,
+    "line": 64
+  },
+  {
+    "file": "NPC.cs",
+    "typeName": "NPC",
+    "methodName": "Start",
+    "score": 1,
+    "line": 51
+  },
+  {
+    "file": "NPC.cs",
+    "typeName": "NPC",
+    "methodName": "FixedUpdate",
+    "score": 3,
+    "line": 60
+  },
+  {
+    "file": "NPC.cs",
+    "typeName": "NPC",
+    "methodName": "OnTriggerStay",
+    "score": 18,
+    "line": 73
+  },
+  {
+    "file": "NPC.cs",
+    "typeName": "NPC",
+    "methodName": "FinishedSpeaking",
+    "score": 1,
+    "line": 121
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Awake",
+    "score": 9,
+    "line": 118
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Start",
+    "score": 7,
+    "line": 148
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "GetInputDirection",
+    "score": 1,
+    "line": 601
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "OnCollisionStay",
+    "score": 29,
+    "line": 534
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "SnapToFloor",
+    "score": 1,
+    "line": 619
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "JumpAnim",
+    "score": 1,
+    "line": 638
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "IsPound",
+    "score": 1,
+    "line": 676
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "PoundEnd",
+    "score": 3,
+    "line": 662
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "IsPoundStart",
+    "score": 1,
+    "line": 682
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "UndoPound",
+    "score": 4,
+    "line": 687
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "BounceUp",
+    "score": 3,
+    "line": 704
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Heal",
+    "score": 1,
+    "line": 735
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Hurt",
+    "score": 11,
+    "line": 742
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Knockback",
+    "score": 1,
+    "line": 772
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "CanBeChased",
+    "score": 1,
+    "line": 797
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "FixedUpdate",
+    "score": 124,
+    "line": 205
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "AcceptHat",
+    "score": 1,
+    "line": 808
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "AltJumpButtonCheck",
+    "score": 2,
+    "line": 834
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "RemoveHat",
+    "score": 3,
+    "line": 819
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "LockZAxis",
+    "score": 1,
+    "line": 872
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "HurtTimer",
+    "score": 3,
+    "line": 883
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Kill",
+    "score": 6,
+    "line": 909
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "Victory",
+    "score": 5,
+    "line": 931
+  },
+  {
+    "file": "Player.cs",
+    "typeName": "Player",
+    "methodName": "VictoryEnd",
+    "score": 1,
+    "line": 964
+  },
+  {
+    "file": "CameraTriggerActivator.cs",
+    "typeName": "CameraTriggerActivator",
+    "methodName": "OnTriggerEnter",
+    "score": 3,
+    "line": 32
+  },
+  {
+    "file": "CameraTriggerActivator.cs",
+    "typeName": "CameraTriggerActivator",
+    "methodName": "OnTriggerExit",
+    "score": 3,
+    "line": 46
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "FixedUpdate",
+    "score": 3,
+    "line": 49
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "OnTriggerStay",
+    "score": 3,
+    "line": 62
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "OnCollisionEnter",
+    "score": 12,
+    "line": 80
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "SetReadyFace",
+    "score": 2,
+    "line": 118
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "SetFallFace",
+    "score": 2,
+    "line": 132
+  },
+  {
+    "file": "Thwomp.cs",
+    "typeName": "Thwomp",
+    "methodName": "SetUpFace",
+    "score": 2,
+    "line": 146
+  },
+  {
+    "file": "HMFUtilities.cs",
+    "typeName": "HMFUtilities",
+    "methodName": "OpenSaveDirectory",
+    "score": 1,
+    "line": 27
+  },
+  {
+    "file": "DryBones.cs",
+    "typeName": "DryBones",
+    "methodName": "LateUpdate",
+    "score": 1,
+    "line": 56
+  },
+  {
+    "file": "DryBones.cs",
+    "typeName": "DryBones",
+    "methodName": "WhenHurtPlayer",
+    "score": 2,
+    "line": 75
+  },
+  {
+    "file": "DryBones.cs",
+    "typeName": "DryBones",
+    "methodName": "FixedUpdateStompable",
+    "score": 9,
+    "line": 89
+  },
+  {
+    "file": "RotatorButton.cs",
+    "typeName": "RotatorButton",
+    "methodName": "Start",
+    "score": 3,
+    "line": 33
+  },
+  {
+    "file": "RotatorButton.cs",
+    "typeName": "RotatorButton",
+    "methodName": "FixedUpdate",
+    "score": 15,
+    "line": 50
+  },
+  {
+    "file": "Magic.cs",
+    "typeName": "Magic",
+    "methodName": "OnCollisionEnter",
+    "score": 3,
+    "line": 29
+  },
+  {
+    "file": "Magikoopa.cs",
+    "typeName": "Magikoopa",
+    "methodName": "Start",
+    "score": 2,
+    "line": 47
+  },
+  {
+    "file": "Magikoopa.cs",
+    "typeName": "Magikoopa",
+    "methodName": "FixedUpdateStompable",
+    "score": 9,
+    "line": 69
+  },
+  {
+    "file": "Magikoopa.cs",
+    "typeName": "Magikoopa",
+    "methodName": "Cast",
+    "score": 2,
+    "line": 91
+  },
+  {
+    "file": "Boo.cs",
+    "typeName": "Boo",
+    "methodName": "FixedUpdate",
+    "score": 20,
+    "line": 43
+  },
+  {
+    "file": "Piranha.cs",
+    "typeName": "Piranha",
+    "methodName": "OnTriggerStay",
+    "score": 3,
+    "line": 46
+  },
+  {
+    "file": "Piranha.cs",
+    "typeName": "Piranha",
+    "methodName": "FixedUpdateStompable",
+    "score": 1,
+    "line": 69
+  },
+  {
+    "file": "TransformSwapper.cs",
+    "typeName": "TransformSwapper",
+    "methodName": "Change",
+    "score": 1,
+    "line": 21
+  },
+  {
+    "file": "Cannon.cs",
+    "typeName": "Cannon",
+    "methodName": "Start",
+    "score": 2,
+    "line": 26
+  },
+  {
+    "file": "Cannon.cs",
+    "typeName": "Cannon",
+    "methodName": "Launch",
+    "score": 2,
+    "line": 33
+  },
+  {
+    "file": "Stompable.cs",
+    "typeName": "Stompable",
+    "methodName": "FixedUpdate",
+    "score": 2,
+    "line": 33
+  },
+  {
+    "file": "Stompable.cs",
+    "typeName": "Stompable",
+    "methodName": "Stomp",
+    "score": 2,
+    "line": 90
+  },
+  {
+    "file": "Stompable.cs",
+    "typeName": "Stompable",
+    "methodName": "OnCollisionStay",
+    "score": 11,
+    "line": 54
+  },
+  {
+    "file": "HammerSpawn.cs",
+    "typeName": "HammerSpawn",
+    "methodName": "FixedUpdate",
+    "score": 9,
+    "line": 32
+  },
+  {
+    "file": "Enemy.cs",
+    "typeName": "Enemy",
+    "methodName": "Start",
+    "score": 1,
+    "line": 44
+  },
+  {
+    "file": "Enemy.cs",
+    "typeName": "Enemy",
+    "methodName": "LateUpdate",
+    "score": 1,
+    "line": 56
+  },
+  {
+    "file": "Enemy.cs",
+    "typeName": "Enemy",
+    "methodName": "WhenHurtPlayer",
+    "score": 2,
+    "line": 77
+  },
+  {
+    "file": "Enemy.cs",
+    "typeName": "Enemy",
+    "methodName": "FixedUpdateStompable",
+    "score": 21,
+    "line": 92
+  },
+  {
+    "file": "Enemy.cs",
+    "typeName": "Enemy",
+    "methodName": "OnCollisionStayStompable",
+    "score": 6,
+    "line": 154
+  },
+  {
+    "file": "ItemSpawnSnowballButton.cs",
+    "typeName": "ItemSpawnSnowballButton",
+    "methodName": "ResetPosition",
+    "score": 1,
+    "line": 19
+  },
+  {
+    "file": "Galoomba.cs",
+    "typeName": "Galoomba",
+    "methodName": "WhenStomped",
+    "score": 2,
+    "line": 25
+  },
+  {
+    "file": "Galoomba.cs",
+    "typeName": "Galoomba",
+    "methodName": "WhenHurtPlayer",
+    "score": 1,
+    "line": 37
+  },
+  {
+    "file": "Podoboo.cs",
+    "typeName": "Podoboo",
+    "methodName": "FixedUpdate",
+    "score": 21,
+    "line": 48
+  },
+  {
+    "file": "StarClearDeleter.cs",
+    "typeName": "StarClearDeleter",
+    "methodName": "Start",
+    "score": 1,
+    "line": 24
+  },
+  {
+    "file": "SpikeSpawn.cs",
+    "typeName": "SpikeSpawn",
+    "methodName": "FixedUpdate",
+    "score": 9,
+    "line": 32
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "LateUpdate",
+    "score": 1,
+    "line": 54
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "OnCollisionStay",
+    "score": 21,
+    "line": 70
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "WhenHurtPlayer",
+    "score": 2,
+    "line": 135
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "WhenStomped",
+    "score": 5,
+    "line": 106
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "FixedUpdateStompable",
+    "score": 21,
+    "line": 150
+  },
+  {
+    "file": "Chuck.cs",
+    "typeName": "Chuck",
+    "methodName": "OnCollisionStayStompable",
+    "score": 10,
+    "line": 210
+  },
+  {
+    "file": "Spike.cs",
+    "typeName": "Spike",
+    "methodName": "Start",
+    "score": 2,
+    "line": 34
+  },
+  {
+    "file": "Spike.cs",
+    "typeName": "Spike",
+    "methodName": "Throw",
+    "score": 1,
+    "line": 50
+  },
+  {
+    "file": "MoverButton.cs",
+    "typeName": "MoverButton",
+    "methodName": "Start",
+    "score": 3,
+    "line": 33
+  },
+  {
+    "file": "MoverButton.cs",
+    "typeName": "MoverButton",
+    "methodName": "FixedUpdate",
+    "score": 5,
+    "line": 50
+  },
+  {
+    "file": "Bully.cs",
+    "typeName": "Bully",
+    "methodName": "LateUpdate",
+    "score": 1,
+    "line": 46
+  },
+  {
+    "file": "Bully.cs",
+    "typeName": "Bully",
+    "methodName": "OnCollisionStay",
+    "score": 29,
+    "line": 62
+  },
+  {
+    "file": "Bully.cs",
+    "typeName": "Bully",
+    "methodName": "FixedUpdateStompable",
+    "score": 21,
+    "line": 146
+  },
+  {
+    "file": "Bully.cs",
+    "typeName": "Bully",
+    "methodName": "OnCollisionStayStompable",
+    "score": 10,
+    "line": 207
+  },
+  {
+    "file": "HideNearCamera.cs",
+    "typeName": "HideNearCamera",
+    "methodName": "LateUpdate",
+    "score": 7,
+    "line": 39
+  },
+  {
+    "file": "MoverMulti.cs",
+    "typeName": "MoverMulti",
+    "methodName": "FixedUpdate",
+    "score": 9,
+    "line": 50
+  },
+  {
+    "file": "MoverMulti.cs",
+    "typeName": "MoverMulti",
+    "methodName": "Start",
+    "score": 1,
+    "line": 39
+  },
+  {
+    "file": "ShrinkAndDestroy.cs",
+    "typeName": "ShrinkAndDestroy",
+    "methodName": "FixedUpdate",
+    "score": 2,
+    "line": 18
+  },
+  {
+    "file": "HammerBro.cs",
+    "typeName": "HammerBro",
+    "methodName": "FixedUpdateStompable",
+    "score": 8,
+    "line": 69
+  },
+  {
+    "file": "HammerBro.cs",
+    "typeName": "HammerBro",
+    "methodName": "OnCollisionStayStompable",
+    "score": 9,
+    "line": 101
+  },
+  {
+    "file": "ItemSpawnButton.cs",
+    "typeName": "ItemSpawnButton",
+    "methodName": "Start",
+    "score": 3,
+    "line": 27
+  },
+  {
+    "file": "ItemSpawnButton.cs",
+    "typeName": "ItemSpawnButton",
+    "methodName": "FixedUpdate",
+    "score": 4,
+    "line": 45
+  },
+  {
+    "file": "CheepCheep.cs",
+    "typeName": "CheepCheep",
+    "methodName": "FixedUpdateStompable",
+    "score": 8,
+    "line": 57
+  },
+  {
+    "file": "CheepCheep.cs",
+    "typeName": "CheepCheep",
+    "methodName": "OnCollisionStayStompable",
+    "score": 6,
+    "line": 104
+  },
+  {
+    "file": "SnakeSwitch.cs",
+    "typeName": "SnakeSwitch",
+    "methodName": "OnTriggerStay",
+    "score": 2,
+    "line": 50
+  },
+  {
+    "file": "DashPanel.cs",
+    "typeName": "DashPanel",
+    "methodName": "Start",
+    "score": 1,
+    "line": 27
+  },
+  {
+    "file": "DashPanel.cs",
+    "typeName": "DashPanel",
+    "methodName": "OnTriggerEnter",
+    "score": 1,
+    "line": 39
+  },
+  {
+    "file": "DashPanel.cs",
+    "typeName": "DashPanel",
+    "methodName": "OnTriggerStay",
+    "score": 1,
+    "line": 51
+  },
+  {
+    "file": "DashPanel.cs",
+    "typeName": "DashPanel",
+    "methodName": "PixelAnimate",
+    "score": 1,
+    "line": 62
+  },
+  {
+    "file": "DashPanel.cs",
+    "typeName": "DashPanel",
+    "methodName": "OnDestroy",
+    "score": 1,
+    "line": 69
+  },
+  {
+    "file": "BeepBlockBeeper.cs",
+    "typeName": "BeepBlockBeeper",
+    "methodName": "Beep",
+    "score": 3,
+    "line": 45
+  },
+  {
+    "file": "CoinColor.cs",
+    "typeName": "CoinColor",
+    "methodName": "OnTriggerEnter",
+    "score": 3,
+    "line": 36
+  },
+  {
+    "file": "CoinColor.cs",
+    "typeName": "CoinColor",
+    "methodName": "Track",
+    "score": 2,
+    "line": 52
+  },
+  {
+    "file": "HatCoinSpawner.cs",
+    "typeName": "HatCoinSpawner",
+    "methodName": "FixedUpdate",
+    "score": 3,
+    "line": 38
+  },
+  {
+    "file": "CoinBlockAnim.cs",
+    "typeName": "CoinBlockAnim",
+    "methodName": "FixedUpdate",
+    "score": 2,
+    "line": 20
+  },
+  {
+    "file": "Propeller.cs",
+    "typeName": "Propeller",
+    "methodName": "FixedUpdate",
+    "score": 1,
+    "line": 38
+  },
+  {
+    "file": "Donut.cs",
+    "typeName": "Donut",
+    "methodName": "FixedUpdate",
+    "score": 8,
+    "line": 44
+  },
+  {
+    "file": "Donut.cs",
+    "typeName": "Donut",
+    "methodName": "WaitToFall",
+    "score": 1,
+    "line": 84
+  },
+  {
+    "file": "Donut.cs",
+    "typeName": "Donut",
+    "methodName": "OnCollisionStay",
+    "score": 7,
+    "line": 68
+  },
+  {
+    "file": "Mover.cs",
+    "typeName": "Mover",
+    "methodName": "Start",
+    "score": 1,
+    "line": 36
+  },
+  {
+    "file": "Mover.cs",
+    "typeName": "Mover",
+    "methodName": "FixedUpdate",
+    "score": 10,
+    "line": 48
+  },
+  {
+    "file": "JumpPanel.cs",
+    "typeName": "JumpPanel",
+    "methodName": "OnTriggerExit",
+    "score": 3,
+    "line": 36
+  },
+  {
+    "file": "FlipPanel.cs",
+    "typeName": "FlipPanel",
+    "methodName": "Start",
+    "score": 3,
+    "line": 41
+  },
+  {
+    "file": "FlipPanel.cs",
+    "typeName": "FlipPanel",
+    "methodName": "PanelCheck",
+    "score": 18,
+    "line": 74
+  },
+  {
+    "file": "FlipPanel.cs",
+    "typeName": "FlipPanel",
+    "methodName": "OnTriggerEnter",
+    "score": 5,
+    "line": 53
+  },
+  {
+    "file": "FlipPanel.cs",
+    "typeName": "FlipPanel",
+    "methodName": "OnDrawGizmos",
+    "score": 1,
+    "line": 106
+  },
+  {
+    "file": "QuestionBlockTriple.cs",
+    "typeName": "QuestionBlockTriple",
+    "methodName": "BlockHitCoin",
+    "score": 4,
+    "line": 23
+  },
+  {
+    "file": "QuestionBlockTriple.cs",
+    "typeName": "QuestionBlockTriple",
+    "methodName": "BlockHit",
+    "score": 11,
+    "line": 37
+  },
+  {
+    "file": "Checkpoint.cs",
+    "typeName": "Checkpoint",
+    "methodName": "OnTriggerEnter",
+    "score": 9,
+    "line": 50
+  },
+  {
+    "file": "Checkpoint.cs",
+    "typeName": "Checkpoint",
+    "methodName": "UnsetFlag",
+    "score": 1,
+    "line": 89
+  },
+  {
+    "file": "SpikeTrap.cs",
+    "typeName": "SpikeTrap",
+    "methodName": "Start",
+    "score": 2,
+    "line": 37
+  },
+  {
+    "file": "SpikeTrap.cs",
+    "typeName": "SpikeTrap",
+    "methodName": "SpikeAnimation",
+    "score": 1,
+    "line": 46
+  },
+  {
+    "file": "PressureSwitch.cs",
+    "typeName": "PressureSwitch",
+    "methodName": "FixedUpdate",
+    "score": 4,
+    "line": 41
+  },
+  {
+    "file": "PressureSwitch.cs",
+    "typeName": "PressureSwitch",
+    "methodName": "OnTriggerStay",
+    "score": 3,
+    "line": 56
+  },
+  {
+    "file": "SpeedAnimatorRot.cs",
+    "typeName": "SpeedAnimatorRot",
+    "methodName": "FixedUpdate",
+    "score": 1,
+    "line": 19
+  },
+  {
+    "file": "Trampoline.cs",
+    "typeName": "Trampoline",
+    "methodName": "OnCollisionEnter",
+    "score": 11,
+    "line": 41
+  },
+  {
+    "file": "StarSpawnerCoin.cs",
+    "typeName": "StarSpawnerCoin",
+    "methodName": "Start",
+    "score": 3,
+    "line": 26
+  },
+  {
+    "file": "StarSpawnerCoin.cs",
+    "typeName": "StarSpawnerCoin",
+    "methodName": "Notify",
+    "score": 1,
+    "line": 36
+  },
+  {
+    "file": "WarpBoxLocked.cs",
+    "typeName": "WarpBoxLocked",
+    "methodName": "FixedUpdate",
+    "score": 4,
+    "line": 22
+  },
+  {
+    "file": "HatBlock.cs",
+    "typeName": "HatBlock",
+    "methodName": "OnCollisionEnter",
+    "score": 7,
+    "line": 36
+  },
+  {
+    "file": "StarSelectDeleter.cs",
+    "typeName": "StarSelectDeleter",
+    "methodName": "Start",
+    "score": 1,
+    "line": 24
+  },
+  {
+    "file": "Coin.cs",
+    "typeName": "Coin",
+    "methodName": "OnTriggerEnter",
+    "score": 1,
+    "line": 23
+  },
+  {
+    "file": "Star.cs",
+    "typeName": "Star",
+    "methodName": "Start",
+    "score": 4,
+    "line": 36
+  },
+  {
+    "file": "Star.cs",
+    "typeName": "Star",
+    "methodName": "OnTriggerEnter",
+    "score": 4,
+    "line": 54
+  },
+  {
+    "file": "QuestionBlock.cs",
+    "typeName": "QuestionBlock",
+    "methodName": "OnCollisionEnter",
+    "score": 12,
+    "line": 49
+  },
+  {
+    "file": "QuestionBlock.cs",
+    "typeName": "QuestionBlock",
+    "methodName": "BlockHitCoin",
+    "score": 2,
+    "line": 74
+  },
+  {
+    "file": "QuestionBlock.cs",
+    "typeName": "QuestionBlock",
+    "methodName": "BlockHit",
+    "score": 7,
+    "line": 85
+  },
+  {
+    "file": "Brick.cs",
+    "typeName": "Brick",
+    "methodName": "OnCollisionEnter",
+    "score": 8,
+    "line": 22
+  },
+  {
+    "file": "SnakePanel.cs",
+    "typeName": "SnakePanel",
+    "methodName": "FlipAnimate",
+    "score": 9,
+    "line": 59
+  },
+  {
+    "file": "StompSwitch.cs",
+    "typeName": "StompSwitch",
+    "methodName": "OnCollisionEnter",
+    "score": 11,
+    "line": 44
+  },
+  {
+    "file": "JumpThroughPlatform.cs",
+    "typeName": "JumpThroughPlatform",
+    "methodName": "OnTriggerExit",
+    "score": 1,
+    "line": 32
+  },
+  {
+    "file": "WarpBox.cs",
+    "typeName": "WarpBox",
+    "methodName": "Awake",
+    "score": 3,
+    "line": 57
+  },
+  {
+    "file": "WarpBox.cs",
+    "typeName": "WarpBox",
+    "methodName": "OnTriggerEnter",
+    "score": 3,
+    "line": 76
+  },
+  {
+    "file": "WarpBox.cs",
+    "typeName": "WarpBox",
+    "methodName": "Warp",
+    "score": 4,
+    "line": 90
+  },
+  {
+    "file": "BlockSwitch.cs",
+    "typeName": "BlockSwitch",
+    "methodName": "OnCollisionEnter",
+    "score": 12,
+    "line": 45
+  },
+  {
+    "file": "Powerup.cs",
+    "typeName": "Powerup",
+    "methodName": "FixedUpdate",
+    "score": 4,
+    "line": 38
+  },
+  {
+    "file": "Powerup.cs",
+    "typeName": "Powerup",
+    "methodName": "OnTriggerStay",
+    "score": 7,
+    "line": 53
+  },
+  {
+    "file": "PlayerResizer.cs",
+    "typeName": "PlayerResizer",
+    "methodName": "FixedUpdate",
+    "score": 8,
+    "line": 22
+  },
+  {
+    "file": "Snowball.cs",
+    "typeName": "Snowball",
+    "methodName": "FixedUpdate",
+    "score": 8,
+    "line": 33
+  },
+  {
+    "file": "Snowball.cs",
+    "typeName": "Snowball",
+    "methodName": "OnCollisionStay",
+    "score": 6,
+    "line": 65
+  },
+  {
+    "file": "FreeLookHelper.cs",
+    "typeName": "FreeLookHelper",
+    "methodName": "LoadSettings",
+    "score": 4,
+    "line": 97
+  },
+  {
+    "file": "FreeLookHelper.cs",
+    "typeName": "FreeLookHelper",
+    "methodName": "FixedUpdate",
+    "score": 5,
+    "line": 63
+  },
+  {
+    "file": "FreeLookHelper.cs",
+    "typeName": "FreeLookHelper",
+    "methodName": "CamFix",
+    "score": 2,
+    "line": 138
+  },
+  {
+    "file": "Hazard.cs",
+    "typeName": "Hazard",
+    "methodName": "OnCollisionStay",
+    "score": 3,
+    "line": 29
+  },
+  {
+    "file": "SpriteAnimator.cs",
+    "typeName": "SpriteAnimator",
+    "methodName": "Start",
+    "score": 2,
+    "line": 29
+  },
+  {
+    "file": "SpriteAnimator.cs",
+    "typeName": "SpriteAnimator",
+    "methodName": "Animate",
+    "score": 2,
+    "line": 36
+  },
+  {
+    "file": "HudControl.cs",
+    "typeName": "HudControl",
+    "methodName": "LateUpdate",
+    "score": 2,
+    "line": 36
+  },
+  {
+    "file": "OptionsMenu.cs",
+    "typeName": "OptionsMenu",
+    "methodName": "Update",
+    "score": 6,
+    "line": 125
+  },
+  {
+    "file": "OptionsMenu.cs",
+    "typeName": "OptionsMenu",
+    "methodName": "Start",
+    "score": 2,
+    "line": 60
+  },
+  {
+    "file": "OptionsMenu.cs",
+    "typeName": "OptionsMenu",
+    "methodName": "ChangeOption",
+    "score": 58,
+    "line": 194
+  },
+  {
+    "file": "OptionsMenu.cs",
+    "typeName": "OptionsMenu",
+    "methodName": "BoolToInt",
+    "score": 2,
+    "line": 344
+  },
+  {
+    "file": "OptionsMenu.cs",
+    "typeName": "OptionsMenu",
+    "methodName": "UpdateText",
+    "score": 7,
+    "line": 318
+  },
+  {
+    "file": "SaveData.cs",
+    "typeName": "SaveData",
+    "methodName": "Load",
+    "score": 2,
+    "line": 46
+  },
+  {
+    "file": "SaveData.cs",
+    "typeName": "SaveData",
+    "methodName": "NullCheck",
+    "score": 3,
+    "line": 72
+  },
+  {
+    "file": "SaveData.cs",
+    "typeName": "SaveData",
+    "methodName": "CollectStar",
+    "score": 2,
+    "line": 108
+  },
+  {
+    "file": "SaveData.cs",
+    "typeName": "SaveData",
+    "methodName": "AddCollection",
+    "score": 2,
+    "line": 119
+  },
+  {
+    "file": "PauseMenu.cs",
+    "typeName": "PauseMenu",
+    "methodName": "Start",
+    "score": 2,
+    "line": 83
+  },
+  {
+    "file": "PauseMenu.cs",
+    "typeName": "PauseMenu",
+    "methodName": "Update",
+    "score": 30,
+    "line": 101
+  },
+  {
+    "file": "TitleScreen.cs",
+    "typeName": "TitleScreen",
+    "methodName": "UpdateFileSelectText",
+    "score": 2,
+    "line": 163
+  },
+  {
+    "file": "TitleScreen.cs",
+    "typeName": "TitleScreen",
+    "methodName": "Update",
+    "score": 41,
+    "line": 90
+  },
+  {
+    "file": "LoadingScreen.cs",
+    "typeName": "LoadingScreen",
+    "methodName": "LoadAsyncScene",
+    "score": 2,
+    "line": 34
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "Victory",
+    "score": 1,
+    "line": 47
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "VictoryShort",
+    "score": 1,
+    "line": 62
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "Return",
+    "score": 2,
+    "line": 80
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "StarAppearSound",
+    "score": 3,
+    "line": 127
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "ChangeMusic",
+    "score": 3,
+    "line": 100
+  },
+  {
+    "file": "MusicControl.cs",
+    "typeName": "MusicControl",
+    "methodName": "RestartMusic",
+    "score": 1,
+    "line": 147
+  },
+  {
+    "file": "Painting.cs",
+    "typeName": "Painting",
+    "methodName": "OnTriggerEnter",
+    "score": 9,
+    "line": 53
+  },
+  {
+    "file": "Painting.cs",
+    "typeName": "Painting",
+    "methodName": "SetClothCollider",
+    "score": 1,
+    "line": 73
+  },
+  {
+    "file": "Painting.cs",
+    "typeName": "Painting",
+    "methodName": "StartIntro",
+    "score": 2,
+    "line": 79
+  },
+  {
+    "file": "OptionsSave.cs",
+    "typeName": "OptionsSave",
+    "methodName": "Load",
+    "score": 2,
+    "line": 39
+  },
+  {
+    "file": "OptionsApplier.cs",
+    "typeName": "OptionsApplier",
+    "methodName": "Start",
+    "score": 1,
+    "line": 33
+  },
+  {
+    "file": "OptionsApplier.cs",
+    "typeName": "OptionsApplier",
+    "methodName": "ChangeSettings",
+    "score": 5,
+    "line": 53
+  },
+  {
+    "file": "OptionsApplier.cs",
+    "typeName": "OptionsApplier",
+    "methodName": "ChangeResolution",
+    "score": 1,
+    "line": 87
+  },
+  {
+    "file": "SpriteBlinker.cs",
+    "typeName": "SpriteBlinker",
+    "methodName": "Animate",
+    "score": 1,
+    "line": 34
+  },
+  {
+    "file": "MenuCursor.cs",
+    "typeName": "MenuCursor",
+    "methodName": "ResetIndex",
+    "score": 1,
+    "line": 128
+  },
+  {
+    "file": "MenuCursor.cs",
+    "typeName": "MenuCursor",
+    "methodName": "ButtonPress",
+    "score": 1,
+    "line": 137
+  },
+  {
+    "file": "MenuCursor.cs",
+    "typeName": "MenuCursor",
+    "methodName": "MultiMove",
+    "score": 1,
+    "line": 145
+  },
+  {
+    "file": "MenuCursor.cs",
+    "typeName": "MenuCursor",
+    "methodName": "Update",
+    "score": 20,
+    "line": 53
+  },
+  {
+    "file": "IntroMenu.cs",
+    "typeName": "IntroMenu",
+    "methodName": "Update",
+    "score": 12,
+    "line": 53
+  },
+  {
+    "file": "IntroMenu.cs",
+    "typeName": "IntroMenu",
+    "methodName": "DisplayIntro",
+    "score": 6,
+    "line": 100
+  },
+  {
+    "file": "StarSpawnerDelete.cs",
+    "typeName": "StarSpawnerDelete",
+    "methodName": "FixedUpdate",
+    "score": 4,
+    "line": 28
+  },
+  {
+    "file": "Rumbler.cs",
+    "typeName": "Rumbler",
+    "methodName": "OnDisable",
+    "score": 1,
+    "line": 35
+  },
+  {
+    "file": "Rumbler.cs",
+    "typeName": "Rumbler",
+    "methodName": "Rumble",
+    "score": 1,
+    "line": 25
+  },
+  {
+    "file": "HealthCircle.cs",
+    "typeName": "HealthCircle",
+    "methodName": "LateUpdate",
+    "score": 1,
+    "line": 34
+  },
+  {
+    "file": "StarCountDeleter.cs",
+    "typeName": "StarCountDeleter",
+    "methodName": "Start",
+    "score": 4,
+    "line": 24
+  },
+  {
+    "file": "Wind.cs",
+    "typeName": "Wind",
+    "methodName": "OnTriggerStay",
+    "score": 7,
+    "line": 23
+  },
+  {
+    "file": "DialogControl.cs",
+    "typeName": "DialogControl",
+    "methodName": "Update",
+    "score": 31,
+    "line": 56
+  },
+  {
+    "file": "DialogControl.cs",
+    "typeName": "DialogControl",
+    "methodName": "DisplayDialog",
+    "score": 1,
+    "line": 104
+  },
+  {
+    "file": "DialogControl.cs",
+    "typeName": "DialogControl",
+    "methodName": "NextDialog",
+    "score": 2,
+    "line": 116
+  },
+  {
+    "file": "FadeControl.cs",
+    "typeName": "FadeControl",
+    "methodName": "LateUpdate",
+    "score": 4,
+    "line": 32
+  }
+]

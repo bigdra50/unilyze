@@ -1,0 +1,1010 @@
+[
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "IsRoot",
+    "score": 1,
+    "line": 130
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Find",
+    "score": 3,
+    "line": 103
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Awake",
+    "score": 6,
+    "line": 135
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Dispose",
+    "score": 1,
+    "line": 165
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "DisposeCore",
+    "score": 1,
+    "line": 174
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Build",
+    "score": 14,
+    "line": 185
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "CreateChild",
+    "score": 1,
+    "line": 228
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "CreateChildFromPrefab",
+    "score": 3,
+    "line": 255
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "CreateChildFromPrefab",
+    "score": 1,
+    "line": 280
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "InstallTo",
+    "score": 2,
+    "line": 284
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Create",
+    "score": 1,
+    "line": 66
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "GetRuntimeParent",
+    "score": 13,
+    "line": 308
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "AutoInjectAll",
+    "score": 4,
+    "line": 355
+  },
+  {
+    "file": "LifetimeScope.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "Create",
+    "score": 1,
+    "line": 79
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "DiagnosticsEnabled",
+    "score": 1,
+    "line": 10
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "CreateAsset",
+    "score": 1,
+    "line": 32
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "LoadInstanceFromPreloadAssets",
+    "score": 1,
+    "line": 52
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "IsRootLifetimeScopeInstance",
+    "score": 1,
+    "line": 87
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "GetOrCreateRootLifetimeScopeInstance",
+    "score": 2,
+    "line": 70
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "OnEnable",
+    "score": 4,
+    "line": 90
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "OnFirstSceneLoaded",
+    "score": 3,
+    "line": 114
+  },
+  {
+    "file": "VContainerSettings.cs",
+    "typeName": "VContainerSettings",
+    "methodName": "SetName",
+    "score": 2,
+    "line": 125
+  },
+  {
+    "file": "ContainerLocalInstanceProvider.cs",
+    "typeName": "ContainerLocalInstanceProvider",
+    "methodName": "SpawnInstance",
+    "score": 3,
+    "line": 16
+  },
+  {
+    "file": "ContainerBuilder.cs",
+    "typeName": "ScopedContainerBuilder",
+    "methodName": "Exists",
+    "score": 12,
+    "line": 48
+  },
+  {
+    "file": "ContainerBuilder.cs",
+    "typeName": "ContainerBuilder",
+    "methodName": "Exists",
+    "score": 5,
+    "line": 115
+  },
+  {
+    "file": "ContainerBuilder.cs",
+    "typeName": "ContainerBuilder",
+    "methodName": "BuildRegistry",
+    "score": 1,
+    "line": 139
+  },
+  {
+    "file": "IObjectResolverExtensions.cs",
+    "typeName": "IObjectResolverExtensions",
+    "methodName": "TryResolve",
+    "score": 1,
+    "line": 13
+  },
+  {
+    "file": "IObjectResolverExtensions.cs",
+    "typeName": "IObjectResolverExtensions",
+    "methodName": "ResolveOrDefault",
+    "score": 1,
+    "line": 26
+  },
+  {
+    "file": "IObjectResolverExtensions.cs",
+    "typeName": "IObjectResolverExtensions",
+    "methodName": "ResolveOrParameter",
+    "score": 5,
+    "line": 41
+  },
+  {
+    "file": "ContainerBuilderExtensions.cs",
+    "typeName": "ContainerBuilderExtensions",
+    "methodName": "Register",
+    "score": 2,
+    "line": 11
+  },
+  {
+    "file": "ContainerBuilderExtensions.cs",
+    "typeName": "ContainerBuilderExtensions",
+    "methodName": "RegisterDisposeCallback",
+    "score": 1,
+    "line": 151
+  },
+  {
+    "file": "OpenGenericInstanceProvider.cs",
+    "typeName": "TypeParametersKey",
+    "methodName": "Equals",
+    "score": 10,
+    "line": 20
+  },
+  {
+    "file": "OpenGenericInstanceProvider.cs",
+    "typeName": "TypeParametersKey",
+    "methodName": "GetHashCode",
+    "score": 1,
+    "line": 40
+  },
+  {
+    "file": "Registration.cs",
+    "typeName": "Registration",
+    "methodName": "ToString",
+    "score": 2,
+    "line": 29
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "Match",
+    "score": 1,
+    "line": 22
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "GetEnumerator",
+    "score": 1,
+    "line": 26
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "GetEnumerator",
+    "score": 1,
+    "line": 27
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "ToString",
+    "score": 1,
+    "line": 49
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "Add",
+    "score": 4,
+    "line": 55
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "SpawnInstance",
+    "score": 2,
+    "line": 68
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "CollectFromParentScopes",
+    "score": 13,
+    "line": 101
+  },
+  {
+    "file": "CollectionInstanceProvider.cs",
+    "typeName": "CollectionInstanceProvider",
+    "methodName": "SpawnInstance",
+    "score": 3,
+    "line": 87
+  },
+  {
+    "file": "DiagnosticsCollector.cs",
+    "typeName": "DiagnosticsCollector",
+    "methodName": "TraceBuild",
+    "score": 3,
+    "line": 43
+  },
+  {
+    "file": "DiagnosticsCollector.cs",
+    "typeName": "DiagnosticsCollector",
+    "methodName": "TraceResolve",
+    "score": 7,
+    "line": 58
+  },
+  {
+    "file": "DiagnosticsCollector.cs",
+    "typeName": "DiagnosticsCollector",
+    "methodName": "SetResolveTime",
+    "score": 3,
+    "line": 90
+  },
+  {
+    "file": "InjectorCache.cs",
+    "typeName": "InjectorCache",
+    "methodName": "GetOrBuild",
+    "score": 4,
+    "line": 11
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "Build",
+    "score": 11,
+    "line": 16
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "AddToBuildBuffer",
+    "score": 7,
+    "line": 51
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "AddCollectionToBuildBuffer",
+    "score": 3,
+    "line": 90
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "TryGet",
+    "score": 3,
+    "line": 112
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "TryGetClosedGenericRegistration",
+    "score": 3,
+    "line": 128
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "Exists",
+    "score": 2,
+    "line": 145
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "TryFallbackToContainerLocal",
+    "score": 3,
+    "line": 158
+  },
+  {
+    "file": "Registry.cs",
+    "typeName": "Registry",
+    "methodName": "TryFallbackToSingleElementCollection",
+    "score": 4,
+    "line": 179
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "Container",
+    "methodName": "Resolve",
+    "score": 2,
+    "line": 229
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "Container",
+    "methodName": "TryResolve",
+    "score": 1,
+    "line": 239
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "Container",
+    "methodName": "Resolve",
+    "score": 1,
+    "line": 252
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "Resolve",
+    "score": 2,
+    "line": 87
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "Container",
+    "methodName": "Dispose",
+    "score": 1,
+    "line": 277
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "TryResolve",
+    "score": 1,
+    "line": 96
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "Container",
+    "methodName": "ResolveCore",
+    "score": 4,
+    "line": 289
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "Resolve",
+    "score": 1,
+    "line": 109
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "Dispose",
+    "score": 1,
+    "line": 141
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "ResolveCore",
+    "score": 5,
+    "line": 152
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "CreateTrackedInstance",
+    "score": 2,
+    "line": 174
+  },
+  {
+    "file": "Container.cs",
+    "typeName": "ScopedContainer",
+    "methodName": "TryFindRegistration",
+    "score": 3,
+    "line": 187
+  },
+  {
+    "file": "BuilderCallbackDisposable.cs",
+    "typeName": "BuilderCallbackDisposable",
+    "methodName": "Dispose",
+    "score": 1,
+    "line": 16
+  },
+  {
+    "file": "RegistrationBuilder.cs",
+    "typeName": "RegistrationBuilder",
+    "methodName": "As",
+    "score": 1,
+    "line": 80
+  },
+  {
+    "file": "RegistrationBuilder.cs",
+    "typeName": "RegistrationBuilder",
+    "methodName": "AddInterfaceType",
+    "score": 2,
+    "line": 138
+  },
+  {
+    "file": "RegisterInfo.cs",
+    "typeName": "RegisterInfo",
+    "methodName": "GetFilename",
+    "score": 6,
+    "line": 30
+  },
+  {
+    "file": "RegisterInfo.cs",
+    "typeName": "RegisterInfo",
+    "methodName": "GetFileLineNumber",
+    "score": 6,
+    "line": 50
+  },
+  {
+    "file": "RegisterInfo.cs",
+    "typeName": "RegisterInfo",
+    "methodName": "GetScriptAssetPath",
+    "score": 2,
+    "line": 70
+  },
+  {
+    "file": "RegisterInfo.cs",
+    "typeName": "RegisterInfo",
+    "methodName": "GetHeadline",
+    "score": 3,
+    "line": 79
+  },
+  {
+    "file": "RegisterInfo.cs",
+    "typeName": "RegisterInfo",
+    "methodName": "GetHeadlineFrame",
+    "score": 11,
+    "line": 100
+  },
+  {
+    "file": "DiagnosticsContext.cs",
+    "typeName": "DiagnositcsContext",
+    "methodName": "GetCollector",
+    "score": 1,
+    "line": 14
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "TypeAnalyzer",
+    "methodName": "Analyze",
+    "score": 91,
+    "line": 218
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "TypeAnalyzer",
+    "methodName": "Contains",
+    "score": 3,
+    "line": 354
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "TypeAnalyzer",
+    "methodName": "CheckCircularDependency",
+    "score": 2,
+    "line": 368
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "TypeAnalyzer",
+    "methodName": "CheckCircularDependencyRecursive",
+    "score": 58,
+    "line": 381
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "DependencyInfo",
+    "methodName": "ToString",
+    "score": 1,
+    "line": 189
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "InjectPropertyInfo",
+    "methodName": "InjectPropertyInfo",
+    "score": 1,
+    "line": 100
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "InjectFieldInfo",
+    "methodName": "InjectFieldInfo",
+    "score": 1,
+    "line": 79
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "InjectMethodInfo",
+    "methodName": "ExtractParameterKeys",
+    "score": 3,
+    "line": 59
+  },
+  {
+    "file": "TypeAnalyzer.cs",
+    "typeName": "InjectConstructorInfo",
+    "methodName": "ExtractParameterKeys",
+    "score": 3,
+    "line": 29
+  },
+  {
+    "file": "OpenGenericRegistrationBuilder.cs",
+    "typeName": "OpenGenericRegistrationBuilder",
+    "methodName": "OpenGenericRegistrationBuilder",
+    "score": 2,
+    "line": 8
+  },
+  {
+    "file": "OpenGenericRegistrationBuilder.cs",
+    "typeName": "OpenGenericRegistrationBuilder",
+    "methodName": "AsImplementedInterfaces",
+    "score": 3,
+    "line": 21
+  },
+  {
+    "file": "OpenGenericRegistrationBuilder.cs",
+    "typeName": "OpenGenericRegistrationBuilder",
+    "methodName": "AddInterfaceType",
+    "score": 9,
+    "line": 34
+  },
+  {
+    "file": "ListPool.cs",
+    "typeName": "ListPool\u003CT\u003E",
+    "methodName": "Get",
+    "score": 1,
+    "line": 34
+  },
+  {
+    "file": "PlayerLoopRunner.cs",
+    "typeName": "PlayerLoopRunner",
+    "methodName": "Run",
+    "score": 6,
+    "line": 21
+  },
+  {
+    "file": "ComponentRegistrationBuilder.cs",
+    "typeName": "ComponentDestination",
+    "methodName": "GetParent",
+    "score": 2,
+    "line": 14
+  },
+  {
+    "file": "ComponentRegistrationBuilder.cs",
+    "typeName": "ComponentDestination",
+    "methodName": "ApplyDontDestroyOnLoadIfNeeded",
+    "score": 1,
+    "line": 23
+  },
+  {
+    "file": "ComponentRegistrationBuilder.cs",
+    "typeName": "ComponentRegistrationBuilder",
+    "methodName": "Build",
+    "score": 4,
+    "line": 71
+  },
+  {
+    "file": "FixedTypeObjectKeyHashtable.cs",
+    "typeName": "FixedTypeObjectKeyHashtable\u003CTValue\u003E",
+    "methodName": "GetHashCode",
+    "score": 1,
+    "line": 61
+  },
+  {
+    "file": "FixedTypeObjectKeyHashtable.cs",
+    "typeName": "FixedTypeObjectKeyHashtable\u003CTValue\u003E",
+    "methodName": "FixedTypeObjectKeyHashtable",
+    "score": 5,
+    "line": 26
+  },
+  {
+    "file": "FixedTypeObjectKeyHashtable.cs",
+    "typeName": "FixedTypeObjectKeyHashtable\u003CTValue\u003E",
+    "methodName": "TryGet",
+    "score": 13,
+    "line": 73
+  },
+  {
+    "file": "ParentReference.cs",
+    "typeName": "ParentReference",
+    "methodName": "OnAfterDeserialize",
+    "score": 6,
+    "line": 29
+  },
+  {
+    "file": "CappedArrayPool.cs",
+    "typeName": "CappedArrayPool\u003CT\u003E",
+    "methodName": "CappedArrayPool",
+    "score": 3,
+    "line": 15
+  },
+  {
+    "file": "CappedArrayPool.cs",
+    "typeName": "CappedArrayPool\u003CT\u003E",
+    "methodName": "Rent",
+    "score": 4,
+    "line": 31
+  },
+  {
+    "file": "CappedArrayPool.cs",
+    "typeName": "CappedArrayPool\u003CT\u003E",
+    "methodName": "Return",
+    "score": 3,
+    "line": 62
+  },
+  {
+    "file": "PlayerLoopHelper.cs",
+    "typeName": "PlayerLoopHelper",
+    "methodName": "FindSubSystem",
+    "score": 3,
+    "line": 153
+  },
+  {
+    "file": "PlayerLoopHelper.cs",
+    "typeName": "PlayerLoopHelper",
+    "methodName": "EnsureInitialized",
+    "score": 2,
+    "line": 48
+  },
+  {
+    "file": "PlayerLoopHelper.cs",
+    "typeName": "PlayerLoopHelper",
+    "methodName": "InsertSubsystem",
+    "score": 11,
+    "line": 163
+  },
+  {
+    "file": "LifetimeScope.AwakeScheduler.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "AwakeWaitingChildren",
+    "score": 5,
+    "line": 45
+  },
+  {
+    "file": "LifetimeScope.AwakeScheduler.cs",
+    "typeName": "LifetimeScope",
+    "methodName": "OnSceneLoaded",
+    "score": 5,
+    "line": 69
+  },
+  {
+    "file": "FindComponentProvider.cs",
+    "typeName": "FindComponentProvider",
+    "methodName": "SpawnInstance",
+    "score": 13,
+    "line": 28
+  },
+  {
+    "file": "ContainerBuilderUnityExtensions.cs",
+    "typeName": "EntryPointsBuilder",
+    "methodName": "EnsureDispatcherRegistered",
+    "score": 1,
+    "line": 13
+  },
+  {
+    "file": "ContainerBuilderUnityExtensions.cs",
+    "typeName": "ContainerBuilderUnityExtensions",
+    "methodName": "RegisterComponentInHierarchy",
+    "score": 2,
+    "line": 139
+  },
+  {
+    "file": "ReflectionInjector.cs",
+    "typeName": "ReflectionInjector",
+    "methodName": "CreateInstance",
+    "score": 2,
+    "line": 32
+  },
+  {
+    "file": "ReflectionInjector.cs",
+    "typeName": "ReflectionInjector",
+    "methodName": "InjectFields",
+    "score": 2,
+    "line": 64
+  },
+  {
+    "file": "ReflectionInjector.cs",
+    "typeName": "ReflectionInjector",
+    "methodName": "InjectProperties",
+    "score": 2,
+    "line": 76
+  },
+  {
+    "file": "ReflectionInjector.cs",
+    "typeName": "ReflectionInjector",
+    "methodName": "InjectMethods",
+    "score": 6,
+    "line": 88
+  },
+  {
+    "file": "ExistingComponentProvider.cs",
+    "typeName": "ExistingComponentProvider",
+    "methodName": "SpawnInstance",
+    "score": 4,
+    "line": 26
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "StartableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 24
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "PostStartableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 59
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "FixedTickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 94
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "PostFixedTickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 129
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "PostTickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 199
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "LateTickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 234
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "TickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 164
+  },
+  {
+    "file": "PlayerLoopItem.cs",
+    "typeName": "PostLateTickableLoopItem",
+    "methodName": "MoveNext",
+    "score": 7,
+    "line": 269
+  },
+  {
+    "file": "NewGameObjectProvider.cs",
+    "typeName": "NewGameObjectProvider",
+    "methodName": "SpawnInstance",
+    "score": 2,
+    "line": 29
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "Add",
+    "score": 2,
+    "line": 37
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "RemoveAt",
+    "score": 5,
+    "line": 63
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "Clear",
+    "score": 1,
+    "line": 107
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "CheckDispose",
+    "score": 1,
+    "line": 127
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "FindNullIndex",
+    "score": 3,
+    "line": 171
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "FindLastNonNullIndex",
+    "score": 3,
+    "line": 180
+  },
+  {
+    "file": "FreeList.cs",
+    "typeName": "FreeList\u003CT\u003E",
+    "methodName": "Remove",
+    "score": 5,
+    "line": 81
+  },
+  {
+    "file": "CompositeDisposable.cs",
+    "typeName": "CompositeDisposable",
+    "methodName": "Dispose",
+    "score": 3,
+    "line": 11
+  },
+  {
+    "file": "TypeKeyHashTable2.cs",
+    "typeName": "TypeKeyHashTable2\u003CTValue\u003E",
+    "methodName": "TypeKeyHashTable2",
+    "score": 2,
+    "line": 38
+  },
+  {
+    "file": "TypeKeyHashTable2.cs",
+    "typeName": "TypeKeyHashTable2\u003CTValue\u003E",
+    "methodName": "TryGet",
+    "score": 7,
+    "line": 61
+  },
+  {
+    "file": "TypeKeyHashTable2.cs",
+    "typeName": "TypeKeyHashTable2\u003CTValue\u003E",
+    "methodName": "Insert",
+    "score": 4,
+    "line": 93
+  },
+  {
+    "file": "TypeKeyHashTable2.cs",
+    "typeName": "TypeKeyHashTable2\u003CTValue\u003E",
+    "methodName": "NextBucketIndex",
+    "score": 1,
+    "line": 141
+  },
+  {
+    "file": "TypeKeyHashTable2.cs",
+    "typeName": "TypeKeyHashTable2\u003CTValue\u003E",
+    "methodName": "SetBucketAt",
+    "score": 1,
+    "line": 128
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "PrefabDirtyScope",
+    "methodName": "PrefabDirtyScope",
+    "score": 1,
+    "line": 14
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "PrefabDirtyScope",
+    "methodName": "Dispose",
+    "score": 1,
+    "line": 25
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "InjectGameObject",
+    "score": 9,
+    "line": 36
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "Instantiate",
+    "score": 1,
+    "line": 98
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "Instantiate",
+    "score": 2,
+    "line": 143
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "Instantiate",
+    "score": 2,
+    "line": 179
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "Instantiate",
+    "score": 1,
+    "line": 242
+  },
+  {
+    "file": "ObjectResolverUnityExtensions.cs",
+    "typeName": "ObjectResolverUnityExtensions",
+    "methodName": "SetName",
+    "score": 2,
+    "line": 286
+  },
+  {
+    "file": "PrefabComponentProvider.cs",
+    "typeName": "PrefabComponentProvider",
+    "methodName": "SpawnInstance",
+    "score": 5,
+    "line": 26
+  },
+  {
+    "file": "EntryPointDispatcher.cs",
+    "typeName": "EntryPointDispatcher",
+    "methodName": "Dispatch",
+    "score": 22,
+    "line": 21
+  }
+]

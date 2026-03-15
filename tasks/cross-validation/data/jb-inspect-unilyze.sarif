@@ -1,0 +1,4271 @@
+{
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.6.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "results": [
+        {
+          "ruleId": "CanSimplifyDictionaryLookupWithTryGetValue",
+          "ruleIndex": 0,
+          "level": "note",
+          "message": {
+            "text": "Dictionary lookup can be simplified with 'TryGetValue'"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs",
+                  "index": 0
+                },
+                "region": {
+                  "startLine": 92,
+                  "startColumn": 34,
+                  "endLine": 92,
+                  "endColumn": 45,
+                  "charOffset": 2828,
+                  "charLength": 11
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0E0CA936F4569F801E17221FF7091DB2BC2786EBFC1A84A389274BB50AFF575D"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "CollectionNeverQueried.Local",
+          "ruleIndex": 1,
+          "level": "warning",
+          "message": {
+            "text": "Content of collection 'matched' is only updated but never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/DiffCalculator.cs",
+                  "index": 1
+                },
+                "region": {
+                  "startLine": 128,
+                  "startColumn": 13,
+                  "endLine": 128,
+                  "endColumn": 20,
+                  "charOffset": 5823,
+                  "charLength": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "6055B7E87F3D19776BA7B102A7F632C7B33F65D1A4619B1C69821BBAC20FD178"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Expression is always true according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 116,
+                  "startColumn": 13,
+                  "endLine": 116,
+                  "endColumn": 37,
+                  "charOffset": 4075,
+                  "charLength": 24
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "09D815C735999763E16A5488EC18F5E1C0CEA01AB3F9284226C9AFA974964154"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Expression is always true according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 118,
+                  "startColumn": 13,
+                  "endLine": 118,
+                  "endColumn": 37,
+                  "charOffset": 4179,
+                  "charLength": 24
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E66C439F8024D481E848719B84A425E7859F087CACA848D3E721F0269D3A4202"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Expression is always true according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 244,
+                  "startColumn": 17,
+                  "endLine": 244,
+                  "endColumn": 36,
+                  "charOffset": 8636,
+                  "charLength": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "F07EBD72D99FB1F14F1E13A004D862A3525BF7CAED8C85A02114098DD4F6AAF7"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract",
+          "ruleIndex": 2,
+          "level": "warning",
+          "message": {
+            "text": "Expression is always true according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 248,
+                  "startColumn": 17,
+                  "endLine": 248,
+                  "endColumn": 36,
+                  "charOffset": 8873,
+                  "charLength": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "F07EBD72D99FB1F14F1E13A004D862A3525BF7CAED8C85A02114098DD4F6AAF7"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract",
+          "ruleIndex": 3,
+          "level": "warning",
+          "message": {
+            "text": "Conditional access qualifier expression is never null according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 160,
+                  "startColumn": 58,
+                  "endLine": 160,
+                  "endColumn": 59,
+                  "charOffset": 5635,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "ADB5EC9224C87E9ADCC327B04F7051131E060C7845927FB9BBEA1D8EDCCE5705"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract",
+          "ruleIndex": 3,
+          "level": "warning",
+          "message": {
+            "text": "Conditional access qualifier expression is never null according to nullable reference types' annotations"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 164,
+                  "startColumn": 62,
+                  "endLine": 164,
+                  "endColumn": 63,
+                  "charOffset": 5929,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "07A1468A9BBF03AFAA4846E2E81A1464ACF2391A5E97C61D030B27F374138AA9"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ConvertToPrimaryConstructor",
+          "ruleIndex": 4,
+          "level": "note",
+          "message": {
+            "text": "Convert into primary constructor"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 12,
+                  "endLine": 10,
+                  "endColumn": 26,
+                  "charOffset": 192,
+                  "charLength": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "FA59594F5D937BAE6345E84ED7AC9E4E76FDDFE3F4539021E5DAE005C0C44AC3"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "DuplicatedStatements",
+          "ruleIndex": 5,
+          "level": "warning",
+          "message": {
+            "text": "Duplicated statements"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/ProgramHelpers.cs",
+                  "index": 5
+                },
+                "region": {
+                  "startLine": 90,
+                  "startColumn": 13,
+                  "endLine": 90,
+                  "endColumn": 25,
+                  "charOffset": 3049,
+                  "charLength": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "994EC6F385407FADFF3C914808DE3FBC6E94DCC9A26112B667DC69B7ADE1DA98"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'CriticalCognitiveCC' does not match rule 'Constant fields (private)'. Suggested name is 'CriticalCognitiveCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 49,
+                  "startColumn": 15,
+                  "endLine": 49,
+                  "endColumn": 34,
+                  "charOffset": 1122,
+                  "charLength": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "CD8E36A264B2BC3645AD9DE23CB9A0B87897471334895A4714C61B5D6CC930EA"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'CriticalMaintainabilityMI' does not match rule 'Constant fields (private)'. Suggested name is 'CriticalMaintainabilityMi'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 18,
+                  "endLine": 44,
+                  "endColumn": 43,
+                  "charOffset": 946,
+                  "charLength": 25
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E0849876ADD3BA9A231D8621328336B0CE8AE75C11F28F4D6E7A913DB39410CF"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'HighCognitiveCC' does not match rule 'Constant fields (private)'. Suggested name is 'HighCognitiveCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 39,
+                  "startColumn": 15,
+                  "endLine": 39,
+                  "endColumn": 30,
+                  "charOffset": 749,
+                  "charLength": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "12056279BFB65CFD919CC2050E8A798D3987A01D0285DC156AC751BE96375A5C"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'HighCyclomaticCC' does not match rule 'Constant fields (private)'. Suggested name is 'HighCyclomaticCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 38,
+                  "startColumn": 15,
+                  "endLine": 38,
+                  "endColumn": 31,
+                  "charOffset": 712,
+                  "charLength": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "69313E0A037710FC4A2DE8E3247D43075B8F43AC08AD0D3BA4105A464A8B5687"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'LongMethodCognitiveCC' does not match rule 'Constant fields (private)'. Suggested name is 'LongMethodCognitiveCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 36,
+                  "startColumn": 15,
+                  "endLine": 36,
+                  "endColumn": 36,
+                  "charOffset": 631,
+                  "charLength": 21
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "3C848A660FE350EA9606E0BE305BA39F82F0A38000B305758D5CF7F21C401B81"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'LowMaintainabilityMI' does not match rule 'Constant fields (private)'. Suggested name is 'LowMaintainabilityMi'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 18,
+                  "endLine": 43,
+                  "endColumn": 38,
+                  "charOffset": 900,
+                  "charLength": 20
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "2B256E31203DA58A8BDEF5A3FC4FCCDF35DC3897A193D08FBA11F2950998A63B"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'RecalculateCycCC' does not match rule 'Methods'. Suggested name is 'RecalculateCycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 306,
+                  "startColumn": 24,
+                  "endLine": 306,
+                  "endColumn": 40,
+                  "charOffset": 11440,
+                  "charLength": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "FCD8188D172406A2E98BC153C23E576081AC978B0C59E9BDA7E4559E2EC6E83A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'TarjanSCC' does not match rule 'Methods'. Suggested name is 'TarjanScc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs",
+                  "index": 0
+                },
+                "region": {
+                  "startLine": 62,
+                  "startColumn": 58,
+                  "endLine": 62,
+                  "endColumn": 67,
+                  "charOffset": 1955,
+                  "charLength": 9
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "9889A198FBD3D39543487CDDD965627E88044BEAC229561A863E0CECC85F7B1A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'avgCogCC' does not match rule 'Local variables'. Suggested name is 'avgCogCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TrendAnalyzer.cs",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 13,
+                  "endLine": 35,
+                  "endColumn": 21,
+                  "charOffset": 1087,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "D7DB879CC5169E9C0B5E38D3DC1B39004D87BA7E5825239E29D74DD1B8CB74C8"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'avgCycCC' does not match rule 'Local variables'. Suggested name is 'avgCycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 338,
+                  "startColumn": 13,
+                  "endLine": 338,
+                  "endColumn": 21,
+                  "charOffset": 12630,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "9EF1EBB48FAD1428348021C31AF8DB4CE9244FA6EBB8BFAC907D6F2EB38E94C7"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'avgMI' does not match rule 'Local variables'. Suggested name is 'avgMi'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 111,
+                  "startColumn": 13,
+                  "endLine": 111,
+                  "endColumn": 18,
+                  "charOffset": 4087,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "D979F4F937D08A8676F463D13D9BAD78317DFCE1A95B3676418FEFE0FF9C02B1"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'cogCC' does not match rule 'Local variables'. Suggested name is 'cogCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/MethodMetricsCalculator.cs",
+                  "index": 10
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 13,
+                  "endLine": 12,
+                  "endColumn": 18,
+                  "charOffset": 333,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "05E4A46153A90EEF9A571BDF0559F8B5C1696F9FC9519D4BE4B18F3ADD98CD41"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'cogCC' does not match rule 'Local variables'. Suggested name is 'cogCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeInfo.cs",
+                  "index": 11
+                },
+                "region": {
+                  "startLine": 396,
+                  "startColumn": 14,
+                  "endLine": 396,
+                  "endColumn": 19,
+                  "charOffset": 16528,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "5889F6E342484588326829855643B50239B140251CA2E4BEB1C306AECFE8FCB1"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'cycCC' does not match rule 'Local variables'. Suggested name is 'cycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/MethodMetricsCalculator.cs",
+                  "index": 10
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 13,
+                  "endLine": 13,
+                  "endColumn": 18,
+                  "charOffset": 394,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0E4D4C20259BCD9673886CAF5DDDA4ED963EED0121F9170A95896D762566C106"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'cycCC' does not match rule 'Local variables'. Suggested name is 'cycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeInfo.cs",
+                  "index": 11
+                },
+                "region": {
+                  "startLine": 396,
+                  "startColumn": 21,
+                  "endLine": 396,
+                  "endColumn": 26,
+                  "charOffset": 16535,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "5889F6E342484588326829855643B50239B140251CA2E4BEB1C306AECFE8FCB1"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'maxCycCC' does not match rule 'Local variables'. Suggested name is 'maxCycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 341,
+                  "startColumn": 13,
+                  "endLine": 341,
+                  "endColumn": 21,
+                  "charOffset": 12786,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "02834CCFD0F5060BE2856758B36501110997DAB6FED9B5175D1271186554C670"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'methodsWithMI' does not match rule 'Local variables'. Suggested name is 'methodsWithMi'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 110,
+                  "startColumn": 13,
+                  "endLine": 110,
+                  "endColumn": 26,
+                  "charOffset": 3997,
+                  "charLength": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "609E39F14AA2D55EA6E579DD67E4DB3863CF33960DDD1A50D183A44B7B5811AF"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'minMI' does not match rule 'Local variables'. Suggested name is 'minMi'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 114,
+                  "startColumn": 13,
+                  "endLine": 114,
+                  "endColumn": 18,
+                  "charOffset": 4247,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "B0B4AD50B4BAB59FEED98FF6427322BD8944F9F718AB4E4C222C50A15C27FED8"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "InconsistentNaming",
+          "ruleIndex": 6,
+          "level": "warning",
+          "message": {
+            "text": "Name 'newCycCC' does not match rule 'Local variables'. Suggested name is 'newCycCc'."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 325,
+                  "startColumn": 21,
+                  "endLine": 325,
+                  "endColumn": 29,
+                  "charOffset": 12212,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E7749A83D034333BD350F4E0369CD60946EB33BD49A0C67B56C97CA00DDBF0E2"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'CalculateHealthScore' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 140,
+                  "startColumn": 5,
+                  "endLine": 140,
+                  "endColumn": 13,
+                  "charOffset": 5042,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0EB80C0FA807E488A22684F6F5E3081F21C6E98C3F03C59936CC621039829983"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'CountGenericArity' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeIdentity.cs",
+                  "index": 12
+                },
+                "region": {
+                  "startLine": 76,
+                  "startColumn": 5,
+                  "endLine": 76,
+                  "endColumn": 11,
+                  "charOffset": 3083,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "06A7DCC8BC17078D960BC8E174EC7BAE245093B52BBFF06AEA500EADC5D8B486"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'DetectAssemblyCycles' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs",
+                  "index": 0
+                },
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 5,
+                  "endLine": 43,
+                  "endColumn": 11,
+                  "charOffset": 1257,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "B76B8B28684822A5E2D77A7562584A205E93CE6A141F61FAFA275E90B44955D7"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'DetectTypeCycles' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs",
+                  "index": 0
+                },
+                "region": {
+                  "startLine": 21,
+                  "startColumn": 5,
+                  "endLine": 21,
+                  "endColumn": 11,
+                  "charOffset": 567,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "6E3AEB365A3E0B7AA747EC9485817CE9366AA1C222463085FCFA1D0F8650C6AF"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'Interpolate' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 161,
+                  "startColumn": 5,
+                  "endLine": 161,
+                  "endColumn": 13,
+                  "charOffset": 5934,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "97BED975FF0D3D1731BB456969C52FDD14A3F8BEDBCAF5A89445A57E4DE406F9"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'Intersect' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 35,
+                  "startColumn": 5,
+                  "endLine": 35,
+                  "endColumn": 11,
+                  "charOffset": 800,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "D4D5D4A8AF8774FB953D22ECEEF3EB4A3E6176B0423D8911055CBCF9FB24333F"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'PopCount' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 5,
+                  "endLine": 41,
+                  "endColumn": 11,
+                  "charOffset": 967,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "BFDDAEF9FB531F629B784F7F66ADA01B501A5554FF1CB31FFF7CECB0A92AD962"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'ResolveTypeRelationships' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs",
+                  "index": 7
+                },
+                "region": {
+                  "startLine": 121,
+                  "startColumn": 5,
+                  "endLine": 121,
+                  "endColumn": 13,
+                  "charOffset": 4750,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "D590501CC28277114E31C8C0F198472844640AD24436BF883DA514E6FC662982"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'SetBit' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 22,
+                  "startColumn": 5,
+                  "endLine": 22,
+                  "endColumn": 11,
+                  "charOffset": 441,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "56D989830D4027FEB83229DDF394F27AD0F6D78E0E240E9060CD09D345065B39"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'SimpleHash' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 48,
+                  "startColumn": 5,
+                  "endLine": 48,
+                  "endColumn": 11,
+                  "charOffset": 1160,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "813D798FBBF66FFD4BE6BDEEFDD10DE107E442BBFEDFB7582CCADFA7FA785BE5"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'TarjanSCC' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs",
+                  "index": 0
+                },
+                "region": {
+                  "startLine": 62,
+                  "startColumn": 5,
+                  "endLine": 62,
+                  "endColumn": 13,
+                  "charOffset": 1902,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "9889A198FBD3D39543487CDDD965627E88044BEAC229561A863E0CECC85F7B1A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Method 'ToSnapshot' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TrendAnalyzer.cs",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 26,
+                  "startColumn": 5,
+                  "endLine": 26,
+                  "endColumn": 11,
+                  "charOffset": 567,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "C34FCF48B9704A6B503264F7446240CB02976384E014F5494D9FC3E637A07D53"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MemberCanBePrivate.Global",
+          "ruleIndex": 7,
+          "level": "note",
+          "message": {
+            "text": "Property 'Empty' can be made private"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 15,
+                  "startColumn": 5,
+                  "endLine": 15,
+                  "endColumn": 11,
+                  "charOffset": 260,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "25B6DD43D53A894DEA4CA79B7D2389DC7950D704F029C0094A10F5614B2E40F6"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 81,
+                  "startColumn": 50,
+                  "endLine": 81,
+                  "endColumn": 52,
+                  "charOffset": 2544,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "97A532FBE8E58B09663F224A35918243657B0AF160C29082566D66925CD6FE00"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 105,
+                  "startColumn": 48,
+                  "endLine": 105,
+                  "endColumn": 50,
+                  "charOffset": 3249,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "6BEE736C84A6F8FA23EA21F8A86217B548FE51011D0E95D20456C6A3FC59C822"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 139,
+                  "startColumn": 59,
+                  "endLine": 139,
+                  "endColumn": 61,
+                  "charOffset": 4720,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E8CF5B4CB9752FB902BF93FCD1DB5FF89A482195943FD6CD3F004C95A5EAFFC6"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 272,
+                  "startColumn": 21,
+                  "endLine": 272,
+                  "endColumn": 23,
+                  "charOffset": 9774,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "127BBE44864BA02F014717F0D1FDD2DF50F645AC300674CDDB4AE73EEA5AE02D"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 4,
+                  "startColumn": 22,
+                  "endLine": 4,
+                  "endColumn": 24,
+                  "charOffset": 61,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "2E70AEE3129579CB9A364FF83817B18D4411314FF05B996D40040C71965DAAD2"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 22,
+                  "endLine": 6,
+                  "endColumn": 24,
+                  "charOffset": 135,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "952EE63F153BDC8A9FBBE509B79D74E98203CB176281C93472AC2B0D13B41704"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 8,
+                  "startColumn": 22,
+                  "endLine": 8,
+                  "endColumn": 24,
+                  "charOffset": 215,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "4F150F3C445A5D562581DFB65B3169759A0292D4030C0D1EF4E1C0677612457B"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 22,
+                  "endLine": 13,
+                  "endColumn": 24,
+                  "charOffset": 339,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "CB0CEE66F996C41C5845AAB49C0FD69FC7E41947B0D456FFB57BD5B7754E08ED"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 16,
+                  "startColumn": 79,
+                  "endLine": 16,
+                  "endColumn": 81,
+                  "charOffset": 479,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "6A83CD544E3F6F89E09B4361563C65211347873ECB0CE4E27CE0969630BCC427"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "MergeIntoPattern",
+          "ruleIndex": 8,
+          "level": "note",
+          "message": {
+            "text": "Merge into pattern"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 18,
+                  "startColumn": 82,
+                  "endLine": 18,
+                  "endColumn": 84,
+                  "charOffset": 608,
+                  "charLength": 2
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "C6BCF8B1BD38FFF08B16B45088BE17CBAD974632159B621B31D4CD209BF6E8A4"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedField.Local",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "Field '_byId' is assigned but its value is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeInfo.cs",
+                  "index": 11
+                },
+                "region": {
+                  "startLine": 571,
+                  "startColumn": 51,
+                  "endLine": 571,
+                  "endColumn": 56,
+                  "charOffset": 22810,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "59DB10D608706D320EBE0F09C4C487E21CEB549D9A48776F3C4C7C7F90D283D1"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.AsmdefInfo.UnresolvedReferences' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AsmdefInfo.cs",
+                  "index": 13
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 28,
+                  "endLine": 9,
+                  "endColumn": 48,
+                  "charOffset": 182,
+                  "charLength": 20
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "798A152DA1C52EFD88FBAFCFC0FE6A210D7A58F6433B8EBE52DBF431626F35C9"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.CsprojInfo.ProjectReferences' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CsprojParser.cs",
+                  "index": 14
+                },
+                "region": {
+                  "startLine": 7,
+                  "startColumn": 27,
+                  "endLine": 7,
+                  "endColumn": 44,
+                  "charOffset": 145,
+                  "charLength": 17
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "D35C1F18B025921E5634B862D3220BF57C5C18053621E6B6789CE85CB5173FAA"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.HalsteadMetrics.TotalOperands' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/HalsteadCalculator.cs",
+                  "index": 15
+                },
+                "region": {
+                  "startLine": 13,
+                  "startColumn": 9,
+                  "endLine": 13,
+                  "endColumn": 22,
+                  "charOffset": 326,
+                  "charLength": 13
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "68D88D6F963284F48DE5CD57140A80FCCD3AC0B01B0C802B1AE98EBEBD0C7B7D"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.HalsteadMetrics.TotalOperators' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/HalsteadCalculator.cs",
+                  "index": 15
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 9,
+                  "endLine": 12,
+                  "endColumn": 23,
+                  "charOffset": 302,
+                  "charLength": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "5C195F7EBEEB6DB883C87B43720BB55170F5F1C25B21F4926E44FBABDB400BAE"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.HalsteadMetrics.UniqueOperands' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/HalsteadCalculator.cs",
+                  "index": 15
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 9,
+                  "endLine": 11,
+                  "endColumn": 23,
+                  "charOffset": 278,
+                  "charLength": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "AB2807CB3B66F578F7747DE22A5CF16BD1B065F885991036794BCC6835A05F53"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "NotAccessedPositionalProperty.Global",
+          "ruleIndex": 10,
+          "level": "warning",
+          "message": {
+            "text": "Positional property 'Unilyze.HalsteadMetrics.UniqueOperators' is never accessed (except in implicit Equals/ToString implementations)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/HalsteadCalculator.cs",
+                  "index": 15
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 9,
+                  "endLine": 10,
+                  "endColumn": 24,
+                  "charOffset": 253,
+                  "charLength": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "34C8AAB4A6839B1F8CD9119583067489A1CCA9F29A01E315918C181319C936F7"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantCast",
+          "ruleIndex": 11,
+          "level": "warning",
+          "message": {
+            "text": "Type cast is redundant"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CboCalculator.cs",
+                  "index": 16
+                },
+                "region": {
+                  "startLine": 25,
+                  "startColumn": 64,
+                  "endLine": 25,
+                  "endColumn": 83,
+                  "charOffset": 848,
+                  "charLength": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "85D337D6F730FF7AEF8B3126F769DF43BE34536D16C10ABA0EC91F6F5A59596A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantCast",
+          "ruleIndex": 11,
+          "level": "warning",
+          "message": {
+            "text": "Type cast is redundant"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LcomCalculator.cs",
+                  "index": 17
+                },
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 64,
+                  "endLine": 31,
+                  "endColumn": 83,
+                  "charOffset": 1295,
+                  "charLength": 19
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "632BA1825D77E29A43F8F454798FD187E6DF85E5A68985B7FF7CF5EFA60D8E64"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantSuppressNullableWarningExpression",
+          "ruleIndex": 12,
+          "level": "warning",
+          "message": {
+            "text": "The nullable warning suppression expression is redundant"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 140,
+                  "startColumn": 42,
+                  "endLine": 140,
+                  "endColumn": 43,
+                  "charOffset": 5058,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "8DBA23C165093778BAAFEF5F9AD939466D882F579AAEB67F968BB51AD46DF367"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantSuppressNullableWarningExpression",
+          "ruleIndex": 12,
+          "level": "warning",
+          "message": {
+            "text": "The nullable warning suppression expression is redundant"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs",
+                  "index": 3
+                },
+                "region": {
+                  "startLine": 47,
+                  "startColumn": 45,
+                  "endLine": 47,
+                  "endColumn": 46,
+                  "charOffset": 1825,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "93367456795EB16AA98A97F9B8AC68138808CADFE231D0D23702E4756F203973"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantTypeArgumentsInsideNameof",
+          "ruleIndex": 13,
+          "level": "note",
+          "message": {
+            "text": "Type arguments inside 'nameof' are redundant"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 66,
+                  "endLine": 73,
+                  "endColumn": 67,
+                  "charOffset": 1837,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "13E8C18EEE942281FCAA5A6F28B5842CDB32C1503E15FD709631633B6EC5360A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantUsingDirective",
+          "ruleIndex": 14,
+          "level": "warning",
+          "message": {
+            "text": "Using directive is not required by the code and can be safely removed"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisResult.cs",
+                  "index": 19
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 24,
+                  "charOffset": 0,
+                  "charLength": 23
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "229AB8FB62F50064BC9452A58643BB1DA0EF24D2549BFA326D280250257571E1"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "RedundantUsingDirective",
+          "ruleIndex": 14,
+          "level": "warning",
+          "message": {
+            "text": "Using directive is not required by the code and can be safely removed"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TrendAnalyzer.cs",
+                  "index": 8
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 24,
+                  "charOffset": 0,
+                  "charLength": 23
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0F21EC70AE07B1FB60CF14A1BEC58174976F0F75BC9F7D871200FF12487A0B1F"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "ReturnTypeCanBeNotNullable",
+          "ruleIndex": 15,
+          "level": "warning",
+          "message": {
+            "text": "Return type of 'BuildProperties' can be made non-nullable"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/SarifFormatter.cs",
+                  "index": 20
+                },
+                "region": {
+                  "startLine": 168,
+                  "startColumn": 22,
+                  "endLine": 168,
+                  "endColumn": 23,
+                  "charOffset": 5842,
+                  "charLength": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0C1DEDC6E56ED90F237851C7C1508F358144664FB1382DDE61C2A376C3E6810E"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Add' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 70,
+                  "startColumn": 27,
+                  "endLine": 70,
+                  "endColumn": 30,
+                  "charOffset": 1775,
+                  "charLength": 3
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "4038C2CE9F7EC6800892E44D91655040A4F322D8813E4942B8AFCCEFAA205A55"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Add' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 81,
+                  "startColumn": 27,
+                  "endLine": 81,
+                  "endColumn": 30,
+                  "charOffset": 2085,
+                  "charLength": 3
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "53B36F10387FBA551C073B96E95DF9E661899C5FFDE2E7BBA95192DD021EFD86"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Allocate' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 14,
+                  "startColumn": 20,
+                  "endLine": 14,
+                  "endColumn": 28,
+                  "charOffset": 298,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "8E3A398EFC32B664508A0D63EFA83A58B41160B7304797778B94F5F4A5D8858A"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'AnalyzeDirectory' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeInfo.cs",
+                  "index": 11
+                },
+                "region": {
+                  "startLine": 73,
+                  "startColumn": 47,
+                  "endLine": 73,
+                  "endColumn": 63,
+                  "charOffset": 1952,
+                  "charLength": 16
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "B0D8E2D306ECB10330B5E7E97A5B26933B007F041E46926646C5575855DB8030"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'AsSpan' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 61,
+                  "startColumn": 28,
+                  "endLine": 61,
+                  "endColumn": 34,
+                  "charOffset": 1557,
+                  "charLength": 6
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "3A88320D04C46734F7E7271F504C39AA8C9C1886962406E96947BEE14F96F436"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Clear' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 41,
+                  "startColumn": 17,
+                  "endLine": 41,
+                  "endColumn": 22,
+                  "charOffset": 1115,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "F53BB60DF439BAA86B69B89DE3B82116AFDB79F4C1570CE3B7658705E6918098"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Deallocate' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 17,
+                  "endLine": 33,
+                  "endColumn": 27,
+                  "charOffset": 847,
+                  "charLength": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "C67D8C9E4652C1CB58668D1F5D99697DAD3CB141215FB1AE4E39CFD14FE91B30"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Dispose' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 49,
+                  "startColumn": 17,
+                  "endLine": 49,
+                  "endColumn": 24,
+                  "charOffset": 1279,
+                  "charLength": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "5C40403F3E27CD93882624AFA70140107B56833341B812F69BF287529DF2C3F9"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'EstimateSimilarity' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 92,
+                  "startColumn": 19,
+                  "endLine": 92,
+                  "endColumn": 37,
+                  "charOffset": 2379,
+                  "charLength": 18
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "B8059C527565261D4A88C376C344327496BF3B80458DF5B063C188C15AF55B02"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'MightContain' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 56,
+                  "startColumn": 17,
+                  "endLine": 56,
+                  "endColumn": 29,
+                  "charOffset": 1375,
+                  "charLength": 12
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "06E6341204E1147EB41F441DBFC802DAF1830CD3647DAC5259E3C10BA8EFB2B8"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Method 'Union' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 29,
+                  "startColumn": 27,
+                  "endLine": 29,
+                  "endColumn": 32,
+                  "charOffset": 659,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "C17246FC3B67F1A0CA35EF836F7FD323F458220E82EE92BE1E68B9D2184DB7A5"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Property 'Bits' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 19,
+                  "startColumn": 20,
+                  "endLine": 19,
+                  "endColumn": 24,
+                  "charOffset": 366,
+                  "charLength": 4
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "CCB509439263FECDADD421BBD32C60A25A8CD0632578EE0CA799988F330913B6"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Property 'Count' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 12,
+                  "startColumn": 16,
+                  "endLine": 12,
+                  "endColumn": 21,
+                  "charOffset": 262,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E82631ED6C3C214B90E1CC4BF60B19BD6A06AB1755C20A0C281986E13821938E"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Property 'IsDisposed' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 11,
+                  "startColumn": 17,
+                  "endLine": 11,
+                  "endColumn": 27,
+                  "charOffset": 220,
+                  "charLength": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "E338D517F547F507CDF65376F66C92C559C58374BA3526DF42A8D69A15B06DD0"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Global",
+          "ruleIndex": 16,
+          "level": "note",
+          "message": {
+            "text": "Property 'IsEmpty' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 17,
+                  "startColumn": 17,
+                  "endLine": 17,
+                  "endColumn": 24,
+                  "charOffset": 323,
+                  "charLength": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "B991FD7E7CE1A4A0A3FECBC63D48C5280A825633A5C614816FF85571696A2AF5"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedMember.Local",
+          "ruleIndex": 17,
+          "level": "warning",
+          "message": {
+            "text": "Method 'TypeKey' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/DiffCalculator.cs",
+                  "index": 1
+                },
+                "region": {
+                  "startLine": 57,
+                  "startColumn": 19,
+                  "endLine": 57,
+                  "endColumn": 26,
+                  "charOffset": 1984,
+                  "charLength": 7
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "F17A0E65197E2574C01F3A1C39155A0D186244DDF1E89945C108EB3128138F51"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedParameter.Global",
+          "ruleIndex": 18,
+          "level": "note",
+          "message": {
+            "text": "Parameter 'high5' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs",
+                  "index": 9
+                },
+                "region": {
+                  "startLine": 161,
+                  "startColumn": 88,
+                  "endLine": 161,
+                  "endColumn": 93,
+                  "charOffset": 6017,
+                  "charLength": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "97BED975FF0D3D1731BB456969C52FDD14A3F8BEDBCAF5A89445A57E4DE406F9"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedParameter.Global",
+          "ruleIndex": 18,
+          "level": "note",
+          "message": {
+            "text": "Parameter 'typeInfo' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs",
+                  "index": 6
+                },
+                "region": {
+                  "startLine": 55,
+                  "startColumn": 22,
+                  "endLine": 55,
+                  "endColumn": 30,
+                  "charOffset": 1334,
+                  "charLength": 8
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "67907701E7AA9A0E1E9F60AE37755F2DE6FC5EB7A7818099BDFE8F46CF976430"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedParameter.Local",
+          "ruleIndex": 19,
+          "level": "warning",
+          "message": {
+            "text": "Parameter 'parentKind' is never used"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs",
+                  "index": 2
+                },
+                "region": {
+                  "startLine": 302,
+                  "startColumn": 96,
+                  "endLine": 302,
+                  "endColumn": 106,
+                  "charOffset": 10860,
+                  "charLength": 10
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "754D8D08C7FD31D0B18BD891ADD873E0182EC6D0464C9E12DCD3E1306662FBFD"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedType.Global",
+          "ruleIndex": 20,
+          "level": "note",
+          "message": {
+            "text": "Struct 'BloomFilter128' is never used (except inside its declaration)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs",
+                  "index": 4
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 24,
+                  "endLine": 6,
+                  "endColumn": 38,
+                  "charOffset": 106,
+                  "charLength": 14
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "094CEF3818C9EC328B0A892D8C7935041C22C03A968862146271C07484313D2E"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UnusedType.Global",
+          "ruleIndex": 20,
+          "level": "note",
+          "message": {
+            "text": "Struct 'LinearAllocator' is never used (except inside its declaration)"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs",
+                  "index": 18
+                },
+                "region": {
+                  "startLine": 6,
+                  "startColumn": 12,
+                  "endLine": 6,
+                  "endColumn": 27,
+                  "charOffset": 93,
+                  "charLength": 15
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "0289ECECDC289723893B6403F1CED42794BEDC8E04D2E9FBA625DD452E5BB02F"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        },
+        {
+          "ruleId": "UseCollectionExpression",
+          "ruleIndex": 21,
+          "level": "note",
+          "message": {
+            "text": "Use collection expression"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/DiffCalculator.cs",
+                  "index": 1
+                },
+                "region": {
+                  "startLine": 103,
+                  "startColumn": 25,
+                  "endLine": 103,
+                  "endColumn": 47,
+                  "charOffset": 4424,
+                  "charLength": 22
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "contextRegionHash/v1": "075D652133D615272728C856198B08F62E5898CE01C24E0EB21CEBDD63F7F728"
+          },
+          "properties": {
+            "tags": ["C#",".NET 10.0",".NET 8.0",".NET 9.0"]
+          }
+        }
+      ],
+      "tool": {
+        "driver": {
+          "name": "InspectCode",
+          "organization": "JetBrains, Inc",
+          "fullName": "JetBrains Inspect Code 2025.3.3",
+          "semanticVersion": "253.0.20260216.123800",
+          "informationUri": "http://www.jetbrains.com/resharper/features/command-line.html",
+          "rules": [
+            {
+              "id": "CanSimplifyDictionaryLookupWithTryGetValue",
+              "fullDescription": {
+                "text": "Dictionary lookup can be simplified with 'TryGetValue'"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/CanSimplifyDictionaryLookupWithTryGetValue.html"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/CanSimplifyDictionaryLookupWithTryGetValue.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.BestPractice",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CollectionNeverQueried.Local",
+              "fullDescription": {
+                "text": "Elements are only added to the collection but never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/CollectionNeverQueried.Local.html"
+              },
+              "shortDescription": {
+                "text": "Collection content is never queried: Private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/CollectionNeverQueried.Local.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract",
+              "fullDescription": {
+                "text": "Expression is always 'true' or 'false' according to nullable reference types' annotations"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract.html"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract",
+              "fullDescription": {
+                "text": "Conditional access qualifier expression is not null according to nullable reference types' annotations"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ConvertToPrimaryConstructor",
+              "fullDescription": {
+                "text": "Replace ordinary constructor with primary constructor"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/ConvertToPrimaryConstructor.html"
+              },
+              "shortDescription": {
+                "text": "Convert constructor into primary constructor"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/ConvertToPrimaryConstructor.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.LanguageUsage",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "DuplicatedStatements",
+              "fullDescription": {
+                "text": "Remove statements from conditional branches or 'switch' cases if an identical sequence is executed afterward"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/DuplicatedStatements.html"
+              },
+              "shortDescription": {
+                "text": "Duplicated statements"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/DuplicatedStatements.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "InconsistentNaming",
+              "fullDescription": {
+                "text": "Name doesn't match naming style defined for this kind of symbol"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/InconsistentNaming.html"
+              },
+              "shortDescription": {
+                "text": "Inconsistent Naming"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/InconsistentNaming.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.ConstraintViolation",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.ConstraintViolation",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.ConstraintViolation",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "MemberCanBePrivate.Global",
+              "fullDescription": {
+                "text": "Member can be made private"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/MemberCanBePrivate.Global.html"
+              },
+              "shortDescription": {
+                "text": "Member can be made private: Non-private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/MemberCanBePrivate.Global.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.BestPractice",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.BestPractice",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.BestPractice",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "MergeIntoPattern",
+              "fullDescription": {
+                "text": "Merge sequential null/pattern checks into single recursive/logical pattern check"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/MergeIntoPattern.html"
+              },
+              "shortDescription": {
+                "text": "Merge null/pattern checks into complex pattern"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/MergeIntoPattern.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.LanguageUsage",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "NotAccessedField.Local",
+              "fullDescription": {
+                "text": "Field is assigned but its value is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/NotAccessedField.Local.html"
+              },
+              "shortDescription": {
+                "text": "Non-accessed field: Private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/NotAccessedField.Local.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "NotAccessedPositionalProperty.Global",
+              "fullDescription": {
+                "text": "Positional property is never accessed for reading"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/NotAccessedPositionalProperty.Global.html"
+              },
+              "shortDescription": {
+                "text": "Non-accessed positional property: Non-private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/NotAccessedPositionalProperty.Global.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "RedundantCast",
+              "fullDescription": {
+                "text": "Type cast can be safely removed"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/RedundantCast.html"
+              },
+              "shortDescription": {
+                "text": "Redundant cast"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/RedundantCast.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "RedundantSuppressNullableWarningExpression",
+              "fullDescription": {
+                "text": "Nullable warning suppression expression does not suppress any warnings and is applied to an already non-nullable operand"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/RedundantSuppressNullableWarningExpression.html"
+              },
+              "shortDescription": {
+                "text": "Redundant nullable warning suppression expression"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/RedundantSuppressNullableWarningExpression.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "RedundantTypeArgumentsInsideNameof",
+              "fullDescription": {
+                "text": "Simplify code by removing redundant type arguments from 'nameof' because they don't affect the result"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/RedundantTypeArgumentsInsideNameof.html"
+              },
+              "shortDescription": {
+                "text": "Redundant type arguments inside 'nameof'"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/RedundantTypeArgumentsInsideNameof.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "RedundantUsingDirective",
+              "fullDescription": {
+                "text": "Using directive is not required by the code and can be safely removed"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/RedundantUsingDirective.html"
+              },
+              "shortDescription": {
+                "text": "Redundant using directive"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/RedundantUsingDirective.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "ASPX.CodeRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ReturnTypeCanBeNotNullable",
+              "fullDescription": {
+                "text": "Function's return type is declared as nullable but it never returns nullable values"
+              },
+              "shortDescription": {
+                "text": "Return type of a function can be made non-nullable"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.CodeSmell",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UnusedMember.Global",
+              "fullDescription": {
+                "text": "Type member is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UnusedMember.Global.html"
+              },
+              "shortDescription": {
+                "text": "Type member is never used: Non-private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UnusedMember.Global.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "ASXX.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "ASPX.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UnusedMember.Local",
+              "fullDescription": {
+                "text": "Type member is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UnusedMember.Local.html"
+              },
+              "shortDescription": {
+                "text": "Type member is never used: Private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UnusedMember.Local.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UnusedParameter.Global",
+              "fullDescription": {
+                "text": "Parameter is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UnusedParameter.Global.html"
+              },
+              "shortDescription": {
+                "text": "Unused parameter: Non-private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UnusedParameter.Global.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UnusedParameter.Local",
+              "fullDescription": {
+                "text": "Parameter is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UnusedParameter.Local.html"
+              },
+              "shortDescription": {
+                "text": "Unused parameter: Private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "warning"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UnusedParameter.Local.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UnusedType.Global",
+              "fullDescription": {
+                "text": "Type is never used"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UnusedType.Global.html"
+              },
+              "shortDescription": {
+                "text": "Type is never used: Non-private accessibility"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UnusedType.Global.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "VBASIC.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                },
+                {
+                  "target": {
+                    "id": "XAML.DeclarationRedundancy",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "UseCollectionExpression",
+              "fullDescription": {
+                "text": "Suggest to replace collection object construction and items additions with C# 12 collection expression syntax"
+              },
+              "help": {
+                "text": "https://www.jetbrains.com/help/resharper/UseCollectionExpression.html"
+              },
+              "shortDescription": {
+                "text": "Use collection expression syntax"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "helpUri": "https://www.jetbrains.com/help/resharper/UseCollectionExpression.html",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP.LanguageUsage",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            }
+          ],
+          "taxa": [
+            {
+              "id": "ASPX",
+              "name": "Aspx"
+            },
+            {
+              "id": "ASPX.CodeRedundancy",
+              "name": "Redundancies in Code",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "ASPX",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ASPX.DeclarationRedundancy",
+              "name": "Redundancies in Symbol Declarations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "ASPX",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "ASXX",
+              "name": "HttpHandler or WebService"
+            },
+            {
+              "id": "ASXX.DeclarationRedundancy",
+              "name": "Redundancies in Symbol Declarations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "ASXX",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP",
+              "name": "C#"
+            },
+            {
+              "id": "CSHARP.BestPractice",
+              "name": "Common Practices and Code Improvements",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP.CodeRedundancy",
+              "name": "Redundancies in Code",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP.CodeSmell",
+              "name": "Potential Code Quality Issues",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP.ConstraintViolation",
+              "name": "Constraints Violations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP.DeclarationRedundancy",
+              "name": "Redundancies in Symbol Declarations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "CSHARP.LanguageUsage",
+              "name": "Language Usage Opportunities",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "CSHARP",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "VBASIC",
+              "name": "VB.NET"
+            },
+            {
+              "id": "VBASIC.BestPractice",
+              "name": "Common Practices and Code Improvements",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "VBASIC",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "VBASIC.CodeRedundancy",
+              "name": "Redundancies in Code",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "VBASIC",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "VBASIC.CodeSmell",
+              "name": "Potential Code Quality Issues",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "VBASIC",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "VBASIC.ConstraintViolation",
+              "name": "Constraints Violations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "VBASIC",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "VBASIC.DeclarationRedundancy",
+              "name": "Redundancies in Symbol Declarations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "VBASIC",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "XAML",
+              "name": "XAML"
+            },
+            {
+              "id": "XAML.BestPractice",
+              "name": "Common Practices and Code Improvements",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "XAML",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "XAML.CodeSmell",
+              "name": "Potential Code Quality Issues",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "XAML",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "XAML.ConstraintViolation",
+              "name": "Constraints Violations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "XAML",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "XAML.DeclarationRedundancy",
+              "name": "Redundancies in Symbol Declarations",
+              "relationships": [
+                {
+                  "target": {
+                    "id": "XAML",
+                    "toolComponent": {
+                      "name": "InspectCode"
+                    }
+                  },
+                  "kinds": [
+                    "superset"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true
+        }
+      ],
+      "versionControlProvenance": [
+        {
+          "repositoryUri": "https://github.com/bigdra50/unilyze.git",
+          "revisionId": "2bc4e5b06b9384d66a7adc2e838de24ec4949f99",
+          "branch": "main"
+        }
+      ],
+      "originalUriBaseIds": {
+        "solutionDir": {
+          "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/",
+          "description": {
+            "text": "Solution Directory"
+          }
+        }
+      },
+      "artifacts": [
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CycleDetector.cs"
+          },
+          "hashes": {
+            "md5": "096A0A11BFA23BF33126F1DEF7E0BCB3",
+            "sha-1": "74ABE4A08C72A7C1D42B1CF95CC05594A9D09C29",
+            "sha-256": "DB58A09B53215303867C98AF391D98BFE05EDB6DDC896F02737501F120ECE9BB"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/DiffCalculator.cs"
+          },
+          "hashes": {
+            "md5": "4FE834C7BCEB2346C1E4E5EDEA385F20",
+            "sha-1": "48425FC9A34214A55A5732579E7B792579F9E753",
+            "sha-256": "3CC621FC874177671F8311ABA67F131E9680B6C27B626FE426890C26676F3D28"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CognitiveComplexity.cs"
+          },
+          "hashes": {
+            "md5": "03070240DFDDA9A44E6EF9805582A216",
+            "sha-1": "310B6BBFADF7229A55DA414AF33A05EF9D5FBA07",
+            "sha-256": "F5EA0F11B21222A80F92040B865D727722F82BA74885CFDBC566DD9775783B09"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/Program.cs"
+          },
+          "hashes": {
+            "md5": "1F3500820D4D375A1F9D46776FB9D78C",
+            "sha-1": "0BDA19AFFBC7DAB8CA301E59C2FC5B99A31A4133",
+            "sha-256": "43F4D0721054BEDDBC6202056E28F1CCCA34B63999FE7A9BE80118D3CD06FF96"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/BloomFilter128.cs"
+          },
+          "hashes": {
+            "md5": "D15CA0AE3387F1B8D8C76141A6F27516",
+            "sha-1": "3F24DF96BBCFA36A4677B9DA54D0FB61AD18B87C",
+            "sha-256": "813593C273FEEBE4442463AA3C61136077C3106DFAE4AA51AFF81EC71F4B34D8"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/ProgramHelpers.cs"
+          },
+          "hashes": {
+            "md5": "5E5430F344D9CC09FC9A9887716299C7",
+            "sha-1": "BD8DE29BC873F459FAC1040C7BC035644139F05F",
+            "sha-256": "231960A7B2D94C7DC3887217021E2804ED1181064CEC0456280D7D0BC3222511"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeSmellDetector.cs"
+          },
+          "hashes": {
+            "md5": "D0C8CB9F4FE87C6B0C02DCB6C2C0296B",
+            "sha-1": "E8E938D33BFA09091FFECDFED1C4B983FD62A7BC",
+            "sha-256": "1CC733EE7961C58C2745CB75D0A579E6E4B1375E6E6D5CACF2E32B073D7B1A04"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisPipeline.cs"
+          },
+          "hashes": {
+            "md5": "7F18F4BCD01B49D50F5F6B39CA648727",
+            "sha-1": "024590E7160AF4B6860E5A8B58C5AAA4868A88B5",
+            "sha-256": "EFC6A8587BFCB155515A3C1E15287485EA2E73F0E173CB79779DF5D45B7DD923"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TrendAnalyzer.cs"
+          },
+          "hashes": {
+            "md5": "BD21ED2F3EF4B482BDE1E09CD54A3F09",
+            "sha-1": "09238E64A1E4CADCAB5FCB56BBD8006FBA86D4A6",
+            "sha-256": "BDDE104A5B920583051D22B5885DE391E6265616E75D115BBB7749181A322239"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CodeHealthCalculator.cs"
+          },
+          "hashes": {
+            "md5": "409C7233DA1638D26C1D7CB6E036E70C",
+            "sha-1": "799C18001EE238638B2A80FEC8EAA16EBE289479",
+            "sha-256": "9C909BA50FA1D0FE49690F395349E172C968EA4B8EBA4AA64F97A4BBAEA5DB65"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/MethodMetricsCalculator.cs"
+          },
+          "hashes": {
+            "md5": "E7451164F60FDEAB4CAC696D30FD48EE",
+            "sha-1": "2103C37E07CA9F50FAD75A2B19DFA993ED21C51E",
+            "sha-256": "F8325AF4C42F1518E7038A7DB3B8EE63025170959E32E280F495AD56A3EA6D42"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeInfo.cs"
+          },
+          "hashes": {
+            "md5": "EAADAC085A36F665F5E6B86935BCD569",
+            "sha-1": "C9308469ED0AB1457B719E67975F8357CAFE4E23",
+            "sha-256": "874D898069BBE4448A9060C2FE0A68B21819A4649B56DD65831BAA5A865E5F73"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/TypeIdentity.cs"
+          },
+          "hashes": {
+            "md5": "C93506908AD464461EAA6A556F6EEEC0",
+            "sha-1": "B9074D425838672DF817999CAA7AFC5D379EE469",
+            "sha-256": "AC8714CE6B18186DC6C1F24285AE22850F5D6E0A2A8601E4AAD8A3BB9F36646E"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AsmdefInfo.cs"
+          },
+          "hashes": {
+            "md5": "1FFF51CC672C9BA0BC72D6F3D69052B8",
+            "sha-1": "AD73FA2A0A090353898FC815B6FB4A6BD6C241D3",
+            "sha-256": "EB1E3776918ED836C9A41B1BE8BBC5476054D477F5D8D27D506123C130EA6493"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CsprojParser.cs"
+          },
+          "hashes": {
+            "md5": "321D88357A6DF5727998BFA3BD1E47EC",
+            "sha-1": "08D49BD7B600831F8351C59CB18E857A11598807",
+            "sha-256": "D0FAAF7EB2C680B5CDF762C59908F43D291AD56809236024D6C54B7516DA1BB6"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/HalsteadCalculator.cs"
+          },
+          "hashes": {
+            "md5": "BA3B82CE44837345DB91E31B97F8A4F3",
+            "sha-1": "1291215366373ED56582E23DC706B08F0DA452DC",
+            "sha-256": "1C7A42DD4EDE1180DC354C9399844EC2A5FB5D0D417E19998FAEF84470E320FE"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/CboCalculator.cs"
+          },
+          "hashes": {
+            "md5": "36B36EB7255C1D6DFE629444C5969999",
+            "sha-1": "257DF5A09E4A1C39838667A5B3FDB244E9696301",
+            "sha-256": "085B0A4D71DA29FCED0B512CF6689E7B383415006CCFC02EE652F6B018232D82"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LcomCalculator.cs"
+          },
+          "hashes": {
+            "md5": "3C23567BB72891E8CF92E254B200309E",
+            "sha-1": "314F12E70D422B687712E3931418F4182CBAF8C7",
+            "sha-256": "FDA589E681388FEF3732358B0343DD303B533B90A01ABA86271FED414021856C"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/LinearAllocator.cs"
+          },
+          "hashes": {
+            "md5": "76195CB0FBDEA2F3919FA6A555741BC7",
+            "sha-1": "B7631AD26FE90AB6EB47D7CBEBB85A53AF7713D9",
+            "sha-256": "E53CCA2E22BA1091F4F2036AC499E392F9DA5C8DC1B3E17C8642C750F4B30D6C"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/AnalysisResult.cs"
+          },
+          "hashes": {
+            "md5": "EDEFC8D1EE5869F5DEDB6B24D9B8B3EC",
+            "sha-1": "5CD8DF2B4F4DD923BCA4A2E636CC11D7D77992DB",
+            "sha-256": "62593658239F17B92EDB5E661DB39058C6EF34DD17C64F8984BF35B62BC05755"
+          }
+        },
+        {
+          "location": {
+            "uri": "file:///Volumes/CrucialX9/dev/github.com/bigdra50/unity-roslyn-graph/src/Unilyze/SarifFormatter.cs"
+          },
+          "hashes": {
+            "md5": "BC1A9E8D9A129E530BD96FABACD5217C",
+            "sha-1": "53EB758379217D82E13E0B7D5724ADE860322B82",
+            "sha-256": "7EEFB96C4B0FB988585A09058C5618CC7341C7F577EA10E9BD3E8B81C01EE154"
+          }
+        }
+      ],
+      "columnKind": "utf16CodeUnits"
+    }
+  ]
+}
