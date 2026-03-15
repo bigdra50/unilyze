@@ -305,7 +305,7 @@ body.offline-mode .panel{
   <button class="btn" id="bCyc">Cycles</button>
   <button class="btn" id="bAsm">Assemblies</button>
   <div class="sep"></div>
-  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option><option value="elk">ELK</option></select>
+  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option><option value="elk" selected>ELK</option></select>
   <button class="btn active" id="bEdge">Edges</button>
   <div class="spacer"></div>
   <span class="stats" id="st"></span>
@@ -1083,9 +1083,8 @@ const cy = cytoscape({
       'line-color':'data(color)','target-arrow-color':'data(color)',
       'target-arrow-shape':'data(ar)','arrow-scale':.6,
       'width':'data(w)','line-style':'data(ls)',
-      'curve-style':'unbundled-bezier',
-      'control-point-distances':'data(cpd)',
-      'control-point-weights':[0.5],
+      'curve-style':'taxi',
+      'taxi-direction':'downward','taxi-turn':20,'taxi-turn-min-distance':8,
       'opacity':'data(opa)'
     }},
     {selector:'edge[?meta]',style:{
@@ -1236,7 +1235,7 @@ function rebuild(){
   cy.endBatch();
 }
 
-let _layoutEngine='dagre';
+let _layoutEngine='elk';
 
 function layout(){
   const vis=cy.elements().filter(e=>e.style('display')!=='none');
@@ -1714,7 +1713,11 @@ document.getElementById('edgeStyle').addEventListener('change',function(){
       'taxi-turn':20,'taxi-turn-min-distance':8
     });
   } else {
-    cy.edges(':not([?meta])').removeStyle('curve-style taxi-direction taxi-turn taxi-turn-min-distance');
+    cy.edges(':not([?meta])').style({
+      'curve-style':'unbundled-bezier',
+      'control-point-distances':'data(cpd)',
+      'control-point-weights':[0.5]
+    }).removeStyle('taxi-direction taxi-turn taxi-turn-min-distance');
   }
   cy.endBatch();
   if(_layoutEngine!==prevEngine){rebuild();layout();}
