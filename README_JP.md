@@ -1,5 +1,7 @@
 # unilyze
 
+[![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
+
 Unity プロジェクトの型依存関係とコード品質を静的解析・可視化する CLI ツール。
 
 開発者向けのビルド・テスト・リリース情報は [README.dev_JP.md](README.dev_JP.md) を参照。

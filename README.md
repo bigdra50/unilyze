@@ -1,5 +1,7 @@
 # unilyze
 
+[![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
+
 A CLI tool for static analysis and visualization of type dependencies and code quality in Unity projects.
 
 [日本語版 / Japanese](README_JP.md)
