@@ -10,6 +10,13 @@ description: |
 
 unilyze メトリクスの CodeHealth スコアを収束条件として、リファクタリングを反復実行する。
 
+## Quick Reference
+
+```bash
+unilyze metrics   # メトリクス定義、CodeSmell 閾値一覧
+unilyze schema    # JSON 出力の全フィールドリファレンス
+```
+
 ## Usage
 
 ```

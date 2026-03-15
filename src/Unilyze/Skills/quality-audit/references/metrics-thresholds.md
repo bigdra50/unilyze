@@ -1,5 +1,7 @@
 # Metrics Thresholds
 
+> CLI から `unilyze metrics` で定義・検出閾値を確認可能。以下はレーティング基準の補足。
+
 ## CodeHealth
 
 | Range | Rating | Action |

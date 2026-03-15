@@ -7,6 +7,10 @@ if (args.Length >= 1 && args[0] == "hotspot")
     return RunHotspot(args[1..]);
 if (args.Length >= 1 && args[0] == "trend")
     return RunTrend(args[1..]);
+if (args.Length >= 1 && args[0] == "metrics")
+    return PrintMetrics();
+if (args.Length >= 1 && args[0] == "schema")
+    return PrintSchema();
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -138,18 +142,179 @@ Options:
   -i, --input     Use existing JSON instead of analyzing
   -o, --output    Output file path (format inferred from extension: .html, .json, .sarif)
   -f, --format    Output format: html, json, sarif (default: html)
-  -a, --assembly  Filter by assembly name (e.g. App.Domain)
-      --prefix    Filter asmdef names by prefix (auto-detected if omitted)
+  -a, --assembly  Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
+      --prefix    Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
       --no-open   Do not open the generated HTML in a browser
   -v, --version   Show version
   -h, --help      Show this help
 
 Subcommands:
+  metrics         Show metric definitions and code smell thresholds
+  schema          Show JSON output field reference
   skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
+
+Exit codes:
+  0  Success
+  1  Error (invalid option, file not found, etc.)
 """);
     return 0;
 }
 
+
+static int PrintMetrics()
+{
+    Console.WriteLine("""
+    unilyze metrics - Metric definitions and thresholds
+
+    Metrics (per method):
+      CycCC    Cyclomatic Complexity (McCabe 1976). Count of decision points + 1.
+               Counted: if, case, for, foreach, while, do, catch, ?:, ?., ??,
+               &&, ||, goto, switch expression arm, bool & / bool |.
+      CogCC    Cognitive Complexity (SonarSource). Nesting-aware complexity.
+               Structural nodes (if, switch, for, while, catch) add +1 + nesting level.
+               Logical operators (&&, ||, and, or) add +1 on kind change only.
+               goto and direct recursion add flat +1.
+      MI       Maintainability Index (0-100). Based on Halstead Volume, CycCC, LOC.
+               >80 good, 60-80 moderate, <60 poor.
+
+    Metrics (per type):
+      LCOM     Lack of Cohesion of Methods (Henderson-Sellers).
+               Formula: (avg(mA) - M) / (1 - M)
+                 mA(f) = number of methods accessing field f
+                 M     = number of instance methods (incl. constructors)
+               0.0 = fully cohesive, 1.0 = fully dispersed.
+               null when M <= 1 or no instance fields.
+               Auto-properties excluded from field set.
+      DIT      Depth of Inheritance Tree. Base class count above this type.
+      CBO      Coupling Between Objects. Count of distinct external types referenced.
+      Ca       Afferent Coupling. Number of types that depend on this type.
+      Ce       Efferent Coupling. Number of types this type depends on.
+      Inst     Instability = Ce / (Ca + Ce). 0.0 = stable, 1.0 = unstable.
+
+    CodeHealth (per type, 1.0 - 10.0, higher is better):
+      Weighted score from 6 factors:
+        avgCogCC (25%), maxCogCC (20%), lineCount (15%),
+        methodCount (10%), maxNestingDepth (15%), excessiveParamMethods (15%).
+
+    CodeSmell detection thresholds:
+      GodClass             lines >= 500 OR methods >= 20     (Critical: lines >= 1000)
+      LongMethod           lines >= 80 OR CogCC >= 25       (Critical: lines >= 150 OR CogCC >= 40)
+      HighComplexity       CycCC >= 15 OR CogCC >= 15
+      DeepNesting          depth >= 4                        (Critical: depth >= 6)
+      ExcessiveParameters  params > 5
+      LowCohesion          LCOM >= 0.8
+      HighCoupling         CBO >= 15
+      DeepInheritance      DIT >= 5
+      LowMaintainability   MI < 60
+      CyclicDependency     type participates in a dependency cycle
+    """);
+    return 0;
+}
+
+static int PrintSchema()
+{
+    Console.WriteLine("""
+    unilyze schema - JSON output field reference
+
+    analyze (unilyze -f json):
+      .projectPath                         string   Analyzed project path
+      .analyzedAt                          string   ISO 8601 timestamp
+      .analysisLevel                       string?  "SyntaxOnly" or "Semantic"
+      .assemblies[]                        object   Assembly info
+        .name                              string   Assembly name (from .asmdef)
+        .sourceFiles[]                     string   Relative .cs file paths
+        .referencedAssemblies[]            string   Referenced assembly names
+      .types[]                             object   Type topology nodes
+        .name, .namespace, .assembly       string   Type identity
+        .kind                              string   "Class","Interface","Struct","Enum","Delegate"
+        .isPublic, .isSealed, .isAbstract  bool     Modifiers
+      .dependencies[]                      object   Type-level dependencies
+        .source, .target                   string   Type names
+        .kind                              string   "Inheritance","Implementation","Association",
+                                                    "Usage","Aggregation"
+      .typeMetrics[]                       object   Per-type metrics (see below)
+
+    typeMetrics[]:
+      .typeName                            string   Type name (without namespace)
+      .qualifiedName                       string?  Namespace.TypeName
+      .namespace                           string   Namespace
+      .assembly                            string   Assembly name
+      .filePath                            string?  Source file path
+      .startLine                           int?     Type declaration start line
+      .typeId                              string?  Unique identifier
+      .lineCount                           int      Total lines
+      .methodCount                         int      Method count
+      .codeHealth                          float    1.0-10.0 (higher is better)
+      .lcom                                float?   LCOM-HS (0.0-1.0, null if N/A)
+      .dit                                 int?     Depth of Inheritance Tree
+      .cbo                                 int?     Coupling Between Objects
+      .afferentCoupling                    int?     Ca
+      .efferentCoupling                    int?     Ce
+      .instability                         float?   Ce/(Ca+Ce)
+      .averageCognitiveComplexity          float    Avg CogCC across methods
+      .averageCyclomaticComplexity         float    Avg CycCC across methods
+      .maxCognitiveComplexity              int      Max CogCC
+      .maxCyclomaticComplexity             int      Max CycCC
+      .maxNestingDepth                     int      Max nesting depth
+      .averageMaintainabilityIndex         float?   Avg MI
+      .minMaintainabilityIndex             float?   Min MI
+      .excessiveParameterMethodCount       int      Methods with params > 5
+      .codeSmells[]                        object   Detected code smells
+        .kind                              string   Smell category (see 'unilyze metrics')
+        .severity                          string   "Warning" or "Critical"
+        .message                           string   Human-readable description
+        .methodName                        string?  Affected method (null for type-level)
+      .methods[]                           object   Per-method metrics
+
+    methods[]:
+      .methodName                          string   Method name
+      .cyclomaticComplexity                int      CycCC (base 1)
+      .cognitiveComplexity                 int      CogCC
+      .maxNestingDepth                     int      Max nesting depth
+      .parameterCount                      int      Parameter count
+      .lineCount                           int      Lines of code
+      .startLine                           int?     Start line in source
+      .maintainabilityIndex                float?   MI (0-100)
+
+    diff (unilyze diff):
+      .beforePath, .afterPath              string   Compared file paths
+      .beforeAnalyzedAt, .afterAnalyzedAt  string   Timestamps
+      .summary                             object
+        .improvedCount                     int      Types with better metrics
+        .degradedCount                     int      Types with worse metrics
+        .unchangedCount                    int      Unchanged types
+        .addedCount                        int      New types
+        .removedCount                      int      Removed types
+      .improved[], .degraded[], .unchanged[], .added[], .removed[]
+                                           TypeDiff[]  Per-type changes
+
+    hotspot (unilyze hotspot):
+      .projectPath                         string   Project path
+      .since                               string   Git log period (e.g. "12.month")
+      .topN                                int      Requested top N
+      .hotspots[]                          object
+        .typeName                          string   Type name
+        .namespace                         string?  Namespace
+        .filePath                          string?  File path
+        .changeCount                       int      Git commit count touching this type
+        .codeHealth                        float    CodeHealth score
+        .hotspotScore                      float    changeCount * (10.0 - codeHealth)
+
+    trend (unilyze trend):
+      .snapshots[]                         object   Per-snapshot data
+        .analyzedAt                        string   Timestamp
+        .typeCount                         int      Number of types
+        .averageCodeHealth                 float    Avg CodeHealth
+        .codeSmellCount                    int      Total code smells
+        .highComplexityTypeCount           int      Types with CycCC>=15 or CogCC>=15
+        .averageCognitiveComplexity        float    Project-wide avg CogCC
+      .summary                             object
+        .snapshotCount                     int      Number of snapshots
+        .codeHealthDelta                   float    First-to-last health change
+        .codeSmellDelta                    int      First-to-last smell count change
+    """);
+    return 0;
+}
 
 static void TryOpenInBrowser(string path)
 {
