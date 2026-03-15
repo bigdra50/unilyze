@@ -8,6 +8,10 @@ A CLI tool for static analysis and visualization of type dependencies and code q
 
 For build, test, and release information, see [README.dev.md](README.dev.md).
 
+## Demo
+
+<div><video controls src="https://github.com/user-attachments/assets/60ae2566-f961-4324-a16d-8f384b7d03fd" muted="false"></video></div>
+
 ### Requirements
 
 - .NET 8.0 or later
