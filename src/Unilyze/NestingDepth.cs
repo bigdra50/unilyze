@@ -18,7 +18,8 @@ public static class NestingDepth
     {
         foreach (var child in node.ChildNodes())
         {
-            if (IsNestingNode(child))
+            // else if is a flat chain — don't increment depth
+            if (IsNestingNode(child) && !(child is IfStatementSyntax && node is ElseClauseSyntax))
             {
                 var newDepth = depth + 1;
                 if (newDepth > maxDepth) maxDepth = newDepth;
@@ -33,7 +34,6 @@ public static class NestingDepth
 
     static bool IsNestingNode(SyntaxNode node) => node is
         IfStatementSyntax or
-        ElseClauseSyntax or
         ForStatementSyntax or
         ForEachStatementSyntax or
         WhileStatementSyntax or
