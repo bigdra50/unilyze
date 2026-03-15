@@ -24,7 +24,9 @@ unilyze メトリクスの CodeHealth スコアを収束条件として、リフ
 
 ```python
 snapshot = get_or_create_baseline(path)
-targets = identify_worst_types(snapshot, threshold=target)
+hotspots = unilyze_hotspot(path)    # git 履歴があれば churn x complexity で優先順位付け
+targets = identify_worst_types(snapshot, hotspots, threshold=target)
+# hotspots が取得できない場合 (非 git / 履歴不足) は CodeHealth 順にフォールバック
 
 for round in range(1, max_rounds + 1):
     type_to_fix = pick_worst(targets)
@@ -43,22 +45,42 @@ for round in range(1, max_rounds + 1):
 print_final_summary()
 ```
 
-### Step 1: ベースライン取得
+### Step 1: ベースライン取得 & hotspot 分析
+
+スナップショットはリポジトリルートの `.unilyze/` に保存する。
 
 ```bash
+UNILYZE_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.unilyze"
+mkdir -p "$UNILYZE_DIR"
+
 # /quality-audit で作成済みなら再利用
-if [ -f /tmp/quality-audit.json ]; then
-  cp /tmp/quality-audit.json /tmp/refactor-before.json
+if [ -f "$UNILYZE_DIR/quality-audit.json" ]; then
+  cp "$UNILYZE_DIR/quality-audit.json" "$UNILYZE_DIR/refactor-before.json"
 else
-  unilyze -p <path> -f json -o /tmp/refactor-before.json
+  # --prefix または -a で自前コードに絞る (サードパーティ除外)
+  unilyze -p <path> --prefix "App." -f json -o "$UNILYZE_DIR/refactor-before.json"
 fi
 ```
+
+hotspot を取得して優先順位を決定する (ループ開始時に1回だけ実行)。
+git 履歴が十分にある場合のみ有効。非 git リポジトリや作りたてのリポジトリではスキップし、CodeHealth 順で進める。
+
+```bash
+# git 履歴があれば hotspot を取得 (失敗しても続行)
+unilyze hotspot -p <path> 2>&1 || echo "hotspot unavailable, using CodeHealth order"
+```
+
+hotspot が取得できた場合、「変更頻度が高い かつ CodeHealth が低い」型を優先的にリファクタリング対象とする。
+CodeHealth だけで順位付けすると、滅多に変更しないコードに労力を使ってしまう。
 
 ワースト型を抽出:
 
 ```bash
-jq --argjson t 8.0 '[.typeMetrics[] | select(.codeHealth != null and .codeHealth < $t)] | sort_by(.codeHealth) | .[0]' /tmp/refactor-before.json
+jq --argjson t 8.0 '[.typeMetrics[] | select(.codeHealth != null and .codeHealth < $t)] | sort_by(.codeHealth) | .[0]' "$UNILYZE_DIR/refactor-before.json"
 ```
+
+partial class や static 拡張メソッドクラスが GodClass 判定されている場合、
+計測特性によるものであり改善対象から除外してよい (詳細: quality-audit/references/blind-spots.md)。
 
 ### Step 2: リファクタリング実施
 
@@ -91,8 +113,8 @@ dotnet test  # or project-specific test command
 ### Step 4: 定量比較
 
 ```bash
-unilyze -p <path> -f json -o /tmp/refactor-after.json
-unilyze diff /tmp/refactor-before.json /tmp/refactor-after.json 2>&1
+unilyze -p <path> -f json -o "$UNILYZE_DIR/refactor-after.json"
+unilyze diff "$UNILYZE_DIR/refactor-before.json" "$UNILYZE_DIR/refactor-after.json" 2>&1
 ```
 
 判定ロジック:
@@ -136,7 +158,7 @@ Overall: N types improved, M reached target, K remaining
 
 スナップショットを更新:
 ```bash
-cp /tmp/refactor-after.json /tmp/quality-audit.json
+cp "$UNILYZE_DIR/refactor-after.json" "$UNILYZE_DIR/quality-audit.json"
 ```
 
 ## Notes
@@ -145,3 +167,5 @@ cp /tmp/refactor-after.json /tmp/quality-audit.json
 - テスト通過を必ず確認してから次のラウンドへ
 - `/quality-audit` のスナップショットをベースラインとして再利用可能
 - 悪化が発生した場合は次のラウンドに進まず、まず悪化を修正する
+- hotspot はループ開始時に1回取得すれば十分。git churn はループ中に大きく変わらない
+- hotspot は git 履歴が必要。非 git リポジトリや履歴が少ない場合は CodeHealth 順にフォールバックする
