@@ -74,6 +74,12 @@ unilyze hotspot -p ~/MyUnityProject --since 6.month -n 10
 # Quality trend (time-series comparison)
 unilyze trend <dir-of-jsons>
 unilyze trend <dir-of-jsons> -o trend.json
+
+# Show metric definitions and code smell thresholds
+unilyze metrics
+
+# Show JSON output field reference
+unilyze schema
 ```
 
 `hotspot` requires the `git` command and assumes the target path is a Git repository.
@@ -104,22 +110,22 @@ unilyze trend <dir-of-jsons> -o trend.json
 | Maintainability Index | Computed from Halstead Volume, CycCC, LoC (0-100) | Method |
 | Code Health | Composite score (1.0: worst - 10.0: best) | Type |
 
-For detailed metric definitions and thresholds, see [docs/metrics.md](docs/metrics.md).
+Run `unilyze metrics` for detailed definitions and thresholds from the CLI. See also [docs/metrics.md](docs/metrics.md).
 
 ## Code Smell Detection
 
-| Kind | Condition |
-|------|-----------|
-| GodClass | Lines > 500 and methods > 20 |
-| LongMethod | Lines > 60 |
-| HighComplexity | CogCC > 25 |
-| ExcessiveParameters | Parameters > 4 |
-| DeepNesting | Nesting depth > 4 |
-| LowCohesion | LCOM > 0.8 |
-| HighCoupling | CBO >= 14 |
-| LowMaintainability | MI < 20 |
-| DeepInheritance | DIT >= 6 |
-| CyclicDependency | Cyclic dependencies between types/assemblies (Tarjan SCC) |
+| Kind | Warning | Critical |
+|------|---------|----------|
+| GodClass | lines >= 500 OR methods >= 20 | lines >= 1000 |
+| LongMethod | lines >= 80 OR CogCC >= 25 | lines >= 150 OR CogCC >= 40 |
+| HighComplexity | CycCC >= 15 OR CogCC >= 15 | - |
+| ExcessiveParameters | params > 5 | - |
+| DeepNesting | depth >= 4 | depth >= 6 |
+| LowCohesion | LCOM >= 0.8 | - |
+| HighCoupling | CBO >= 15 | - |
+| LowMaintainability | MI < 60 | - |
+| DeepInheritance | DIT >= 5 | - |
+| CyclicDependency | Cyclic dependencies between types/assemblies (Tarjan SCC) | - |
 
 ## Output Formats
 
@@ -157,6 +163,34 @@ Designed to drive quality improvement loops with coding agents:
 ```
 unilyze (measure) -> identify issues -> fix -> unilyze diff (verify) -> confirm improvement
 ```
+
+### Install skills for your agent
+
+```bash
+# Claude Code
+unilyze skills install --claude
+
+# Multiple targets at once
+unilyze skills install --claude --codex --cursor
+
+# Global install (available across all projects)
+unilyze skills install --claude --global
+```
+
+Supported targets: `--claude`, `--codex`, `--cursor`, `--gemini`, `--windsurf`
+
+Skills provide structured workflows (`/quality-audit`, `/refactor-loop`) that guide agents through measure-fix-verify cycles.
+
+### Self-documenting CLI for agents
+
+Agents can discover metrics and JSON schema without external docs:
+
+```bash
+unilyze metrics   # Metric definitions, CodeSmell thresholds
+unilyze schema    # JSON output field reference (for jq queries)
+```
+
+### Measure-fix-verify loop
 
 ```bash
 # 1. Measure

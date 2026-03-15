@@ -72,6 +72,12 @@ unilyze hotspot -p ~/MyUnityProject --since 6.month -n 10
 # 品質トレンド (時系列比較)
 unilyze trend <dir-of-jsons>
 unilyze trend <dir-of-jsons> -o trend.json
+
+# メトリクス定義・CodeSmell 閾値を表示
+unilyze metrics
+
+# JSON 出力フィールドリファレンスを表示
+unilyze schema
 ```
 
 `hotspot` は `git` コマンドが利用可能で、対象パスが Git リポジトリであることを前提とする。
@@ -102,22 +108,22 @@ unilyze trend <dir-of-jsons> -o trend.json
 | Maintainability Index | Halstead Volume, CycCC, LoC から算出 (0-100) | メソッド |
 | Code Health | 複合スコア (1.0: 最悪 - 10.0: 最良) | 型 |
 
-各メトリクスの詳細な定義と閾値は [docs/metrics.md](docs/metrics.md) を参照。
+`unilyze metrics` で定義・閾値を CLI から直接確認可能。[docs/metrics.md](docs/metrics.md) も参照。
 
 ## Code Smell Detection
 
-| Kind | 条件 |
-|------|------|
-| GodClass | 行数 > 500 かつ メソッド数 > 20 |
-| LongMethod | 行数 > 60 |
-| HighComplexity | CogCC > 25 |
-| ExcessiveParameters | パラメータ数 > 4 |
-| DeepNesting | ネスト深度 > 4 |
-| LowCohesion | LCOM > 0.8 |
-| HighCoupling | CBO >= 14 |
-| LowMaintainability | MI < 20 |
-| DeepInheritance | DIT >= 6 |
-| CyclicDependency | 型/アセンブリ間の循環依存 (Tarjan SCC) |
+| Kind | Warning | Critical |
+|------|---------|----------|
+| GodClass | 行数 >= 500 OR メソッド数 >= 20 | 行数 >= 1000 |
+| LongMethod | 行数 >= 80 OR CogCC >= 25 | 行数 >= 150 OR CogCC >= 40 |
+| HighComplexity | CycCC >= 15 OR CogCC >= 15 | - |
+| ExcessiveParameters | パラメータ数 > 5 | - |
+| DeepNesting | ネスト深度 >= 4 | ネスト深度 >= 6 |
+| LowCohesion | LCOM >= 0.8 | - |
+| HighCoupling | CBO >= 15 | - |
+| LowMaintainability | MI < 60 | - |
+| DeepInheritance | DIT >= 5 | - |
+| CyclicDependency | 型/アセンブリ間の循環依存 (Tarjan SCC) | - |
 
 ## Output Formats
 
@@ -155,6 +161,34 @@ unilyze trend <dir-of-jsons> -o trend.json
 ```
 unilyze (計測) → 問題特定 → 修正 → unilyze diff (検証) → 改善確認
 ```
+
+### エージェント向け skill インストール
+
+```bash
+# Claude Code
+unilyze skills install --claude
+
+# 複数ターゲットを同時指定
+unilyze skills install --claude --codex --cursor
+
+# グローバルインストール (全プロジェクトで利用可能)
+unilyze skills install --claude --global
+```
+
+対応ターゲット: `--claude`, `--codex`, `--cursor`, `--gemini`, `--windsurf`
+
+skill は構造化ワークフロー (`/quality-audit`, `/refactor-loop`) を提供し、計測→修正→検証のサイクルをガイドする。
+
+### エージェント向け自己完結 CLI
+
+エージェントは外部ドキュメントなしでメトリクスと JSON スキーマを把握できる:
+
+```bash
+unilyze metrics   # メトリクス定義、CodeSmell 閾値
+unilyze schema    # JSON 出力フィールドリファレンス (jq クエリ構築用)
+```
+
+### 計測→修正→検証ループ
 
 ```bash
 # 1. 計測
