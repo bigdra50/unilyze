@@ -123,7 +123,7 @@ unilyze - Static analyzer for Unity projects
 Usage:
   unilyze                                  Analyze current directory and open in browser
   unilyze diff <before.json> <after.json>  Compare two analysis snapshots
-  unilyze hotspot -p <path>                Identify refactoring hotspots (git churn x complexity)
+  unilyze hotspot                          Identify refactoring hotspots (git churn x complexity)
   unilyze trend <dir-of-jsons>             Show quality trend across multiple snapshots
   unilyze -p <path>                        Analyze project and open in browser
   unilyze -p <path> --no-open              Analyze project and write HTML/JSON without opening a browser
@@ -256,7 +256,7 @@ static int PrintDiffUsage()
 
 static int RunHotspot(string[] args)
 {
-    if (args.Length == 0 || args.Any(a => a is "-h" or "--help"))
+    if (args.Any(a => a is "-h" or "--help"))
         return PrintHotspotUsage();
 
     var opts = ProgramHelpers.ParseOptions(args);
@@ -268,11 +268,7 @@ static int RunHotspot(string[] args)
     if (!int.TryParse(opts.GetValueOrDefault("-n") ?? "20", out var topN))
         topN = 20;
 
-    if (path == null)
-    {
-        Console.Error.WriteLine("Error: -p/--path is required for hotspot analysis");
-        return 1;
-    }
+    path ??= ".";
 
     try
     {
@@ -335,13 +331,14 @@ static int PrintHotspotUsage()
     unilyze hotspot - Identify refactoring hotspots (git churn x complexity)
 
     Usage:
-      unilyze hotspot -p <path>                         Analyze and output hotspot JSON
+      unilyze hotspot                                    Analyze current directory
+      unilyze hotspot -p <path>                         Analyze specified project
       unilyze hotspot -p <path> -i analysis.json         Use existing analysis JSON
       unilyze hotspot -p <path> --since 6.month -n 10   Custom period and top N
       unilyze hotspot -p <path> -o hotspots.json         Save to file
 
     Options:
-      -p, --path      Project root (required, used for git log)
+      -p, --path      Project root (default: ., used for git log)
       -i, --input     Existing analysis JSON (skip fresh analysis)
       --since          Git log period (default: 12.month)
       -n               Top N results (default: 20)
