@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.Frozen;
 using System.Runtime.InteropServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -17,6 +18,41 @@ public static class HalsteadCalculator
 {
     static readonly ConcurrentQueue<Dictionary<string, int>> DictPool = new();
 
+    /// <summary>
+    /// Pre-computed SyntaxKind -> string map for keyword-operator nodes.
+    /// Eliminates per-call <c>Kind().ToString()</c> allocations.
+    /// </summary>
+    static readonly FrozenDictionary<SyntaxKind, string> KeywordOperatorNames =
+        new Dictionary<SyntaxKind, string>
+        {
+            [SyntaxKind.IfStatement] = "IfStatement",
+            [SyntaxKind.ElseClause] = "ElseClause",
+            [SyntaxKind.ForStatement] = "ForStatement",
+            [SyntaxKind.ForEachStatement] = "ForEachStatement",
+            [SyntaxKind.WhileStatement] = "WhileStatement",
+            [SyntaxKind.DoStatement] = "DoStatement",
+            [SyntaxKind.SwitchStatement] = "SwitchStatement",
+            [SyntaxKind.SwitchExpression] = "SwitchExpression",
+            [SyntaxKind.CaseSwitchLabel] = "CaseSwitchLabel",
+            [SyntaxKind.CasePatternSwitchLabel] = "CasePatternSwitchLabel",
+            [SyntaxKind.SwitchExpressionArm] = "SwitchExpressionArm",
+            [SyntaxKind.ReturnStatement] = "ReturnStatement",
+            [SyntaxKind.ThrowStatement] = "ThrowStatement",
+            [SyntaxKind.ThrowExpression] = "ThrowExpression",
+            [SyntaxKind.TryStatement] = "TryStatement",
+            [SyntaxKind.CatchClause] = "CatchClause",
+            [SyntaxKind.FinallyClause] = "FinallyClause",
+            [SyntaxKind.ObjectCreationExpression] = "ObjectCreationExpression",
+            [SyntaxKind.ImplicitObjectCreationExpression] = "ImplicitObjectCreationExpression",
+            [SyntaxKind.TypeOfExpression] = "TypeOfExpression",
+            [SyntaxKind.IsPatternExpression] = "IsPatternExpression",
+            [SyntaxKind.AsExpression] = "AsExpression",
+            [SyntaxKind.AwaitExpression] = "AwaitExpression",
+            [SyntaxKind.YieldReturnStatement] = "YieldReturnStatement",
+            [SyntaxKind.YieldBreakStatement] = "YieldBreakStatement",
+            [SyntaxKind.ConditionalAccessExpression] = "ConditionalAccessExpression",
+        }.ToFrozenDictionary();
+
     public static HalsteadMetrics Calculate(SyntaxNode? body)
     {
         if (body is null)
@@ -27,7 +63,8 @@ public static class HalsteadCalculator
 
         try
         {
-            CollectTokens(body, operatorCounts, operandCounts);
+            var walker = new HalsteadWalker(operatorCounts, operandCounts);
+            walker.Visit(body);
 
             var n1 = SumValues(operatorCounts);
             var n2 = SumValues(operandCounts);
@@ -96,20 +133,32 @@ public static class HalsteadCalculator
         count++;
     }
 
-    static void CollectTokens(SyntaxNode node, Dictionary<string, int> operators, Dictionary<string, int> operands)
+    /// <summary>
+    /// Single-pass walker at token depth.
+    /// <see cref="DefaultVisit"/> classifies keyword-operator nodes;
+    /// <see cref="VisitToken"/> classifies operator/operand tokens.
+    /// </summary>
+    sealed class HalsteadWalker(
+        Dictionary<string, int> operators,
+        Dictionary<string, int> operands)
+        : CSharpSyntaxWalker(SyntaxWalkerDepth.Token)
     {
-        foreach (var token in node.DescendantTokens())
+        public override void DefaultVisit(SyntaxNode node)
+        {
+            if (KeywordOperatorNames.TryGetValue(node.Kind(), out var name))
+                AddToken(operators, name);
+
+            base.DefaultVisit(node);
+        }
+
+        public override void VisitToken(SyntaxToken token)
         {
             if (IsOperatorToken(token))
                 AddToken(operators, token.Text);
             else if (IsOperandToken(token))
                 AddToken(operands, token.Text);
-        }
 
-        foreach (var child in node.DescendantNodes())
-        {
-            if (IsKeywordOperator(child))
-                AddToken(operators, child.Kind().ToString());
+            base.VisitToken(token);
         }
     }
 
@@ -207,34 +256,5 @@ public static class HalsteadCalculator
             or TypeParameterSyntax
             or ParameterSyntax
             or TypeParameterConstraintSyntax;
-    }
-
-    static bool IsKeywordOperator(SyntaxNode node)
-    {
-        return node is IfStatementSyntax
-            or ElseClauseSyntax
-            or ForStatementSyntax
-            or ForEachStatementSyntax
-            or WhileStatementSyntax
-            or DoStatementSyntax
-            or SwitchStatementSyntax
-            or SwitchExpressionSyntax
-            or CaseSwitchLabelSyntax
-            or CasePatternSwitchLabelSyntax
-            or SwitchExpressionArmSyntax
-            or ReturnStatementSyntax
-            or ThrowStatementSyntax
-            or ThrowExpressionSyntax
-            or TryStatementSyntax
-            or CatchClauseSyntax
-            or FinallyClauseSyntax
-            or ObjectCreationExpressionSyntax
-            or ImplicitObjectCreationExpressionSyntax
-            or TypeOfExpressionSyntax
-            or IsPatternExpressionSyntax
-            or BinaryExpressionSyntax { RawKind: (int)SyntaxKind.AsExpression }
-            or AwaitExpressionSyntax
-            or YieldStatementSyntax
-            or ConditionalAccessExpressionSyntax;
     }
 }

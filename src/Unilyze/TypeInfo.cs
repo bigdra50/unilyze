@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -81,73 +82,87 @@ public static class TypeAnalyzer
         if (preprocessorSymbols is { Count: > 0 })
             parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
 
-        var csFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories);
-        var rawTypes = new List<TypeNodeInfo>();
-        var trees = new List<SyntaxTree>();
+        var csFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories).ToList();
+        var rawTypes = new ConcurrentBag<TypeNodeInfo>();
+        var trees = new ConcurrentBag<SyntaxTree>();
 
-        foreach (var file in csFiles)
+        Parallel.ForEach(csFiles, file =>
         {
             var source = File.ReadAllText(file);
             var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: file);
             trees.Add(tree);
             var root = tree.GetRoot();
-            rawTypes.AddRange(ExtractTypes(root, assemblyName, file));
-        }
+            ExtractTypesInto(rawTypes, root, assemblyName, file);
+        });
+
+        // Sort to ensure deterministic partial merge order (ConcurrentBag is unordered)
+        var rawTypeList = rawTypes.OrderBy(t => t.FilePath, StringComparer.Ordinal)
+            .ThenBy(t => t.StartLine).ToList();
+        var treeList = trees.ToList();
 
         // B2: 2パス interface 判定
         var knownInterfaces = new HashSet<string>(
-            rawTypes.Where(t => t.Kind == "interface").Select(t => t.Name.Split('<')[0]));
-        var resolved = rawTypes.Select(t => ResolveBaseTypes(t, knownInterfaces)).ToList();
+            rawTypeList.Where(t => t.Kind == "interface").Select(t => t.Name.Split('<')[0]));
+        var resolved = rawTypeList.Select(t => ResolveBaseTypes(t, knownInterfaces)).ToList();
 
         // B4: partial マージ
-        return new AnalyzeDirectoryResult(MergePartialTypes(resolved), trees);
+        return new AnalyzeDirectoryResult(MergePartialTypes(resolved), treeList);
     }
 
-    // --- Phase 1: Raw extraction ---
+    // --- Phase 1: Raw extraction (allocation-reduced: no yield state machines) ---
 
-    static IEnumerable<TypeNodeInfo> ExtractTypes(SyntaxNode root, string assemblyName, string filePath)
+    static void ExtractTypesInto(ConcurrentBag<TypeNodeInfo> bag, SyntaxNode root, string assemblyName, string filePath)
     {
-        foreach (var t in ExtractTypeDeclarations(root, assemblyName, filePath)) yield return t;
-        foreach (var t in ExtractEnumDeclarations(root, assemblyName, filePath)) yield return t;
-        foreach (var t in ExtractDelegateDeclarations(root, assemblyName, filePath)) yield return t;
-    }
-
-    static IEnumerable<TypeNodeInfo> ExtractTypeDeclarations(SyntaxNode root, string assemblyName, string filePath)
-    {
-        foreach (var typeDecl in root.DescendantNodes().OfType<TypeDeclarationSyntax>())
+        foreach (var node in root.DescendantNodes())
         {
-            var name = typeDecl.Identifier.Text;
-            if (typeDecl.TypeParameterList is { } tpl)
-                name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
-
-            var kind = GetTypeKind(typeDecl);
-            var ns = GetNamespace(typeDecl);
-            var qualifiedName = TypeIdentity.CreateQualifiedName(typeDecl);
-            var typeId = TypeIdentity.CreateTypeId(typeDecl, assemblyName);
-            var modifiers = GetModifiers(typeDecl.Modifiers);
-            var attributes = GetAttributeInfos(typeDecl.AttributeLists);
-            var genericConstraints = ExtractGenericConstraints(typeDecl);
-            var isNested = typeDecl.Parent is TypeDeclarationSyntax;
-
-            var baseListItems = typeDecl.BaseList is { } baseList
-                ? baseList.Types.Select(t => t.Type.ToString()).ToList()
-                : [];
-
-            var members = ExtractMembers(typeDecl).ToList();
-            var ctorParams = ExtractConstructorParams(typeDecl).ToList();
-            AddRecordParameters(typeDecl, members, ctorParams);
-
-            var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
-
-            var typeSpan = typeDecl.GetLocation().GetLineSpan();
-            var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
-            var typeStartLine = typeSpan.StartLinePosition.Line + 1;
-
-            yield return new TypeNodeInfo(
-                name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine,
-                qualifiedName, typeId);
+            switch (node)
+            {
+                case TypeDeclarationSyntax typeDecl:
+                    bag.Add(ExtractSingleTypeDecl(typeDecl, assemblyName, filePath));
+                    break;
+                case EnumDeclarationSyntax enumDecl:
+                    bag.Add(ExtractSingleEnumDecl(enumDecl, assemblyName, filePath));
+                    break;
+                case DelegateDeclarationSyntax delDecl:
+                    bag.Add(ExtractSingleDelegateDecl(delDecl, assemblyName, filePath));
+                    break;
+            }
         }
+    }
+
+    static TypeNodeInfo ExtractSingleTypeDecl(TypeDeclarationSyntax typeDecl, string assemblyName, string filePath)
+    {
+        var name = typeDecl.Identifier.Text;
+        if (typeDecl.TypeParameterList is { } tpl)
+            name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
+
+        var kind = GetTypeKind(typeDecl);
+        var ns = GetNamespace(typeDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(typeDecl);
+        var typeId = TypeIdentity.CreateTypeId(typeDecl, assemblyName);
+        var modifiers = GetModifiers(typeDecl.Modifiers);
+        var attributes = GetAttributeInfos(typeDecl.AttributeLists);
+        var genericConstraints = ExtractGenericConstraints(typeDecl);
+        var isNested = typeDecl.Parent is TypeDeclarationSyntax;
+
+        var baseListItems = typeDecl.BaseList is { } baseList
+            ? baseList.Types.Select(t => t.Type.ToString()).ToList()
+            : [];
+
+        var members = ExtractMembers(typeDecl).ToList();
+        var ctorParams = ExtractConstructorParams(typeDecl).ToList();
+        AddRecordParameters(typeDecl, members, ctorParams);
+
+        var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
+
+        var typeSpan = typeDecl.GetLocation().GetLineSpan();
+        var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
+        var typeStartLine = typeSpan.StartLinePosition.Line + 1;
+
+        return new TypeNodeInfo(
+            name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
+            attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine,
+            qualifiedName, typeId);
     }
 
     static string GetTypeKind(TypeDeclarationSyntax typeDecl) => typeDecl switch
@@ -180,82 +195,76 @@ public static class TypeAnalyzer
         return (baseListItems[0], baseListItems[1..]);
     }
 
-    static IEnumerable<TypeNodeInfo> ExtractEnumDeclarations(SyntaxNode root, string assemblyName, string filePath)
+    static TypeNodeInfo ExtractSingleEnumDecl(EnumDeclarationSyntax enumDecl, string assemblyName, string filePath)
     {
-        foreach (var enumDecl in root.DescendantNodes().OfType<EnumDeclarationSyntax>())
-        {
-            var ns = GetNamespace(enumDecl);
-            var qualifiedName = TypeIdentity.CreateQualifiedName(enumDecl);
-            var typeId = TypeIdentity.CreateTypeId(enumDecl, assemblyName);
-            var modifiers = GetModifiers(enumDecl.Modifiers);
-            var attributes = GetAttributeInfos(enumDecl.AttributeLists);
-            var isNested = enumDecl.Parent is TypeDeclarationSyntax;
+        var ns = GetNamespace(enumDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(enumDecl);
+        var typeId = TypeIdentity.CreateTypeId(enumDecl, assemblyName);
+        var modifiers = GetModifiers(enumDecl.Modifiers);
+        var attributes = GetAttributeInfos(enumDecl.AttributeLists);
+        var isNested = enumDecl.Parent is TypeDeclarationSyntax;
 
-            string? enumBaseType = null;
-            if (enumDecl.BaseList is { } enumBase)
-                enumBaseType = enumBase.Types.FirstOrDefault()?.Type.ToString();
+        string? enumBaseType = null;
+        if (enumDecl.BaseList is { } enumBase)
+            enumBaseType = enumBase.Types.FirstOrDefault()?.Type.ToString();
 
-            var enumMembers = enumDecl.Members
-                .Select(m =>
-                {
-                    var value = m.EqualsValue?.Value.ToString();
-                    var memberType = value != null ? $"enum = {value}" : "enum";
-                    return new MemberInfo(
-                        m.Identifier.Text, memberType, "EnumMember", [], [],
-                        GetAttributeInfos(m.AttributeLists));
-                })
-                .ToList();
+        var enumMembers = enumDecl.Members
+            .Select(m =>
+            {
+                var value = m.EqualsValue?.Value.ToString();
+                var memberType = value != null ? $"enum = {value}" : "enum";
+                return new MemberInfo(
+                    m.Identifier.Text, memberType, "EnumMember", [], [],
+                    GetAttributeInfos(m.AttributeLists));
+            })
+            .ToList();
 
-            var enumSpan = enumDecl.GetLocation().GetLineSpan();
-            var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
-            var enumStartLine = enumSpan.StartLinePosition.Line + 1;
+        var enumSpan = enumDecl.GetLocation().GetLineSpan();
+        var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
+        var enumStartLine = enumSpan.StartLinePosition.Line + 1;
 
-            yield return new TypeNodeInfo(
-                enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
-                attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine,
-                qualifiedName, typeId);
-        }
+        return new TypeNodeInfo(
+            enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
+            attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine,
+            qualifiedName, typeId);
     }
 
-    static IEnumerable<TypeNodeInfo> ExtractDelegateDeclarations(SyntaxNode root, string assemblyName, string filePath)
+    static TypeNodeInfo ExtractSingleDelegateDecl(DelegateDeclarationSyntax delDecl, string assemblyName, string filePath)
     {
-        foreach (var delDecl in root.DescendantNodes().OfType<DelegateDeclarationSyntax>())
+        var name = delDecl.Identifier.Text;
+        if (delDecl.TypeParameterList is { } tpl)
+            name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
+
+        var ns = GetNamespace(delDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(delDecl);
+        var typeId = TypeIdentity.CreateTypeId(delDecl, assemblyName);
+        var modifiers = GetModifiers(delDecl.Modifiers);
+        var attributes = GetAttributeInfos(delDecl.AttributeLists);
+        var isNested = delDecl.Parent is TypeDeclarationSyntax;
+
+        var parameters = delDecl.ParameterList.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList();
+
+        var returnType = delDecl.ReturnType.ToString();
+        var members = new List<MemberInfo>
         {
-            var name = delDecl.Identifier.Text;
-            if (delDecl.TypeParameterList is { } tpl)
-                name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
+            new("Invoke", returnType, "Method", ["public"], parameters, [])
+        };
 
-            var ns = GetNamespace(delDecl);
-            var qualifiedName = TypeIdentity.CreateQualifiedName(delDecl);
-            var typeId = TypeIdentity.CreateTypeId(delDecl, assemblyName);
-            var modifiers = GetModifiers(delDecl.Modifiers);
-            var attributes = GetAttributeInfos(delDecl.AttributeLists);
-            var isNested = delDecl.Parent is TypeDeclarationSyntax;
+        var genericConstraints = delDecl.ConstraintClauses
+            .Select(cc => new GenericConstraintInfo(
+                cc.Name.ToString(), cc.Constraints.Select(c => c.ToString()).ToList()))
+            .ToList();
 
-            var parameters = delDecl.ParameterList.Parameters
-                .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-                .ToList();
+        var delSpan = delDecl.GetLocation().GetLineSpan();
+        var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
+        var delStartLine = delSpan.StartLinePosition.Line + 1;
 
-            var returnType = delDecl.ReturnType.ToString();
-            var members = new List<MemberInfo>
-            {
-                new("Invoke", returnType, "Method", ["public"], parameters, [])
-            };
-
-            var genericConstraints = delDecl.ConstraintClauses
-                .Select(cc => new GenericConstraintInfo(
-                    cc.Name.ToString(), cc.Constraints.Select(c => c.ToString()).ToList()))
-                .ToList();
-
-            var delSpan = delDecl.GetLocation().GetLineSpan();
-            var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
-            var delStartLine = delSpan.StartLinePosition.Line + 1;
-
-            yield return new TypeNodeInfo(
-                name, ns, "delegate", modifiers, null, [], members, [],
-                attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine,
-                qualifiedName, typeId);
-        }
+        return new TypeNodeInfo(
+            name, ns, "delegate", modifiers, null, [], members, [],
+            attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine,
+            qualifiedName, typeId);
     }
 
     // --- Phase 2: Resolve base type vs interfaces ---
@@ -293,14 +302,34 @@ public static class TypeAnalyzer
             }
 
             var first = parts[0];
+            string? baseType = null;
+            var interfaces = new HashSet<string>();
+            var members = new List<MemberInfo>();
+            var ctorParams = new List<string>();
+            var attrNames = new HashSet<string>();
+            var attrs = new List<AttributeInfo>();
+            var constraintParams = new HashSet<string>();
+            var constraints = new List<GenericConstraintInfo>();
+            var totalLineCount = 0;
+            foreach (var p in parts)
+            {
+                baseType ??= p.BaseType;
+                foreach (var i in p.Interfaces) interfaces.Add(i);
+                members.AddRange(p.Members);
+                ctorParams.AddRange(p.ConstructorParams);
+                foreach (var a in p.Attributes) { if (attrNames.Add(a.Name)) attrs.Add(a); }
+                foreach (var c in p.GenericConstraints) { if (constraintParams.Add(c.TypeParameter)) constraints.Add(c); }
+                totalLineCount += p.LineCount;
+            }
             result.Add(first with
             {
-                BaseType = parts.Select(p => p.BaseType).FirstOrDefault(b => b != null) ?? first.BaseType,
-                Interfaces = parts.SelectMany(p => p.Interfaces).Distinct().ToList(),
-                Members = parts.SelectMany(p => p.Members).ToList(),
-                ConstructorParams = parts.SelectMany(p => p.ConstructorParams).ToList(),
-                Attributes = parts.SelectMany(p => p.Attributes).DistinctBy(a => a.Name).ToList(),
-                GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList()
+                LineCount = totalLineCount,
+                BaseType = baseType ?? first.BaseType,
+                Interfaces = interfaces.ToList(),
+                Members = members,
+                ConstructorParams = ctorParams,
+                Attributes = attrs,
+                GenericConstraints = constraints
             });
         }
 

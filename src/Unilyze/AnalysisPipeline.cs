@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Unilyze;
@@ -167,6 +168,16 @@ internal static class AnalysisPipeline
         var typeDeclLookup = BuildTypeDeclLookup(allTypes, treeByPath);
         var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
 
+        // Pre-warm SemanticModel cache: distribute initial GetSemanticModel cost across threads
+        if (compilationResult.Compilation is not null)
+        {
+            var uniqueTrees = typeDeclLookup.Values.Select(td => td.SyntaxTree).Distinct().ToList();
+            Parallel.ForEach(uniqueTrees, tree =>
+            {
+                modelCache.GetOrAdd(tree, t => compilationResult.Compilation.GetSemanticModel(t));
+            });
+        }
+
         var result = new TypeMetrics[typeMetrics.Count];
         Parallel.For(0, typeMetrics.Count, i =>
         {
@@ -314,6 +325,17 @@ internal static class AnalysisPipeline
             Dit = dit,
             CodeSmells = smells.Count > 0 ? smells : null
         };
+    }
+
+    static bool HasBitwiseOps(TypeDeclarationSyntax typeDecl)
+    {
+        foreach (var node in typeDecl.DescendantNodes())
+        {
+            if (node is BinaryExpressionSyntax binary &&
+                (binary.IsKind(SyntaxKind.BitwiseAndExpression) || binary.IsKind(SyntaxKind.BitwiseOrExpression)))
+                return true;
+        }
+        return false;
     }
 
     static TypeMetrics RecalculateCycCC(
