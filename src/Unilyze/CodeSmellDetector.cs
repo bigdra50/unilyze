@@ -11,7 +11,13 @@ public enum CodeSmellKind
     HighCoupling,
     CyclicDependency,
     LowMaintainability,
-    DeepInheritance
+    DeepInheritance,
+    BoxingAllocation,
+    ClosureCapture,
+    ParamsArrayAllocation,
+    CatchAllException,
+    MissingInnerException,
+    ThrowingSystemException
 }
 
 public enum SmellSeverity

@@ -176,8 +176,14 @@ static int PrintMetrics()
                goto and direct recursion add flat +1.
       MI       Maintainability Index (0-100). Based on Halstead Volume, CycCC, LOC.
                >80 good, 60-80 moderate, <60 poor.
+      Halstead Halstead complexity measures from operator/operand counts.
+               Volume (V) = N * log2(n). Difficulty (D) = (n1/2) * (N2/n2).
+               Effort (E) = D * V. EstimatedBugs (B) = E^(2/3) / 3000.
 
     Metrics (per type):
+      WMC      Weighted Methods per Class. Sum of CycCC for all methods.
+      NOC      Number of Children. Direct subclass/implementer count.
+      RFC      Response For a Class. Methods in class + unique external methods called.
       LCOM     Lack of Cohesion of Methods (Henderson-Sellers).
                Formula: (avg(mA) - M) / (1 - M)
                  mA(f) = number of methods accessing field f
@@ -190,6 +196,13 @@ static int PrintMetrics()
       Ca       Afferent Coupling. Number of types that depend on this type.
       Ce       Efferent Coupling. Number of types this type depends on.
       Inst     Instability = Ce / (Ca + Ce). 0.0 = stable, 1.0 = unstable.
+      TypeRank PageRank-based importance score. Higher = more depended upon.
+               damping=0.85, normalized to sum=1.0.
+
+    Metrics (per assembly):
+      A        Abstractness = (abstract classes + interfaces) / total types.
+      DfMS     Distance from Main Sequence = |A + I - 1|. 0.0 = ideal balance.
+      H        Relational Cohesion = (R + 1) / N. Internal relationship density.
 
     CodeHealth (per type, 1.0 - 10.0, higher is better):
       Weighted score from 6 factors:
@@ -207,6 +220,20 @@ static int PrintMetrics()
       DeepInheritance      DIT >= 5
       LowMaintainability   MI < 60
       CyclicDependency     type participates in a dependency cycle
+
+    Performance analysis (per type, SemanticModel required):
+      BoxingAllocation     Value type boxed to reference type (object, interface, virtual call)
+      ClosureCapture       Lambda/anonymous method captures outer scope variable (heap alloc)
+      ParamsArrayAllocation  Implicit array allocation for params parameter
+
+    Exception flow analysis (per type):
+      CatchAllException    catch (Exception) without rethrow
+      MissingInnerException  throw new X() in catch without inner exception
+      ThrowingSystemException  throw new Exception() directly (use specific exception)
+
+    DI container detection:
+      VContainer           Register<T>, RegisterInstance, [Inject] attribute
+      Zenject              Bind<T>().To<T>(), BindInterfacesTo<T>()
     """);
     return 0;
 }
@@ -222,6 +249,9 @@ static int PrintSchema()
       .analysisLevel                       string?  "SyntaxOnly" or "Semantic"
       .assemblies[]                        object   Assembly info
         .name                              string   Assembly name (from .asmdef)
+        .metrics.abstractness              float    Abstractness (0.0-1.0)
+        .metrics.distanceFromMainSequence  float?   |A + I - 1| (0.0 = ideal)
+        .metrics.relationalCohesion        float?   (R + 1) / N
         .sourceFiles[]                     string   Relative .cs file paths
         .referencedAssemblies[]            string   Referenced assembly names
       .types[]                             object   Type topology nodes
@@ -251,6 +281,13 @@ static int PrintSchema()
       .afferentCoupling                    int?     Ca
       .efferentCoupling                    int?     Ce
       .instability                         float?   Ce/(Ca+Ce)
+      .wmc                                 int?     Weighted Methods per Class (sum of CycCC)
+      .noc                                 int?     Number of Children (direct subclasses)
+      .rfc                                 int?     Response For a Class
+      .typeRank                            float?   PageRank importance score
+      .boxingCount                         int?     Boxing operations detected
+      .closureCaptureCount                 int?     Closure captures detected
+      .paramsAllocationCount               int?     Implicit params array allocations
       .averageCognitiveComplexity          float    Avg CogCC across methods
       .averageCyclomaticComplexity         float    Avg CycCC across methods
       .maxCognitiveComplexity              int      Max CogCC
@@ -275,6 +312,9 @@ static int PrintSchema()
       .lineCount                           int      Lines of code
       .startLine                           int?     Start line in source
       .maintainabilityIndex                float?   MI (0-100)
+      .halsteadDifficulty                  float?   (n1/2) * (N2/n2)
+      .halsteadEffort                      float?   Difficulty * Volume
+      .halsteadEstimatedBugs               float?   E^(2/3) / 3000
 
     diff (unilyze diff):
       .beforePath, .afterPath              string   Compared file paths

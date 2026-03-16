@@ -6,7 +6,8 @@ public sealed record AsmdefInfo(
     string Name,
     string Directory,
     IReadOnlyList<string> References,
-    IReadOnlyList<string>? UnresolvedReferences = null)
+    IReadOnlyList<string>? UnresolvedReferences = null,
+    IReadOnlyList<string>? ExcludeDirectories = null)
 {
     public static IReadOnlyList<AsmdefInfo> Discover(string assetsDir)
     {
@@ -29,7 +30,30 @@ public sealed record AsmdefInfo(
             results.Add(new AsmdefInfo(name, dir, refs, unresolvedRefs.Count > 0 ? unresolvedRefs : null));
         }
 
+        if (results.Count > 0 && HasLooseFiles(assetsDir, results))
+        {
+            var asmdefDirs = results.Select(a => Path.GetFullPath(a.Directory)).ToList();
+            var refs = results.Select(a => a.Name).ToList();
+            results.Add(new AsmdefInfo("Assembly-CSharp", assetsDir, refs, ExcludeDirectories: asmdefDirs));
+        }
+
         return results;
+    }
+
+    static bool HasLooseFiles(string assetsDir, IReadOnlyList<AsmdefInfo> asmdefs)
+    {
+        var asmdefDirs = asmdefs
+            .Select(a => Path.GetFullPath(a.Directory) + Path.DirectorySeparatorChar)
+            .ToList();
+
+        foreach (var csFile in System.IO.Directory.EnumerateFiles(assetsDir, "*.cs", SearchOption.AllDirectories))
+        {
+            var fullPath = Path.GetFullPath(csFile);
+            if (!asmdefDirs.Any(ad => fullPath.StartsWith(ad, StringComparison.OrdinalIgnoreCase)))
+                return true;
+        }
+
+        return false;
     }
 
     static (List<string> References, List<string> UnresolvedReferences) ParseReferences(

@@ -22,7 +22,8 @@ public enum DependencyKind
     MethodParam,
     ReturnType,
     EventType,
-    GenericConstraint
+    GenericConstraint,
+    DIRegistration
 }
 
 public sealed record ParameterInfo(string Name, string Type);
@@ -63,7 +64,10 @@ public sealed record MemberInfo(
     int? MaxNestingDepth = null,
     int LineCount = 0,
     int? StartLine = null,
-    double? HalsteadVolume = null);
+    double? HalsteadVolume = null,
+    double? HalsteadDifficulty = null,
+    double? HalsteadEffort = null,
+    double? HalsteadEstimatedBugs = null);
 
 public sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
@@ -75,14 +79,18 @@ public static class TypeAnalyzer
         => AnalyzeDirectoryWithTrees(directory, assemblyName).Types;
 
     public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(
-        string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null)
+        string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null,
+        IReadOnlyList<string>? excludeDirectories = null)
     {
         var parseOptions = CSharpParseOptions.Default
             .WithLanguageVersion(LanguageVersion.Latest);
         if (preprocessorSymbols is { Count: > 0 })
             parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
 
-        var csFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories).ToList();
+        var allFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories);
+        var csFiles = excludeDirectories is { Count: > 0 }
+            ? allFiles.Where(f => !IsUnderAnyDirectory(f, excludeDirectories)).ToList()
+            : allFiles.ToList();
         var rawTypes = new ConcurrentBag<TypeNodeInfo>();
         var trees = new ConcurrentBag<SyntaxTree>();
 
@@ -422,7 +430,7 @@ public static class TypeAnalyzer
             .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
             .ToList();
         var bodyNode = (SyntaxNode?)method.Body ?? method.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halsteadVolume) = MethodMetricsCalculator.Calculate(bodyNode);
+        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
         var methodSpan = method.GetLocation().GetLineSpan();
         var methodLineCount = methodSpan.EndLinePosition.Line - methodSpan.StartLinePosition.Line + 1;
         var methodStartLine = methodSpan.StartLinePosition.Line + 1;
@@ -430,10 +438,24 @@ public static class TypeAnalyzer
             method.Identifier.Text, method.ReturnType.ToString(), "Method",
             GetModifiers(method.Modifiers), methodParams,
             GetAttributeInfos(method.AttributeLists), cogCC, cycCC, nestDepth, methodLineCount, methodStartLine,
-            halsteadVolume);
+            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs);
     }
 
     // --- Helpers ---
+
+    static bool IsUnderAnyDirectory(string filePath, IReadOnlyList<string> directories)
+    {
+        var fullPath = Path.GetFullPath(filePath);
+        foreach (var dir in directories)
+        {
+            var normalizedDir = dir.EndsWith(Path.DirectorySeparatorChar)
+                ? dir
+                : dir + Path.DirectorySeparatorChar;
+            if (fullPath.StartsWith(normalizedDir, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
 
     static string GetNamespace(SyntaxNode node)
     {

@@ -12,7 +12,10 @@ public sealed record HalsteadMetrics(
     int UniqueOperands,
     int TotalOperators,
     int TotalOperands,
-    double Volume);
+    double Volume,
+    double Difficulty,
+    double Effort,
+    double EstimatedBugs);
 
 public static class HalsteadCalculator
 {
@@ -56,7 +59,7 @@ public static class HalsteadCalculator
     public static HalsteadMetrics Calculate(SyntaxNode? body)
     {
         if (body is null)
-            return new HalsteadMetrics(0, 0, 0, 0, 0);
+            return new HalsteadMetrics(0, 0, 0, 0, 0, 0, 0, 0);
 
         var operatorCounts = RentDict();
         var operandCounts = RentDict();
@@ -78,7 +81,13 @@ public static class HalsteadCalculator
                 ? programLength * Math.Log2(vocabulary)
                 : 0.0;
 
-            return new HalsteadMetrics(eta1, eta2, n1, n2, volume);
+            var difficulty = eta2 > 0
+                ? (eta1 / 2.0) * ((double)n2 / eta2)
+                : 0.0;
+            var effort = difficulty * volume;
+            var estimatedBugs = Math.Pow(effort, 2.0 / 3.0) / 3000.0;
+
+            return new HalsteadMetrics(eta1, eta2, n1, n2, volume, difficulty, effort, estimatedBugs);
         }
         finally
         {

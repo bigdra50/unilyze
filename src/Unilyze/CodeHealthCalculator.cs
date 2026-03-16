@@ -8,7 +8,10 @@ public sealed record MethodMetrics(
     int ParameterCount,
     int LineCount,
     int? StartLine = null,
-    double? MaintainabilityIndex = null);
+    double? MaintainabilityIndex = null,
+    double? HalsteadDifficulty = null,
+    double? HalsteadEffort = null,
+    double? HalsteadEstimatedBugs = null);
 
 public sealed record TypeMetrics(
     string TypeName,
@@ -32,6 +35,13 @@ public sealed record TypeMetrics(
     double? Instability = null,
     double? AverageMaintainabilityIndex = null,
     double? MinMaintainabilityIndex = null,
+    int? Wmc = null,
+    int? Noc = null,
+    int? Rfc = null,
+    double? TypeRank = null,
+    int? BoxingCount = null,
+    int? ClosureCaptureCount = null,
+    int? ParamsAllocationCount = null,
     IReadOnlyList<CodeSmell>? CodeSmells = null,
     string? FilePath = null,
     int? StartLine = null,
@@ -93,7 +103,10 @@ public static class CodeHealthCalculator
                     m.Parameters.Count,
                     m.LineCount,
                     m.StartLine,
-                    mi.HasValue ? Math.Round(mi.Value, 1) : null);
+                    mi.HasValue ? Math.Round(mi.Value, 1) : null,
+                    m.HalsteadDifficulty.HasValue ? Math.Round(m.HalsteadDifficulty.Value, 2) : null,
+                    m.HalsteadEffort.HasValue ? Math.Round(m.HalsteadEffort.Value, 1) : null,
+                    m.HalsteadEstimatedBugs.HasValue ? Math.Round(m.HalsteadEstimatedBugs.Value, 4) : null);
             })
             .ToList();
 

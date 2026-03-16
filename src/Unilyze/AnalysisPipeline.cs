@@ -38,7 +38,15 @@ internal static class AnalysisPipeline
 
         allTypes = ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
-        var deps = DependencyBuilder.Build(allTypes);
+        var deps = DependencyBuilder.Build(allTypes).ToList();
+
+        // DI container dependency detection
+        var diRegistrations = DIContainerAnalyzer.Analyze(allSyntaxTrees, compilationResult.Compilation);
+        foreach (var reg in diRegistrations)
+        {
+            deps.Add(new TypeDependency(reg.ServiceType, reg.ImplementationType, DependencyKind.DIRegistration));
+        }
+
         var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
 
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
@@ -46,10 +54,18 @@ internal static class AnalysisPipeline
 
         typeMetrics = EnrichWithSemanticAnalysis(typeMetrics, allTypes, allSyntaxTrees, compilationResult);
 
+        // Phase 1/2: WMC, NOC, TypeRank
+        var nocMap = NocCalculator.Calculate(deps);
+        var typeRankMap = RankCalculator.CalculateTypeRank(deps, allTypes);
+        typeMetrics = EnrichWithNewMetrics(typeMetrics, nocMap, typeRankMap);
+
         var assemblyInfos = targets.Select(a =>
         {
             var types = allTypes.Where(t => t.Assembly == a.Name).ToList();
-            var metrics = AssemblyMetrics.Compute(a.Name, types);
+            var asmDeps = deps.Where(d =>
+                allTypes.Any(t => TypeIdentity.GetTypeId(t) == d.FromTypeId && t.Assembly == a.Name) ||
+                allTypes.Any(t => TypeIdentity.GetTypeId(t) == d.ToTypeId && t.Assembly == a.Name)).ToList();
+            var metrics = AssemblyMetrics.Compute(a.Name, types, asmDeps, couplingMap);
             var asmTypeMetrics = typeMetrics.Where(m => m.Assembly == a.Name).ToList();
             var health = CodeHealthCalculator.ComputeAssemblyHealth(asmTypeMetrics);
             return new AssemblyInfo(a.Name, a.Directory, a.References, metrics, health);
@@ -112,7 +128,8 @@ internal static class AnalysisPipeline
         var allTrees = new List<SyntaxTree>();
         foreach (var asm in targets)
         {
-            var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(asm.Directory, asm.Name, preprocessorSymbols);
+            var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
+                asm.Directory, asm.Name, preprocessorSymbols, asm.ExcludeDirectories);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }
@@ -269,6 +286,7 @@ internal static class AnalysisPipeline
         double? lcom = null;
         int? cbo = null;
         int? dit = null;
+        int? rfc = null;
         typeInfoByKey.TryGetValue(key, out var typeInfo);
 
         if (typeDeclLookup.TryGetValue(key, out var typeDecl))
@@ -284,6 +302,7 @@ internal static class AnalysisPipeline
             {
                 lcom = LcomCalculator.Calculate(typeDecl, model);
                 cbo = CboCalculator.Calculate(typeDecl, model);
+                rfc = RfcCalculator.Calculate(typeDecl, model);
 
                 if (model is not null)
                 {
@@ -295,6 +314,7 @@ internal static class AnalysisPipeline
                 // Roslyn internal errors (e.g. NullableWalker NRE) — fall back to syntactic analysis
                 lcom = LcomCalculator.Calculate(typeDecl, model: null);
                 cbo = CboCalculator.Calculate(typeDecl, model: null);
+                rfc = RfcCalculator.Calculate(typeDecl, model: null);
                 model = null;
             }
 
@@ -316,14 +336,64 @@ internal static class AnalysisPipeline
         }
         var smells = typeInfo is not null
             ? CodeSmellDetector.Detect(current, typeInfo, lcom, cbo, dit)
-            : [];
+            : new List<CodeSmell>();
+
+        var wmc = WmcCalculator.Calculate(typeInfo?.Members ?? []);
+
+        // New feature detectors
+        IReadOnlyList<BoxingOccurrence> boxings = [];
+        IReadOnlyList<ClosureCapture> closures = [];
+        IReadOnlyList<ParamsAllocation> paramsAllocs = [];
+        ExceptionFlowResult? exceptionFlow = null;
+
+        if (typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
+        {
+            SemanticModel? mdl = null;
+            if (compilationResult.Compilation is not null)
+                mdl = modelCache.GetOrAdd(td.SyntaxTree, t => compilationResult.Compilation.GetSemanticModel(t));
+
+            try
+            {
+                boxings = BoxingDetector.Detect(td, mdl);
+                closures = ClosureDetector.Detect(td, mdl);
+                paramsAllocs = ParamsArrayDetector.Detect(td, mdl);
+                exceptionFlow = ExceptionFlowAnalyzer.Analyze(td, mdl);
+            }
+            catch (Exception)
+            {
+                // Roslyn internal errors — graceful degradation
+            }
+        }
+
+        // Convert detector results to CodeSmells
+        var allSmells = new List<CodeSmell>(smells);
+        foreach (var b in boxings)
+            allSmells.Add(new CodeSmell(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, metrics.TypeName, b.MethodName, b.Description));
+        foreach (var c in closures)
+            allSmells.Add(new CodeSmell(CodeSmellKind.ClosureCapture, SmellSeverity.Warning, metrics.TypeName, c.MethodName, $"captures: {string.Join(", ", c.CapturedVariables)}"));
+        foreach (var p in paramsAllocs)
+            allSmells.Add(new CodeSmell(CodeSmellKind.ParamsArrayAllocation, SmellSeverity.Warning, metrics.TypeName, p.MethodName, $"params call to {p.CalledMethod} ({p.ArgCount} args)"));
+        if (exceptionFlow is not null)
+        {
+            foreach (var ca in exceptionFlow.CatchAllClauses.Where(c => !c.HasRethrow))
+                allSmells.Add(new CodeSmell(CodeSmellKind.CatchAllException, SmellSeverity.Warning, metrics.TypeName, ca.MethodName, $"catch-all at line {ca.Line}"));
+            foreach (var mi in exceptionFlow.MissingInnerExceptions)
+                allSmells.Add(new CodeSmell(CodeSmellKind.MissingInnerException, SmellSeverity.Warning, metrics.TypeName, mi.MethodName, $"throw new {mi.NewExceptionType} without inner exception"));
+            foreach (var se in exceptionFlow.SystemExceptionThrows)
+                allSmells.Add(new CodeSmell(CodeSmellKind.ThrowingSystemException, SmellSeverity.Warning, metrics.TypeName, se.MethodName, "throw new Exception() directly"));
+        }
 
         return current with
         {
             Lcom = lcom,
             Cbo = cbo,
             Dit = dit,
-            CodeSmells = smells.Count > 0 ? smells : null
+            Rfc = rfc,
+            Wmc = wmc,
+            BoxingCount = boxings.Count > 0 ? boxings.Count : null,
+            ClosureCaptureCount = closures.Count > 0 ? closures.Count : null,
+            ParamsAllocationCount = paramsAllocs.Count > 0 ? paramsAllocs.Count : null,
+            CodeSmells = allSmells.Count > 0 ? allSmells : null
         };
     }
 
@@ -383,6 +453,26 @@ internal static class AnalysisPipeline
             AverageCyclomaticComplexity = avgCycCC,
             MaxCyclomaticComplexity = maxCycCC
         };
+    }
+
+    static IReadOnlyList<TypeMetrics> EnrichWithNewMetrics(
+        IReadOnlyList<TypeMetrics> typeMetrics,
+        IReadOnlyDictionary<string, int> nocMap,
+        IReadOnlyDictionary<string, double> typeRankMap)
+    {
+        var enriched = new List<TypeMetrics>(typeMetrics.Count);
+        foreach (var metrics in typeMetrics)
+        {
+            var typeId = TypeIdentity.GetTypeId(metrics);
+            nocMap.TryGetValue(typeId, out var noc);
+            typeRankMap.TryGetValue(typeId, out var rank);
+            enriched.Add(metrics with
+            {
+                Noc = noc,
+                TypeRank = rank > 0 ? Math.Round(rank, 6) : null
+            });
+        }
+        return enriched;
     }
 
     static IReadOnlyList<TypeMetrics> EnrichWithCouplingMetrics(

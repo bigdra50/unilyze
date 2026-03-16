@@ -21,6 +21,12 @@ public static class SarifFormatter
         ("UNI008", CodeSmellKind.LowMaintainability, "Low maintainability"),
         ("UNI009", CodeSmellKind.CyclicDependency, "Cyclic dependency"),
         ("UNI010", CodeSmellKind.DeepInheritance, "Deep inheritance hierarchy"),
+        ("UNI011", CodeSmellKind.BoxingAllocation, "Boxing allocation detected"),
+        ("UNI012", CodeSmellKind.ClosureCapture, "Closure variable capture detected"),
+        ("UNI013", CodeSmellKind.ParamsArrayAllocation, "Implicit params array allocation"),
+        ("UNI014", CodeSmellKind.CatchAllException, "Catch-all exception without rethrow"),
+        ("UNI015", CodeSmellKind.MissingInnerException, "Missing inner exception in rethrow"),
+        ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
     ];
 
     public static string Generate(AnalysisResult result)
