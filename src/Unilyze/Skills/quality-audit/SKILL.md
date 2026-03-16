@@ -80,8 +80,17 @@ jq '[.typeMetrics[] | select(.codeSmells) | {typeName, namespace, codeSmells: [.
 # CBO 閾値超過 (.cbo > 14 は null を自動除外)
 jq '[.typeMetrics[] | select(.cbo > 14) | {typeName, namespace, cbo}] | sort_by(.cbo) | reverse' "$UNILYZE_DIR/quality-audit.json"
 
+# Boxing ホットスポット (GC 圧力)
+jq '[.typeMetrics[] | select(.boxingCount) | {typeName, boxingCount, closureCaptureCount, paramsAllocationCount}] | sort_by(-.boxingCount)' "$UNILYZE_DIR/quality-audit.json"
+
+# 例外フロー問題
+jq '[.typeMetrics[].codeSmells[]? | select(.kind == "CatchAllException" or .kind == "MissingInnerException" or .kind == "ThrowingSystemException")] | group_by(.kind) | .[] | {kind: .[0].kind, count: length}' "$UNILYZE_DIR/quality-audit.json"
+
+# DI 依存グラフ
+jq '[.dependencies[] | select(.kind == "DIRegistration")] | .[] | {service: .fromType, impl: .toType}' "$UNILYZE_DIR/quality-audit.json"
+
 # サマリー統計
-jq '{totalTypes: (.typeMetrics | length), belowThreshold: [.typeMetrics[] | select(.codeHealth) | select(.codeHealth < 7.0)] | length, criticalSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[] | select(.severity == "Critical")] | length, allSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[]] | length}' "$UNILYZE_DIR/quality-audit.json"
+jq '{totalTypes: (.typeMetrics | length), belowThreshold: [.typeMetrics[] | select(.codeHealth) | select(.codeHealth < 7.0)] | length, criticalSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[] | select(.severity == "Critical")] | length, allSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[]] | length, boxingTypes: [.typeMetrics[] | select(.boxingCount)] | length, closureTypes: [.typeMetrics[] | select(.closureCaptureCount)] | length, diRegistrations: [.dependencies[] | select(.kind == "DIRegistration")] | length}' "$UNILYZE_DIR/quality-audit.json"
 ```
 
 ### Phase 2: AI コードレビュー (ワースト箇所)
@@ -94,6 +103,11 @@ Phase 1 で特定したワースト型のソースファイルを読み、分析
 
 全ファイルを読む必要はない。メトリクスが悪い箇所に集中する。
 
+CycCC と CogCC の使い分け:
+- CycCC が高い → テストケース数の下限見積もり。テスタビリティの問題
+- CogCC が高い → 人間にとっての理解困難さ。可読性・保守性の問題
+- 両方を併用して判断する。片方だけで改善方針を決めない
+
 ### Phase 3: 盲点補完
 
 unilyze の計測対象外を AI が確認する。詳細は [references/blind-spots.md](references/blind-spots.md) を参照。
@@ -101,10 +115,33 @@ unilyze の計測対象外を AI が確認する。詳細は [references/blind-s
 主な確認項目:
 - トップレベルステートメント (Program.cs 等) の行数・複雑度
 - IDisposable の Dispose 漏れ
-- bare catch / 広すぎる例外キャッチ
 - Process.Start のデッドロックパターン
 
+> catch (Exception) の握り潰しは CatchAllException、inner exception 未設定は MissingInnerException として自動検出されるようになった。盲点から除外。
+
 対象ファイルが存在しない場合はスキップする。
+
+### Goodhart's Law への対処
+
+> "When a measure becomes a target, it ceases to be a good measure."
+> （指標が目標になると、良い指標ではなくなる）
+
+メトリクス改善の提案時、以下のアンチパターンに注意する:
+
+| メトリクス | ゲーミングの例 | 正しい対処 |
+|-----------|---------------|-----------|
+| CycCC / CogCC | 関数を過度に分割して数値を下げるが全体の可読性は低下 | ローカルとグローバルの可読性を両方確認 |
+| テストカバレッジ | assertionなしのテストで100%達成 | mutation testing で検証 |
+| LOC | 冗長なコードを書いて行数を稼ぐ | LOCは参考値、アウトカムで判断 |
+| BoxingCount | boxing回避のために可読性を犠牲にした最適化 | ホットパスのみ最適化、プロファイラで確認 |
+
+対策原則:
+1. 複数メトリクスをバランスよく評価する（単一指標を目標にしない）
+2. 定量指標（unilyze計測値）と定性判断（AIレビュー）を組み合わせる
+3. アウトプット（LOC、コミット数）ではなくアウトカム（障害率、保守コスト）に注目
+4. メトリクス値だけでなく「変更の妥当性」を問う（数値を下げるためだけの変更は棄却）
+
+出典: [Goodhart's Law in Software Engineering](https://jellyfish.co/blog/goodharts-law-in-software-engineering-and-how-to-avoid-gaming-your-metrics/), [SPACE Framework](https://queue.acm.org/detail.cfm?id=3454124)
 
 ### Phase 4: 統合レポート
 

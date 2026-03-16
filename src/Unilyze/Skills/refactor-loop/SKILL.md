@@ -104,8 +104,18 @@ partial class や static 拡張メソッドクラスが GodClass 判定されて
 | HighCoupling (CBO > 14) | インターフェース導入、依存逆転 |
 | ExcessiveParameters (> 5) | パラメータオブジェクト導入 |
 | LowCohesion (LCOM > 0.8) | 関連メソッド+フィールドを別クラスへ |
+| BoxingAllocation | struct に override (ToString, GetHashCode)、ジェネリック制約、Span 活用 |
+| ClosureCapture | static ラムダ化、ローカル変数をパラメータ渡し、closureless overload |
+| ParamsArrayAllocation | 配列を事前作成して渡す、Span-based overload |
+| CatchAllException | 具象例外型で catch、必要なら rethrow |
+| MissingInnerException | `throw new X("msg", e)` で inner exception を渡す |
+| ThrowingSystemException | ArgumentNullException 等の具象例外に変更 |
 
 1つのラウンドで1つの型に集中する。複数の型を同時に変更しない。
+
+Goodhart's Law に注意: メトリクス値を下げるためだけの変更（関数の過度な分割、boxing回避のために可読性を犠牲にする等）は行わない。変更後に「全体の可読性・保守性が改善したか」を定性的にも確認する。
+
+CycCC が高い箇所はテスタビリティの問題。CogCC が高い箇所は可読性の問題。改善戦略が異なるので区別する。
 
 ### Step 3: テスト実行
 

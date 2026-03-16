@@ -13,7 +13,8 @@ unilyze が計測できない / 精度が低い領域。AI レビューで補完
 - Process.Start + StandardOutput.ReadToEnd のデッドロック
 - 再帰呼び出しの StackOverflowException リスク
 - IDisposable 未 Dispose (JsonDocument, Process 等)
-- bare catch / catch (Exception) による致命的例外の握り潰し
+
+> catch (Exception) の握り潰しは ExceptionFlowAnalyzer (CatchAllException) で検出可能になった。
 
 ## 精度が低い領域
 

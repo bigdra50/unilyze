@@ -3,8 +3,6 @@
 Maintenance, implementation, validation, and release notes for `unilyze`.
 For installation and usage, see [README.md](README.md).
 
-[日本語版 / Japanese](README.dev_JP.md)
-
 ## Requirements
 
 - unilyze supports `.NET 8.0 or later`
@@ -99,6 +97,10 @@ Related tests:
 ### asmdef GUID Resolution
 
 GUIDs are extracted from `.asmdef.meta` files to resolve `references: ["GUID:..."]`. Unresolvable GUIDs are retained, not discarded.
+
+### Implicit Assembly-CSharp Detection
+
+When `.asmdef` files exist but some `.cs` files under Assets are not covered by any asmdef directory, those files are automatically collected as the implicit `Assembly-CSharp` assembly. This matches Unity's default behavior where loose scripts belong to `Assembly-CSharp`. The detection uses directory-based exclusion to avoid double-counting files already covered by an asmdef.
 
 Related files:
 

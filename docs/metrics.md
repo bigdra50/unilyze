@@ -94,6 +94,149 @@ M = インスタンスメソッド数（コンストラクタ含む）
 | コンストラクタ | M に含む | M に含む | M に含む (v0.2.0 で修正済み) |
 | static メンバー | 除外 | 除外 | 除外 |
 
+## WMC (Weighted Methods per Class)
+
+準拠仕様: Chidamber, S.R. & Kemerer, C.F. (1994) "A Metrics Suite for Object Oriented Design"
+
+### 公式
+
+```
+WMC = Σ CycCC(method_i)  for all methods in class
+```
+
+クラス内の全メソッドの Cyclomatic Complexity の合計。重み付けは CycCC を使用。
+
+### 解釈
+
+| 値 | 意味 |
+|-----|------|
+| 0 | メソッドなし（データクラス、enum等） |
+| 1-20 | 一般的な範囲 |
+| > 20 | リファクタリング候補 |
+
+## NOC (Number of Children)
+
+準拠仕様: Chidamber & Kemerer (1994)
+
+直接のサブクラス数。DependencyBuilder の Inheritance 依存から逆引きで算出。
+
+### 解釈
+
+| 値 | 意味 |
+|-----|------|
+| 0 | 継承されていない |
+| 高い | 再利用度が高い基底クラス。変更時の影響範囲が大きい |
+
+## RFC (Response For a Class)
+
+### 公式
+
+```
+RFC = M + R
+
+M = クラス内のメソッド数（コンストラクタ含む）
+R = M 内から呼び出されるユニークな外部メソッド数
+```
+
+### Semantic / Syntactic パス
+
+| パス | 解決方法 |
+|------|---------|
+| Semantic | SemanticModel で InvocationExpression のシンボルを解決。正確 |
+| Syntactic (fallback) | InvocationExpression のメソッド名文字列で近似。オーバーロード区別不可 |
+
+### 解釈
+
+| 値 | 意味 |
+|-----|------|
+| <= 50 | 一般的な範囲 |
+| > 50 | テスト・理解が困難になる傾向 |
+
+## Halstead Complexity Measures
+
+準拠仕様: Halstead, M.H. (1977) "Elements of Software Science"
+
+### 基本測定値
+
+| 記号 | 意味 |
+|------|------|
+| n1 (UniqueOperators) | ユニークなオペレータ数 |
+| n2 (UniqueOperands) | ユニークなオペランド数 |
+| N1 (TotalOperators) | 総オペレータ数 |
+| N2 (TotalOperands) | 総オペランド数 |
+
+### 導出メトリクス
+
+| メトリクス | 公式 | 説明 |
+|-----------|------|------|
+| Volume (V) | `(N1 + N2) * log2(n1 + n2)` | 実装サイズ |
+| Difficulty (D) | `(n1 / 2) * (N2 / n2)` | 理解の困難さ。n2=0 の場合は 0 |
+| Effort (E) | `D * V` | 実装に必要な精神的労力 |
+| EstimatedBugs (B) | `E^(2/3) / 3000` | 推定バグ数 |
+
+## TypeRank
+
+NDepend の TypeRank に相当する、PageRank ベースの型重要度スコア。
+
+### アルゴリズム
+
+- 入力: DependencyBuilder の TypeDependency リスト → 隣接リスト
+- damping factor: 0.85
+- 収束閾値: 1e-6 (L1 ノルム)
+- 最大反復回数: 100
+- Dangling node（出次数 0）のランクは全ノードに均等分配
+- 結果は正規化（合計 = 1.0）
+
+### 解釈
+
+高いほど多くの型から依存されている重要な型。値オブジェクトやインフラ型が上位に来る傾向がある。
+
+## Abstractness (A)
+
+準拠仕様: Martin, R.C. "Agile Software Development" (Stable Abstractions Principle)
+
+### 公式
+
+```
+A = (abstract class 数 + interface 数) / 全型数
+```
+
+アセンブリ粒度で算出。0.0 = 全て具象、1.0 = 全て抽象。
+
+## Distance from Main Sequence (DfMS)
+
+### 公式
+
+```
+D = |A + I - 1|
+
+A = Abstractness
+I = Instability (アセンブリ粒度: 全型の Ce 合計 / (Ca 合計 + Ce 合計))
+```
+
+Main Sequence（A + I = 1 の直線）からの距離。0.0 が理想。
+
+| 位置 | 意味 |
+|------|------|
+| D ≈ 0 | 安定度と抽象度のバランスが良い |
+| A=0, I=0 (D=1) | 安定かつ具象 → Zone of Pain（変更困難） |
+| A=1, I=1 (D=1) | 不安定かつ抽象 → Zone of Uselessness |
+
+## Relational Cohesion (H)
+
+準拠仕様: NDepend - Relational Cohesion
+
+### 公式
+
+```
+H = (R + 1) / N
+
+R = アセンブリ内の型間依存エッジ数（重複除外、自己参照除外）
+N = アセンブリ内の型数
+```
+
+N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に連携している。1.5-4.0 が推奨範囲。
+
 ## Code Health
 
 独自メトリクス。型単位のスコア (1.0 - 10.0)。
