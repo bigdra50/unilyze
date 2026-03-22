@@ -186,6 +186,23 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal(JsonValueKind.Object, doc.RootElement.GetProperty("summary").ValueKind);
     }
 
+    [Fact]
+    public void Statusline_Help_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("statusline", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("statusline", stdout);
+    }
+
+    [Fact]
+    public void Statusline_AnalyzesProject_OutputsFormattedLine()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("CH:", stdout);
+    }
+
     private void WriteSimpleProject()
     {
         var csFile = Path.Combine(_tempDir, "Sample.cs");

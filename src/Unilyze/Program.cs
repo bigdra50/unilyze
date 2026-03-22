@@ -11,6 +11,8 @@ if (args.Length >= 1 && args[0] == "metrics")
     return PrintMetrics();
 if (args.Length >= 1 && args[0] == "schema")
     return PrintSchema();
+if (args.Length >= 1 && args[0] == "statusline")
+    return StatuslineRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -152,6 +154,7 @@ Subcommands:
   metrics         Show metric definitions and code smell thresholds
   schema          Show JSON output field reference
   skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
+  statusline      Output compact code health for status line display
 
 Exit codes:
   0  Success
