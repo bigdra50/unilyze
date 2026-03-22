@@ -43,11 +43,47 @@ unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (GitHub Code Scanni
 unilyze diff <before.json> <after.json>           # Compare snapshots
 unilyze hotspot -p ~/MyUnityProject               # Git churn x complexity
 unilyze trend <dir-of-jsons>                      # Quality trend
+unilyze statusline -p ~/MyUnityProject            # Compact summary for status line
 unilyze metrics                                   # Metric definitions & thresholds
 unilyze schema                                    # JSON field reference
 ```
 
 Run `unilyze --help` for all options.
+
+### Status Line Integration
+
+`unilyze statusline` outputs a compact one-line code health summary for use with [Claude Code's status line](https://docs.anthropic.com/en/docs/claude-code/statusline):
+
+```
+CH:9.8/5.9 MI:52 111smells 🔴1 📦66
+```
+
+| Item | Description |
+|------|-------------|
+| `CH:avg/min` | Average and minimum Code Health (1.0-10.0) |
+| `MI:n` | Average Maintainability Index (green >=80, yellow >=60, red <60) |
+| `Nsmells` | Warning-level code smells |
+| `🔴N` | Critical-level code smells (hidden if 0) |
+| `📦N` | Boxing allocations (hidden if 0) |
+| `♻N` | Cyclic dependencies (hidden if 0) |
+
+Results are cached per project (default 60s). Add to `~/.claude/statusline.sh`:
+
+```bash
+# Unilyze Code Health (Unity projects only)
+if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; then
+    UNILYZE_HASH=$(md5 -qs "$PROJECT_DIR")
+    UNILYZE_CACHE="${TMPDIR:-/tmp/}unilyze-sl-${UNILYZE_HASH}.txt"
+    if [[ -f "$UNILYZE_CACHE" ]]; then
+        UNILYZE_STATUS=$(cat "$UNILYZE_CACHE" 2>/dev/null)
+        CACHE_AGE=$(( $(date +%s) - $(stat -f %m "$UNILYZE_CACHE" 2>/dev/null || echo 0) ))
+        [[ $CACHE_AGE -gt 60 ]] && (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
+    elif command -v unilyze &>/dev/null; then
+        (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
+    fi
+    [[ -n "${UNILYZE_STATUS:-}" ]] && echo "$UNILYZE_STATUS"
+fi
+```
 
 ## Metrics
 
