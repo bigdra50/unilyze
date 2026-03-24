@@ -7,7 +7,9 @@ namespace Unilyze;
 
 internal static class AnalysisPipeline
 {
-    public static AnalysisResult Build(string path, string? prefix, string? assemblyFilter)
+    public static AnalysisResult Build(
+        string path, string? prefix, string? assemblyFilter,
+        IReadOnlyList<string>? excludeDirectories = null)
     {
         var assetsDir = ProgramHelpers.ResolveAssetsDir(path);
         var asmdefs = AsmdefInfo.Discover(assetsDir);
@@ -29,7 +31,7 @@ internal static class AnalysisPipeline
         var resolved = UnityDllResolver.Resolve(projectRoot);
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
 
-        var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols);
+        var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols, excludeDirectories);
         var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo);
         var analysisLevel = compilationResult.Level.ToString();
 
@@ -122,18 +124,36 @@ internal static class AnalysisPipeline
     }
 
     static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypes(
-        IReadOnlyList<AsmdefInfo> targets, IReadOnlyList<string> preprocessorSymbols)
+        IReadOnlyList<AsmdefInfo> targets, IReadOnlyList<string> preprocessorSymbols,
+        IReadOnlyList<string>? additionalExclude = null)
     {
         var allTypes = new List<TypeNodeInfo>();
         var allTrees = new List<SyntaxTree>();
         foreach (var asm in targets)
         {
+            var merged = MergeExcludeDirectories(asm.ExcludeDirectories, additionalExclude);
             var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
-                asm.Directory, asm.Name, preprocessorSymbols, asm.ExcludeDirectories);
+                asm.Directory, asm.Name, preprocessorSymbols, merged);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }
         return (allTypes, allTrees);
+    }
+
+    static IReadOnlyList<string>? MergeExcludeDirectories(
+        IReadOnlyList<string>? asmExclude, IReadOnlyList<string>? configExclude)
+    {
+        if (asmExclude is not { Count: > 0 } && configExclude is not { Count: > 0 })
+            return null;
+        if (asmExclude is not { Count: > 0 })
+            return configExclude;
+        if (configExclude is not { Count: > 0 })
+            return asmExclude;
+
+        var merged = new List<string>(asmExclude.Count + configExclude.Count);
+        merged.AddRange(asmExclude);
+        merged.AddRange(configExclude);
+        return merged;
     }
 
     internal static IReadOnlyList<TypeNodeInfo> ResolveTypeRelationships(

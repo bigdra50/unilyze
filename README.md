@@ -85,6 +85,40 @@ if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; th
 fi
 ```
 
+## Configuration
+
+unilyze loads settings from config files and CLI options. All scopes are merged additively (union).
+
+| Scope | Path |
+|-------|------|
+| Global | `$XDG_CONFIG_HOME/unilyze/config.json` (default: `~/.config/unilyze/config.json`) |
+| Project | `<project-root>/.unilyze.json` |
+| CLI | `--exclude-dir <dir>` (repeatable) |
+
+### Exclude Directories
+
+Exclude directories from analysis (e.g., Asset Store imports, third-party code):
+
+```jsonc
+// .unilyze.json
+{
+  "excludeDirs": [
+    "Assets/Plugins",
+    "Assets/ThirdParty"
+  ]
+}
+```
+
+Paths are relative to the project root. Config files use JSONC (comments and trailing commas allowed).
+
+CLI equivalent:
+
+```bash
+unilyze -p ~/MyUnityProject --exclude-dir Assets/Plugins --exclude-dir Assets/ThirdParty
+```
+
+The `statusline` subcommand automatically reads config files, so no CLI options are needed for status line integration.
+
 ## Metrics
 
 | Metric | Description | Granularity |

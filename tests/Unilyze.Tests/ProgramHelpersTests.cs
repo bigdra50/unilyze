@@ -55,6 +55,53 @@ public sealed class ProgramHelpersTests
         Assert.Empty(result);
     }
 
+    // --- ParseMultiValueOption ---
+
+    [Fact]
+    public void ParseMultiValueOption_NoMatch_ReturnsEmpty()
+    {
+        var result = ProgramHelpers.ParseMultiValueOption(["-p", "/path"], "--exclude-dir");
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void ParseMultiValueOption_SingleValue()
+    {
+        var result = ProgramHelpers.ParseMultiValueOption(
+            ["--exclude-dir", "Assets/Plugins"], "--exclude-dir");
+        Assert.Single(result);
+        Assert.Equal("Assets/Plugins", result[0]);
+    }
+
+    [Fact]
+    public void ParseMultiValueOption_MultipleValues()
+    {
+        var result = ProgramHelpers.ParseMultiValueOption(
+            ["--exclude-dir", "Assets/Plugins", "--exclude-dir", "Assets/ThirdParty"],
+            "--exclude-dir");
+        Assert.Equal(2, result.Count);
+        Assert.Equal("Assets/Plugins", result[0]);
+        Assert.Equal("Assets/ThirdParty", result[1]);
+    }
+
+    [Fact]
+    public void ParseMultiValueOption_InterleavedWithOtherOptions()
+    {
+        var result = ProgramHelpers.ParseMultiValueOption(
+            ["-p", "/path", "--exclude-dir", "Assets/Plugins", "-f", "json", "--exclude-dir", "Assets/ThirdParty"],
+            "--exclude-dir");
+        Assert.Equal(2, result.Count);
+        Assert.Equal("Assets/Plugins", result[0]);
+        Assert.Equal("Assets/ThirdParty", result[1]);
+    }
+
+    [Fact]
+    public void ParseMultiValueOption_TrailingKeyWithoutValue_Ignored()
+    {
+        var result = ProgramHelpers.ParseMultiValueOption(["--exclude-dir"], "--exclude-dir");
+        Assert.Empty(result);
+    }
+
     // --- ResolveFormat ---
 
     [Theory]

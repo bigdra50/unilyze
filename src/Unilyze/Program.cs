@@ -30,6 +30,7 @@ var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 var noOpen = opts.ContainsKey("--no-open");
+var cliExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 
 // Determine output format: explicit -f > output extension > default (html)
 OutputFormat format;
@@ -50,7 +51,9 @@ try
     }
     else
     {
-        result = AnalysisPipeline.Build(path!, prefix, assembly);
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
+        var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
+        result = AnalysisPipeline.Build(path!, prefix, assembly, config.ExcludeDirs);
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -140,15 +143,23 @@ Usage:
   unilyze skills install --claude           Install skills for AI coding tools
 
 Options:
-  -p, --path      Unity project root or Assets directory (default: .)
-  -i, --input     Use existing JSON instead of analyzing
-  -o, --output    Output file path (format inferred from extension: .html, .json, .sarif)
-  -f, --format    Output format: html, json, sarif (default: html)
-  -a, --assembly  Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
-      --prefix    Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
-      --no-open   Do not open the generated HTML in a browser
-  -v, --version   Show version
-  -h, --help      Show this help
+  -p, --path         Unity project root or Assets directory (default: .)
+  -i, --input        Use existing JSON instead of analyzing
+  -o, --output       Output file path (format inferred from extension: .html, .json, .sarif)
+  -f, --format       Output format: html, json, sarif (default: html)
+  -a, --assembly     Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
+      --prefix       Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
+      --exclude-dir  Exclude directory from analysis (repeatable, relative to project root)
+      --no-open      Do not open the generated HTML in a browser
+  -v, --version      Show version
+  -h, --help         Show this help
+
+Configuration:
+  Settings are loaded from (all scopes merged additively):
+    Global:  $XDG_CONFIG_HOME/unilyze/config.json (default: ~/.config/unilyze/config.json)
+    Project: <project-root>/.unilyze.json
+  Example .unilyze.json:
+    { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }
 
 Subcommands:
   metrics         Show metric definitions and code smell thresholds
@@ -472,6 +483,7 @@ static int RunHotspot(string[] args)
     var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
     var since = opts.GetValueOrDefault("--since") ?? "12.month";
     var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
+    var hotspotExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 
     if (!int.TryParse(opts.GetValueOrDefault("-n") ?? "20", out var topN))
         topN = 20;
@@ -490,7 +502,9 @@ static int RunHotspot(string[] args)
         }
         else
         {
-            var result = AnalysisPipeline.Build(path, null, null);
+            var hotspotRoot = ProgramHelpers.ResolveProjectRoot(path);
+            var hotspotConfig = UnilyzeConfig.LoadMerged(hotspotRoot, hotspotExcludeDirs);
+            var result = AnalysisPipeline.Build(path, null, null, hotspotConfig.ExcludeDirs);
             typeMetrics = result.TypeMetrics ?? [];
         }
 
@@ -546,12 +560,13 @@ static int PrintHotspotUsage()
       unilyze hotspot -p <path> -o hotspots.json         Save to file
 
     Options:
-      -p, --path      Project root (default: ., used for git log)
-      -i, --input     Existing analysis JSON (skip fresh analysis)
-      --since          Git log period (default: 12.month)
-      -n               Top N results (default: 20)
-      -o, --output    Output file path
-      -h, --help      Show this help
+      -p, --path         Project root (default: ., used for git log)
+      -i, --input        Existing analysis JSON (skip fresh analysis)
+      --since            Git log period (default: 12.month)
+      -n                 Top N results (default: 20)
+      --exclude-dir      Exclude directory from analysis (repeatable)
+      -o, --output       Output file path
+      -h, --help         Show this help
     """);
     return 0;
 }
