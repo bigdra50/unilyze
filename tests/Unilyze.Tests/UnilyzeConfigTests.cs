@@ -204,6 +204,120 @@ public sealed class UnilyzeConfigTests : IDisposable
         Assert.Null(result.ExcludeDirs);
     }
 
+    // --- SaveFile ---
+
+    [Fact]
+    public void SaveFile_CreatesDirectoryAndWritesJson()
+    {
+        var path = Path.Combine(_tempDir, "sub", "config.json");
+        var config = new UnilyzeConfig(["Assets/Plugins"]);
+
+        UnilyzeConfig.SaveFile(path, config);
+
+        Assert.True(File.Exists(path));
+        var loaded = UnilyzeConfig.LoadFile(path);
+        Assert.NotNull(loaded.ExcludeDirs);
+        Assert.Single(loaded.ExcludeDirs!);
+        Assert.Equal("Assets/Plugins", loaded.ExcludeDirs![0]);
+    }
+
+    [Fact]
+    public void SaveFile_NullExcludeDirs_OmitsKey()
+    {
+        var path = Path.Combine(_tempDir, "empty.json");
+        UnilyzeConfig.SaveFile(path, UnilyzeConfig.Empty);
+
+        var json = File.ReadAllText(path);
+        Assert.DoesNotContain("excludeDirs", json);
+    }
+
+    // --- AddExcludeDir ---
+
+    [Fact]
+    public void AddExcludeDir_NewFile_CreatesWithEntry()
+    {
+        var path = Path.Combine(_tempDir, ".unilyze.json");
+        var result = UnilyzeConfig.AddExcludeDir(path, "Assets/Plugins");
+
+        Assert.True(result);
+        var config = UnilyzeConfig.LoadFile(path);
+        Assert.Single(config.ExcludeDirs!);
+        Assert.Equal("Assets/Plugins", config.ExcludeDirs![0]);
+    }
+
+    [Fact]
+    public void AddExcludeDir_ExistingFile_AppendsEntry()
+    {
+        var path = WriteTempFile(".unilyze.json", """{ "excludeDirs": ["Assets/Plugins"] }""");
+        var result = UnilyzeConfig.AddExcludeDir(path, "Assets/ThirdParty");
+
+        Assert.True(result);
+        var config = UnilyzeConfig.LoadFile(path);
+        Assert.Equal(2, config.ExcludeDirs!.Count);
+    }
+
+    [Fact]
+    public void AddExcludeDir_Duplicate_ReturnsFalse()
+    {
+        var path = WriteTempFile(".unilyze.json", """{ "excludeDirs": ["Assets/Plugins"] }""");
+        var result = UnilyzeConfig.AddExcludeDir(path, "Assets/Plugins");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void AddExcludeDir_DuplicateCaseInsensitive_ReturnsFalse()
+    {
+        var path = WriteTempFile(".unilyze.json", """{ "excludeDirs": ["Assets/Plugins"] }""");
+        var result = UnilyzeConfig.AddExcludeDir(path, "assets/plugins");
+
+        Assert.False(result);
+    }
+
+    // --- RemoveExcludeDir ---
+
+    [Fact]
+    public void RemoveExcludeDir_ExistingEntry_RemovesIt()
+    {
+        var path = WriteTempFile(".unilyze.json",
+            """{ "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }""");
+        var result = UnilyzeConfig.RemoveExcludeDir(path, "Assets/Plugins");
+
+        Assert.True(result);
+        var config = UnilyzeConfig.LoadFile(path);
+        Assert.Single(config.ExcludeDirs!);
+        Assert.Equal("Assets/ThirdParty", config.ExcludeDirs![0]);
+    }
+
+    [Fact]
+    public void RemoveExcludeDir_LastEntry_RemovesKey()
+    {
+        var path = WriteTempFile(".unilyze.json", """{ "excludeDirs": ["Assets/Plugins"] }""");
+        var result = UnilyzeConfig.RemoveExcludeDir(path, "Assets/Plugins");
+
+        Assert.True(result);
+        var config = UnilyzeConfig.LoadFile(path);
+        Assert.Null(config.ExcludeDirs);
+    }
+
+    [Fact]
+    public void RemoveExcludeDir_NotFound_ReturnsFalse()
+    {
+        var path = WriteTempFile(".unilyze.json", """{ "excludeDirs": ["Assets/Plugins"] }""");
+        var result = UnilyzeConfig.RemoveExcludeDir(path, "Assets/NonExistent");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void RemoveExcludeDir_EmptyConfig_ReturnsFalse()
+    {
+        var path = WriteTempFile(".unilyze.json", "{}");
+        var result = UnilyzeConfig.RemoveExcludeDir(path, "Assets/Plugins");
+
+        Assert.False(result);
+    }
+
     // --- Path helpers ---
 
     [Fact]

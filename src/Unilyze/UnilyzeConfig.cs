@@ -79,6 +79,52 @@ internal sealed record UnilyzeConfig(
         return resolved;
     }
 
+    static readonly JsonSerializerOptions WriteOptions = new()
+    {
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    internal static void SaveFile(string path, UnilyzeConfig config)
+    {
+        var dir = Path.GetDirectoryName(path);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        var json = JsonSerializer.Serialize(config, WriteOptions);
+        File.WriteAllText(path, json + Environment.NewLine);
+    }
+
+    internal static bool AddExcludeDir(string configPath, string dir)
+    {
+        var config = LoadFile(configPath);
+        var existing = config.ExcludeDirs?.ToList() ?? [];
+
+        if (existing.Any(e => e.Equals(dir, StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        existing.Add(dir);
+        SaveFile(configPath, config with { ExcludeDirs = existing });
+        return true;
+    }
+
+    internal static bool RemoveExcludeDir(string configPath, string dir)
+    {
+        var config = LoadFile(configPath);
+        if (config.ExcludeDirs is not { Count: > 0 })
+            return false;
+
+        var updated = config.ExcludeDirs
+            .Where(e => !e.Equals(dir, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (updated.Count == config.ExcludeDirs.Count)
+            return false;
+
+        SaveFile(configPath, config with { ExcludeDirs = updated.Count > 0 ? updated : null });
+        return true;
+    }
+
     internal static string GetGlobalConfigPath()
     {
         var xdgConfig = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
