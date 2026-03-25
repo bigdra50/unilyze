@@ -82,6 +82,20 @@ internal static class ProgramHelpers
         return null;
     }
 
+    public static IReadOnlyList<string> ParseMultiValueOption(string[] args, string key)
+    {
+        var values = new List<string>();
+        for (var i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] == key)
+            {
+                values.Add(args[i + 1]);
+                i++;
+            }
+        }
+        return values;
+    }
+
     public static string ResolveAssetsDir(string path)
     {
         if (Directory.Exists(Path.Combine(path, "Assets")))

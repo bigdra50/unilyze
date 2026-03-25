@@ -40,12 +40,13 @@ unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (GitHub Code Scanni
 ### Subcommands
 
 ```bash
-unilyze diff <before.json> <after.json>           # Compare snapshots
-unilyze hotspot -p ~/MyUnityProject               # Git churn x complexity
-unilyze trend <dir-of-jsons>                      # Quality trend
-unilyze statusline -p ~/MyUnityProject            # Compact summary for status line
-unilyze metrics                                   # Metric definitions & thresholds
-unilyze schema                                    # JSON field reference
+unilyze config list                                # Show/manage configuration
+unilyze diff <before.json> <after.json>            # Compare snapshots
+unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
+unilyze trend <dir-of-jsons>                       # Quality trend
+unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
+unilyze metrics                                    # Metric definitions & thresholds
+unilyze schema                                     # JSON field reference
 ```
 
 Run `unilyze --help` for all options.
@@ -83,6 +84,49 @@ if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; th
     fi
     [[ -n "${UNILYZE_STATUS:-}" ]] && echo "$UNILYZE_STATUS"
 fi
+```
+
+## Configuration
+
+unilyze loads settings from config files and CLI options. All scopes are merged additively (union).
+
+| Scope | Path |
+|-------|------|
+| Global | `$XDG_CONFIG_HOME/unilyze/config.json` (default: `~/.config/unilyze/config.json`) |
+| Project | `<project-root>/.unilyze.json` |
+| CLI | `--exclude-dir <dir>` (repeatable) |
+
+### Exclude Directories
+
+Exclude directories from analysis (e.g., Asset Store imports, third-party code):
+
+```jsonc
+// .unilyze.json
+{
+  "excludeDirs": [
+    "Assets/Plugins",
+    "Assets/ThirdParty"
+  ]
+}
+```
+
+Paths are relative to the project root. Config files use JSONC (comments and trailing commas allowed).
+
+CLI equivalent:
+
+```bash
+unilyze -p ~/MyUnityProject --exclude-dir Assets/Plugins --exclude-dir Assets/ThirdParty
+```
+
+The `statusline` subcommand automatically reads config files, so no CLI options are needed for status line integration.
+
+### Managing Config
+
+```bash
+unilyze config list                                    # Show current configuration
+unilyze config add-exclude-dir Assets/Plugins          # Add to project config
+unilyze config add-exclude-dir Library --global        # Add to global config
+unilyze config remove-exclude-dir Assets/Plugins       # Remove from project config
 ```
 
 ## Metrics

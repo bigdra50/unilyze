@@ -13,6 +13,8 @@ if (args.Length >= 1 && args[0] == "schema")
     return PrintSchema();
 if (args.Length >= 1 && args[0] == "statusline")
     return StatuslineRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "config")
+    return RunConfig(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -30,6 +32,7 @@ var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 var noOpen = opts.ContainsKey("--no-open");
+var cliExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 
 // Determine output format: explicit -f > output extension > default (html)
 OutputFormat format;
@@ -50,7 +53,9 @@ try
     }
     else
     {
-        result = AnalysisPipeline.Build(path!, prefix, assembly);
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
+        var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
+        result = AnalysisPipeline.Build(path!, prefix, assembly, config.ExcludeDirs);
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -140,17 +145,26 @@ Usage:
   unilyze skills install --claude           Install skills for AI coding tools
 
 Options:
-  -p, --path      Unity project root or Assets directory (default: .)
-  -i, --input     Use existing JSON instead of analyzing
-  -o, --output    Output file path (format inferred from extension: .html, .json, .sarif)
-  -f, --format    Output format: html, json, sarif (default: html)
-  -a, --assembly  Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
-      --prefix    Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
-      --no-open   Do not open the generated HTML in a browser
-  -v, --version   Show version
-  -h, --help      Show this help
+  -p, --path         Unity project root or Assets directory (default: .)
+  -i, --input        Use existing JSON instead of analyzing
+  -o, --output       Output file path (format inferred from extension: .html, .json, .sarif)
+  -f, --format       Output format: html, json, sarif (default: html)
+  -a, --assembly     Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
+      --prefix       Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
+      --exclude-dir  Exclude directory from analysis (repeatable, relative to project root)
+      --no-open      Do not open the generated HTML in a browser
+  -v, --version      Show version
+  -h, --help         Show this help
+
+Configuration:
+  Settings are loaded from (all scopes merged additively):
+    Global:  $XDG_CONFIG_HOME/unilyze/config.json (default: ~/.config/unilyze/config.json)
+    Project: <project-root>/.unilyze.json
+  Example .unilyze.json:
+    { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }
 
 Subcommands:
+  config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds
   schema          Show JSON output field reference
   skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
@@ -472,6 +486,7 @@ static int RunHotspot(string[] args)
     var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
     var since = opts.GetValueOrDefault("--since") ?? "12.month";
     var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
+    var hotspotExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 
     if (!int.TryParse(opts.GetValueOrDefault("-n") ?? "20", out var topN))
         topN = 20;
@@ -490,7 +505,9 @@ static int RunHotspot(string[] args)
         }
         else
         {
-            var result = AnalysisPipeline.Build(path, null, null);
+            var hotspotRoot = ProgramHelpers.ResolveProjectRoot(path);
+            var hotspotConfig = UnilyzeConfig.LoadMerged(hotspotRoot, hotspotExcludeDirs);
+            var result = AnalysisPipeline.Build(path, null, null, hotspotConfig.ExcludeDirs);
             typeMetrics = result.TypeMetrics ?? [];
         }
 
@@ -546,12 +563,13 @@ static int PrintHotspotUsage()
       unilyze hotspot -p <path> -o hotspots.json         Save to file
 
     Options:
-      -p, --path      Project root (default: ., used for git log)
-      -i, --input     Existing analysis JSON (skip fresh analysis)
-      --since          Git log period (default: 12.month)
-      -n               Top N results (default: 20)
-      -o, --output    Output file path
-      -h, --help      Show this help
+      -p, --path         Project root (default: ., used for git log)
+      -i, --input        Existing analysis JSON (skip fresh analysis)
+      --since            Git log period (default: 12.month)
+      -n                 Top N results (default: 20)
+      --exclude-dir      Exclude directory from analysis (repeatable)
+      -o, --output       Output file path
+      -h, --help         Show this help
     """);
     return 0;
 }
@@ -654,6 +672,117 @@ static int PrintTrendUsage()
     Options:
       -o, --output    Output file path
       -h, --help      Show this help
+    """);
+    return 0;
+}
+
+static int RunConfig(string[] args)
+{
+    if (args.Length == 0 || args.Any(a => a is "-h" or "--help"))
+        return PrintConfigUsage();
+
+    var subcommand = args[0];
+    var isGlobal = args.Contains("--global");
+    var positional = args.Where(a => !a.StartsWith('-')).Skip(1).ToList();
+
+    var projectRoot = ProgramHelpers.ResolveProjectRoot(".");
+    var configPath = isGlobal
+        ? UnilyzeConfig.GetGlobalConfigPath()
+        : UnilyzeConfig.GetProjectConfigPath(projectRoot);
+
+    switch (subcommand)
+    {
+        case "list":
+            return ConfigList(projectRoot);
+
+        case "add-exclude-dir":
+            if (positional.Count == 0)
+            {
+                Console.Error.WriteLine("Usage: unilyze config add-exclude-dir <dir> [--global]");
+                return 1;
+            }
+            if (UnilyzeConfig.AddExcludeDir(configPath, positional[0]))
+            {
+                Console.Error.WriteLine($"Added '{positional[0]}' to {configPath}");
+                return 0;
+            }
+            Console.Error.WriteLine($"'{positional[0]}' already exists in {configPath}");
+            return 0;
+
+        case "remove-exclude-dir":
+            if (positional.Count == 0)
+            {
+                Console.Error.WriteLine("Usage: unilyze config remove-exclude-dir <dir> [--global]");
+                return 1;
+            }
+            if (UnilyzeConfig.RemoveExcludeDir(configPath, positional[0]))
+            {
+                Console.Error.WriteLine($"Removed '{positional[0]}' from {configPath}");
+                return 0;
+            }
+            Console.Error.WriteLine($"'{positional[0]}' not found in {configPath}");
+            return 0;
+
+        default:
+            Console.Error.WriteLine($"Unknown config subcommand: '{subcommand}'");
+            return PrintConfigUsage();
+    }
+}
+
+static int ConfigList(string projectRoot)
+{
+    var globalPath = UnilyzeConfig.GetGlobalConfigPath();
+    var projectPath = UnilyzeConfig.GetProjectConfigPath(projectRoot);
+
+    var global = UnilyzeConfig.LoadFile(globalPath);
+    var project = UnilyzeConfig.LoadFile(projectPath);
+
+    var hasAny = false;
+
+    if (global.ExcludeDirs is { Count: > 0 })
+    {
+        hasAny = true;
+        Console.WriteLine($"[global] {globalPath}");
+        Console.WriteLine("  excludeDirs:");
+        foreach (var dir in global.ExcludeDirs)
+            Console.WriteLine($"    {dir}");
+    }
+
+    if (project.ExcludeDirs is { Count: > 0 })
+    {
+        if (hasAny) Console.WriteLine();
+        hasAny = true;
+        Console.WriteLine($"[project] {projectPath}");
+        Console.WriteLine("  excludeDirs:");
+        foreach (var dir in project.ExcludeDirs)
+            Console.WriteLine($"    {dir}");
+    }
+
+    if (!hasAny)
+        Console.WriteLine("No configuration found.");
+
+    return 0;
+}
+
+static int PrintConfigUsage()
+{
+    Console.WriteLine("""
+    unilyze config - Manage configuration
+
+    Usage:
+      unilyze config list                                 Show current configuration
+      unilyze config add-exclude-dir <dir>                Add directory to project config
+      unilyze config add-exclude-dir <dir> --global       Add directory to global config
+      unilyze config remove-exclude-dir <dir>             Remove directory from project config
+      unilyze config remove-exclude-dir <dir> --global    Remove directory from global config
+
+    Options:
+      --global    Target global config ($XDG_CONFIG_HOME/unilyze/config.json)
+      -h, --help  Show this help
+
+    Config files:
+      Project: <project-root>/.unilyze.json
+      Global:  $XDG_CONFIG_HOME/unilyze/config.json (default: ~/.config/unilyze/config.json)
     """);
     return 0;
 }
