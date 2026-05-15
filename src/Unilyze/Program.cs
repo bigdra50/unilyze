@@ -400,12 +400,28 @@ static int RunDiff(string[] args)
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 2)
     {
-        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.json]");
+        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open]");
         return 1;
     }
 
     var opts = ProgramHelpers.ParseOptions(args);
     var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
+    var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
+    var noOpen = opts.ContainsKey("--no-open");
+
+    OutputFormat format;
+    try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
+    catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 1; }
+
+    if (format == OutputFormat.Sarif)
+    {
+        Console.Error.WriteLine("Diff does not support SARIF output. Use json or html.");
+        return 1;
+    }
+
+    // Default for `unilyze diff` (no -f/-o) remains json-to-stdout for backward compat
+    if (formatStr == null && output == null)
+        format = OutputFormat.Json;
 
     var beforePath = positional[0];
     var afterPath = positional[1];
@@ -421,11 +437,27 @@ static int RunDiff(string[] args)
                     ?? throw new InvalidOperationException($"Failed to parse: {afterPath}");
 
         var diff = DiffCalculator.Compare(before, after);
-        var json = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);
+        var diffJson = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);
 
         PrintDiffSummary(diff);
 
-        return WriteOutput(json, output);
+        if (format == OutputFormat.Html)
+        {
+            var htmlPath = output ?? Path.Combine(
+                Path.GetTempPath(),
+                $"unilyze-diff-{Path.GetFileNameWithoutExtension(beforePath)}-{Path.GetFileNameWithoutExtension(afterPath)}.html");
+
+            var html = HtmlFormatter.GenerateWithDiff(afterJson, diffJson, after.ProjectPath);
+            File.WriteAllText(htmlPath, html);
+            Console.Error.WriteLine($"Written to {htmlPath}");
+
+            if (output == null && !noOpen)
+                TryOpenInBrowser(htmlPath);
+
+            return 0;
+        }
+
+        return WriteOutput(diffJson, output);
     }
     catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
     {
@@ -466,11 +498,15 @@ static int PrintDiffUsage()
     unilyze diff - Compare two analysis snapshots
 
     Usage:
-      unilyze diff <before.json> <after.json>              Output diff JSON to stdout
-      unilyze diff <before.json> <after.json> -o out.json   Save diff to file
+      unilyze diff <before.json> <after.json>                   Output diff JSON to stdout
+      unilyze diff <before.json> <after.json> -o out.json       Save diff JSON to file
+      unilyze diff <before.json> <after.json> -o out.html       Render diff as interactive HTML viewer
+      unilyze diff <before.json> <after.json> -f html           Render HTML to temp dir and open in browser
 
     Options:
-      -o, --output    Output file path
+      -o, --output    Output file path (format inferred from extension: .html or .json)
+      -f, --format    Output format: json, html (default: json when no -o specified)
+          --no-open   When generating HTML, do not auto-open in browser
       -h, --help      Show this help
     """);
     return 0;

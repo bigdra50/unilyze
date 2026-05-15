@@ -290,6 +290,34 @@ body.offline-mode .panel{
     position:fixed;left:12px;right:12px;top:72px;bottom:12px;width:auto
   }
 }
+.diff-summary{display:flex;gap:14px;align-items:center;padding:6px 14px;
+  background:rgba(88,166,255,.05);border-bottom:1px solid var(--border);
+  font-size:11px;color:var(--dim);flex-wrap:wrap;font-variation-settings:'MONO' 1}
+.diff-summary .imp{color:#7ee787}.diff-summary .deg{color:#f97583}
+.diff-summary .add{color:#58a6ff}.diff-summary .rem{color:var(--dim)}
+.diff-summary .lbl{color:var(--dim);margin-right:4px}
+.diff-summary input[type=checkbox]{accent-color:var(--accent);vertical-align:middle;margin-right:4px}
+.diff-summary label{cursor:pointer;color:var(--text);user-select:none}
+.diff-badge{display:inline-block;font-size:9px;padding:1px 4px;border-radius:3px;
+  margin-right:4px;font-weight:700;font-variation-settings:'MONO' 1;vertical-align:middle}
+.diff-badge.dA{background:rgba(126,231,135,.2);color:#7ee787}
+.diff-badge.dM{background:rgba(88,166,255,.2);color:#58a6ff}
+.diff-badge.dR{background:rgba(249,117,131,.2);color:#f97583}
+.diff-badge.dI{background:rgba(126,231,135,.18);color:#7ee787}
+.diff-badge.dD{background:rgba(249,117,131,.18);color:#f97583}
+.diff-row.diff-improved td:first-child{box-shadow:inset 2px 0 #7ee787}
+.diff-row.diff-degraded td:first-child{box-shadow:inset 2px 0 #f97583}
+.diff-row.diff-added    td:first-child{box-shadow:inset 2px 0 #58a6ff}
+.diff-row.diff-removed  td:first-child{box-shadow:inset 2px 0 #6e7681}
+.diff-row.diff-removed{opacity:.55}
+.metric-delta{font-size:10px;margin-left:4px;font-variation-settings:'MONO' 1}
+.metric-delta.up{color:#7ee787}
+.metric-delta.down{color:#f97583}
+.metric-delta.neutral{color:var(--dim)}
+.diff-section .dline{display:flex;gap:8px;align-items:baseline;font-size:11px;padding:2px 0;font-variation-settings:'MONO' 1}
+.diff-section .dline .dn{color:var(--dim);min-width:140px;flex-shrink:0;font-size:10px}
+.diff-section .dline .dv{color:var(--text)}
+.diff-section .dline .da{color:var(--dim);font-size:10px}
 </style>
 </head>
 <body>
@@ -310,6 +338,7 @@ body.offline-mode .panel{
   <div class="spacer"></div>
   <span class="stats" id="st"></span>
 </div>
+<div class="diff-summary" id="diffSum" style="display:none"></div>
 <div class="main">
   <div class="left-panel hidden" id="hp">
     <div class="lp-header">
@@ -406,6 +435,79 @@ DATA.types.forEach(t=>{tl[typeKey(t)]=t});
 const tm = {};
 (DATA.typeMetrics||[]).forEach(m=>{tm[metricKey(m)]=m});
 
+// --- Diff data (snapshot comparison overlay) ---
+const DIFF = __DIFF_DATA_PLACEHOLDER__;
+// Metric names that are higher-is-better. Keep in sync with DiffCalculator.HigherIsBetter.
+const HIGHER_IS_BETTER = new Set(['CodeHealth','AverageMaintainabilityIndex','MinMaintainabilityIndex']);
+const dl = {}; // typeKey -> TypeDiff annotated with _bucket
+const diffState = { changedOnly: false };
+if (DIFF) {
+  // TypeDiff.typeKey is a display-friendly qualified name (e.g. "Foo.Bar"),
+  // but the offline view's row.id uses TypeId form ("Asm::Foo.Bar"). Index both
+  // so lookups succeed regardless of which form the table row uses.
+  ['improved','degraded','unchanged','added','removed'].forEach(bucket => {
+    (DIFF[bucket]||[]).forEach(td => {
+      const annotated = Object.assign({_bucket: bucket}, td);
+      dl[td.typeKey] = annotated;
+      if (td.assembly) dl[td.assembly + '::' + td.typeKey] = annotated;
+    });
+  });
+  document.addEventListener('DOMContentLoaded', initDiffSummary);
+  if (document.readyState !== 'loading') initDiffSummary();
+}
+
+function initDiffSummary(){
+  const el = document.getElementById('diffSum');
+  if (!el || el.dataset.init === '1') return;
+  el.dataset.init = '1';
+  const s = DIFF.summary || {};
+  el.innerHTML = '' +
+    '<span class="lbl">Diff:</span>' +
+    '<span class="imp">▲'+(s.improvedCount||0)+' improved</span>' +
+    '<span class="deg">▼'+(s.degradedCount||0)+' degraded</span>' +
+    '<span>='+(s.unchangedCount||0)+' unchanged</span>' +
+    '<span class="add">+'+(s.addedCount||0)+' added</span>' +
+    '<span class="rem">-'+(s.removedCount||0)+' removed</span>' +
+    '<div class="sep" style="width:1px;height:14px;background:var(--border)"></div>' +
+    '<label><input type="checkbox" id="diffChangedOnly">Changed only</label>';
+  el.style.display = 'flex';
+  const cb = document.getElementById('diffChangedOnly');
+  cb.checked = !!diffState.changedOnly;
+  cb.addEventListener('change', () => {
+    diffState.changedOnly = cb.checked;
+    const q = document.getElementById('q');
+    if (q) q.dispatchEvent(new Event('input'));
+  });
+}
+
+function diffBucketBadge(bucket){
+  switch(bucket){
+    case 'added':    return '<span class="diff-badge dA" title="Added in after">A</span>';
+    case 'removed':  return '<span class="diff-badge dR" title="Removed in after">D</span>';
+    case 'improved': return '<span class="diff-badge dI" title="Improved">M</span>';
+    case 'degraded': return '<span class="diff-badge dD" title="Degraded">M</span>';
+    default: return '';
+  }
+}
+function diffRowClass(bucket){
+  return bucket ? ' diff-row diff-'+bucket : '';
+}
+function deltaSpan(name, delta, formatter){
+  if (delta == null) return '';
+  if (typeof delta === 'number' && Math.abs(delta) < 1e-4) return '';
+  const isImproved = HIGHER_IS_BETTER.has(name) ? delta > 0 : delta < 0;
+  const cls = isImproved ? 'up' : 'down';
+  const arrow = delta > 0 ? '▲' : '▼';
+  const fmt = formatter || (v => Number.isInteger(v) ? String(v) : (+v).toFixed(2).replace(/\.?0+$/,''));
+  return '<span class="metric-delta '+cls+'">'+arrow+fmt(Math.abs(delta))+'</span>';
+}
+function buildDeltaMap(td){
+  if(!td) return null;
+  const m={};
+  (td.doubleDeltas||[]).forEach(d=>{m[d.name]=d;});
+  (td.intDeltas||[]).forEach(d=>{m[d.name]=d;});
+  return m;
+}
 function healthColor(score){
   if(score==null) return null;
   if(score>=9) return '#56d364';
@@ -468,7 +570,28 @@ function renderOfflineReport(){
       outgoing:stats.outgoing,
       incoming:stats.incoming
     };
-  }).sort((a,b)=>{
+  });
+
+  // Synthesize rows for types removed in `after` so they still appear in the diff view
+  if (DIFF) {
+    const existing = new Set(typeRows.map(r => r.id));
+    (DIFF.removed||[]).forEach(td => {
+      if (existing.has(td.typeKey)) return;
+      typeRows.push({
+        id: td.typeKey,
+        name: td.typeName,
+        namespace: td.namespace || '(global)',
+        qualifiedName: td.typeKey,
+        assembly: td.assembly,
+        kind: 'removed',
+        health: null, maxCogCC: 0, cbo: null, dit: null,
+        smellCount: 0, outgoing: 0, incoming: 0,
+        _removed: true
+      });
+    });
+  }
+
+  typeRows.sort((a,b)=>{
     const ah=a.health??999,bh=b.health??999;
     if(ah!==bh) return ah-bh;
     return a.qualifiedName.localeCompare(b.qualifiedName);
@@ -603,15 +726,25 @@ function renderOfflineReport(){
     : null;
 
   function renderTypeDetail(typeId){
-    const type=tl[typeId];
-    if(!type) return;
+    const td=dl[typeId];
+    let type=tl[typeId];
+    if(!type){
+      if(!td) return;
+      // Removed-in-after type: synthesize a stub from the TypeDiff
+      type={
+        name:td.typeName, namespace:td.namespace, assembly:td.assembly,
+        kind:'removed', qualifiedName:td.typeKey
+      };
+    }
 
     const metrics=tm[typeId];
     const outgoing=(DATA.dependencies||[]).filter(dep=>depFromId(dep)===typeId);
     const incoming=(DATA.dependencies||[]).filter(dep=>depToId(dep)===typeId);
     const accent=ac[type.assembly]||'#6e7681';
 
-    let html='<h2 style="color:'+accent+'">'+escapeHtml(type.name)+'</h2>';
+    let html='<h2 style="color:'+accent+'">';
+    if(td) html+=diffBucketBadge(td._bucket);
+    html+=escapeHtml(type.name)+'</h2>';
     html+='<div class="meta">'+escapeHtml(type.kind)+' &middot; '+escapeHtml(type.assembly)+'</div>';
     html+='<div class="meta">'+escapeHtml(type.qualifiedName||qualifiedName(type.namespace,type.name))+'</div>';
 
@@ -635,6 +768,50 @@ function renderOfflineReport(){
         metrics.codeSmells.forEach(smell=>{
           html+='<div class="member"><span class="badge">'+escapeHtml(smell.severity[0])+'</span><span class="n">'+escapeHtml(smell.kind)+' &middot; '+escapeHtml(smell.message)+'</span></div>';
         });
+      }
+    }
+
+    if(td){
+      const allDeltas=[].concat(td.doubleDeltas||[],td.intDeltas||[])
+        .filter(d=>typeof d.delta==='number'&&Math.abs(d.delta)>1e-4);
+      if(allDeltas.length){
+        html+='<div class="section-title">Changes vs Baseline</div><div class="diff-section">';
+        allDeltas.forEach(d=>{
+          const isFloat=Number.isFinite(d.delta)&&!Number.isInteger(d.delta);
+          const fmtVal=v=>isFloat?(+v).toFixed(2):String(v);
+          html+='<div class="dline">' +
+            '<span class="dn">'+escapeHtml(d.name)+'</span>' +
+            '<span class="dv">'+fmtVal(d.before)+' → '+fmtVal(d.after)+'</span>' +
+            deltaSpan(d.name,d.delta,v=>isFloat?(+v).toFixed(2):String(v)) +
+            '</div>';
+        });
+        html+='</div>';
+      }
+      const methodDiffs=(td.methodDiffs||[]).filter(md=>md.status!=='Unchanged');
+      if(methodDiffs.length){
+        html+='<div class="section-title">Methods Changed ('+methodDiffs.length+')</div><div class="diff-section">';
+        methodDiffs.forEach(md=>{
+          const parts=(md.intDeltas||[])
+            .filter(d=>d.delta!==0)
+            .map(d=>escapeHtml(d.name)+' '+d.before+'→'+d.after+' '+(d.delta>0?'+':'')+d.delta);
+          html+='<div class="dline">' +
+            '<span class="dn">'+escapeHtml(md.methodName)+'('+md.parameterCount+')</span>' +
+            '<span class="da">'+(parts.length?parts.join(' · '):'—')+'</span>' +
+            '</div>';
+        });
+        html+='</div>';
+      }
+      if(td.smellChanges && td.smellChanges.length){
+        html+='<div class="section-title">Smells Δ ('+td.smellChanges.length+')</div><div class="diff-section">';
+        td.smellChanges.forEach(sc=>{
+          const tag=sc.isResolved?'<span class="metric-delta up">- FIXED</span>':'<span class="metric-delta down">+ NEW</span>';
+          html+='<div class="dline">' +
+            '<span class="dn">'+escapeHtml(sc.smell.kind)+'</span>' +
+            '<span class="dv">'+escapeHtml(sc.smell.message||'')+'</span>' +
+            tag +
+            '</div>';
+        });
+        html+='</div>';
       }
     }
 
@@ -697,13 +874,19 @@ function renderOfflineReport(){
 
   function render(filterText){
     const query=(filterText||'').trim().toLowerCase();
-    const matches=row=>!query||[
+    const queryMatches=row=>!query||[
       row.name,
       row.namespace,
       row.qualifiedName,
       row.assembly,
       row.kind
     ].some(value=>String(value).toLowerCase().includes(query));
+    const passesChangedFilter=row=>{
+      if(!DIFF || !diffState.changedOnly) return true;
+      const td=dl[row.id];
+      return td && td._bucket !== 'unchanged';
+    };
+    const matches=row=>queryMatches(row)&&passesChangedFilter(row);
 
     const filteredTypes=typeRows.filter(matches);
     const filteredDeps=(DATA.dependencies||[])
@@ -774,19 +957,28 @@ function renderOfflineReport(){
         '<section class="offline-section" id="offline-types"><h2>Types</h2><div class="sub">Click a type to open the detail panel.</div>' +
           '<div class="offline-table-wrap"><table class="offline-table"><thead><tr><th>Type</th><th>Assembly</th><th>Kind</th><th>Health</th><th>Max CogCC</th><th>CBO</th><th>DIT</th><th>Smells</th><th>Out</th><th>In</th></tr></thead><tbody>' +
             (filteredTypes.length
-              ? filteredTypes.map(row=>
-                  '<tr>' +
-                    '<td><button class="offline-link" data-type-id="'+escapeHtml(row.id)+'">'+escapeHtml(row.qualifiedName)+'</button></td>' +
+              ? filteredTypes.map(row=>{
+                  const td=dl[row.id];
+                  const dm=buildDeltaMap(td);
+                  const trClass=td?diffRowClass(td._bucket):'';
+                  const badge=td?diffBucketBadge(td._bucket):'';
+                  const dHealth=dm?dm['CodeHealth']:null;
+                  const dMaxCog=dm?dm['MaxCognitiveComplexity']:null;
+                  const dCbo=dm?dm['Cbo']:null;
+                  const dDit=dm?dm['Dit']:null;
+                  return '<tr class="'+trClass.trim()+'">' +
+                    '<td>'+badge+'<button class="offline-link" data-type-id="'+escapeHtml(row.id)+'">'+escapeHtml(row.qualifiedName)+'</button></td>' +
                     '<td>'+escapeHtml(row.assembly)+'</td>' +
                     '<td>'+escapeHtml(row.kind)+'</td>' +
-                    '<td>'+metricCell(row.health,value=>'<span style="color:'+healthColor(value)+'">'+escapeHtml(value)+'</span>')+'</td>' +
-                    '<td>'+row.maxCogCC+'</td>' +
-                    '<td>'+metricCell(row.cbo)+'</td>' +
-                    '<td>'+metricCell(row.dit)+'</td>' +
+                    '<td>'+metricCell(row.health,value=>'<span style="color:'+healthColor(value)+'">'+escapeHtml(value)+'</span>')+(dHealth?deltaSpan('CodeHealth',dHealth.delta,v=>v.toFixed(1)):'')+'</td>' +
+                    '<td>'+row.maxCogCC+(dMaxCog?deltaSpan('MaxCognitiveComplexity',dMaxCog.delta):'')+'</td>' +
+                    '<td>'+metricCell(row.cbo)+(dCbo?deltaSpan('Cbo',dCbo.delta):'')+'</td>' +
+                    '<td>'+metricCell(row.dit)+(dDit?deltaSpan('Dit',dDit.delta):'')+'</td>' +
                     '<td>'+row.smellCount+'</td>' +
                     '<td>'+row.outgoing+'</td>' +
                     '<td>'+row.incoming+'</td>' +
-                  '</tr>').join('')
+                  '</tr>';
+                }).join('')
               : '<tr><td colspan="10"><span class="offline-empty">No types match the current filter.</span></td></tr>') +
           '</tbody></table></div>' +
         '</section>' +
