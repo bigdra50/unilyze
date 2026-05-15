@@ -41,7 +41,8 @@ unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (GitHub Code Scanni
 
 ```bash
 unilyze config list                                # Show/manage configuration
-unilyze diff <before.json> <after.json>            # Compare snapshots
+unilyze diff <before.json> <after.json>            # Compare snapshots (JSON)
+unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (interactive HTML)
 unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
 unilyze trend <dir-of-jsons>                       # Quality trend
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
@@ -202,6 +203,19 @@ Detects type registrations in Unity DI containers and adds them to the dependenc
 | `html` | Interactive dependency graph in browser (offline fallback included) |
 | `json` | Agent integration, programmatic use |
 | `sarif` | GitHub Code Scanning, IDE integration |
+
+## Diff Viewer
+
+`unilyze diff <before.json> <after.json> -o diff.html` overlays metric deltas onto the standard analysis viewer.
+
+Each type row gets:
+
+- A change badge (`A` added / `M` modified / `D` removed) and color-coded left border
+- Inline `▲`/`▼` deltas next to Health, Max CogCC, CBO, DIT cells
+- A `Changed only` toggle in the diff summary bar
+- A "Changes vs Baseline" / "Methods Changed" / "Smells Δ" section in the type detail panel
+
+The viewer otherwise behaves like a normal `unilyze` HTML report (dependency graph, hotspots, cycles, assembly coupling).
 
 ## Agent Workflow
 
