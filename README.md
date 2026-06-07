@@ -280,12 +280,14 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 
 ## DI Container Detection
 
-Detects type registrations in Unity DI containers and records them as `DIRegistration` entries in the dependency list:
+Detects type registrations in Unity DI containers and integrates them into the dependency graph. Registration endpoints are resolved to analyzed types, so the resulting edges feed cycle detection, CBO/Ca/Ce coupling, and TypeRank like any other dependency:
 
 | Container | Patterns |
 |-----------|----------|
 | VContainer | `Register<T>`, `RegisterInstance`, `RegisterFactory`, `[Inject]` attribute |
 | Zenject | `Bind<T>().To<T>()`, `BindInterfacesTo<T>()`, `BindInterfacesAndSelfTo<T>()` |
+
+Endpoints that resolve to a type outside the analyzed set (e.g. a framework type), or to an ambiguous bare name shared by multiple namespaces, stay unconnected and contribute nothing to the metrics.
 
 ## Output Formats
 
@@ -337,8 +339,6 @@ unilyze schema    # JSON field reference
 
 - HTML graph loads Cytoscape from CDN. Falls back to offline report when unavailable.
 - Windows is untested.
-- DI registration entries appear in the dependency list but are not yet wired into the graph view, cycle detection, or coupling metrics ([issue 19](https://github.com/bigdra50/unilyze/issues/19)).
-- When Unity DLLs cannot be resolved, the analysis silently degrades to SyntaxOnly and the level is not shown in outputs ([issue 16](https://github.com/bigdra50/unilyze/issues/16)).
 
 ## License
 

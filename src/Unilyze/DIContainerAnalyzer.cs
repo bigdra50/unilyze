@@ -10,7 +10,9 @@ public sealed record DIRegistration(
     string ContainerType,
     string? Lifetime,
     string FilePath,
-    int Line);
+    int Line,
+    string? ServiceTypeQualified = null,
+    string? ImplementationTypeQualified = null);
 
 public static class DIContainerAnalyzer
 {
@@ -53,8 +55,14 @@ public static class DIContainerAnalyzer
         InvocationExpressionSyntax invocation, SemanticModel model, string filePath)
     {
         var symbolInfo = model.GetSymbolInfo(invocation);
+
+        // The invocation does not bind to any method (e.g. VContainer/Zenject is an
+        // external package not referenced in the compilation, so the receiver is
+        // object/unresolved). Fall back to name-based matching so DI edges are still
+        // detected. A resolved-but-foreign method symbol is treated as authoritative
+        // negative below, preventing false positives from unrelated Register/Bind APIs.
         if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
-            return null;
+            return TryResolveSyntactic(invocation, filePath);
 
         var containingNs = GetRootNamespace(methodSymbol.ContainingType);
 
