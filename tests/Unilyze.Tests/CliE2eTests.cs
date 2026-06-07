@@ -160,6 +160,126 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Level_Syntax_PinsAndReportsSyntaxOnly()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "syntax");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("SyntaxOnly", root.GetProperty("analysisLevel").GetString());
+    }
+
+    [Fact]
+    public void Level_Complete_OnNonUnityProject_ExitsNonZero()
+    {
+        // A bare directory of .cs files can only resolve to SyntaxOnly, so a Complete pin must fail.
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("-p", _tempDir, "-f", "json", "--level", "complete");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Requested analysis level", stderr);
+    }
+
+    [Fact]
+    public void Level_Unknown_ExitsNonZero()
+    {
+        var (exitCode, _, stderr) = Run("-p", _tempDir, "-f", "json", "--level", "bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown level", stderr);
+    }
+
+    [Fact]
+    public void JsonOutput_IncludesAnalysisLevel()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.True(root.TryGetProperty("analysisLevel", out var level));
+        Assert.Equal("SyntaxOnly", level.GetString());
+    }
+
+    [Fact]
+    public void Badge_Help_MentionsLevel()
+    {
+        var (exitCode, stdout, _) = Run("badge", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--level", stdout);
+    }
+
+    [Fact]
+    public void Badge_JsonOutput_IncludesAnalysisLevel()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("SyntaxOnly", root.GetProperty("analysisLevel").GetString());
+    }
+
+    [Fact]
+    public void Badge_LevelComplete_OnNonUnityProject_ExitsNonZero()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--level", "complete");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Requested analysis level", stderr);
+    }
+
+    [Fact]
+    public void Statusline_Help_MentionsLevel()
+    {
+        var (exitCode, stdout, _) = Run("statusline", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--level", stdout);
+    }
+
+    [Fact]
+    public void Statusline_SyntaxOnlyProject_ShowsLevelMarker()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("[syntax]", stdout);
+    }
+
+    [Fact]
+    public void DiffSubcommand_MismatchedLevels_WarnsOnStderr()
+    {
+        var before = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], null, "Complete");
+        var after = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], null, "SyntaxOnly");
+        var beforeJson = JsonSerializer.Serialize(before, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var afterJson = JsonSerializer.Serialize(after, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, beforeJson);
+        File.WriteAllText(afterFile, afterJson);
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("analysis levels differ", stderr);
+    }
+
+    [Fact]
+    public void DiffSubcommand_SameLevels_NoLevelWarning()
+    {
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], null, "SyntaxOnly");
+        var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, json);
+        File.WriteAllText(afterFile, json);
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile);
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("analysis levels differ", stderr);
+    }
+
+    [Fact]
     public void DiffSubcommand_Help_ExitsZero()
     {
         var (exitCode, stdout, _) = Run("diff", "--help");

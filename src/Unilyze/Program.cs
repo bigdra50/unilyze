@@ -35,6 +35,18 @@ var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembl
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 var noOpen = opts.ContainsKey("--no-open");
 var cliExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
+var levelStr = opts.GetValueOrDefault("--level");
+
+AnalysisLevel? requestedLevel = null;
+if (levelStr != null)
+{
+    if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
+    {
+        Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
+        return 1;
+    }
+    requestedLevel = lvl;
+}
 
 // Determine output format: explicit -f > output extension > default (html)
 OutputFormat format;
@@ -57,7 +69,7 @@ try
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
         var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
-        result = AnalysisPipeline.Build(path!, prefix, assembly, config.ExcludeDirs);
+        result = AnalysisPipeline.Build(path!, prefix, assembly, config.ExcludeDirs, requestedLevel);
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -155,6 +167,8 @@ Options:
   -a, --assembly     Filter by assembly name (exact or suffix match, e.g. "Domain" matches "App.Domain")
       --prefix       Filter asmdef names by prefix (auto-detected from common dot-prefix if omitted)
       --exclude-dir  Exclude directory from analysis (repeatable, relative to project root)
+      --level        Pin analysis level: syntax, core, full, complete
+                     (caps auto-resolved level; fails if the level cannot be reached)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version
   -h, --help         Show this help
@@ -267,7 +281,11 @@ static int PrintSchema()
     analyze (unilyze -f json):
       .projectPath                         string   Analyzed project path
       .analyzedAt                          string   ISO 8601 timestamp
-      .analysisLevel                       string?  "SyntaxOnly" or "Semantic"
+      .analysisLevel                       string?  Resolved analysis depth:
+                                                    "SyntaxOnly" (no Unity DLLs; semantic
+                                                    metrics understated), "CoreEngine",
+                                                    "FullEngine", or "Complete".
+                                                    null in older JSON snapshots.
       .assemblies[]                        object   Assembly info
         .name                              string   Assembly name (from .asmdef)
         .metrics.abstractness              float    Abstractness (0.0-1.0)
@@ -439,6 +457,15 @@ static int RunDiff(string[] args)
                      ?? throw new InvalidOperationException($"Failed to parse: {beforePath}");
         var after = JsonSerializer.Deserialize(afterJson, AnalysisJsonContext.Default.AnalysisResult)
                     ?? throw new InvalidOperationException($"Failed to parse: {afterPath}");
+
+        // Mismatched analysis levels make metric deltas unreliable (e.g. SyntaxOnly vs Complete
+        // changes boxing/CBO/DIT counts). Warn but do not fail (issue 17).
+        if (before.AnalysisLevel != after.AnalysisLevel)
+        {
+            Console.Error.WriteLine(
+                $"Warning: analysis levels differ (before: {before.AnalysisLevel ?? "unknown"}, "
+                + $"after: {after.AnalysisLevel ?? "unknown"}). Metric deltas may be unreliable.");
+        }
 
         var diff = DiffCalculator.Compare(before, after);
         var diffJson = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);

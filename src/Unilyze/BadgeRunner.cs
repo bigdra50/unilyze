@@ -12,6 +12,7 @@ internal static class BadgeRunner
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
         var metricStr = opts.GetValueOrDefault("--metric");
         var formatStr = opts.GetValueOrDefault("--format");
+        var levelStr = opts.GetValueOrDefault("--level");
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
@@ -25,11 +26,22 @@ internal static class BadgeRunner
             return 1;
         }
 
+        AnalysisLevel? requestedLevel = null;
+        if (levelStr != null)
+        {
+            if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
+            {
+                Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
+                return 1;
+            }
+            requestedLevel = lvl;
+        }
+
         try
         {
             var fullPath = ProgramHelpers.ResolveProjectRoot(path);
             var config = UnilyzeConfig.LoadMerged(fullPath);
-            var result = AnalysisPipeline.Build(fullPath, null, null, config.ExcludeDirs);
+            var result = AnalysisPipeline.Build(fullPath, null, null, config.ExcludeDirs, requestedLevel);
             var summary = StatuslineFormatter.ComputeSummary(result);
             var badge = BadgeFormatter.Build(metric, summary);
             var content = format == BadgeFormat.Svg ? BadgeSvgRenderer.Render(badge) : BadgeFormatter.Serialize(badge);
@@ -44,7 +56,7 @@ internal static class BadgeRunner
             Console.Write(content);
             return 0;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or DirectoryNotFoundException)
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or DirectoryNotFoundException)
         {
             Console.Error.WriteLine(ex.Message);
             return 1;
@@ -70,11 +82,14 @@ internal static class BadgeRunner
               -o, --output   Output file path (default: stdout)
               --metric       Badge metric: codehealth, mi, smells (default: codehealth)
               --format       Output format: json, svg (default: json)
+              --level        Pin analysis level: syntax, core, full, complete
               -h, --help     Show this help
 
             Output format (shields.io endpoint JSON or flat SVG):
-              { "schemaVersion": 1, "label": "...", "message": "...", "color": "..." }
-              SVG: single-line shields.io flat badge (use --format svg)
+              { "schemaVersion": 1, "label": "...", "message": "...", "color": "...", "analysisLevel": "..." }
+              shields.io ignores the extra analysisLevel field.
+              SVG: single-line shields.io flat badge (use --format svg);
+                   the analysis level is embedded as a leading XML comment.
             """);
         return 0;
     }

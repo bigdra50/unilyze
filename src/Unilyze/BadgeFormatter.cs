@@ -4,7 +4,10 @@ using System.Text.Json.Serialization;
 
 namespace Unilyze;
 
-internal sealed record ShieldsBadge(int SchemaVersion, string Label, string Message, string Color);
+// AnalysisLevel is an extra, non-standard field. shields.io ignores unknown keys in endpoint
+// JSON, so it is safe to surface the analysis depth alongside the standard badge fields (issue 16).
+internal sealed record ShieldsBadge(
+    int SchemaVersion, string Label, string Message, string Color, string? AnalysisLevel = null);
 
 internal enum BadgeMetric { CodeHealth, Mi, Smells }
 
@@ -23,7 +26,7 @@ internal static class BadgeFormatter
         };
 
         if (s.TypeCount == 0)
-            return new ShieldsBadge(1, label, "n/a", "lightgrey");
+            return new ShieldsBadge(1, label, "n/a", "lightgrey", s.AnalysisLevel);
 
         return metric switch
         {
@@ -36,7 +39,8 @@ internal static class BadgeFormatter
                     >= 8.0 => "brightgreen",
                     >= 5.0 => "yellow",
                     _ => "red"
-                }),
+                },
+                s.AnalysisLevel),
             BadgeMetric.Mi => new ShieldsBadge(
                 1,
                 label,
@@ -46,12 +50,14 @@ internal static class BadgeFormatter
                     >= 80.0 => "brightgreen",
                     >= 60.0 => "yellow",
                     _ => "red"
-                }),
+                },
+                s.AnalysisLevel),
             BadgeMetric.Smells => new ShieldsBadge(
                 1,
                 label,
                 s.WarningCount.ToString(CultureInfo.InvariantCulture),
-                s.CriticalCount > 0 ? "red" : s.WarningCount > 0 ? "yellow" : "brightgreen"),
+                s.CriticalCount > 0 ? "red" : s.WarningCount > 0 ? "yellow" : "brightgreen",
+                s.AnalysisLevel),
             _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, null)
         };
     }
@@ -110,6 +116,8 @@ internal static class BadgeFormatter
         JsonSerializer.Serialize(badge, BadgeJsonContext.Default.ShieldsBadge);
 }
 
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(ShieldsBadge))]
 internal partial class BadgeJsonContext : JsonSerializerContext;

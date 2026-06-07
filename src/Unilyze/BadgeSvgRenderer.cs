@@ -42,7 +42,18 @@ internal static class BadgeSvgRenderer
         sb.Append(w.ToString(inv));
         sb.Append("\" height=\"20\" role=\"img\" aria-label=\"");
         sb.Append(ariaLabel);
-        sb.Append("\"><title>");
+        sb.Append("\">");
+
+        // Embed the analysis level as an XML comment inside the root so degraded badges are
+        // traceable, while keeping the output starting with the <svg> element (issue 16).
+        if (!string.IsNullOrEmpty(badge.AnalysisLevel))
+        {
+            sb.Append("<!-- unilyze analysisLevel: ");
+            sb.Append(EscapeXmlComment(badge.AnalysisLevel));
+            sb.Append(" -->");
+        }
+
+        sb.Append("<title>");
         sb.Append(ariaLabel);
         sb.Append("</title><linearGradient id=\"s\" x2=\"0\" y2=\"100%\"><stop offset=\"0\" stop-color=\"#bbb\" stop-opacity=\".1\"/><stop offset=\"1\" stop-opacity=\".1\"/></linearGradient><clipPath id=\"r\"><rect width=\"");
         sb.Append(w.ToString(inv));
@@ -96,6 +107,10 @@ internal static class BadgeSvgRenderer
 
         return sum;
     }
+
+    // XML comments cannot contain "--"; collapse any occurrence defensively.
+    static string EscapeXmlComment(string text) =>
+        text.Replace("--", "-");
 
     static string EscapeXml(string text) =>
         text
