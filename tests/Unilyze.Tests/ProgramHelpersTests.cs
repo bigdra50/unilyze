@@ -55,6 +55,32 @@ public sealed class ProgramHelpersTests
         Assert.Empty(result);
     }
 
+    // --- HasFlagWithoutValue ---
+
+    [Fact]
+    public void HasFlagWithoutValue_FlagAtEnd_True()
+    {
+        Assert.True(ProgramHelpers.HasFlagWithoutValue(["--metric", "codehealth", "--fail-under"], "--fail-under"));
+    }
+
+    [Fact]
+    public void HasFlagWithoutValue_FlagFollowedByOption_True()
+    {
+        Assert.True(ProgramHelpers.HasFlagWithoutValue(["--fail-under", "--format", "json"], "--fail-under"));
+    }
+
+    [Fact]
+    public void HasFlagWithoutValue_FlagWithValue_False()
+    {
+        Assert.False(ProgramHelpers.HasFlagWithoutValue(["--fail-under", "7", "--format", "json"], "--fail-under"));
+    }
+
+    [Fact]
+    public void HasFlagWithoutValue_FlagAbsent_False()
+    {
+        Assert.False(ProgramHelpers.HasFlagWithoutValue(["--metric", "smells", "--fail-over", "5"], "--fail-under"));
+    }
+
     // --- ParseMultiValueOption ---
 
     [Fact]

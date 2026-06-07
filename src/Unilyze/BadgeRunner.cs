@@ -30,6 +30,14 @@ internal static class BadgeRunner
             return 1;
         }
 
+        // ParseOptions drops a value-taking flag that has no value token, which
+        // would silently skip the gate (false green in CI). Reject it explicitly.
+        foreach (var gateFlag in new[] { "--fail-under", "--fail-over" })
+        {
+            if (ProgramHelpers.HasFlagWithoutValue(args, gateFlag))
+                return Fail($"{gateFlag} requires a value.", ExitUsageError);
+        }
+
         // Fail fast on incompatible gate flags before running analysis.
         var optionCheck = BadgeGate.ValidateOptions(metric, failUnder, failOver);
         if (optionCheck.Outcome == GateOutcome.UsageError)

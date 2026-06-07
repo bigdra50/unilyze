@@ -294,6 +294,40 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal("lightgrey", root.GetProperty("color").GetString());
     }
 
+    [Fact]
+    public void Badge_GateOnEmptyProject_FailsClosed()
+    {
+        // No types analyzed: the gate must fail (exit 2) rather than report a false green.
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--metric", "codehealth", "--fail-under", "7");
+        Assert.Equal(2, exitCode);
+        Assert.Contains("metric unavailable", stderr);
+    }
+
+    [Fact]
+    public void Badge_GatePass_ExitsZero()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, _) = Run("badge", "-p", _tempDir, "--metric", "codehealth", "--fail-under", "1");
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void Badge_FailUnderWithoutValue_ExitsUsageError()
+    {
+        // Trailing value-less gate flag must be a usage error, not a silently skipped gate.
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--metric", "codehealth", "--fail-under");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--fail-under requires a value", stderr);
+    }
+
+    [Fact]
+    public void Badge_FailOverWithoutValue_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--metric", "smells", "--fail-over");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--fail-over requires a value", stderr);
+    }
+
     private void WriteSimpleProject()
     {
         var csFile = Path.Combine(_tempDir, "Sample.cs");
