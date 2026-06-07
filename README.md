@@ -117,7 +117,7 @@ The shields.io endpoint approach does not work in private repositories: GitHub's
 | `mi` | `maintainability` | average MI (method-bearing types) | green >=80, yellow >=60, red below |
 | `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
 
-In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are stable across analysis levels, while smell counts are syntax-level (semantic smells such as boxing are not included). See [docs/metrics.md](./docs/metrics.md) for validation data.
+In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are approximately stable across analysis levels (averages match in validation; min values can shift where `#if UNITY_EDITOR` code is excluded at SyntaxOnly). Smell counts are level-dependent: at SyntaxOnly only the syntax-level subset is reported (semantic smells such as boxing are not included), so smell badges are not comparable across levels. See [docs/metrics.md](./docs/metrics.md) for validation data.
 
 To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
 
@@ -263,7 +263,7 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 
 ## DI Container Detection
 
-Detects type registrations in Unity DI containers and adds them to the dependency graph:
+Detects type registrations in Unity DI containers and records them as `DIRegistration` entries in the dependency list:
 
 | Container | Patterns |
 |-----------|----------|
@@ -320,6 +320,8 @@ unilyze schema    # JSON field reference
 
 - HTML graph loads Cytoscape from CDN. Falls back to offline report when unavailable.
 - Windows is untested.
+- DI registration entries appear in the dependency list but are not yet wired into the graph view, cycle detection, or coupling metrics ([issue 19](https://github.com/bigdra50/unilyze/issues/19)).
+- When Unity DLLs cannot be resolved, the analysis silently degrades to SyntaxOnly and the level is not shown in outputs ([issue 16](https://github.com/bigdra50/unilyze/issues/16)).
 
 ## License
 

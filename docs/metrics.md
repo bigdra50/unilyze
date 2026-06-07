@@ -61,7 +61,7 @@ SonarAnalyzer.CSharp 10.20.0 との突合結果（Unilyze 自身のソースコ�
 
 ### 公式 Roslyn エンジン (CodeAnalysisMetricData / Metrics.exe / CA1502) との規約差
 
-unilyze 自身の src/Unilyze 全 339 メソッドを公式エンジンと突合し、両者の規約を残差ゼロで実証した確定表
+unilyze 自身の src/Unilyze 全 339 メソッドを公式エンジンと突合し、両者の規約差を実証した確定表（97/100 型で残差ゼロ、残り 3 型は ±1 まで分解済み）
 （再現手順は [scripts/crossval](../scripts/crossval/)、検証データは「バリデーション (検証)」セクション）:
 
 | 構文 | 公式エンジン | Unilyze |
@@ -312,7 +312,8 @@ smells の内訳差分:
 | HighCoupling | 111 | 19 |
 
 SyntaxOnly では SemanticModel 依存の検出（Boxing / Params / DIT / CBO）が過小になる。
-このため `unilyze badge` の対象は SyntaxOnly で安定する CodeHealth / MI / smells に限定し、smells は構文レベルである旨をドキュメントに明記している。
+このため `unilyze badge` の対象は、レベル間で安定する CodeHealth / MI と、構文レベルのサブセットに縮退する smells に限定している。
+上表のとおり smells の総数自体はレベル間で大きく変わる（885 → 289）ため、smells バッジはレベルをまたいだ比較に使えない旨をドキュメントに明記している。
 
 ### Microsoft.CodeAnalysis Metrics (公式エンジン) との突合
 
