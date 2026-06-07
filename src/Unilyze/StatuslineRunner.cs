@@ -19,6 +19,18 @@ internal static class StatuslineRunner
         if (!int.TryParse(refreshStr, out var refreshSeconds))
             refreshSeconds = DefaultRefreshSeconds;
 
+        var levelStr = opts.GetValueOrDefault("--level");
+        AnalysisLevel? requestedLevel = null;
+        if (levelStr != null)
+        {
+            if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
+            {
+                Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
+                return 1;
+            }
+            requestedLevel = lvl;
+        }
+
         var fullPath = ProgramHelpers.ResolveProjectRoot(path);
         var cacheHash = ComputePathHash(fullPath);
         var cacheDir = Path.GetTempPath();
@@ -56,7 +68,7 @@ internal static class StatuslineRunner
         try
         {
             var config = UnilyzeConfig.LoadMerged(fullPath);
-            var result = AnalysisPipeline.Build(fullPath, null, null, config.ExcludeDirs);
+            var result = AnalysisPipeline.Build(fullPath, null, null, config.ExcludeDirs, requestedLevel);
             var summary = StatuslineFormatter.ComputeSummary(result);
             var formatted = StatuslineFormatter.Format(summary);
 
@@ -102,12 +114,15 @@ internal static class StatuslineRunner
             Options:
               -p, --path     Project root (default: .)
               --refresh      Cache refresh interval in seconds (default: 60)
+              --level        Pin analysis level: syntax, core, full, complete
               -h, --help     Show this help
 
-            Output format: CH:9.4 ⚠87 🔴5
-              CH  = Average Code Health (1.0-10.0)
-              ⚠   = Warning code smells count
-              🔴  = Critical code smells count (hidden if 0)
+            Output format: CH:9.4 ⚠87 🔴5 [core]
+              CH       = Average Code Health (1.0-10.0)
+              ⚠        = Warning code smells count
+              🔴       = Critical code smells count (hidden if 0)
+              [level]  = Analysis level marker, shown only below Complete
+                         ([syntax] / [core] / [full])
 
             Color coding:
               Code Health: green (>=8.0), yellow (>=5.0), red (<5.0)
