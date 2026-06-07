@@ -266,6 +266,7 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 | HighComplexity | CycCC >= 15 or CogCC >= 15 | — |
 | DeepNesting | ネスト深度 >= 4 | ネスト深度 >= 6 |
 | LowCohesion | LCOM >= 0.8 | — |
+| CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
 
 ## バリデーション (検証)
 

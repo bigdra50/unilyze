@@ -64,6 +64,9 @@ public static class ExceptionFlowAnalyzer
 
     static bool IsCatchAll(CatchClauseSyntax catchClause, SemanticModel? model)
     {
+        if (catchClause.Filter is not null)
+            return false;
+
         var declaration = catchClause.Declaration;
 
         // bare catch: `catch { }`
