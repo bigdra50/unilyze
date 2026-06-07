@@ -120,6 +120,13 @@ public class CyclomaticComplexityTests
     }
 
     [Fact]
+    public void DeconstructionForEach_ReturnsTwo()
+    {
+        // foreach (var (a, b) in ...) parses as ForEachVariableStatementSyntax, not ForEachStatementSyntax
+        Assert.Equal(2, Calc("void M() { foreach (var (a, b) in new (int, int)[0]) { } }"));
+    }
+
+    [Fact]
     public void WhileLoop_ReturnsTwo()
     {
         Assert.Equal(2, Calc("void M() { while (true) { } }"));

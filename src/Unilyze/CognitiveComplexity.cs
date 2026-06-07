@@ -48,7 +48,7 @@ public static class CognitiveComplexity
                     break;
 
                 case ForStatementSyntax:
-                case ForEachStatementSyntax:
+                case CommonForEachStatementSyntax:
                 case WhileStatementSyntax:
                 case DoStatementSyntax:
                     state.Total += 1 + nesting;

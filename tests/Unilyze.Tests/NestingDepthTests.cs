@@ -22,6 +22,12 @@ public class NestingDepthTests
     }
 
     [Fact]
+    public void DeconstructionForeach_ReturnsOne()
+    {
+        Assert.Equal(1, Calc("void M() { foreach (var (a, b) in new (int, int)[0]) { } }"));
+    }
+
+    [Fact]
     public void NestedIf_ReturnsTwo()
     {
         Assert.Equal(2, Calc("""
