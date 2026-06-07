@@ -16,8 +16,13 @@ public sealed record ResolvedDlls(
 
 public static class UnityDllResolver
 {
-    public static ResolvedDlls Resolve(string projectRoot)
+    // maxLevel caps DLL collection so the resolved level is pinned deterministically.
+    // SyntaxOnly cap short-circuits before any DLL discovery.
+    public static ResolvedDlls Resolve(string projectRoot, AnalysisLevel maxLevel = AnalysisLevel.Complete)
     {
+        if (maxLevel == AnalysisLevel.SyntaxOnly)
+            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+
         var version = DetectUnityVersion(projectRoot);
         if (version is null)
             return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
@@ -41,11 +46,13 @@ public static class UnityDllResolver
         if (paths.Count == 0)
             return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
 
-        var moduleDlls = CollectModuleDlls(managedRoot);
+        // FullEngine adds engine/editor module DLLs; skip them when capped to CoreEngine.
+        var moduleDlls = maxLevel >= AnalysisLevel.FullEngine ? CollectModuleDlls(managedRoot) : [];
         paths.AddRange(moduleDlls);
 
+        // Complete adds compiled package assemblies; skip them below Complete.
         var scriptAssembliesDir = Path.Combine(projectRoot, "Library", "ScriptAssemblies");
-        var packageDlls = CollectPackageDlls(scriptAssembliesDir);
+        var packageDlls = maxLevel >= AnalysisLevel.Complete ? CollectPackageDlls(scriptAssembliesDir) : [];
 
         var level = packageDlls.Count > 0 ? AnalysisLevel.Complete :
                     moduleDlls.Count > 0 ? AnalysisLevel.FullEngine :

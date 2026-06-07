@@ -5,9 +5,14 @@ namespace Unilyze;
 
 internal static class AnalysisPipeline
 {
+    // requestedLevel pins the analysis level (issue 17):
+    //   - resolved level above the request is capped down deterministically
+    //   - resolved level below the request fails (the pipeline does not silently degrade)
+    // When null the level is auto-resolved as before, so existing callers are unaffected.
     public static AnalysisResult Build(
         string path, string? prefix, string? assemblyFilter,
-        IReadOnlyList<string>? excludeDirectories = null)
+        IReadOnlyList<string>? excludeDirectories = null,
+        AnalysisLevel? requestedLevel = null)
     {
         var assetsDir = ProgramHelpers.ResolveAssetsDir(path);
         var asmdefs = AsmdefInfo.Discover(assetsDir);
@@ -26,15 +31,38 @@ internal static class AnalysisPipeline
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path);
         var csprojInfo = ResolveCsprojInfo(projectRoot);
 
-        var resolved = UnityDllResolver.Resolve(projectRoot);
+        // Cap DLL collection at the requested level so the pin is deterministic.
+        var cap = requestedLevel ?? AnalysisLevel.Complete;
+        var resolved = UnityDllResolver.Resolve(projectRoot, cap);
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
 
         var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols, excludeDirectories);
         var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo);
         var analysisLevel = compilationResult.Level.ToString();
 
-        if (compilationResult.Level != AnalysisLevel.SyntaxOnly)
-            Console.Error.WriteLine($"Analysis level: {analysisLevel}");
+        // The level is always reported on stderr (issue 16: previously only when != SyntaxOnly).
+        Console.Error.WriteLine($"Analysis level: {analysisLevel}");
+
+        var isUnityProject = File.Exists(
+            Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt"));
+
+        // A Unity project that silently fell back to SyntaxOnly means DLL resolution
+        // failed and semantic metrics (boxing/CBO/DIT/...) are understated (issue 16).
+        if (isUnityProject && compilationResult.Level == AnalysisLevel.SyntaxOnly
+            && requestedLevel is not AnalysisLevel.SyntaxOnly)
+        {
+            Console.Error.WriteLine(
+                "Warning: Unity project detected but Unity DLLs could not be resolved; "
+                + "analysis degraded to SyntaxOnly. Semantic metrics (boxing, CBO, DIT, etc.) are understated.");
+        }
+
+        // Pin requested an analysis depth the environment cannot satisfy: fail loudly (issue 17).
+        if (requestedLevel is { } required && compilationResult.Level < required)
+        {
+            throw new InvalidOperationException(
+                $"Requested analysis level '{required}' could not be satisfied "
+                + $"(resolved '{compilationResult.Level}'). Unity DLLs may be missing.");
+        }
 
         allTypes = BaseTypeResolver.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
