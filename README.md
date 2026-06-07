@@ -1,5 +1,7 @@
 # unilyze
 
+[![CI](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml/badge.svg)](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml)
+[![Code Health](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbigdra50%2Funilyze%2Fbadges%2Fcodehealth.json)](./docs/metrics.md)
 [![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
 
 A CLI tool for static analysis and visualization of type dependencies and code quality in Unity projects.
@@ -46,6 +48,7 @@ unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (inter
 unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
 unilyze trend <dir-of-jsons>                       # Quality trend
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
+unilyze badge -p ~/MyUnityProject -o badge.json    # shields.io endpoint JSON (CI badges)
 unilyze metrics                                    # Metric definitions & thresholds
 unilyze schema                                     # JSON field reference
 ```
@@ -85,6 +88,64 @@ if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; th
     fi
     [[ -n "${UNILYZE_STATUS:-}" ]] && echo "$UNILYZE_STATUS"
 fi
+```
+
+### Badges
+
+`unilyze badge` outputs [shields.io endpoint JSON](https://shields.io/badges/endpoint-badge) so you can show code quality badges in your README:
+
+```bash
+unilyze badge -p ~/MyUnityProject                  # code health (default)
+unilyze badge -p ~/MyUnityProject --metric mi      # maintainability index
+unilyze badge -p ~/MyUnityProject --metric smells  # code smell count
+```
+
+| Metric | Label | Message | Color |
+|--------|-------|---------|-------|
+| `codehealth` | `code health` | `avg / min` (e.g. `9.2 / 6.1`) | by min: green >=8.0, yellow >=5.0, red below |
+| `mi` | `maintainability` | average MI | green >=80, yellow >=60, red below |
+| `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
+
+In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are stable across analysis levels, while smell counts are syntax-level (semantic smells such as boxing are not included). See [docs/metrics.md](./docs/metrics.md) for validation data.
+
+To publish badges from GitHub Actions, generate the JSON on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
+
+```yaml
+# .github/workflows/badges.yml
+name: Badges
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write # force-push to the badges branch
+jobs:
+  badges:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool install --global Unilyze
+      - run: |
+          mkdir -p /tmp/badge-data
+          unilyze badge -p . -o /tmp/badge-data/codehealth.json
+      - run: |
+          cd /tmp/badge-data
+          git init -q -b badges
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -qm "update badges"
+          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" badges
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+Then reference it from your README:
+
+```markdown
+![Code Health](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.json)
 ```
 
 ## Configuration

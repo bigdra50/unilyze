@@ -64,6 +64,8 @@ SonarAnalyzer.CSharp 10.20.0 との突合結果（Unilyze 自身のソースコ�
 | `??` | カウントしない | +1 |
 | switch expression arm | 未対応 | +1 |
 
+公式エンジンとの型単位の突合結果は「バリデーション (検証)」セクションを参照。
+
 ## LCOM-HS (Henderson-Sellers)
 
 準拠仕様: Henderson-Sellers, B. (1996) "Object-Oriented Metrics: Measures of Complexity"
@@ -264,3 +266,58 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 | HighComplexity | CycCC >= 15 or CogCC >= 15 | — |
 | DeepNesting | ネスト深度 >= 4 | ネスト深度 >= 6 |
 | LowCohesion | LCOM >= 0.8 | — |
+
+## バリデーション (検証)
+
+### Complete vs SyntaxOnly 解析の差分
+
+Unity DLL を解決できない環境（CI 等）では SyntaxOnly に縮退する。
+同一の実プロジェクト（oculus-samples/Unity-Decommissioned、283 型）を Complete と SyntaxOnly で解析した実測差分:
+
+| 指標 | Complete | SyntaxOnly | 備考 |
+|------|----------|------------|------|
+| CodeHealth avg | 9.6 | 9.6 | 同一（構文情報のみで算出されるため） |
+| CodeHealth min | 4.8 | 5.0 | 差分は `#if UNITY_EDITOR` の define 有無起因 |
+| 依存関係数 | 452 | 429 | -5% |
+| 循環依存 | 6 | 6 | 同一 |
+| smells 総数 | 885 | 289 | 内訳は下表 |
+| DIT max | 7 | 1 | エンジン型を跨ぐ継承はセマンティック必須 |
+| CBO avg | 13.7 | 5.7 | UnityEngine 型への結合が不可視 |
+| 解析時間 | 4.6s | 0.6s | |
+
+smells の内訳差分:
+
+| スメル | Complete | SyntaxOnly |
+|--------|----------|------------|
+| BoxingAllocation | 312 | 0 |
+| ClosureCapture | 181 | 81 |
+| ParamsArrayAllocation | 30 | 0 |
+| DeepInheritance | 38 | 0 |
+| HighCoupling | 111 | 19 |
+
+SyntaxOnly では SemanticModel 依存の検出（Boxing / Params / DIT / CBO）が過小になる。
+このため `unilyze badge` の対象は SyntaxOnly で安定する CodeHealth / MI / smells に限定し、smells は構文レベルである旨をドキュメントに明記している。
+
+### Microsoft.CodeAnalysis Metrics (公式エンジン) との突合
+
+公式 Metrics ツールと同一実装の `CodeAnalysisMetricData`（Microsoft.CodeAnalysis.AnalyzerUtilities）で unilyze 自身の src/Unilyze（87 型マッチ、source generator 由来の 1 型を除外し 86 型）を計測し、unilyze の SyntaxOnly 解析と突合した:
+
+| 指標 | Pearson 相関 | 平均絶対差 | 備考 |
+|------|-------------|-----------|------|
+| CycCC | 0.994 | 1.7 | 型単位合計で比較 |
+| MI | 0.870 | 5.4 | 公式は型集約、unilyze はメソッド平均（メソッド無し 43 型は unilyze 非対象） |
+| 結合度 | 0.817 (順位) | — | 公式 ClassCoupling 平均 14.0 vs unilyze CBO 3.6（SyntaxOnly では過小） |
+| DIT | — | — | 公式は object 継承を 1 と数える規約差で全件オフセット |
+
+CycCC の乖離が大きい型（カウント規約差の調査対象）:
+
+| 型 | 公式 | Unilyze |
+|----|------|---------|
+| HalsteadCalculator | 16 | 30 |
+| BloomFilter128 | 26 | 17 |
+| StatuslineFormatter | 16 | 25 |
+| DIContainerAnalyzer | 103 | 111 |
+| ProgramHelpers | 31 | 39 |
+
+乖離の主因仮説は「CycCC > Roslyn CA1502 との差異」の表の通り（unilyze は `?.` `??` switch expression arm をカウントする）。
+詳細調査は GitHub issue で追跡している。
