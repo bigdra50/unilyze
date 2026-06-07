@@ -8,8 +8,9 @@ public sealed class BadgeGateTests
         int warnings = 0,
         int criticals = 0,
         int typeCount = 10,
-        double avgMi = 80.0) =>
-        new(avgHealth, minHealth, warnings, criticals, typeCount, avgMi, 0, 0);
+        double avgMi = 80.0,
+        int miBearingCount = 10) =>
+        new(avgHealth, minHealth, warnings, criticals, typeCount, avgMi, 0, 0, miBearingCount);
 
     [Fact]
     public void Evaluate_NoGateFlags_Passes()
@@ -151,6 +152,51 @@ public sealed class BadgeGateTests
     {
         var result = BadgeGate.Evaluate(BadgeMetric.Smells, Summary(), null, value);
         Assert.Equal(GateOutcome.UsageError, result.Outcome);
+    }
+
+    // --- fail-closed when the metric is unavailable (no data) ---
+
+    [Fact]
+    public void Evaluate_CodeHealth_ZeroTypes_FailsAsUnavailable()
+    {
+        var result = BadgeGate.Evaluate(BadgeMetric.CodeHealth, Summary(typeCount: 0, miBearingCount: 0), "7", null);
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("metric unavailable", result.Message);
+        Assert.Contains("0 types analyzed", result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_Mi_ZeroTypes_FailsAsUnavailable()
+    {
+        var result = BadgeGate.Evaluate(BadgeMetric.Mi, Summary(typeCount: 0, miBearingCount: 0), "70", null);
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("metric unavailable", result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_Smells_ZeroTypes_FailsAsUnavailable()
+    {
+        var result = BadgeGate.Evaluate(BadgeMetric.Smells, Summary(typeCount: 0, miBearingCount: 0), null, "5");
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("metric unavailable", result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_Mi_NoMethodBearingTypes_FailsAsUnavailable()
+    {
+        // Types exist (e.g. only records/markers) but none have a defined MI.
+        var result = BadgeGate.Evaluate(BadgeMetric.Mi, Summary(typeCount: 5, avgMi: 0.0, miBearingCount: 0), "70", null);
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("metric unavailable", result.Message);
+        Assert.Contains("method-bearing", result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_ZeroTypes_NoGateFlags_StillPasses()
+    {
+        // No gate requested: an empty project must not be forced to fail.
+        var result = BadgeGate.Evaluate(BadgeMetric.CodeHealth, Summary(typeCount: 0, miBearingCount: 0), null, null);
+        Assert.Equal(GateOutcome.Pass, result.Outcome);
     }
 
     [Fact]

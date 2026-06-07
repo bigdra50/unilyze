@@ -63,16 +63,43 @@ internal static class BadgeGate
         if (!hasFailUnder && !hasFailOver)
             return Pass();
 
+        // Fail closed when the metric is unavailable (e.g. wrong path, no types
+        // analyzed). The badge would render "n/a", so silently exiting 0 here
+        // would be a false green in CI. Keep this distinct from a threshold miss.
+        var unavailable = EvaluateAvailability(metric, summary);
+        if (unavailable is not null)
+            return unavailable;
+
         return metric switch
         {
-            BadgeMetric.CodeHealth or BadgeMetric.Mi => EvaluateThreshold(metric, summary, failUnder, hasFailOver),
-            BadgeMetric.Smells => EvaluateSmells(summary, failOver, hasFailUnder),
+            BadgeMetric.CodeHealth or BadgeMetric.Mi => EvaluateThreshold(metric, summary, failUnder),
+            BadgeMetric.Smells => EvaluateSmells(summary, failOver),
             _ => UsageError($"Unsupported metric: {metric}")
         };
     }
 
+    /// <summary>
+    /// Returns a Fail outcome when the gated metric has no data to evaluate,
+    /// otherwise null. codehealth/smells need at least one analyzed type; mi
+    /// additionally needs at least one method-bearing type (records and markers
+    /// have no MI and are excluded from the average).
+    /// </summary>
+    static BadgeGateResult? EvaluateAvailability(BadgeMetric metric, StatuslineFormatter.Summary summary)
+    {
+        if (summary.TypeCount == 0)
+            return MetricUnavailable("0 types analyzed");
+
+        if (metric == BadgeMetric.Mi && summary.MiBearingCount == 0)
+            return MetricUnavailable("no method-bearing types (MI undefined)");
+
+        return null;
+    }
+
+    static BadgeGateResult MetricUnavailable(string detail) =>
+        new(GateOutcome.Fail, $"gate failed: metric unavailable ({detail})");
+
     static BadgeGateResult EvaluateThreshold(
-        BadgeMetric metric, StatuslineFormatter.Summary summary, string? failUnder, bool hasFailOver)
+        BadgeMetric metric, StatuslineFormatter.Summary summary, string? failUnder)
     {
         // Combination and value validity are already guaranteed by ValidateOptions.
         TryParseDouble(failUnder, out var threshold);
@@ -89,7 +116,7 @@ internal static class BadgeGate
     }
 
     static BadgeGateResult EvaluateSmells(
-        StatuslineFormatter.Summary summary, string? failOver, bool hasFailUnder)
+        StatuslineFormatter.Summary summary, string? failOver)
     {
         // Combination and value validity are already guaranteed by ValidateOptions.
         TryParseInt(failOver, out var threshold);
