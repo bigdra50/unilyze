@@ -292,4 +292,121 @@ public class DIContainerAnalyzerTests
         var reg = Assert.Single(regs);
         Assert.True(reg.Line > 0);
     }
+
+    // --- Qualified name resolution (issue 19) ---
+
+    [Fact]
+    public void VContainer_Register_Semantic_PopulatesQualifiedNames()
+    {
+        // A VContainer stub lets the semantic model bind builder.Register<,>(), so the
+        // qualified names come from the resolved type symbols even though the source
+        // writes bare names via `using` (something the syntactic path cannot recover).
+        var code = """
+            namespace VContainer {
+                public enum Lifetime { Singleton, Transient, Scoped }
+                public interface IContainerBuilder { }
+                public static class Registration {
+                    public static void Register<TInterface, TImplementation>(
+                        this IContainerBuilder builder, Lifetime lifetime) { }
+                }
+            }
+            namespace Game.Services {
+                public interface IFoo { }
+                public class Foo : IFoo { }
+            }
+            namespace Game {
+                using VContainer;
+                using Game.Services;
+                public class Installer {
+                    void Configure(IContainerBuilder builder) {
+                        builder.Register<IFoo, Foo>(Lifetime.Singleton);
+                    }
+                }
+            }
+            """;
+        var reg = Assert.Single(AnalyzeSemantic(code));
+        Assert.Equal("IFoo", reg.ServiceType);
+        Assert.Equal("Foo", reg.ImplementationType);
+        Assert.Equal("Game.Services.IFoo", reg.ServiceTypeQualified);
+        Assert.Equal("Game.Services.Foo", reg.ImplementationTypeQualified);
+    }
+
+    [Fact]
+    public void VContainer_Register_Syntactic_FullyQualified_PopulatesQualifiedNames()
+    {
+        var code = """
+            enum Lifetime { Singleton }
+            class Installer {
+                void Configure(object builder) {
+                    builder.Register<Game.Services.IFoo, Game.Services.Foo>(Lifetime.Singleton);
+                }
+            }
+            """;
+        var reg = Assert.Single(AnalyzeSyntactic(code));
+        // Simple name is normalized (namespace stripped) to match ITypeSymbol.Name.
+        Assert.Equal("IFoo", reg.ServiceType);
+        Assert.Equal("Foo", reg.ImplementationType);
+        Assert.Equal("Game.Services.IFoo", reg.ServiceTypeQualified);
+        Assert.Equal("Game.Services.Foo", reg.ImplementationTypeQualified);
+    }
+
+    [Fact]
+    public void VContainer_Register_Syntactic_SimpleName_NoQualifiedName()
+    {
+        var code = """
+            enum Lifetime { Singleton }
+            class IFoo { }
+            class Foo { }
+            class Installer {
+                void Configure(object builder) {
+                    builder.Register<IFoo, Foo>(Lifetime.Singleton);
+                }
+            }
+            """;
+        var reg = Assert.Single(AnalyzeSyntactic(code));
+        Assert.Equal("IFoo", reg.ServiceType);
+        Assert.Equal("Foo", reg.ImplementationType);
+        // Bare simple names carry no qualification.
+        Assert.Null(reg.ServiceTypeQualified);
+        Assert.Null(reg.ImplementationTypeQualified);
+    }
+
+    [Fact]
+    public void Zenject_BindTo_Semantic_PopulatesQualifiedNames()
+    {
+        // A Zenject stub binds container.Bind<T>(), so the service qualified name comes
+        // from the resolved type symbol (bare name via `using`). The .To<T>() chain is
+        // walked syntactically, so the impl qualified name still requires a fully
+        // qualified write.
+        var code = """
+            namespace Zenject {
+                public interface IBindChain { }
+                public interface IFromChain { IFromChain AsSingle(); }
+                public static class Binder {
+                    public static IBindChain Bind<TService>(this object container) => null;
+                    public static IFromChain To<TImpl>(this IBindChain chain) => null;
+                }
+            }
+            namespace Game.Services {
+                public interface IFoo { }
+                public class Foo : IFoo { }
+            }
+            namespace Game {
+                using Zenject;
+                using Game.Services;
+                public class Installer {
+                    void Configure(object container) {
+                        container.Bind<IFoo>().To<Game.Services.Foo>().AsSingle();
+                    }
+                }
+            }
+            """;
+        var reg = Assert.Single(AnalyzeSemantic(code));
+        Assert.Equal("IFoo", reg.ServiceType);
+        Assert.Equal("Foo", reg.ImplementationType);
+        // Bind<IFoo>() resolves semantically: namespace recovered from the type symbol.
+        Assert.Equal("Game.Services.IFoo", reg.ServiceTypeQualified);
+        // The .To<T>() chain is syntactic; the fully qualified write surfaces the impl qualified name.
+        Assert.Equal("Game.Services.Foo", reg.ImplementationTypeQualified);
+    }
 }
