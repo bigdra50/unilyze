@@ -60,8 +60,8 @@ public static class DIContainerAnalyzer
 
         return containingNs switch
         {
-            "VContainer" => TryResolveVContainerSemantic(invocation, methodSymbol, filePath),
-            "Zenject" => TryResolveZenjectSemantic(invocation, methodSymbol, filePath),
+            "VContainer" => VContainerRegistrationResolver.ResolveSemantic(invocation, methodSymbol, filePath),
+            "Zenject" => ZenjectRegistrationResolver.ResolveSemantic(invocation, methodSymbol, filePath),
             _ => null
         };
     }
@@ -79,138 +79,6 @@ public static class DIContainerAnalyzer
         return "";
     }
 
-    static DIRegistration? TryResolveVContainerSemantic(
-        InvocationExpressionSyntax invocation, IMethodSymbol method, string filePath)
-    {
-        var name = method.Name;
-        var line = invocation.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-
-        switch (name)
-        {
-            case "Register":
-            {
-                var typeArgs = method.TypeArguments;
-                var lifetime = ExtractVContainerLifetimeFromArgs(invocation);
-                if (typeArgs.Length == 2)
-                    return new DIRegistration(
-                        typeArgs[0].Name, typeArgs[1].Name, "VContainer", lifetime, filePath, line);
-                if (typeArgs.Length == 1)
-                    return new DIRegistration(
-                        typeArgs[0].Name, typeArgs[0].Name, "VContainer", lifetime, filePath, line);
-                return null;
-            }
-            case "RegisterInstance":
-            {
-                var implType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : InferInstanceType(invocation, method);
-                return new DIRegistration(
-                    implType, implType, "VContainer", "Singleton", filePath, line);
-            }
-            case "RegisterFactory":
-            {
-                var factoryType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : "Unknown";
-                return new DIRegistration(
-                    factoryType, factoryType, "VContainer", "Transient", filePath, line);
-            }
-            default:
-                return null;
-        }
-    }
-
-    static string InferInstanceType(InvocationExpressionSyntax invocation, IMethodSymbol method)
-    {
-        if (invocation.ArgumentList.Arguments.Count > 0)
-        {
-            var argType = method.Parameters.FirstOrDefault()?.Type;
-            if (argType is not null)
-                return argType.Name;
-        }
-        return "Unknown";
-    }
-
-    static DIRegistration? TryResolveZenjectSemantic(
-        InvocationExpressionSyntax invocation, IMethodSymbol method, string filePath)
-    {
-        var name = method.Name;
-        var line = invocation.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-
-        switch (name)
-        {
-            case "Bind":
-            {
-                var serviceType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : "Unknown";
-                var (implType, lifetime) = TraceZenjectChainSemantic(invocation);
-                return new DIRegistration(
-                    serviceType, implType ?? serviceType, "Zenject", lifetime, filePath, line);
-            }
-            case "BindInterfacesTo":
-            {
-                var implType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : "Unknown";
-                var (_, lifetime) = TraceZenjectChainSemantic(invocation);
-                return new DIRegistration(
-                    implType, implType, "Zenject", lifetime, filePath, line);
-            }
-            case "BindInterfacesAndSelfTo":
-            {
-                var implType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : "Unknown";
-                var (_, lifetime) = TraceZenjectChainSemantic(invocation);
-                return new DIRegistration(
-                    implType, implType, "Zenject", lifetime, filePath, line);
-            }
-            default:
-                return null;
-        }
-    }
-
-    static (string? ImplType, string? Lifetime) TraceZenjectChainSemantic(
-        InvocationExpressionSyntax startInvocation)
-    {
-        string? implType = null;
-        string? lifetime = null;
-
-        var current = startInvocation.Parent;
-        while (current is not null)
-        {
-            if (current is MemberAccessExpressionSyntax memberAccess
-                && memberAccess.Parent is InvocationExpressionSyntax chainInvocation)
-            {
-                var chainName = memberAccess.Name;
-                switch (chainName.Identifier.Text)
-                {
-                    case "To":
-                        if (chainName is GenericNameSyntax toGeneric && toGeneric.TypeArgumentList.Arguments.Count > 0)
-                            implType = toGeneric.TypeArgumentList.Arguments[0].ToString();
-                        break;
-                    case "AsSingle":
-                        lifetime = "Singleton";
-                        break;
-                    case "AsTransient":
-                        lifetime = "Transient";
-                        break;
-                    case "AsCached":
-                        lifetime = "Scoped";
-                        break;
-                }
-                current = chainInvocation.Parent;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return (implType, lifetime);
-    }
-
     // --- Syntactic fallback ---
 
     static DIRegistration? TryResolveSyntactic(InvocationExpressionSyntax invocation, string filePath)
@@ -220,54 +88,8 @@ public static class DIContainerAnalyzer
 
         var line = invocation.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
 
-        // VContainer patterns
-        switch (methodName)
-        {
-            case "Register":
-            {
-                var lifetime = ExtractVContainerLifetimeFromArgs(invocation);
-                if (typeArgs.Count == 2)
-                    return new DIRegistration(typeArgs[0], typeArgs[1], "VContainer", lifetime, filePath, line);
-                if (typeArgs.Count == 1)
-                    return new DIRegistration(typeArgs[0], typeArgs[0], "VContainer", lifetime, filePath, line);
-                return null;
-            }
-            case "RegisterInstance":
-                return new DIRegistration(
-                    InferInstanceTypeSyntactic(invocation),
-                    InferInstanceTypeSyntactic(invocation),
-                    "VContainer", "Singleton", filePath, line);
-            case "RegisterFactory":
-            {
-                var factoryType = typeArgs.Count > 0 ? typeArgs[0] : "Unknown";
-                return new DIRegistration(factoryType, factoryType, "VContainer", "Transient", filePath, line);
-            }
-        }
-
-        // Zenject patterns
-        switch (methodName)
-        {
-            case "Bind":
-            {
-                var serviceType = typeArgs.Count > 0 ? typeArgs[0] : "Unknown";
-                var (implType, lifetime) = TraceZenjectChainSyntactic(invocation);
-                return new DIRegistration(serviceType, implType ?? serviceType, "Zenject", lifetime, filePath, line);
-            }
-            case "BindInterfacesTo":
-            {
-                var implType = typeArgs.Count > 0 ? typeArgs[0] : "Unknown";
-                var (_, lifetime) = TraceZenjectChainSyntactic(invocation);
-                return new DIRegistration(implType, implType, "Zenject", lifetime, filePath, line);
-            }
-            case "BindInterfacesAndSelfTo":
-            {
-                var implType = typeArgs.Count > 0 ? typeArgs[0] : "Unknown";
-                var (_, lifetime) = TraceZenjectChainSyntactic(invocation);
-                return new DIRegistration(implType, implType, "Zenject", lifetime, filePath, line);
-            }
-        }
-
-        return null;
+        return VContainerRegistrationResolver.ResolveSyntactic(invocation, methodName, typeArgs, filePath, line)
+            ?? ZenjectRegistrationResolver.ResolveSyntactic(invocation, methodName, typeArgs, filePath, line);
     }
 
     static (string? Receiver, string? MethodName, IReadOnlyList<string> TypeArgs) DecomposeInvocation(
@@ -294,77 +116,6 @@ public static class DIContainerAnalyzer
             default:
                 return (null, null, []);
         }
-    }
-
-    static string? ExtractVContainerLifetimeFromArgs(InvocationExpressionSyntax invocation)
-    {
-        foreach (var arg in invocation.ArgumentList.Arguments)
-        {
-            var text = arg.Expression.ToString();
-            if (text.Contains("Singleton")) return "Singleton";
-            if (text.Contains("Transient")) return "Transient";
-            if (text.Contains("Scoped")) return "Scoped";
-        }
-        return null;
-    }
-
-    static string InferInstanceTypeSyntactic(InvocationExpressionSyntax invocation)
-    {
-        // Try generic type arg first
-        if (invocation.Expression is MemberAccessExpressionSyntax { Name: GenericNameSyntax generic })
-        {
-            if (generic.TypeArgumentList.Arguments.Count > 0)
-                return generic.TypeArgumentList.Arguments[0].ToString();
-        }
-
-        // Fall back to argument expression type name
-        if (invocation.ArgumentList.Arguments.Count > 0)
-        {
-            var argExpr = invocation.ArgumentList.Arguments[0].Expression.ToString();
-            return argExpr;
-        }
-
-        return "Unknown";
-    }
-
-    static (string? ImplType, string? Lifetime) TraceZenjectChainSyntactic(
-        InvocationExpressionSyntax startInvocation)
-    {
-        string? implType = null;
-        string? lifetime = null;
-
-        var current = startInvocation.Parent;
-        while (current is not null)
-        {
-            if (current is MemberAccessExpressionSyntax memberAccess
-                && memberAccess.Parent is InvocationExpressionSyntax chainInvocation)
-            {
-                var chainName = memberAccess.Name;
-                switch (chainName.Identifier.Text)
-                {
-                    case "To":
-                        if (chainName is GenericNameSyntax toGeneric && toGeneric.TypeArgumentList.Arguments.Count > 0)
-                            implType = toGeneric.TypeArgumentList.Arguments[0].ToString();
-                        break;
-                    case "AsSingle":
-                        lifetime = "Singleton";
-                        break;
-                    case "AsTransient":
-                        lifetime = "Transient";
-                        break;
-                    case "AsCached":
-                        lifetime = "Scoped";
-                        break;
-                }
-                current = chainInvocation.Parent;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return (implType, lifetime);
     }
 
     // --- Inject attribute detection ---
@@ -411,21 +162,29 @@ public static class DIContainerAnalyzer
 
     static string ResolveInjectContainerType(AttributeSyntax attrSyntax, SemanticModel? model)
     {
-        if (model is not null)
-        {
-            var symbolInfo = model.GetSymbolInfo(attrSyntax);
-            if (symbolInfo.Symbol is IMethodSymbol ctorSymbol)
-            {
-                var ns = GetRootNamespace(ctorSymbol.ContainingType);
-                if (ns is "VContainer") return "VContainer";
-                if (ns is "Zenject") return "Zenject";
-            }
-        }
+        return ResolveContainerBySymbol(attrSyntax, model)
+            ?? ResolveContainerByName(attrSyntax.Name.ToString())
+            ?? "Unknown";
+    }
 
-        var name = attrSyntax.Name.ToString();
+    static string? ResolveContainerBySymbol(AttributeSyntax attrSyntax, SemanticModel? model)
+    {
+        if (model?.GetSymbolInfo(attrSyntax).Symbol is not IMethodSymbol ctorSymbol)
+            return null;
+
+        return GetRootNamespace(ctorSymbol.ContainingType) switch
+        {
+            "VContainer" => "VContainer",
+            "Zenject" => "Zenject",
+            _ => null
+        };
+    }
+
+    static string? ResolveContainerByName(string name)
+    {
         if (name.StartsWith("VContainer")) return "VContainer";
         if (name.StartsWith("Zenject")) return "Zenject";
-        return "Unknown";
+        return null;
     }
 
     static string GetInjectTargetType(AttributeSyntax attrSyntax)
