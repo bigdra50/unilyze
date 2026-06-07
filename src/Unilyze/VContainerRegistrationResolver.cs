@@ -20,42 +20,47 @@ internal static class VContainerRegistrationResolver
                 var lifetime = ExtractLifetimeFromArgs(invocation);
                 if (typeArgs.Length == 2)
                     return new DIRegistration(
-                        typeArgs[0].Name, typeArgs[1].Name, "VContainer", lifetime, filePath, line);
+                        typeArgs[0].Name, typeArgs[1].Name, "VContainer", lifetime, filePath, line,
+                        DISymbolNaming.Qualify(typeArgs[0]), DISymbolNaming.Qualify(typeArgs[1]));
                 if (typeArgs.Length == 1)
                     return new DIRegistration(
-                        typeArgs[0].Name, typeArgs[0].Name, "VContainer", lifetime, filePath, line);
+                        typeArgs[0].Name, typeArgs[0].Name, "VContainer", lifetime, filePath, line,
+                        DISymbolNaming.Qualify(typeArgs[0]), DISymbolNaming.Qualify(typeArgs[0]));
                 return null;
             }
             case "RegisterInstance":
             {
-                var implType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
+                var (implType, implQualified) = method.TypeArguments.Length > 0
+                    ? (method.TypeArguments[0].Name, DISymbolNaming.Qualify(method.TypeArguments[0]))
                     : InferInstanceType(invocation, method);
                 return new DIRegistration(
-                    implType, implType, "VContainer", "Singleton", filePath, line);
+                    implType, implType, "VContainer", "Singleton", filePath, line,
+                    implQualified, implQualified);
             }
             case "RegisterFactory":
             {
-                var factoryType = method.TypeArguments.Length > 0
-                    ? method.TypeArguments[0].Name
-                    : "Unknown";
+                var (factoryType, factoryQualified) = method.TypeArguments.Length > 0
+                    ? (method.TypeArguments[0].Name, DISymbolNaming.Qualify(method.TypeArguments[0]))
+                    : ("Unknown", (string?)null);
                 return new DIRegistration(
-                    factoryType, factoryType, "VContainer", "Transient", filePath, line);
+                    factoryType, factoryType, "VContainer", "Transient", filePath, line,
+                    factoryQualified, factoryQualified);
             }
             default:
                 return null;
         }
     }
 
-    private static string InferInstanceType(InvocationExpressionSyntax invocation, IMethodSymbol method)
+    private static (string Name, string? Qualified) InferInstanceType(
+        InvocationExpressionSyntax invocation, IMethodSymbol method)
     {
         if (invocation.ArgumentList.Arguments.Count > 0)
         {
             var argType = method.Parameters.FirstOrDefault()?.Type;
             if (argType is not null)
-                return argType.Name;
+                return (argType.Name, DISymbolNaming.Qualify(argType));
         }
-        return "Unknown";
+        return ("Unknown", null);
     }
 
     internal static DIRegistration? ResolveSyntactic(
@@ -68,20 +73,32 @@ internal static class VContainerRegistrationResolver
             {
                 var lifetime = ExtractLifetimeFromArgs(invocation);
                 if (typeArgs.Count == 2)
-                    return new DIRegistration(typeArgs[0], typeArgs[1], "VContainer", lifetime, filePath, line);
+                    return new DIRegistration(
+                        DISymbolNaming.SimpleName(typeArgs[0]), DISymbolNaming.SimpleName(typeArgs[1]),
+                        "VContainer", lifetime, filePath, line,
+                        DISymbolNaming.QualifiedFromSyntax(typeArgs[0]), DISymbolNaming.QualifiedFromSyntax(typeArgs[1]));
                 if (typeArgs.Count == 1)
-                    return new DIRegistration(typeArgs[0], typeArgs[0], "VContainer", lifetime, filePath, line);
+                    return new DIRegistration(
+                        DISymbolNaming.SimpleName(typeArgs[0]), DISymbolNaming.SimpleName(typeArgs[0]),
+                        "VContainer", lifetime, filePath, line,
+                        DISymbolNaming.QualifiedFromSyntax(typeArgs[0]), DISymbolNaming.QualifiedFromSyntax(typeArgs[0]));
                 return null;
             }
             case "RegisterInstance":
+            {
+                var instType = InferInstanceTypeSyntactic(invocation);
                 return new DIRegistration(
-                    InferInstanceTypeSyntactic(invocation),
-                    InferInstanceTypeSyntactic(invocation),
-                    "VContainer", "Singleton", filePath, line);
+                    DISymbolNaming.SimpleName(instType), DISymbolNaming.SimpleName(instType),
+                    "VContainer", "Singleton", filePath, line,
+                    DISymbolNaming.QualifiedFromSyntax(instType), DISymbolNaming.QualifiedFromSyntax(instType));
+            }
             case "RegisterFactory":
             {
                 var factoryType = typeArgs.Count > 0 ? typeArgs[0] : "Unknown";
-                return new DIRegistration(factoryType, factoryType, "VContainer", "Transient", filePath, line);
+                return new DIRegistration(
+                    DISymbolNaming.SimpleName(factoryType), DISymbolNaming.SimpleName(factoryType),
+                    "VContainer", "Transient", filePath, line,
+                    DISymbolNaming.QualifiedFromSyntax(factoryType), DISymbolNaming.QualifiedFromSyntax(factoryType));
             }
             default:
                 return null;

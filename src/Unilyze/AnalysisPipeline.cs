@@ -40,11 +40,19 @@ internal static class AnalysisPipeline
 
         var deps = DependencyBuilder.Build(allTypes).ToList();
 
-        // DI container dependency detection
+        // DI container dependency detection.
+        // Resolve registration endpoints to TypeIds where possible so the edges
+        // integrate with the graph, cycle detection, CBO/Ca/Ce, and TypeRank.
+        // External or ambiguous endpoints stay null (FromTypeId/ToTypeId), which
+        // downstream consumers treat as an unresolved edge (no metric contribution).
         var diRegistrations = DIContainerAnalyzer.Analyze(allSyntaxTrees, compilationResult.Compilation);
+        var diTypeIndex = DITypeIdIndex.Build(allTypes);
         foreach (var reg in diRegistrations)
         {
-            deps.Add(new TypeDependency(reg.ServiceType, reg.ImplementationType, DependencyKind.DIRegistration));
+            var fromTypeId = diTypeIndex.Resolve(reg.ServiceType, reg.ServiceTypeQualified);
+            var toTypeId = diTypeIndex.Resolve(reg.ImplementationType, reg.ImplementationTypeQualified);
+            deps.Add(new TypeDependency(
+                reg.ServiceType, reg.ImplementationType, DependencyKind.DIRegistration, fromTypeId, toTypeId));
         }
 
         var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
