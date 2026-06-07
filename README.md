@@ -37,6 +37,7 @@ unilyze -p ~/MyUnityProject                      # Specify project path
 unilyze -p ~/MyUnityProject -o graph.html        # Save HTML + JSON
 unilyze -p ~/MyUnityProject -f json -o result.json  # JSON output
 unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (GitHub Code Scanning)
+unilyze -p ~/MyUnityProject --level core         # Pin analysis level (see Analysis Levels)
 ```
 
 ### Subcommands
@@ -71,6 +72,7 @@ CH:9.8/5.9 MI:52 111smells 🔴1 📦66
 | `🔴N` | Critical-level code smells (hidden if 0) |
 | `📦N` | Boxing allocations (hidden if 0) |
 | `♻N` | Cyclic dependencies (hidden if 0) |
+| `[level]` | Analysis level marker, shown only below `Complete` (`[syntax]` / `[core]` / `[full]`) |
 
 Results are cached per project (default 60s). Add to `~/.claude/statusline.sh`:
 
@@ -160,6 +162,21 @@ Then reference it from your README:
 ```
 
 Prefer shields.io styling options? Generate endpoint JSON instead (the default format) and embed `https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.json`.
+
+## Analysis Levels
+
+unilyze resolves an analysis level based on which Unity DLLs it can locate. Higher levels resolve more types, so semantic metrics that depend on the `SemanticModel` (boxing, params allocations, CBO, DIT) are more complete. When Unity DLLs cannot be resolved (CI without a Unity install, missing `Library/ScriptAssemblies`), the analysis falls back to a lower level. The resolved level is reported on stderr and written to the JSON output as `analysisLevel`.
+
+| Level | Resolved | What is accurate | What is understated |
+|-------|----------|------------------|---------------------|
+| `SyntaxOnly` | No Unity DLLs | CodeHealth, MI, cyclomatic/cognitive complexity, syntactic smells | Boxing, params allocations, CBO, DIT, inheritance across engine types |
+| `CoreEngine` | UnityEngine core + framework | + types referencing `UnityEngine` core | Editor/module types, package assemblies |
+| `FullEngine` | + engine/editor modules | + editor and module types | Compiled package assemblies (`Library/ScriptAssemblies`) |
+| `Complete` | + package assemblies | full semantic resolution | — |
+
+Pin the level with `--level <syntax|core|full|complete>` (supported by the main command, `statusline`, and `badge`). The pin caps the auto-resolved level: a higher resolved level is intentionally lowered for deterministic output, and if the requested level cannot be reached (for example `--level complete` without resolvable DLLs) the command fails with a non-zero exit code instead of silently degrading.
+
+In the status line, a marker (`[syntax]` / `[core]` / `[full]`) is appended when the level is below `Complete`. See [docs/metrics.md](./docs/metrics.md#バリデーション-検証) for measured differences between `Complete` and `SyntaxOnly`.
 
 ## Configuration
 
