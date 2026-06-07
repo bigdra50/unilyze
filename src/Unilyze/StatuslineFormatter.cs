@@ -26,8 +26,13 @@ internal static class StatuslineFormatter
             t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning) ?? 0);
         var criticals = metrics.Sum(t =>
             t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Critical) ?? 0);
-        var avgMi = Math.Round(
-            metrics.Average(t => t.AverageMaintainabilityIndex ?? 0.0), 1);
+        // MI is undefined for method-less types (records, markers) — exclude them
+        // from the denominator instead of counting them as 0.
+        var miValues = metrics
+            .Where(t => t.AverageMaintainabilityIndex is not null)
+            .Select(t => t.AverageMaintainabilityIndex!.Value)
+            .ToList();
+        var avgMi = miValues.Count > 0 ? Math.Round(miValues.Average(), 1) : 0.0;
         var boxing = metrics.Sum(t => t.BoxingCount ?? 0);
         var cyclicDeps = result.CyclicDependencies?.Count ?? 0;
 

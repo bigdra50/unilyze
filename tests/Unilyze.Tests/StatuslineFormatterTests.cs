@@ -47,6 +47,37 @@ public sealed class StatuslineFormatterTests
     }
 
     [Fact]
+    public void ComputeSummary_MethodlessTypes_ExcludedFromMiAverage()
+    {
+        var metrics = new List<TypeMetrics>
+        {
+            new("TypeA", "Ns", "Asm", 100, 5, 2, 3.0, 5, 3.0, 5, 0, 8.0, [],
+                AverageMaintainabilityIndex: 60.0),
+            // Method-less record: MI is undefined (null) and must not drag the average down
+            new("RecordB", "Ns", "Asm", 10, 0, 0, 0.0, 0, 0.0, 0, 0, 10.0, [],
+                AverageMaintainabilityIndex: null),
+        };
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], metrics);
+        var summary = StatuslineFormatter.ComputeSummary(result);
+
+        Assert.Equal(60.0, summary.AverageMaintainabilityIndex);
+    }
+
+    [Fact]
+    public void ComputeSummary_AllTypesMethodless_MiAverageIsZero()
+    {
+        var metrics = new List<TypeMetrics>
+        {
+            new("RecordA", "Ns", "Asm", 10, 0, 0, 0.0, 0, 0.0, 0, 0, 10.0, [],
+                AverageMaintainabilityIndex: null),
+        };
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], metrics);
+        var summary = StatuslineFormatter.ComputeSummary(result);
+
+        Assert.Equal(0.0, summary.AverageMaintainabilityIndex);
+    }
+
+    [Fact]
     public void Format_HighHealth_ContainsAllSections()
     {
         var summary = new StatuslineFormatter.Summary(9.4, 8.5, 87, 5, 100, 75.0, 10, 0);

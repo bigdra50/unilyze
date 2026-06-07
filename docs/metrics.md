@@ -305,7 +305,7 @@ SyntaxOnly では SemanticModel 依存の検出（Boxing / Params / DIT / CBO）
 | 指標 | Pearson 相関 | 平均絶対差 | 備考 |
 |------|-------------|-----------|------|
 | CycCC | 0.994 | 1.7 | 型単位合計で比較 |
-| MI | 0.870 | 5.4 | 公式は型集約、unilyze はメソッド平均（メソッド無し 43 型は unilyze 非対象） |
+| MI | 0.870 | 5.4 | 公式は型集約、unilyze はメソッド平均（メソッド無し 43 型は unilyze 非対象。statusline / badge の MI 平均もメソッドを持つ型のみを分母とする） |
 | 結合度 | 0.817 (順位) | — | 公式 ClassCoupling 平均 14.0 vs unilyze CBO 3.6（SyntaxOnly では過小） |
 | DIT | — | — | 公式は object 継承を 1 と数える規約差で全件オフセット |
 
