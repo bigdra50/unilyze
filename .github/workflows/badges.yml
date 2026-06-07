@@ -28,12 +28,12 @@ jobs:
         run: dotnet restore src/Unilyze/Unilyze.csproj
 
       # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net9.0;net10.0)
-      - name: Generate badge JSON (self-analysis)
+      - name: Generate badge SVGs (self-analysis)
         run: |
           mkdir -p /tmp/badge-data
           for metric in codehealth mi smells; do
             dotnet run --project src/Unilyze -c Release --framework net10.0 -- \
-              badge -p src/Unilyze --metric "$metric" -o "/tmp/badge-data/$metric.json"
+              badge -p src/Unilyze --metric "$metric" --format svg -o "/tmp/badge-data/$metric.svg"
           done
 
       - name: Push to badges branch

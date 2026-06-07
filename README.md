@@ -1,7 +1,7 @@
 # unilyze
 
 [![CI](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml/badge.svg)](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml)
-[![Code Health](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbigdra50%2Funilyze%2Fbadges%2Fcodehealth.json)](./docs/metrics.md)
+[![Code Health](https://raw.githubusercontent.com/bigdra50/unilyze/badges/codehealth.svg)](./docs/metrics.md)
 [![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
 
 A CLI tool for static analysis and visualization of type dependencies and code quality in Unity projects.
@@ -119,7 +119,7 @@ The shields.io endpoint approach does not work in private repositories: GitHub's
 
 In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are stable across analysis levels, while smell counts are syntax-level (semantic smells such as boxing are not included). See [docs/metrics.md](./docs/metrics.md) for validation data.
 
-To publish badges from GitHub Actions, generate the JSON on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
+To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
 
 ```yaml
 # .github/workflows/badges.yml
@@ -140,7 +140,7 @@ jobs:
       - run: dotnet tool install --global Unilyze
       - run: |
           mkdir -p /tmp/badge-data
-          unilyze badge -p . -o /tmp/badge-data/codehealth.json
+          unilyze badge -p . --format svg -o /tmp/badge-data/codehealth.svg
       - run: |
           cd /tmp/badge-data
           git init -q -b badges
@@ -156,8 +156,10 @@ jobs:
 Then reference it from your README:
 
 ```markdown
-![Code Health](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.json)
+![Code Health](https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.svg)
 ```
+
+Prefer shields.io styling options? Generate endpoint JSON instead (the default format) and embed `https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.json`.
 
 ## Configuration
 
