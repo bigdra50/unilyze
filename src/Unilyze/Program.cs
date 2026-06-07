@@ -404,7 +404,7 @@ static int RunDiff(string[] args)
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 2)
     {
-        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open]");
+        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression]");
         return 1;
     }
 
