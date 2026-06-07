@@ -66,7 +66,7 @@ CH:9.8/5.9 MI:52 111smells 🔴1 📦66
 | Item | Description |
 |------|-------------|
 | `CH:avg/min` | Average and minimum Code Health (1.0-10.0) |
-| `MI:n` | Average Maintainability Index (green >=80, yellow >=60, red <60) |
+| `MI:n` | Average Maintainability Index over method-bearing types (green >=80, yellow >=60, red <60) |
 | `Nsmells` | Warning-level code smells |
 | `🔴N` | Critical-level code smells (hidden if 0) |
 | `📦N` | Boxing allocations (hidden if 0) |
@@ -103,7 +103,7 @@ unilyze badge -p ~/MyUnityProject --metric smells  # code smell count
 | Metric | Label | Message | Color |
 |--------|-------|---------|-------|
 | `codehealth` | `code health` | `avg / min` (e.g. `9.2 / 6.1`) | by min: green >=8.0, yellow >=5.0, red below |
-| `mi` | `maintainability` | average MI | green >=80, yellow >=60, red below |
+| `mi` | `maintainability` | average MI (method-bearing types) | green >=80, yellow >=60, red below |
 | `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
 
 In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are stable across analysis levels, while smell counts are syntax-level (semantic smells such as boxing are not included). See [docs/metrics.md](./docs/metrics.md) for validation data.
