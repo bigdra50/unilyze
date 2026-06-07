@@ -171,6 +171,26 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Level_Syntax_CapsBelowCsprojResolvedLevel()
+    {
+        // A .csproj with a resolvable <Reference> auto-elevates the analysis to
+        // CoreEngine, so this is the decisive cap-down case: the same project
+        // pinned to syntax must stay SyntaxOnly instead of being re-elevated.
+        WriteSimpleProject();
+        WriteCsprojWithValidReference();
+
+        var (unpinnedExit, unpinnedStdout, _) = Run("-p", _tempDir, "-f", "json");
+        Assert.Equal(0, unpinnedExit);
+        var unpinnedRoot = JsonDocument.Parse(unpinnedStdout).RootElement;
+        Assert.Equal("CoreEngine", unpinnedRoot.GetProperty("analysisLevel").GetString());
+
+        var (pinnedExit, pinnedStdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "syntax");
+        Assert.Equal(0, pinnedExit);
+        var pinnedRoot = JsonDocument.Parse(pinnedStdout).RootElement;
+        Assert.Equal("SyntaxOnly", pinnedRoot.GetProperty("analysisLevel").GetString());
+    }
+
+    [Fact]
     public void Level_Complete_OnNonUnityProject_ExitsNonZero()
     {
         // A bare directory of .cs files can only resolve to SyntaxOnly, so a Complete pin must fail.
@@ -423,6 +443,23 @@ public sealed class CliE2eTests : IDisposable
             {
                 public string Greet(string name) => $"Hello, {name}!";
             }
+            """);
+    }
+
+    private void WriteCsprojWithValidReference()
+    {
+        // A <Reference> with an existing HintPath makes CsprojParser contribute
+        // reference paths, which auto-elevates SyntaxOnly to CoreEngine.
+        var dllPath = typeof(object).Assembly.Location;
+        var csprojFile = Path.Combine(_tempDir, "Sample.csproj");
+        File.WriteAllText(csprojFile, $"""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <ItemGroup>
+                <Reference Include="CoreLib">
+                  <HintPath>{dllPath}</HintPath>
+                </Reference>
+              </ItemGroup>
+            </Project>
             """);
     }
 }
