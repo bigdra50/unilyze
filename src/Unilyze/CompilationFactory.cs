@@ -12,8 +12,15 @@ public static class CompilationFactory
     public static CompilationResult Create(
         ResolvedDlls resolved,
         IReadOnlyList<SyntaxTree> syntaxTrees,
-        CsprojInfo? csprojInfo = null)
+        CsprojInfo? csprojInfo = null,
+        AnalysisLevel maxLevel = AnalysisLevel.Complete)
     {
+        // A SyntaxOnly pin must not build a semantic model at all: the csproj
+        // merge below would otherwise re-elevate SyntaxOnly to CoreEngine and
+        // silently exceed the requested cap (issue 17).
+        if (maxLevel == AnalysisLevel.SyntaxOnly)
+            return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+
         resolved = MergeWithCsprojReferences(resolved, csprojInfo);
 
         if (resolved.Level == AnalysisLevel.SyntaxOnly || resolved.Paths.Count == 0)

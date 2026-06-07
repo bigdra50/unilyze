@@ -37,7 +37,7 @@ internal static class AnalysisPipeline
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
 
         var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols, excludeDirectories);
-        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo);
+        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap);
         var analysisLevel = compilationResult.Level.ToString();
 
         // The level is always reported on stderr (issue 16: previously only when != SyntaxOnly).

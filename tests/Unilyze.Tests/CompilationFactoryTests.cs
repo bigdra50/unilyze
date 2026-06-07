@@ -56,6 +56,21 @@ public class CompilationFactoryTests
     }
 
     [Fact]
+    public void SyntaxOnlyCap_SkipsCsprojElevation()
+    {
+        // A SyntaxOnly pin must win over the csproj merge: without the cap this
+        // exact input re-elevates to CoreEngine (see MergesCsprojReferencePaths).
+        var resolved = new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+        var csprojInfo = new CsprojInfo([ValidDllPath], [], [], null);
+
+        var result = CompilationFactory.Create(
+            resolved, SingleTree, csprojInfo, maxLevel: AnalysisLevel.SyntaxOnly);
+
+        Assert.Null(result.Compilation);
+        Assert.Equal(AnalysisLevel.SyntaxOnly, result.Level);
+    }
+
+    [Fact]
     public void SyntaxOnly_WhenAllReferencesFail()
     {
         var resolved = new ResolvedDlls(AnalysisLevel.CoreEngine,
