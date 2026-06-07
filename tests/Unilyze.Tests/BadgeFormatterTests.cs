@@ -138,4 +138,18 @@ public sealed class BadgeFormatterTests
         Assert.True(result);
         Assert.Equal(BadgeMetric.CodeHealth, metric);
     }
+
+    [Theory]
+    [InlineData(null, true, BadgeFormat.Json)]
+    [InlineData("", true, BadgeFormat.Json)]
+    [InlineData("json", true, BadgeFormat.Json)]
+    [InlineData("SVG", true, BadgeFormat.Svg)]
+    [InlineData("bogus", false, BadgeFormat.Json)]
+    internal void TryParseFormat_ParsesKnownValues(string? value, bool expectedResult, BadgeFormat expectedFormat)
+    {
+        var result = BadgeFormatter.TryParseFormat(value, out var format);
+
+        Assert.Equal(expectedResult, result);
+        Assert.Equal(expectedFormat, format);
+    }
 }
