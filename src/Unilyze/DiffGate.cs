@@ -35,5 +35,6 @@ internal static class DiffGate
     static DiffGateResult Regression(string detail) =>
         new(HasRegression: true, Reason: $"regression: {detail}");
 
-    static string Fmt(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+    // Matches BadgeGate.Fmt so both gates emit identical numeric precision in reasons.
+    static string Fmt(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 }
