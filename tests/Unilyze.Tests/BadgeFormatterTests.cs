@@ -133,7 +133,7 @@ public sealed class BadgeFormatterTests
     [Fact]
     public void Build_PopulatesAnalysisLevel_FromSummary()
     {
-        var summary = new StatuslineFormatter.Summary(9.2, 8.5, 0, 0, 10, 80, 0, 0, "SyntaxOnly");
+        var summary = new StatuslineFormatter.Summary(9.2, 8.5, 0, 0, 10, 80, 0, 0, AnalysisLevel: "SyntaxOnly");
         var badge = BadgeFormatter.Build(BadgeMetric.CodeHealth, summary);
 
         Assert.Equal("SyntaxOnly", badge.AnalysisLevel);
@@ -142,7 +142,7 @@ public sealed class BadgeFormatterTests
     [Fact]
     public void Build_ZeroTypes_PopulatesAnalysisLevel()
     {
-        var summary = new StatuslineFormatter.Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, "CoreEngine");
+        var summary = new StatuslineFormatter.Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, AnalysisLevel: "CoreEngine");
         var badge = BadgeFormatter.Build(BadgeMetric.CodeHealth, summary);
 
         Assert.Equal("n/a", badge.Message);
@@ -152,7 +152,7 @@ public sealed class BadgeFormatterTests
     [Fact]
     public void Serialize_IncludesAnalysisLevelField_WhenSet()
     {
-        var summary = new StatuslineFormatter.Summary(9.2, 8.5, 0, 0, 10, 80, 0, 0, "FullEngine");
+        var summary = new StatuslineFormatter.Summary(9.2, 8.5, 0, 0, 10, 80, 0, 0, AnalysisLevel: "FullEngine");
         var json = BadgeFormatter.Serialize(BadgeFormatter.Build(BadgeMetric.CodeHealth, summary));
 
         var root = JsonDocument.Parse(json).RootElement;

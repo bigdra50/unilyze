@@ -422,7 +422,7 @@ static int RunDiff(string[] args)
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 2)
     {
-        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open]");
+        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression]");
         return 1;
     }
 
@@ -430,6 +430,7 @@ static int RunDiff(string[] args)
     var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
     var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
     var noOpen = opts.ContainsKey("--no-open");
+    var failOnRegression = opts.ContainsKey("--fail-on-regression");
 
     OutputFormat format;
     try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
@@ -472,6 +473,20 @@ static int RunDiff(string[] args)
 
         PrintDiffSummary(diff);
 
+        // Evaluate the regression gate once; output stays unchanged on pass.
+        var gateExit = 0;
+        if (failOnRegression)
+        {
+            var beforeSummary = StatuslineFormatter.ComputeSummary(before);
+            var afterSummary = StatuslineFormatter.ComputeSummary(after);
+            var gate = DiffGate.EvaluateRegression(beforeSummary, afterSummary);
+            if (gate.HasRegression)
+            {
+                Console.Error.WriteLine(gate.Reason);
+                gateExit = 2;
+            }
+        }
+
         if (format == OutputFormat.Html)
         {
             var htmlPath = output ?? Path.Combine(
@@ -485,10 +500,11 @@ static int RunDiff(string[] args)
             if (output == null && !noOpen)
                 TryOpenInBrowser(htmlPath);
 
-            return 0;
+            return gateExit;
         }
 
-        return WriteOutput(diffJson, output);
+        var writeResult = WriteOutput(diffJson, output);
+        return writeResult != 0 ? writeResult : gateExit;
     }
     catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
     {
@@ -533,12 +549,19 @@ static int PrintDiffUsage()
       unilyze diff <before.json> <after.json> -o out.json       Save diff JSON to file
       unilyze diff <before.json> <after.json> -o out.html       Render diff as interactive HTML viewer
       unilyze diff <before.json> <after.json> -f html           Render HTML to temp dir and open in browser
+      unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
 
     Options:
-      -o, --output    Output file path (format inferred from extension: .html or .json)
-      -f, --format    Output format: json, html (default: json when no -o specified)
-          --no-open   When generating HTML, do not auto-open in browser
-      -h, --help      Show this help
+      -o, --output             Output file path (format inferred from extension: .html or .json)
+      -f, --format             Output format: json, html (default: json when no -o specified)
+          --no-open            When generating HTML, do not auto-open in browser
+          --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
+      -h, --help               Show this help
+
+    Exit codes:
+      0  Success / no regression
+      1  Usage error
+      2  Regression detected (with --fail-on-regression)
     """);
     return 0;
 }

@@ -9,7 +9,7 @@ internal static class ProgramHelpers
         {
             if (args[i].StartsWith('-'))
             {
-                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open")
+                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--fail-on-regression")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {
@@ -19,6 +19,25 @@ internal static class ProgramHelpers
             }
         }
         return opts;
+    }
+
+    /// <summary>
+    /// True when <paramref name="flag"/> appears in <paramref name="args"/> but
+    /// has no value token after it (last position, or immediately followed by
+    /// another option). ParseOptions silently drops such flags, which would turn
+    /// a value-taking gate flag into a no-op (false green in CI). Callers use
+    /// this to surface a usage error instead.
+    /// </summary>
+    public static bool HasFlagWithoutValue(string[] args, string flag)
+    {
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] != flag)
+                continue;
+            if (i + 1 >= args.Length || args[i + 1].StartsWith('-'))
+                return true;
+        }
+        return false;
     }
 
     public static OutputFormat ResolveFormat(string? formatStr, string? output)

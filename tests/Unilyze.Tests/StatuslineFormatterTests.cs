@@ -139,7 +139,7 @@ public sealed class StatuslineFormatterTests
     [InlineData("FullEngine", "[full]")]
     public void Format_BelowComplete_AppendsLevelMarker(string level, string expectedMarker)
     {
-        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, level);
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, AnalysisLevel: level);
         var output = StatuslineFormatter.Format(summary);
 
         Assert.Contains(expectedMarker, output);
@@ -148,7 +148,7 @@ public sealed class StatuslineFormatterTests
     [Fact]
     public void Format_CompleteLevel_NoMarker()
     {
-        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, "Complete");
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, AnalysisLevel: "Complete");
         var output = StatuslineFormatter.Format(summary);
 
         Assert.DoesNotContain("[syntax]", output);
@@ -159,7 +159,7 @@ public sealed class StatuslineFormatterTests
     [Fact]
     public void Format_NullLevel_NoMarker()
     {
-        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, null);
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, AnalysisLevel: null);
         var output = StatuslineFormatter.Format(summary);
 
         // The output contains ANSI color escapes (which include '['), so assert against the

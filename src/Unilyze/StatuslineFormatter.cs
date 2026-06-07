@@ -13,13 +13,14 @@ internal static class StatuslineFormatter
         double AverageMaintainabilityIndex,
         int BoxingCount,
         int CyclicDependencyCount,
+        int MiBearingCount = 0,
         string? AnalysisLevel = null);
 
     internal static Summary ComputeSummary(AnalysisResult result)
     {
         var metrics = result.TypeMetrics ?? [];
         if (metrics.Count == 0)
-            return new Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, result.AnalysisLevel);
+            return new Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, 0, result.AnalysisLevel);
 
         var avg = Math.Round(metrics.Average(t => t.CodeHealth), 1);
         var min = Math.Round(metrics.Min(t => t.CodeHealth), 1);
@@ -37,7 +38,7 @@ internal static class StatuslineFormatter
         var boxing = metrics.Sum(t => t.BoxingCount ?? 0);
         var cyclicDeps = result.CyclicDependencies?.Count ?? 0;
 
-        return new Summary(avg, min, warnings, criticals, metrics.Count, avgMi, boxing, cyclicDeps, result.AnalysisLevel);
+        return new Summary(avg, min, warnings, criticals, metrics.Count, avgMi, boxing, cyclicDeps, miValues.Count, result.AnalysisLevel);
     }
 
     internal static string Format(Summary s)

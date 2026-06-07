@@ -2,6 +2,9 @@ namespace Unilyze;
 
 internal static class BadgeRunner
 {
+    const int ExitUsageError = 1;
+    const int ExitGateFailed = 2;
+
     public static int Run(string[] args)
     {
         var opts = ProgramHelpers.ParseOptions(args);
@@ -13,6 +16,8 @@ internal static class BadgeRunner
         var metricStr = opts.GetValueOrDefault("--metric");
         var formatStr = opts.GetValueOrDefault("--format");
         var levelStr = opts.GetValueOrDefault("--level");
+        var failUnder = opts.GetValueOrDefault("--fail-under");
+        var failOver = opts.GetValueOrDefault("--fail-over");
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
@@ -37,6 +42,20 @@ internal static class BadgeRunner
             requestedLevel = lvl;
         }
 
+        // ParseOptions drops a value-taking flag that has no value token, which
+        // would silently skip the gate (false green in CI). Reject it explicitly.
+        foreach (var gateFlag in new[] { "--fail-under", "--fail-over" })
+        {
+            if (ProgramHelpers.HasFlagWithoutValue(args, gateFlag))
+                return Fail($"{gateFlag} requires a value.", ExitUsageError);
+        }
+
+        // Fail fast on incompatible gate flags before running analysis.
+        var optionCheck = BadgeGate.ValidateOptions(metric, failUnder, failOver);
+        if (optionCheck.Outcome == GateOutcome.UsageError)
+            return Fail(optionCheck.Message, ExitUsageError);
+
+
         try
         {
             var fullPath = ProgramHelpers.ResolveProjectRoot(path);
@@ -46,21 +65,37 @@ internal static class BadgeRunner
             var badge = BadgeFormatter.Build(metric, summary);
             var content = format == BadgeFormat.Svg ? BadgeSvgRenderer.Render(badge) : BadgeFormatter.Serialize(badge);
 
+            // Emit the badge unchanged (backward compatible) before evaluating the gate.
             if (output != null)
             {
                 File.WriteAllText(output, content);
                 Console.Error.WriteLine($"Written to {output}");
-                return 0;
+            }
+            else
+            {
+                Console.Write(content);
             }
 
-            Console.Write(content);
-            return 0;
+            var gate = BadgeGate.Evaluate(metric, summary, failUnder, failOver);
+            return gate.Outcome switch
+            {
+                GateOutcome.UsageError => Fail(gate.Message, ExitUsageError),
+                GateOutcome.Fail => Fail(gate.Message, ExitGateFailed),
+                _ => 0
+            };
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or DirectoryNotFoundException)
         {
             Console.Error.WriteLine(ex.Message);
             return 1;
         }
+    }
+
+    static int Fail(string? message, int exitCode)
+    {
+        if (!string.IsNullOrEmpty(message))
+            Console.Error.WriteLine(message);
+        return exitCode;
     }
 
     static int PrintUsage()
@@ -76,6 +111,9 @@ internal static class BadgeRunner
               unilyze badge -p <path> --metric smells          Code smells badge
               unilyze badge -p <path> -o badge.json            Write JSON to file
               unilyze badge -p <path> --format svg -o codehealth.svg   SVG badge (works in private repos via relative path)
+              unilyze badge --metric codehealth --fail-under 7  Exit 2 if min CodeHealth < 7 (CI gate)
+              unilyze badge --metric mi --fail-under 70         Exit 2 if average MI < 70
+              unilyze badge --metric smells --fail-over 5       Exit 2 if warnings > 5 (or any critical)
 
             Options:
               -p, --path     Project root (default: .)
@@ -83,7 +121,16 @@ internal static class BadgeRunner
               --metric       Badge metric: codehealth, mi, smells (default: codehealth)
               --format       Output format: json, svg (default: json)
               --level        Pin analysis level: syntax, core, full, complete
+              --fail-under   Quality gate for codehealth/mi: fail if value below threshold
+                             (codehealth: min CodeHealth, mi: average MI)
+              --fail-over    Quality gate for smells: fail if warning count above count
+                             (any critical smell always fails)
               -h, --help     Show this help
+
+            Exit codes:
+              0  Success / gate passed
+              1  Usage error (e.g. --fail-under with --metric smells)
+              2  Quality gate failed
 
             Output format (shields.io endpoint JSON or flat SVG):
               { "schemaVersion": 1, "label": "...", "message": "...", "color": "...", "analysisLevel": "..." }

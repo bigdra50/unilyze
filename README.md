@@ -119,6 +119,27 @@ The shields.io endpoint approach does not work in private repositories: GitHub's
 | `mi` | `maintainability` | average MI (method-bearing types) | green >=80, yellow >=60, red below |
 | `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
 
+#### Quality gates
+
+`unilyze badge` can act as a CI gate. Without these flags the output is unchanged and the exit code stays `0`.
+
+```bash
+unilyze badge --metric codehealth --fail-under 7   # fail if min CodeHealth < 7
+unilyze badge --metric mi --fail-under 70          # fail if average MI < 70
+unilyze badge --metric smells --fail-over 5        # fail if warnings > 5 (or any critical)
+```
+
+| Flag | Valid metrics | Fails when |
+|------|---------------|-----------|
+| `--fail-under <value>` | `codehealth`, `mi` | min CodeHealth (codehealth) or average MI (mi) is strictly below `value` |
+| `--fail-over <count>` | `smells` | warning count is strictly above `count`, or any critical smell exists |
+
+Thresholds are inclusive: values exactly at the threshold pass. Only a value strictly below `--fail-under`, or a warning count strictly above `--fail-over`, fails the gate. Mismatched combinations (e.g. `--fail-under` with `--metric smells`) are a usage error.
+
+The gate is fail-closed: if the metric is unavailable (0 types analyzed, or no method-bearing types for `mi`), the gate exits `2` with `gate failed: metric unavailable (...)` rather than passing. This catches a mistyped `-p` path that would otherwise produce a false green.
+
+Exit codes: `0` success / gate passed, `1` usage error, `2` quality gate failed.
+
 In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are approximately stable across analysis levels (averages match in validation; min values can shift where `#if UNITY_EDITOR` code is excluded at SyntaxOnly). Smell counts are level-dependent: at SyntaxOnly only the syntax-level subset is reported (semantic smells such as boxing are not included), so smell badges are not comparable across levels. See [docs/metrics.md](./docs/metrics.md) for validation data.
 
 To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
@@ -309,6 +330,20 @@ Each type row gets:
 - A "Changes vs Baseline" / "Methods Changed" / "Smells Δ" section in the type detail panel
 
 The viewer otherwise behaves like a normal `unilyze` HTML report (dependency graph, hotspots, cycles, assembly coupling).
+
+### Regression gate
+
+`--fail-on-regression` turns `diff` into a CI gate. The output (JSON, HTML, or stderr summary) is unchanged; only the exit code reflects the gate.
+
+```bash
+unilyze diff before.json after.json --fail-on-regression
+```
+
+A regression is any of: average or min CodeHealth dropped, warning smell count increased, or critical smell count increased (after vs before). On regression, the reason is printed to stderr on one line (e.g. `regression: min CodeHealth 7.2 -> 6.8`).
+
+The gate is evaluated on these **project-wide aggregates**, which is intentionally distinct from the per-type `Degraded`/`Improved` counts shown in the diff summary. A single type can degrade while the aggregates stay flat (e.g. another type improves enough to offset it), so it is possible to see `Degraded: 1` in the summary yet get exit `0`. If you want to gate on any individual type degrading rather than on aggregates, judge on the per-type `Degraded` count from the summary instead.
+
+Exit codes: `0` no regression, `1` usage error, `2` regression detected.
 
 ## Agent Workflow
 
