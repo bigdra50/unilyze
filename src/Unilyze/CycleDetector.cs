@@ -35,7 +35,7 @@ public static class CycleDetector
             adjacency.TryAdd(dep.ToType, []);
         }
 
-        return TarjanSCC(adjacency)
+        return new TarjanScc(adjacency).FindCycles()
             .Select(scc => new CyclicDependency(scc, CycleLevel.Type))
             .ToList();
     }
@@ -54,71 +54,85 @@ public static class CycleDetector
             adjacency[asm.Name] = refs;
         }
 
-        return TarjanSCC(adjacency)
+        return new TarjanScc(adjacency).FindCycles()
             .Select(scc => new CyclicDependency(scc, CycleLevel.Assembly))
             .ToList();
     }
 
     internal static IReadOnlyList<IReadOnlyList<string>> TarjanSCC(
-        Dictionary<string, List<string>> adjacency)
-    {
-        var index = 0;
-        var stack = new Stack<string>();
-        var onStack = new HashSet<string>();
-        var indices = new Dictionary<string, int>();
-        var lowlinks = new Dictionary<string, int>();
-        var result = new List<IReadOnlyList<string>>();
+        Dictionary<string, List<string>> adjacency) => new TarjanScc(adjacency).FindCycles();
+}
 
+// Tarjan's strongly-connected-components algorithm (recursive lowlink form).
+sealed class TarjanScc(Dictionary<string, List<string>> adjacency)
+{
+    readonly Stack<string> _stack = new();
+    readonly HashSet<string> _onStack = [];
+    readonly Dictionary<string, int> _indices = [];
+    readonly Dictionary<string, int> _lowlinks = [];
+    readonly List<IReadOnlyList<string>> _cycles = [];
+    int _index;
+
+    public IReadOnlyList<IReadOnlyList<string>> FindCycles()
+    {
         foreach (var node in adjacency.Keys)
         {
-            if (!indices.ContainsKey(node))
+            if (!_indices.ContainsKey(node))
                 StrongConnect(node);
         }
 
-        return result;
+        return _cycles;
+    }
 
-        void StrongConnect(string v)
+    void StrongConnect(string v)
+    {
+        _indices[v] = _index;
+        _lowlinks[v] = _index;
+        _index++;
+        _stack.Push(v);
+        _onStack.Add(v);
+
+        VisitNeighbors(v);
+
+        if (_lowlinks[v] == _indices[v])
+            CollectCycle(v);
+    }
+
+    void VisitNeighbors(string v)
+    {
+        if (!adjacency.TryGetValue(v, out var neighbors))
+            return;
+
+        foreach (var w in neighbors)
         {
-            indices[v] = index;
-            lowlinks[v] = index;
-            index++;
-            stack.Push(v);
-            onStack.Add(v);
-
-            if (adjacency.TryGetValue(v, out var neighbors))
+            if (_indices.ContainsKey(w))
             {
-                foreach (var w in neighbors)
-                {
-                    if (!indices.ContainsKey(w))
-                    {
-                        if (adjacency.ContainsKey(w))
-                        {
-                            StrongConnect(w);
-                            lowlinks[v] = Math.Min(lowlinks[v], lowlinks[w]);
-                        }
-                    }
-                    else if (onStack.Contains(w))
-                    {
-                        lowlinks[v] = Math.Min(lowlinks[v], indices[w]);
-                    }
-                }
+                if (_onStack.Contains(w))
+                    _lowlinks[v] = Math.Min(_lowlinks[v], _indices[w]);
+                continue;
             }
 
-            if (lowlinks[v] == indices[v])
-            {
-                var scc = new List<string>();
-                string w;
-                do
-                {
-                    w = stack.Pop();
-                    onStack.Remove(w);
-                    scc.Add(w);
-                } while (w != v);
+            if (!adjacency.ContainsKey(w))
+                continue;
 
-                // Only keep SCCs with more than 1 node (actual cycles)
-                if (scc.Count > 1)
-                    result.Add(scc);
-            }
+            StrongConnect(w);
+            _lowlinks[v] = Math.Min(_lowlinks[v], _lowlinks[w]);
         }
+    }
+
+    // Pops the SCC rooted at v; only SCCs with more than one node are actual cycles.
+    void CollectCycle(string v)
+    {
+        var scc = new List<string>();
+        string w;
+        do
+        {
+            w = _stack.Pop();
+            _onStack.Remove(w);
+            scc.Add(w);
+        } while (w != v);
+
+        if (scc.Count > 1)
+            _cycles.Add(scc);
     }
 }
