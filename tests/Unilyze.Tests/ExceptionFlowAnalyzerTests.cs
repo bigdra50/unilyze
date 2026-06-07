@@ -108,6 +108,39 @@ public class ExceptionFlowAnalyzerTests
         Assert.False(clause.HasRethrow);
     }
 
+    [Fact]
+    public void CatchAll_WithWhenTypeFilter_NotDetected()
+    {
+        var code = """
+            using System;
+            using System.IO;
+            class C {
+                void Foo() {
+                    try { }
+                    catch (Exception ex) when (ex is IOException) { }
+                }
+            }
+            """;
+        var result = Analyze(code);
+        Assert.Empty(result.CatchAllClauses);
+    }
+
+    [Fact]
+    public void CatchAll_WithWhenBooleanFilter_NotDetected()
+    {
+        var code = """
+            using System;
+            class C {
+                void Foo() {
+                    try { }
+                    catch (Exception ex) when (ex.Message.Length > 0) { }
+                }
+            }
+            """;
+        var result = Analyze(code);
+        Assert.Empty(result.CatchAllClauses);
+    }
+
     // --- MissingInnerException tests ---
 
     [Fact]

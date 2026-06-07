@@ -248,7 +248,7 @@ static int PrintMetrics()
       ParamsArrayAllocation  Implicit array allocation for params parameter
 
     Exception flow analysis (per type):
-      CatchAllException    catch (Exception) without rethrow
+      CatchAllException    catch (Exception) without rethrow or when filter
       MissingInnerException  throw new X() in catch without inner exception
       ThrowingSystemException  throw new Exception() directly (use specific exception)
 
