@@ -35,7 +35,7 @@ internal static class SemanticEnricher
             var uniqueTrees = typeDeclLookup.Values.Select(td => td.SyntaxTree).Distinct().ToList();
             Parallel.ForEach(uniqueTrees, tree =>
             {
-                modelCache.GetOrAdd(tree, t => compilationResult.Compilation.GetSemanticModel(t));
+                modelCache.GetOrAdd(tree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
             });
         }
 
@@ -123,7 +123,7 @@ internal static class SemanticEnricher
         if (compilationResult.Compilation is not null)
         {
             var tree = typeDecl.SyntaxTree;
-            model = modelCache.GetOrAdd(tree, t => compilationResult.Compilation.GetSemanticModel(t));
+            model = modelCache.GetOrAdd(tree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
         }
 
         try
@@ -176,7 +176,7 @@ internal static class SemanticEnricher
         {
             SemanticModel? mdl = null;
             if (compilationResult.Compilation is not null)
-                mdl = modelCache.GetOrAdd(td.SyntaxTree, t => compilationResult.Compilation.GetSemanticModel(t));
+                mdl = modelCache.GetOrAdd(td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
 
             try
             {

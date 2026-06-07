@@ -35,7 +35,7 @@ internal static class BaseTypeResolver
                 continue;
             }
 
-            var model = modelCache.GetOrAdd(typeDecl.SyntaxTree, t => compilationResult.Compilation.GetSemanticModel(t));
+            var model = modelCache.GetOrAdd(typeDecl.SyntaxTree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
             resolved.Add(ResolveExplicitBaseList(type, typeDecl, model));
         }
 
