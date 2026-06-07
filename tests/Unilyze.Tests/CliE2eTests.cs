@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using System.Xml.Linq;
 
 namespace Unilyze.Tests;
 
@@ -251,6 +252,24 @@ public sealed class CliE2eTests : IDisposable
         var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--metric", "foo");
         Assert.Equal(1, exitCode);
         Assert.Contains("Unknown metric", stderr);
+    }
+
+    [Fact]
+    public void Badge_FormatSvg_OutputsSvg()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir, "--format", "svg");
+        Assert.Equal(0, exitCode);
+        Assert.StartsWith("<svg", stdout.TrimStart());
+        XDocument.Parse(stdout);
+    }
+
+    [Fact]
+    public void Badge_UnknownFormat_ExitsNonZero()
+    {
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--format", "bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown format", stderr);
     }
 
     [Fact]
