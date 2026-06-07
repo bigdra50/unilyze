@@ -98,6 +98,17 @@ fi
 unilyze badge -p ~/MyUnityProject                  # code health (default)
 unilyze badge -p ~/MyUnityProject --metric mi      # maintainability index
 unilyze badge -p ~/MyUnityProject --metric smells  # code smell count
+unilyze badge -p ~/MyUnityProject --format svg -o .github/badges/codehealth.svg
+```
+
+Use `--format svg` to emit a shields.io-style flat SVG badge instead of endpoint JSON. Commit the generated file and reference it from your README with a relative path.
+
+#### Private repositories
+
+The shields.io endpoint approach does not work in private repositories: GitHub's camo proxy and shields.io cannot fetch the raw JSON URL from an authenticated-only repo. Instead, generate the SVG with `unilyze badge --format svg`, commit it into the repository (for example under `.github/badges/`), and reference it from your README via a relative path. Authenticated viewers see the badge rendered inline without going through camo or an external fetch.
+
+```markdown
+![Code Health](.github/badges/codehealth.svg)
 ```
 
 | Metric | Label | Message | Color |
