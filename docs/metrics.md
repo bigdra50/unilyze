@@ -195,6 +195,8 @@ R = M 内から呼び出されるユニークな外部メソッド数
 
 NDepend の TypeRank に相当する、PageRank ベースの型重要度スコア。
 
+解決済みの DI 登録エッジ（VContainer / Zenject）も `TypeDependency` として依存グラフに含まれ、CBO（Ca/Ce）・循環検出・TypeRank にカウントされる。解析対象外の型へ向かう未解決エッジは除外される。
+
 ### アルゴリズム
 
 - 入力: DependencyBuilder の TypeDependency リスト → 隣接リスト
