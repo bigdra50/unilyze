@@ -51,60 +51,7 @@ internal static class TypeIdentity
             ? BuildFallbackQualifiedName(metrics.Namespace, metrics.TypeName)
             : metrics.QualifiedName;
 
-    public static string GetSimpleName(TypeNodeInfo type) => StripGenericArgs(type.Name);
-
-    public static string NormalizeTypeReference(string typeName)
-    {
-        if (string.IsNullOrWhiteSpace(typeName))
-            return "";
-
-        var normalized = typeName.Trim().TrimEnd('?');
-        if (normalized.StartsWith("global::", StringComparison.Ordinal))
-            normalized = normalized["global::".Length..];
-        if (normalized.EndsWith("[]", StringComparison.Ordinal))
-            normalized = normalized[..^2];
-        return normalized;
-    }
-
-    public static string StripGenericArgs(string typeName)
-    {
-        var normalized = NormalizeTypeReference(typeName);
-        var angleIndex = normalized.IndexOf('<');
-        return angleIndex >= 0 ? normalized[..angleIndex] : normalized;
-    }
-
-    public static int CountGenericArity(string typeName)
-    {
-        var normalized = NormalizeTypeReference(typeName);
-        var angleStart = normalized.IndexOf('<');
-        if (angleStart < 0)
-            return 0;
-
-        var angleEnd = normalized.LastIndexOf('>');
-        if (angleEnd <= angleStart + 1)
-            return 0;
-
-        var inner = normalized[(angleStart + 1)..angleEnd];
-        var depth = 0;
-        var count = 1;
-        foreach (var ch in inner)
-        {
-            switch (ch)
-            {
-                case '<':
-                    depth++;
-                    break;
-                case '>':
-                    depth--;
-                    break;
-                case ',' when depth == 0:
-                    count++;
-                    break;
-            }
-        }
-
-        return count;
-    }
+    public static string GetSimpleName(TypeNodeInfo type) => TypeNameFormat.StripGenericArgs(type.Name);
 
     public static IReadOnlyList<string> GetContainingQualifiedNamePrefixes(TypeNodeInfo type)
     {
@@ -172,8 +119,8 @@ internal static class TypeIdentity
 
     static string BuildFallbackTypeId(string assembly, string ns, string name)
     {
-        var simpleName = StripGenericArgs(name);
-        var arity = CountGenericArity(name);
+        var simpleName = TypeNameFormat.StripGenericArgs(name);
+        var arity = TypeNameFormat.CountGenericArity(name);
         var segment = arity > 0 ? $"{simpleName}`{arity}" : simpleName;
         return string.IsNullOrEmpty(ns)
             ? $"{assembly}::{segment}"
@@ -182,7 +129,7 @@ internal static class TypeIdentity
 
     static string BuildFallbackQualifiedName(string ns, string name)
     {
-        var simpleName = StripGenericArgs(name);
+        var simpleName = TypeNameFormat.StripGenericArgs(name);
         return string.IsNullOrEmpty(ns) ? simpleName : $"{ns}.{simpleName}";
     }
 }
