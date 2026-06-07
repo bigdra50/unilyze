@@ -13,6 +13,8 @@ if (args.Length >= 1 && args[0] == "schema")
     return PrintSchema();
 if (args.Length >= 1 && args[0] == "statusline")
     return StatuslineRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "badge")
+    return BadgeRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "config")
     return RunConfig(args[1..]);
 
@@ -143,6 +145,7 @@ Usage:
   unilyze -p <path> -f sarif -o report.sarif  Output SARIF for GitHub Code Scanning
   unilyze -i result.json -o graph.html     Generate HTML from existing JSON
   unilyze skills install --claude           Install skills for AI coding tools
+  unilyze badge -p <path> -o badge.json    Output shields.io endpoint badge JSON
 
 Options:
   -p, --path         Unity project root or Assets directory (default: .)
@@ -164,6 +167,7 @@ Configuration:
     { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }
 
 Subcommands:
+  badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds
   schema          Show JSON output field reference
