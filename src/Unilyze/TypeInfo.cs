@@ -297,51 +297,28 @@ public static class TypeAnalyzer
 
     static IReadOnlyList<TypeNodeInfo> MergePartialTypes(IReadOnlyList<TypeNodeInfo> types)
     {
-        var groups = types.GroupBy(TypeIdentity.GetTypeId);
-        var result = new List<TypeNodeInfo>();
+        return types
+            .GroupBy(TypeIdentity.GetTypeId)
+            .Select(group => group.ToList())
+            .Select(parts => parts.Count == 1 ? parts[0] : MergeTypeParts(parts))
+            .ToList();
+    }
 
-        foreach (var group in groups)
+    // Merges partial declarations of the same type; first occurrence wins for duplicates.
+    static TypeNodeInfo MergeTypeParts(List<TypeNodeInfo> parts)
+    {
+        var first = parts[0];
+        var baseType = parts.Select(p => p.BaseType).FirstOrDefault(b => b is not null);
+        return first with
         {
-            var parts = group.ToList();
-            if (parts.Count == 1)
-            {
-                result.Add(parts[0]);
-                continue;
-            }
-
-            var first = parts[0];
-            string? baseType = null;
-            var interfaces = new HashSet<string>();
-            var members = new List<MemberInfo>();
-            var ctorParams = new List<string>();
-            var attrNames = new HashSet<string>();
-            var attrs = new List<AttributeInfo>();
-            var constraintParams = new HashSet<string>();
-            var constraints = new List<GenericConstraintInfo>();
-            var totalLineCount = 0;
-            foreach (var p in parts)
-            {
-                baseType ??= p.BaseType;
-                foreach (var i in p.Interfaces) interfaces.Add(i);
-                members.AddRange(p.Members);
-                ctorParams.AddRange(p.ConstructorParams);
-                foreach (var a in p.Attributes) { if (attrNames.Add(a.Name)) attrs.Add(a); }
-                foreach (var c in p.GenericConstraints) { if (constraintParams.Add(c.TypeParameter)) constraints.Add(c); }
-                totalLineCount += p.LineCount;
-            }
-            result.Add(first with
-            {
-                LineCount = totalLineCount,
-                BaseType = baseType ?? first.BaseType,
-                Interfaces = interfaces.ToList(),
-                Members = members,
-                ConstructorParams = ctorParams,
-                Attributes = attrs,
-                GenericConstraints = constraints
-            });
-        }
-
-        return result;
+            LineCount = parts.Sum(p => p.LineCount),
+            BaseType = baseType ?? first.BaseType,
+            Interfaces = parts.SelectMany(p => p.Interfaces).Distinct().ToList(),
+            Members = parts.SelectMany(p => p.Members).ToList(),
+            ConstructorParams = parts.SelectMany(p => p.ConstructorParams).ToList(),
+            Attributes = parts.SelectMany(p => p.Attributes).DistinctBy(a => a.Name).ToList(),
+            GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList()
+        };
     }
 
     // --- Member extraction ---
