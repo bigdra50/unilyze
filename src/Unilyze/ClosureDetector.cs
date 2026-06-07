@@ -46,25 +46,23 @@ public static class ClosureDetector
             if (captured.Count > 0)
             {
                 var line = lambda.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                var description = lambda switch
-                {
-                    SimpleLambdaExpressionSyntax simple =>
-                        $"lambda ({simple.Parameter.Identifier.Text}) => ...",
-                    ParenthesizedLambdaExpressionSyntax paren =>
-                        $"lambda ({string.Join(", ", paren.ParameterList.Parameters.Select(p => p.Identifier.Text))}) => ...",
-                    AnonymousMethodExpressionSyntax => "anonymous method",
-                    _ => "lambda"
-                };
-                results.Add(new ClosureCapture(methodName, description, captured, line));
+                results.Add(new ClosureCapture(methodName, DescribeLambda(lambda), captured, line));
             }
         }
     }
 
-    static IReadOnlyList<string> GetCapturedVariablesSemantic(SyntaxNode lambda, SemanticModel model)
+    static string DescribeLambda(SyntaxNode lambda) => lambda switch
     {
-        var captured = new HashSet<string>(StringComparer.Ordinal);
+        SimpleLambdaExpressionSyntax simple =>
+            $"lambda ({simple.Parameter.Identifier.Text}) => ...",
+        ParenthesizedLambdaExpressionSyntax paren =>
+            $"lambda ({string.Join(", ", paren.ParameterList.Parameters.Select(p => p.Identifier.Text))}) => ...",
+        AnonymousMethodExpressionSyntax => "anonymous method",
+        _ => "lambda"
+    };
 
-        // Collect lambda's own parameter names
+    static HashSet<string> CollectLambdaParameters(SyntaxNode lambda)
+    {
         var lambdaParams = new HashSet<string>(StringComparer.Ordinal);
         switch (lambda)
         {
@@ -80,6 +78,13 @@ public static class ClosureDetector
                     lambdaParams.Add(p.Identifier.Text);
                 break;
         }
+        return lambdaParams;
+    }
+
+    static IReadOnlyList<string> GetCapturedVariablesSemantic(SyntaxNode lambda, SemanticModel model)
+    {
+        var captured = new HashSet<string>(StringComparer.Ordinal);
+        var lambdaParams = CollectLambdaParameters(lambda);
 
         foreach (var identifier in lambda.DescendantNodes().OfType<IdentifierNameSyntax>())
         {
@@ -87,85 +92,31 @@ public static class ClosureDetector
             if (lambdaParams.Contains(name))
                 continue;
 
-            var symbolInfo = model.GetSymbolInfo(identifier);
-            var symbol = symbolInfo.Symbol;
-            if (symbol is null)
-                continue;
-
-            switch (symbol)
-            {
-                case ILocalSymbol local:
-                    // Check if declared outside the lambda
-                    if (!lambda.Span.Contains(local.DeclaringSyntaxReferences
-                        .FirstOrDefault()?.Span ?? default))
-                    {
-                        captured.Add(name);
-                    }
-                    break;
-                case IParameterSymbol param:
-                    // Method parameter (declared outside lambda)
-                    if (!lambda.Span.Contains(param.DeclaringSyntaxReferences
-                        .FirstOrDefault()?.Span ?? default))
-                    {
-                        captured.Add(name);
-                    }
-                    break;
-                case IFieldSymbol or IPropertySymbol:
-                    // Instance member access implies 'this' capture
-                    if (!symbol.IsStatic)
-                    {
-                        captured.Add("this");
-                    }
-                    break;
-            }
+            var capturedName = ResolveCapturedName(lambda, model.GetSymbolInfo(identifier).Symbol, name);
+            if (capturedName is not null)
+                captured.Add(capturedName);
         }
 
         return captured.Order().ToList();
     }
 
+    // Locals/parameters count as captures when declared outside the lambda;
+    // instance member access implies a 'this' capture.
+    static string? ResolveCapturedName(SyntaxNode lambda, ISymbol? symbol, string name) => symbol switch
+    {
+        ILocalSymbol or IParameterSymbol when IsDeclaredOutsideLambda(lambda, symbol) => name,
+        IFieldSymbol or IPropertySymbol when !symbol.IsStatic => "this",
+        _ => null
+    };
+
+    static bool IsDeclaredOutsideLambda(SyntaxNode lambda, ISymbol symbol) =>
+        !lambda.Span.Contains(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.Span ?? default);
+
     static IReadOnlyList<string> GetCapturedVariablesSyntactic(SyntaxNode lambda, SyntaxNode method)
     {
-        // Collect method-level names (parameters + local declarations)
-        var outerNames = new HashSet<string>(StringComparer.Ordinal);
+        var outerNames = CollectOuterNames(lambda, method);
+        var lambdaParams = CollectLambdaParameters(lambda);
 
-        // Method parameters
-        switch (method)
-        {
-            case MethodDeclarationSyntax m:
-                foreach (var p in m.ParameterList.Parameters)
-                    outerNames.Add(p.Identifier.Text);
-                break;
-            case ConstructorDeclarationSyntax c:
-                foreach (var p in c.ParameterList.Parameters)
-                    outerNames.Add(p.Identifier.Text);
-                break;
-        }
-
-        // Local variable declarations outside lambda
-        foreach (var local in method.DescendantNodes().OfType<VariableDeclaratorSyntax>())
-        {
-            if (!lambda.Span.Contains(local.Span))
-                outerNames.Add(local.Identifier.Text);
-        }
-
-        // Lambda's own parameters
-        var lambdaParams = new HashSet<string>(StringComparer.Ordinal);
-        switch (lambda)
-        {
-            case SimpleLambdaExpressionSyntax simple:
-                lambdaParams.Add(simple.Parameter.Identifier.Text);
-                break;
-            case ParenthesizedLambdaExpressionSyntax paren:
-                foreach (var p in paren.ParameterList.Parameters)
-                    lambdaParams.Add(p.Identifier.Text);
-                break;
-            case AnonymousMethodExpressionSyntax anon when anon.ParameterList is not null:
-                foreach (var p in anon.ParameterList.Parameters)
-                    lambdaParams.Add(p.Identifier.Text);
-                break;
-        }
-
-        // Check identifiers inside lambda
         var captured = new HashSet<string>(StringComparer.Ordinal);
         foreach (var identifier in lambda.DescendantNodes().OfType<IdentifierNameSyntax>())
         {
@@ -175,5 +126,28 @@ public static class ClosureDetector
         }
 
         return captured.Order().ToList();
+    }
+
+    // Method-level names visible to the lambda: parameters + locals declared outside it.
+    static HashSet<string> CollectOuterNames(SyntaxNode lambda, SyntaxNode method)
+    {
+        var outerNames = new HashSet<string>(StringComparer.Ordinal);
+
+        var parameters = method switch
+        {
+            MethodDeclarationSyntax m => m.ParameterList.Parameters,
+            ConstructorDeclarationSyntax c => c.ParameterList.Parameters,
+            _ => default
+        };
+        foreach (var p in parameters)
+            outerNames.Add(p.Identifier.Text);
+
+        foreach (var local in method.DescendantNodes().OfType<VariableDeclaratorSyntax>())
+        {
+            if (!lambda.Span.Contains(local.Span))
+                outerNames.Add(local.Identifier.Text);
+        }
+
+        return outerNames;
     }
 }
