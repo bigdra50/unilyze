@@ -16,6 +16,30 @@ public sealed class BadgeSvgRendererTests
     }
 
     [Fact]
+    public void Render_WithAnalysisLevel_EmbedsXmlComment()
+    {
+        var badge = new ShieldsBadge(1, "code health", "9.2 / 8.5", "brightgreen", "SyntaxOnly");
+        var svg = BadgeSvgRenderer.Render(badge);
+
+        // Output still starts with the <svg> element; the comment lives inside the root.
+        Assert.StartsWith("<svg", svg);
+        Assert.Contains("<!-- unilyze analysisLevel: SyntaxOnly -->", svg);
+        // The comment must keep the SVG well-formed and the root element intact.
+        var doc = XDocument.Parse(svg);
+        Assert.Equal(Ns + "svg", doc.Root!.Name);
+    }
+
+    [Fact]
+    public void Render_WithoutAnalysisLevel_NoComment()
+    {
+        var badge = new ShieldsBadge(1, "code health", "9.2 / 8.5", "brightgreen");
+        var svg = BadgeSvgRenderer.Render(badge);
+
+        Assert.StartsWith("<svg", svg);
+        Assert.DoesNotContain("analysisLevel", svg);
+    }
+
+    [Fact]
     public void Render_ContainsLabelAndMessage()
     {
         var badge = new ShieldsBadge(1, "maintainability", "82", "green");

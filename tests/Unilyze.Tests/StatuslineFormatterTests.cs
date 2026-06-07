@@ -132,4 +132,53 @@ public sealed class StatuslineFormatterTests
 
         Assert.Equal("", output);
     }
+
+    [Theory]
+    [InlineData("SyntaxOnly", "[syntax]")]
+    [InlineData("CoreEngine", "[core]")]
+    [InlineData("FullEngine", "[full]")]
+    public void Format_BelowComplete_AppendsLevelMarker(string level, string expectedMarker)
+    {
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, level);
+        var output = StatuslineFormatter.Format(summary);
+
+        Assert.Contains(expectedMarker, output);
+    }
+
+    [Fact]
+    public void Format_CompleteLevel_NoMarker()
+    {
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, "Complete");
+        var output = StatuslineFormatter.Format(summary);
+
+        Assert.DoesNotContain("[syntax]", output);
+        Assert.DoesNotContain("[core]", output);
+        Assert.DoesNotContain("[full]", output);
+    }
+
+    [Fact]
+    public void Format_NullLevel_NoMarker()
+    {
+        var summary = new StatuslineFormatter.Summary(9.0, 8.0, 0, 0, 10, 80.0, 0, 0, null);
+        var output = StatuslineFormatter.Format(summary);
+
+        // The output contains ANSI color escapes (which include '['), so assert against the
+        // specific level markers rather than any '[' character.
+        Assert.DoesNotContain("[syntax]", output);
+        Assert.DoesNotContain("[core]", output);
+        Assert.DoesNotContain("[full]", output);
+    }
+
+    [Fact]
+    public void ComputeSummary_CapturesAnalysisLevel()
+    {
+        var metrics = new List<TypeMetrics>
+        {
+            new("TypeA", "Ns", "Asm", 100, 5, 2, 3.0, 5, 3.0, 5, 0, 8.0, []),
+        };
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], metrics, "SyntaxOnly");
+        var summary = StatuslineFormatter.ComputeSummary(result);
+
+        Assert.Equal("SyntaxOnly", summary.AnalysisLevel);
+    }
 }
