@@ -1,0 +1,7 @@
+// Self-analysis config: measure production code only.
+// Test fixtures grow with coverage and would dominate the worst-type badge color.
+{
+  "excludeDirs": [
+    "tests"
+  ]
+}
