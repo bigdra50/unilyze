@@ -203,6 +203,78 @@ public sealed class CliE2eTests : IDisposable
         Assert.Contains("CH:", stdout);
     }
 
+    [Fact]
+    public void Badge_Help_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("badge", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("badge", stdout);
+        Assert.Contains("--metric", stdout);
+    }
+
+    [Fact]
+    public void Badge_DefaultMetric_OutputsValidShieldsJson()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+
+        var doc = JsonDocument.Parse(stdout);
+        Assert.Equal(1, doc.RootElement.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal("code health", doc.RootElement.GetProperty("label").GetString());
+    }
+
+    [Fact]
+    public void Badge_MiMetric_OutputsMaintainability()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir, "--metric", "mi");
+        Assert.Equal(0, exitCode);
+        Assert.Equal("maintainability", JsonDocument.Parse(stdout).RootElement.GetProperty("label").GetString());
+    }
+
+    [Fact]
+    public void Badge_SmellsMetric_OutputsSmells()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir, "--metric", "smells");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("smells", root.GetProperty("label").GetString());
+        Assert.True(int.TryParse(root.GetProperty("message").GetString(), out _));
+    }
+
+    [Fact]
+    public void Badge_UnknownMetric_ExitsNonZero()
+    {
+        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--metric", "foo");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown metric", stderr);
+    }
+
+    [Fact]
+    public void Badge_OutputFlag_WritesFile()
+    {
+        WriteSimpleProject();
+        var outFile = Path.Combine(_tempDir, "badge.json");
+        var (exitCode, _, _) = Run("badge", "-p", _tempDir, "-o", outFile);
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(outFile));
+        Assert.Equal(1, JsonDocument.Parse(File.ReadAllText(outFile)).RootElement.GetProperty("schemaVersion").GetInt32());
+    }
+
+    [Fact]
+    public void Badge_EmptyProject_NaLightgrey()
+    {
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("n/a", root.GetProperty("message").GetString());
+        Assert.Equal("lightgrey", root.GetProperty("color").GetString());
+    }
+
     private void WriteSimpleProject()
     {
         var csFile = Path.Combine(_tempDir, "Sample.cs");
