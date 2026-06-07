@@ -47,24 +47,39 @@ SonarAnalyzer.CSharp 10.20.0 との突合結果（Unilyze 自身のソースコ�
 |--------|-------------|
 | `if` | +1 |
 | `case` label / `case` pattern | +1 |
-| `for`, `foreach`, `while`, `do` | +1 |
+| `for`, `foreach`（分解 foreach 含む）, `while`, `do` | +1 |
 | `catch` | +1 |
 | `? :` (三項演算子) | +1 |
 | `?.` (null 条件) | +1 |
 | `??` (null 合体) | +1 |
 | `&&`, `||` | 各 +1 |
+| bool オペランドの `&`, `|` | 各 +1（semantic model がある解析レベルのみ。SyntaxOnly では型解決できず非カウント） |
 | `goto` | +1 |
 | `switch` expression arm | +1 |
 
-### Roslyn CA1502 との差異
+`??=`、switch expression 自体、catch の `when` フィルタ、`and` / `or` パターンはカウントしない。
 
-| 項目 | CA1502 | Unilyze |
-|------|--------|---------|
-| `?.` | カウントしない | +1 |
-| `??` | カウントしない | +1 |
-| switch expression arm | 未対応 | +1 |
+### 公式 Roslyn エンジン (CodeAnalysisMetricData / Metrics.exe / CA1502) との規約差
 
-公式エンジンとの型単位の突合結果は「バリデーション (検証)」セクションを参照。
+unilyze 自身の src/Unilyze 全 339 メソッドを公式エンジンと突合し、両者の規約を残差ゼロで実証した確定表
+（再現手順は [scripts/crossval](../scripts/crossval/)、検証データは「バリデーション (検証)」セクション）:
+
+| 構文 | 公式エンジン | Unilyze |
+|------|------------|---------|
+| `if` / `? :` / ループ / `case` label・pattern / `?.` / `??` / `&&` / `\|\|` | +1 | +1 |
+| `default` label | +1 | カウントしない |
+| `catch` | カウントしない | +1 |
+| `switch` expression arm | カウントしない | +1 |
+| `goto` | カウントしない | +1 |
+| `??=` | カウントしない | カウントしない |
+| bool の `&` / `\|` | +1 | semantic 時のみ +1 |
+| 型集計 | 全メンバーシンボル各 base 1（暗黙 ctor・accessor・operator 含む） | 宣言メソッドのみ各 base 1 |
+
+注意:
+
+- かつて本ドキュメントは「公式は `?.` `??` をカウントしない」と記載していたが、これは誤り（実装突合で反証済み）。両エンジンともカウントする
+- CA1502 の既定しきい値 25 を unilyze の CycCC に直接適用してはならない。switch expression arm 等の加算により unilyze 値は系統的に高くなり、概算換算式も提供しない（正確な比較には公式エンジンでの再解析が必要）
+- 設計判断: unilyze は拡張解釈（catch / arm / goto は実分岐としてカウント）を意図的に維持する。`catch` と switch arm は McCabe の分岐点定義に忠実であり、既存ベースライン（refactor loop・トレンド・バッジ）の互換も保つ。公式互換値が必要な場合は CA1502 / Metrics.exe を直接使うこと。モダンな複雑度ゲートには SonarAnalyzer S3776 と 100% 整合済みの CogCC を推奨する
 
 ## LCOM-HS (Henderson-Sellers)
 
@@ -301,24 +316,33 @@ SyntaxOnly では SemanticModel 依存の検出（Boxing / Params / DIT / CBO）
 
 ### Microsoft.CodeAnalysis Metrics (公式エンジン) との突合
 
-公式 Metrics ツールと同一実装の `CodeAnalysisMetricData`（Microsoft.CodeAnalysis.AnalyzerUtilities）で unilyze 自身の src/Unilyze（87 型マッチ、source generator 由来の 1 型を除外し 86 型）を計測し、unilyze の SyntaxOnly 解析と突合した:
+公式 Metrics ツールと同一実装の `CodeAnalysisMetricData`（Microsoft.CodeAnalysis.AnalyzerUtilities）で unilyze 自身の src/Unilyze を計測し、unilyze の SyntaxOnly 解析と突合した
+（100 型マッチ、source generator 由来の JsonSerializerContext 2 型を除外。再現: [scripts/crossval](../scripts/crossval/)）:
 
 | 指標 | Pearson 相関 | 平均絶対差 | 備考 |
 |------|-------------|-----------|------|
-| CycCC | 0.994 | 1.7 | 型単位合計で比較 |
+| CycCC | 0.983 | 2.0 | 型単位合計で比較。乖離は規約差で 97/100 型が厳密に説明可能（下記） |
 | MI | 0.870 | 5.4 | 公式は型集約、unilyze はメソッド平均（メソッド無し 43 型は unilyze 非対象。statusline / badge の MI 平均もメソッドを持つ型のみを分母とする） |
 | 結合度 | 0.817 (順位) | — | 公式 ClassCoupling 平均 14.0 vs unilyze CBO 3.6（SyntaxOnly では過小） |
 | DIT | — | — | 公式は object 継承を 1 と数える規約差で全件オフセット |
 
-CycCC の乖離が大きい型（カウント規約差の調査対象）:
+CycCC の乖離の構造（全 339 メソッドの突合で実証済み・issue #4 で調査完了）:
 
-| 型 | 公式 | Unilyze |
-|----|------|---------|
-| HalsteadCalculator | 16 | 30 |
-| BloomFilter128 | 26 | 17 |
-| StatuslineFormatter | 16 | 25 |
-| DIContainerAnalyzer | 103 | 111 |
-| ProgramHelpers | 31 | 39 |
+乖離 Δ = unilyze − 公式 は、規約差の構文出現数で厳密に分解できる（97/100 型で Δ = arm + catch + goto − default − メンバー base 差が完全一致）。
+乖離上位の型と分解:
 
-乖離の主因仮説は「CycCC > Roslyn CA1502 との差異」の表の通り（unilyze は `?.` `??` switch expression arm をカウントする）。
-詳細調査は GitHub issue で追跡している。
+| 型 | 公式 | Unilyze | Δ | 内訳 |
+|----|------|---------|---|------|
+| BadgeFormatter | 14 | 28 | +14 | switch arm ×14 |
+| HalsteadCalculator | 16 | 30 | +14 | switch arm ×14 |
+| DIContainerAnalyzer | 42 | 55 | +13 | switch arm ×14 − default ×1 |
+| BadgeSvgRenderer | 12 | 22 | +10 | switch arm ×10 |
+| ClosureDetector | 30 | 40 | +10 | switch arm ×10 |
+| BloomFilter128 | 26 | 17 | −9 | 公式のメンバー base（ctor / accessor 各 1）×9 |
+
+メソッドを持たない record / DTO 型は一律 Δ = −1（公式が暗黙 ctor を base 1 で数えるため）。
+残差が残る 3 型（HalsteadWalker / State / Walker）は、SyntaxOnly で型解決できない bool `&` `|` と、ネスト型のメンバー名照合に起因する ±1。
+
+なお、調査前の仮説「`?.` `??` が unilyze 固有の加算」は反証された（公式エンジンも両方カウントする）。
+実際の乖離要因は switch expression arm（本コードベースで支配的）、catch、goto、default、メンバー base 差である。
+この調査の副産物として、分解 foreach（`foreach (var (a, b) in ...)`）が CycCC / CogCC / ネスト深度の全 walker でカウント漏れしていたバグを発見・修正した。
