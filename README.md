@@ -132,7 +132,9 @@ unilyze badge --metric smells --fail-over 5        # fail if warnings > 5 (or an
 | `--fail-under <value>` | `codehealth`, `mi` | min CodeHealth (codehealth) or average MI (mi) is strictly below `value` |
 | `--fail-over <count>` | `smells` | warning count is strictly above `count`, or any critical smell exists |
 
-The threshold is inclusive: a value exactly equal to `--fail-under`, or a warning count exactly equal to `--fail-over`, passes. Mismatched combinations (e.g. `--fail-under` with `--metric smells`) are a usage error.
+Thresholds are inclusive: values exactly at the threshold pass. Only a value strictly below `--fail-under`, or a warning count strictly above `--fail-over`, fails the gate. Mismatched combinations (e.g. `--fail-under` with `--metric smells`) are a usage error.
+
+The gate is fail-closed: if the metric is unavailable (0 types analyzed, or no method-bearing types for `mi`), the gate exits `2` with `gate failed: metric unavailable (...)` rather than passing. This catches a mistyped `-p` path that would otherwise produce a false green.
 
 Exit codes: `0` success / gate passed, `1` usage error, `2` quality gate failed.
 
