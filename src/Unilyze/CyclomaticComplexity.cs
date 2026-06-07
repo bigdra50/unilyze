@@ -29,6 +29,7 @@ public static class CyclomaticComplexity
         public override void VisitConditionalExpression(ConditionalExpressionSyntax node) { Count++; base.VisitConditionalExpression(node); }
         public override void VisitForStatement(ForStatementSyntax node) { Count++; base.VisitForStatement(node); }
         public override void VisitForEachStatement(ForEachStatementSyntax node) { Count++; base.VisitForEachStatement(node); }
+        public override void VisitForEachVariableStatement(ForEachVariableStatementSyntax node) { Count++; base.VisitForEachVariableStatement(node); }
         public override void VisitWhileStatement(WhileStatementSyntax node) { Count++; base.VisitWhileStatement(node); }
         public override void VisitDoStatement(DoStatementSyntax node) { Count++; base.VisitDoStatement(node); }
         public override void VisitCatchClause(CatchClauseSyntax node) { Count++; base.VisitCatchClause(node); }

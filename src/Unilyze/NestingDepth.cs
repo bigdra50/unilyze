@@ -35,7 +35,7 @@ public static class NestingDepth
     static bool IsNestingNode(SyntaxNode node) => node is
         IfStatementSyntax or
         ForStatementSyntax or
-        ForEachStatementSyntax or
+        CommonForEachStatementSyntax or
         WhileStatementSyntax or
         DoStatementSyntax or
         SwitchStatementSyntax or

@@ -236,6 +236,19 @@ public class CognitiveComplexityTests
     }
 
     [Fact]
+    public void DeconstructionForeach_ReturnsOne()
+    {
+        Assert.Equal(1, Calc("void M() { foreach (var (a, b) in new (int, int)[0]) { } }"));
+    }
+
+    [Fact]
+    public void DeconstructionForeach_NestedIf_AddsNestingIncrement()
+    {
+        // foreach 1 + if (1 + nesting 1) = 3
+        Assert.Equal(3, Calc("void M() { foreach (var (a, b) in new (int, int)[0]) { if (a > 0) { } } }"));
+    }
+
+    [Fact]
     public void CatchClause_ReturnsOne()
     {
         Assert.Equal(1, Calc("void M() { try { } catch { } }"));
