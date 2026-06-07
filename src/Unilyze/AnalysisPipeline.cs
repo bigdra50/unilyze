@@ -36,7 +36,7 @@ internal static class AnalysisPipeline
         if (compilationResult.Level != AnalysisLevel.SyntaxOnly)
             Console.Error.WriteLine($"Analysis level: {analysisLevel}");
 
-        allTypes = SemanticEnricher.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
+        allTypes = BaseTypeResolver.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         var deps = DependencyBuilder.Build(allTypes).ToList();
 

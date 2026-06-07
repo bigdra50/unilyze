@@ -14,53 +14,19 @@ internal static class SemanticEnricher
         IReadOnlyList<ParamsAllocation> ParamsAllocs,
         ExceptionFlowResult? ExceptionFlow);
 
-    internal static IReadOnlyList<TypeNodeInfo> ResolveTypeRelationships(
-        IReadOnlyList<TypeNodeInfo> allTypes,
-        IReadOnlyList<SyntaxTree> syntaxTrees,
-        CompilationResult compilationResult)
-    {
-        if (compilationResult.Compilation is null)
-            return allTypes;
-
-        var treeByPath = BuildTreeLookup(compilationResult, syntaxTrees);
-        var typeDeclLookup = BuildTypeDeclLookup(allTypes, treeByPath);
-        var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
-        var resolved = new List<TypeNodeInfo>(allTypes.Count);
-
-        foreach (var type in allTypes)
-        {
-            if (type.Kind is "enum" or "delegate")
-            {
-                resolved.Add(type);
-                continue;
-            }
-
-            if (!typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(type), out var typeDecl))
-            {
-                resolved.Add(type);
-                continue;
-            }
-
-            var model = modelCache.GetOrAdd(typeDecl.SyntaxTree, t => compilationResult.Compilation.GetSemanticModel(t));
-            resolved.Add(ResolveExplicitBaseList(type, typeDecl, model));
-        }
-
-        return resolved;
-    }
-
     public static IReadOnlyList<TypeMetrics> Enrich(
         IReadOnlyList<TypeMetrics> typeMetrics,
         IReadOnlyList<TypeNodeInfo> allTypes,
         IReadOnlyList<SyntaxTree> syntaxTrees,
         CompilationResult compilationResult)
     {
-        var treeByPath = BuildTreeLookup(compilationResult, syntaxTrees);
+        var treeByPath = SyntaxLookups.BuildTreeLookup(compilationResult, syntaxTrees);
 
         var typeInfoByKey = new Dictionary<string, TypeNodeInfo>();
         foreach (var t in allTypes)
             typeInfoByKey.TryAdd(TypeIdentity.GetTypeId(t), t);
 
-        var typeDeclLookup = BuildTypeDeclLookup(allTypes, treeByPath);
+        var typeDeclLookup = SyntaxLookups.BuildTypeDeclLookup(allTypes, treeByPath);
         var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
 
         // Pre-warm SemanticModel cache: distribute initial GetSemanticModel cost across threads
@@ -83,74 +49,6 @@ internal static class SemanticEnricher
         return result;
     }
 
-    static Dictionary<string, SyntaxTree> BuildTreeLookup(
-        CompilationResult compilationResult,
-        IReadOnlyList<SyntaxTree> syntaxTrees)
-    {
-        var treeByPath = new Dictionary<string, SyntaxTree>(StringComparer.Ordinal);
-        var sourceSet = compilationResult.Compilation?.SyntaxTrees ?? syntaxTrees;
-        foreach (var tree in sourceSet)
-        {
-            if (!string.IsNullOrEmpty(tree.FilePath))
-                treeByPath.TryAdd(Path.GetFullPath(tree.FilePath), tree);
-        }
-        return treeByPath;
-    }
-
-    static Dictionary<string, TypeDeclarationSyntax> BuildTypeDeclLookup(
-        IReadOnlyList<TypeNodeInfo> allTypes,
-        Dictionary<string, SyntaxTree> treeByPath)
-    {
-        var typeDeclLookup = new Dictionary<string, TypeDeclarationSyntax>();
-        foreach (var type in allTypes)
-        {
-            if (type.Kind is "enum" or "delegate") continue;
-            var normalizedPath = Path.GetFullPath(type.FilePath);
-            if (!treeByPath.TryGetValue(normalizedPath, out var tree)) continue;
-
-            var root = tree.GetRoot();
-            var typeDecl = root.DescendantNodes()
-                .OfType<TypeDeclarationSyntax>()
-                .FirstOrDefault(td => TypeIdentity.CreateTypeId(td, type.Assembly) == TypeIdentity.GetTypeId(type));
-            if (typeDecl is not null)
-                typeDeclLookup.TryAdd(TypeIdentity.GetTypeId(type), typeDecl);
-        }
-        return typeDeclLookup;
-    }
-
-    static TypeNodeInfo ResolveExplicitBaseList(
-        TypeNodeInfo type,
-        TypeDeclarationSyntax typeDecl,
-        SemanticModel model)
-    {
-        if (typeDecl.BaseList is null)
-            return type;
-
-        string? baseType = null;
-        var interfaces = new List<string>();
-
-        foreach (var baseTypeSyntax in typeDecl.BaseList.Types)
-        {
-            var typeSymbol = model.GetTypeInfo(baseTypeSyntax.Type).Type as INamedTypeSymbol;
-            var displayName = typeSymbol?.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
-                ?? baseTypeSyntax.Type.ToString();
-
-            if (type.Kind == "interface" || typeSymbol?.TypeKind == TypeKind.Interface)
-            {
-                interfaces.Add(displayName);
-                continue;
-            }
-
-            baseType ??= displayName;
-        }
-
-        return type with
-        {
-            BaseType = type.Kind == "interface" ? null : baseType,
-            Interfaces = interfaces.Distinct().ToList()
-        };
-    }
-
     static TypeMetrics EnrichSingleType(
         TypeMetrics metrics,
         Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
@@ -159,27 +57,12 @@ internal static class SemanticEnricher
         ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
     {
         var key = TypeIdentity.GetTypeId(metrics);
-        var current = metrics;
 
         typeInfoByKey.TryGetValue(key, out var typeInfo);
 
-        SemanticModel? cohesionModel = null;
-        if (typeDeclLookup.TryGetValue(key, out var typeDecl))
-        {
-            var cohesion = CalculateCohesionMetrics(
-                typeDecl, typeInfo, compilationResult, modelCache, out cohesionModel);
-            current = cohesionModel is not null
-                ? RecalculateCycCC(current, typeDecl, cohesionModel)
-                : current;
-
-            current = current with
-            {
-                Lcom = cohesion.Lcom,
-                Cbo = cohesion.Cbo,
-                Dit = cohesion.Dit,
-                Rfc = cohesion.Rfc,
-            };
-        }
+        var current = typeDeclLookup.TryGetValue(key, out var typeDecl)
+            ? ApplyCohesionMetrics(metrics, typeDecl, typeInfo, compilationResult, modelCache)
+            : metrics;
 
         var smells = typeInfo is not null
             ? CodeSmellDetector.Detect(current, typeInfo, current.Lcom, current.Cbo, current.Dit)
@@ -197,6 +80,30 @@ internal static class SemanticEnricher
             ClosureCaptureCount = detectorResults.Closures.Count > 0 ? detectorResults.Closures.Count : null,
             ParamsAllocationCount = detectorResults.ParamsAllocs.Count > 0 ? detectorResults.ParamsAllocs.Count : null,
             CodeSmells = allSmells.Count > 0 ? allSmells : null
+        };
+    }
+
+    // Recalculates semantic CycCC and stamps LCOM/CBO/DIT/RFC onto the metrics record.
+    static TypeMetrics ApplyCohesionMetrics(
+        TypeMetrics metrics,
+        TypeDeclarationSyntax typeDecl,
+        TypeNodeInfo? typeInfo,
+        CompilationResult compilationResult,
+        ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
+    {
+        var cohesion = CalculateCohesionMetrics(
+            typeDecl, typeInfo, compilationResult, modelCache, out var cohesionModel);
+
+        var current = cohesionModel is not null
+            ? RecalculateCycCC(metrics, typeDecl, cohesionModel)
+            : metrics;
+
+        return current with
+        {
+            Lcom = cohesion.Lcom,
+            Cbo = cohesion.Cbo,
+            Dit = cohesion.Dit,
+            Rfc = cohesion.Rfc,
         };
     }
 

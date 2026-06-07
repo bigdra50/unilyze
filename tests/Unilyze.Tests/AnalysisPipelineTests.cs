@@ -45,7 +45,7 @@ public sealed class AnalysisPipelineTests : IDisposable
             [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-        var resolved = SemanticEnricher.ResolveTypeRelationships(
+        var resolved = BaseTypeResolver.ResolveTypeRelationships(
             analyzed.Types,
             analyzed.SyntaxTrees,
             new CompilationResult(compilation, AnalysisLevel.CoreEngine));
