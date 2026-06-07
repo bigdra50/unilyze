@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- NU1903: Microsoft.Build.Tasks.Core 17.7.2 (transitive via Workspaces.MSBuild 4.12) has a known
+         advisory. This is a local analysis-only harness, never shipped or run in CI; MSBuildLocator
+         loads the installed SDK's MSBuild at runtime, so the vulnerable assembly is not actually used. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.7.8" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.AnalyzerUtilities" Version="3.3.4" />
+  </ItemGroup>
+
+</Project>
