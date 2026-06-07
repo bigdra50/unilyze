@@ -233,10 +233,10 @@ public class TypeAnalyzerTests : IDisposable
         var innerTypes = result.Where(t => t.Name == "Inner").OrderBy(t => t.QualifiedName).ToList();
         Assert.Equal(2, innerTypes.Count);
 
-        var outerAInner = Assert.Single(innerTypes.Where(t => t.QualifiedName == "Sample.OuterA.Inner"));
+        var outerAInner = Assert.Single(innerTypes, t => t.QualifiedName == "Sample.OuterA.Inner");
         Assert.Equal(["A", "B"], outerAInner.Members.Select(m => m.Name).OrderBy(n => n).ToList());
 
-        var outerBInner = Assert.Single(innerTypes.Where(t => t.QualifiedName == "Sample.OuterB.Inner"));
+        var outerBInner = Assert.Single(innerTypes, t => t.QualifiedName == "Sample.OuterB.Inner");
         Assert.Equal(["C"], outerBInner.Members.Select(m => m.Name).OrderBy(n => n).ToList());
     }
 

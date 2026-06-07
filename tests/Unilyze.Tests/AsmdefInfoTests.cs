@@ -18,7 +18,7 @@ public class AsmdefInfoTests : IDisposable
         File.WriteAllText(Path.Combine(directory, fileName), json);
     }
 
-    void WriteMeta(string directory, string fileName, string guid)
+    static void WriteMeta(string directory, string fileName, string guid)
     {
         Directory.CreateDirectory(directory);
         File.WriteAllText(Path.Combine(directory, fileName + ".meta"), $$"""
@@ -115,7 +115,7 @@ public class AsmdefInfoTests : IDisposable
 
         var result = AsmdefInfo.Discover(root);
 
-        var feature = Assert.Single(result.Where(r => r.Name == "Feature"));
+        var feature = Assert.Single(result, r => r.Name == "Feature");
         Assert.Equal(["Runtime"], feature.References);
         Assert.Equal(["GUID:def456"], feature.UnresolvedReferences);
     }
@@ -148,7 +148,7 @@ public class AsmdefInfoTests : IDisposable
 
         var result = AsmdefInfo.Discover(root);
 
-        var mixed = Assert.Single(result.Where(r => r.Name == "Mixed"));
+        var mixed = Assert.Single(result, r => r.Name == "Mixed");
         Assert.Equal(3, mixed.References.Count);
         Assert.Equal("NamedRef.Runtime", mixed.References[0]);
         Assert.Equal("NamedRef.Runtime", mixed.References[1]);
