@@ -263,12 +263,14 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 
 ## DI Container Detection
 
-Detects type registrations in Unity DI containers and adds them to the dependency graph:
+Detects type registrations in Unity DI containers and integrates them into the dependency graph. Registration endpoints are resolved to analyzed types, so the resulting edges feed cycle detection, CBO/Ca/Ce coupling, and TypeRank like any other dependency:
 
 | Container | Patterns |
 |-----------|----------|
 | VContainer | `Register<T>`, `RegisterInstance`, `RegisterFactory`, `[Inject]` attribute |
 | Zenject | `Bind<T>().To<T>()`, `BindInterfacesTo<T>()`, `BindInterfacesAndSelfTo<T>()` |
+
+Endpoints that resolve to a type outside the analyzed set (e.g. a framework type), or to an ambiguous bare name shared by multiple namespaces, stay unconnected and contribute nothing to the metrics.
 
 ## Output Formats
 
