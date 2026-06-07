@@ -8,6 +8,8 @@ internal sealed record ShieldsBadge(int SchemaVersion, string Label, string Mess
 
 internal enum BadgeMetric { CodeHealth, Mi, Smells }
 
+internal enum BadgeFormat { Json, Svg }
+
 internal static class BadgeFormatter
 {
     internal static ShieldsBadge Build(BadgeMetric metric, StatuslineFormatter.Summary s)
@@ -76,6 +78,28 @@ internal static class BadgeFormatter
         if (value.Equals("smells", StringComparison.OrdinalIgnoreCase))
         {
             metric = BadgeMetric.Smells;
+            return true;
+        }
+
+        return false;
+    }
+
+    internal static bool TryParseFormat(string? value, out BadgeFormat format)
+    {
+        format = BadgeFormat.Json;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return true;
+
+        if (value.Equals("json", StringComparison.OrdinalIgnoreCase))
+        {
+            format = BadgeFormat.Json;
+            return true;
+        }
+
+        if (value.Equals("svg", StringComparison.OrdinalIgnoreCase))
+        {
+            format = BadgeFormat.Svg;
             return true;
         }
 
