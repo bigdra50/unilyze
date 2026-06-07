@@ -322,6 +322,8 @@ unilyze diff before.json after.json --fail-on-regression
 
 A regression is any of: average or min CodeHealth dropped, warning smell count increased, or critical smell count increased (after vs before). On regression, the reason is printed to stderr on one line (e.g. `regression: min CodeHealth 7.2 -> 6.8`).
 
+The gate is evaluated on these **project-wide aggregates**, which is intentionally distinct from the per-type `Degraded`/`Improved` counts shown in the diff summary. A single type can degrade while the aggregates stay flat (e.g. another type improves enough to offset it), so it is possible to see `Degraded: 1` in the summary yet get exit `0`. If you want to gate on any individual type degrading rather than on aggregates, judge on the per-type `Degraded` count from the summary instead.
+
 Exit codes: `0` no regression, `1` usage error, `2` regression detected.
 
 ## Agent Workflow
