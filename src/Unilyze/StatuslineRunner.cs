@@ -103,7 +103,8 @@ internal static class StatuslineRunner
 
     static int PrintUsage()
     {
-        Console.WriteLine("""
+        var tempDir = Path.GetTempPath();
+        Console.WriteLine($$"""
             unilyze statusline - Output compact code health for status line display
 
             Usage:
@@ -130,7 +131,7 @@ internal static class StatuslineRunner
               Criticals: red
 
             Cache:
-              Results are cached in /tmp/unilyze-sl-{hash}.txt
+              Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
               Use --refresh to control cache lifetime (default: 60 seconds)
             """);
         return 0;
