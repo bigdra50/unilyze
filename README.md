@@ -12,6 +12,8 @@ For build, test, and release information, see [README.dev.md](README.dev.md).
 
 <div><video controls src="https://github.com/user-attachments/assets/60ae2566-f961-4324-a16d-8f384b7d03fd" muted="false"></video></div>
 
+Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyze/>
+
 ### Requirements
 
 - .NET 8.0 or later
