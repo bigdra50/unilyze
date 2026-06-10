@@ -5,7 +5,11 @@ namespace Unilyze;
 
 internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("excludeDirs")]
-    IReadOnlyList<string>? ExcludeDirs = null)
+    IReadOnlyList<string>? ExcludeDirs = null,
+    [property: JsonPropertyName("disableDefaultExcludes")]
+    bool DisableDefaultExcludes = false,
+    [property: JsonPropertyName("disableGeneratedCodeExcludes")]
+    bool DisableGeneratedCodeExcludes = false)
 {
     public static UnilyzeConfig Empty { get; } = new();
 
@@ -27,11 +31,27 @@ internal sealed record UnilyzeConfig(
         if (cliExcludeDirs is { Count: > 0 })
             merged = Merge(merged, new UnilyzeConfig(cliExcludeDirs));
 
-        var resolved = merged.ExcludeDirs is { Count: > 0 }
-            ? ResolveExcludePaths(merged.ExcludeDirs, projectRoot)
-            : null;
-
+        var resolved = BuildEffectiveExcludeDirs(merged, projectRoot);
         return merged with { ExcludeDirs = resolved };
+    }
+
+    internal static IReadOnlyList<string>? BuildEffectiveExcludeDirs(UnilyzeConfig config, string projectRoot)
+    {
+        var resolved = new List<string>();
+
+        if (!config.DisableDefaultExcludes)
+            resolved.AddRange(DefaultExcludes.ResolveProjectPaths(projectRoot));
+
+        if (config.ExcludeDirs is { Count: > 0 })
+        {
+            foreach (var dir in ResolveExcludePaths(config.ExcludeDirs, projectRoot))
+            {
+                if (!resolved.Any(existing => existing.Equals(dir, StringComparison.OrdinalIgnoreCase)))
+                    resolved.Add(dir);
+            }
+        }
+
+        return resolved.Count > 0 ? resolved : null;
     }
 
     internal static UnilyzeConfig LoadFile(string path)
@@ -53,16 +73,23 @@ internal sealed record UnilyzeConfig(
 
     internal static UnilyzeConfig Merge(UnilyzeConfig lower, UnilyzeConfig higher)
     {
+        IReadOnlyList<string>? excludeDirs;
         if (lower.ExcludeDirs is not { Count: > 0 })
-            return higher;
-        if (higher.ExcludeDirs is not { Count: > 0 })
-            return lower;
+            excludeDirs = higher.ExcludeDirs;
+        else if (higher.ExcludeDirs is not { Count: > 0 })
+            excludeDirs = lower.ExcludeDirs;
+        else
+        {
+            var merged = new HashSet<string>(lower.ExcludeDirs, StringComparer.OrdinalIgnoreCase);
+            foreach (var dir in higher.ExcludeDirs)
+                merged.Add(dir);
+            excludeDirs = merged.ToList();
+        }
 
-        var merged = new HashSet<string>(lower.ExcludeDirs, StringComparer.OrdinalIgnoreCase);
-        foreach (var dir in higher.ExcludeDirs)
-            merged.Add(dir);
-
-        return new UnilyzeConfig(merged.ToList());
+        return new UnilyzeConfig(
+            excludeDirs,
+            lower.DisableDefaultExcludes || higher.DisableDefaultExcludes,
+            lower.DisableGeneratedCodeExcludes || higher.DisableGeneratedCodeExcludes);
     }
 
     internal static IReadOnlyList<string> ResolveExcludePaths(
