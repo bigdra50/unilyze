@@ -349,6 +349,17 @@ The gate is evaluated on these **project-wide aggregates**, which is intentional
 
 Exit codes: `0` no regression, `1` usage error, `2` regression detected.
 
+### Markdown output (CI / PR comments)
+
+`unilyze diff <before.json> <after.json> -f markdown` emits GFM tables suitable for GitHub PR comments and `$GITHUB_STEP_SUMMARY`.
+
+```bash
+unilyze diff before.json after.json -f markdown >> "$GITHUB_STEP_SUMMARY"
+unilyze diff before.json after.json -f markdown | gh pr comment "$PR" --body-file -
+```
+
+With `--fail-on-regression`, the markdown body is unchanged; only the exit code reflects the gate (stdout still contains the verdict line).
+
 ## Agent Workflow
 
 ```
