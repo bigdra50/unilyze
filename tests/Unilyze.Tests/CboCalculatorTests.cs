@@ -195,7 +195,7 @@ public class CboCalculatorTests
             "C", "TestNs", "TestAssembly",
             100, 5, 2, 3.0, 5, 3.0, 5, 0, 8.0, []);
 
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, cbo: 14);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, cbo: 15);
 
         var coupling = Assert.Single(smells, s => s.Kind == CodeSmellKind.HighCoupling);
         Assert.Equal(SmellSeverity.Warning, coupling.Severity);

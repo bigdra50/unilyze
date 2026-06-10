@@ -355,15 +355,37 @@ public class CodeSmellDetectorTests
         Assert.Equal(SmellSeverity.Critical, smell.Severity);
     }
 
-    // LowMaintainability: MI=20.0 no smell, MI=19.9 Warning, MI=10.0 Warning, MI=9.9 Critical
+    // LowMaintainability: MI=60.0 no smell, MI=59.9 Warning, MI=20.0 Warning, MI=19.9 Warning (no Critical tier)
     [Fact]
-    public void LowMaintainability_MI20_NoSmell()
+    public void LowMaintainability_MI60_NoSmell()
+    {
+        var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 10, MaintainabilityIndex: 60.0) };
+        var metrics = MakeTypeMetrics(methods: methods);
+        var typeInfo = MakeTypeInfo();
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
+        Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
+    }
+
+    [Fact]
+    public void LowMaintainability_MI59_9_Warning()
+    {
+        var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 10, MaintainabilityIndex: 59.9) };
+        var metrics = MakeTypeMetrics(methods: methods);
+        var typeInfo = MakeTypeInfo();
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
+        var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
+        Assert.Equal(SmellSeverity.Warning, smell.Severity);
+    }
+
+    [Fact]
+    public void LowMaintainability_MI20_Warning()
     {
         var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 10, MaintainabilityIndex: 20.0) };
         var metrics = MakeTypeMetrics(methods: methods);
         var typeInfo = MakeTypeInfo();
         var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
-        Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
+        var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
+        Assert.Equal(SmellSeverity.Warning, smell.Severity);
     }
 
     [Fact]
@@ -377,63 +399,41 @@ public class CodeSmellDetectorTests
         Assert.Equal(SmellSeverity.Warning, smell.Severity);
     }
 
+    // DeepInheritance: dit=4 no, dit=5 yes
     [Fact]
-    public void LowMaintainability_MI10_Warning()
-    {
-        var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 10, MaintainabilityIndex: 10.0) };
-        var metrics = MakeTypeMetrics(methods: methods);
-        var typeInfo = MakeTypeInfo();
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
-        var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
-        Assert.Equal(SmellSeverity.Warning, smell.Severity);
-    }
-
-    [Fact]
-    public void LowMaintainability_MI9_9_Critical()
-    {
-        var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 10, MaintainabilityIndex: 9.9) };
-        var metrics = MakeTypeMetrics(methods: methods);
-        var typeInfo = MakeTypeInfo();
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
-        var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
-        Assert.Equal(SmellSeverity.Critical, smell.Severity);
-    }
-
-    // DeepInheritance: dit=5 no, dit=6 yes
-    [Fact]
-    public void DeepInheritance_Dit5_NoSmell()
+    public void DeepInheritance_Dit4_NoSmell()
     {
         var metrics = MakeTypeMetrics();
         var typeInfo = MakeTypeInfo();
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, dit: 5);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, dit: 4);
         Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.DeepInheritance);
     }
 
     [Fact]
-    public void DeepInheritance_Dit6_Detected()
+    public void DeepInheritance_Dit5_Detected()
     {
         var metrics = MakeTypeMetrics();
         var typeInfo = MakeTypeInfo();
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, dit: 6);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, dit: 5);
         Assert.Contains(smells, s => s.Kind == CodeSmellKind.DeepInheritance);
     }
 
-    // HighCoupling: cbo=13 no, cbo=14 Warning, cbo=24 Warning, cbo=25 Critical
+    // HighCoupling: cbo=14 no, cbo=15 Warning, cbo=24 Warning, cbo=25 Critical
     [Fact]
-    public void HighCoupling_Cbo13_NoSmell()
-    {
-        var metrics = MakeTypeMetrics();
-        var typeInfo = MakeTypeInfo();
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, cbo: 13);
-        Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.HighCoupling);
-    }
-
-    [Fact]
-    public void HighCoupling_Cbo14_Warning()
+    public void HighCoupling_Cbo14_NoSmell()
     {
         var metrics = MakeTypeMetrics();
         var typeInfo = MakeTypeInfo();
         var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, cbo: 14);
+        Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.HighCoupling);
+    }
+
+    [Fact]
+    public void HighCoupling_Cbo15_Warning()
+    {
+        var metrics = MakeTypeMetrics();
+        var typeInfo = MakeTypeInfo();
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null, cbo: 15);
         var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.HighCoupling);
         Assert.Equal(SmellSeverity.Warning, smell.Severity);
     }

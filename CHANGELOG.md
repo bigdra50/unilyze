@@ -14,9 +14,13 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 ### Added
 
 - `metricsVersion` and `toolVersion` on JSON output root ([#30](https://github.com/bigdra50/unilyze/issues/30)): `metricsVersion` tracks metric-definition compatibility; `toolVersion` records the unilyze assembly version; `diff` / `trend` warn on cross-version comparisons; `diff --fail-on-version-mismatch` exits 2 for CI gates
+- `SmellThresholds` registry as single source for code-smell detection thresholds ([#32](https://github.com/bigdra50/unilyze/issues/32)); drift-guard test keeps `docs/metrics.md` in sync
 
 ### Changed
 
+- [metrics] HighCoupling warning threshold raised from CBO >= 14 to CBO >= 15 (align with documented contract)
+- [metrics] DeepInheritance warning threshold lowered from DIT >= 6 to DIT >= 5 (align with documented contract)
+- [metrics] LowMaintainability warning threshold raised from MI < 20 to MI < 60; LowMaintainability no longer has a Critical tier (docs never defined one)
 - Unknown subcommands and options are now usage errors: one-line stderr message, exit `1`, and a `Did you mean '...'?` suggestion for near-misses (previously `config`/`skills` exited `0` and misspelled flags were silently ignored)
 - Assembly metric aggregation builds a one-time reverse index instead of re-scanning dependencies per assembly (faster on multi-asmdef projects; metric values unchanged)
 
