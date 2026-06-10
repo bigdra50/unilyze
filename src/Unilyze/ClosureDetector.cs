@@ -15,17 +15,8 @@ public static class ClosureDetector
     {
         var results = new List<ClosureCapture>();
 
-        foreach (var method in typeDecl.Members.OfType<MethodDeclarationSyntax>())
-        {
-            var methodName = method.Identifier.Text;
-            DetectInMember(method, methodName, model, results);
-        }
-
-        foreach (var ctor in typeDecl.Members.OfType<ConstructorDeclarationSyntax>())
-        {
-            var methodName = ctor.Identifier.Text + ".ctor";
-            DetectInMember(ctor, methodName, model, results);
-        }
+        foreach (var (scanRoot, memberName) in MemberBodyEnumerator.Enumerate(typeDecl))
+            DetectInMember(scanRoot, memberName, model, results);
 
         return results;
     }
@@ -33,8 +24,9 @@ public static class ClosureDetector
     static void DetectInMember(SyntaxNode member, string methodName, SemanticModel? model,
         List<ClosureCapture> results)
     {
-        var lambdas = member.DescendantNodes()
+        var lambdas = member.DescendantNodesAndSelf()
             .Where(n => n is LambdaExpressionSyntax or AnonymousMethodExpressionSyntax)
+            .Where(n => !MemberBodyEnumerator.IsInsideNestedLocalFunction(n, member))
             .ToList();
 
         foreach (var lambda in lambdas)
@@ -128,26 +120,58 @@ public static class ClosureDetector
         return captured.Order().ToList();
     }
 
-    // Method-level names visible to the lambda: parameters + locals declared outside it.
-    static HashSet<string> CollectOuterNames(SyntaxNode lambda, SyntaxNode method)
+    // Member-level names visible to the lambda: parameters + locals declared outside it.
+    static HashSet<string> CollectOuterNames(SyntaxNode lambda, SyntaxNode member)
     {
         var outerNames = new HashSet<string>(StringComparer.Ordinal);
 
-        var parameters = method switch
-        {
-            MethodDeclarationSyntax m => m.ParameterList.Parameters,
-            ConstructorDeclarationSyntax c => c.ParameterList.Parameters,
-            _ => default
-        };
-        foreach (var p in parameters)
+        foreach (var p in GetParameters(member))
             outerNames.Add(p.Identifier.Text);
 
-        foreach (var local in method.DescendantNodes().OfType<VariableDeclaratorSyntax>())
+        var scopeRoot = GetLocalScopeRoot(member);
+        foreach (var local in scopeRoot.DescendantNodes().OfType<VariableDeclaratorSyntax>())
         {
             if (!lambda.Span.Contains(local.Span))
                 outerNames.Add(local.Identifier.Text);
         }
 
+        if (member is ExpressionSyntax)
+        {
+            var typeDecl = member.Ancestors().OfType<TypeDeclarationSyntax>().FirstOrDefault();
+            if (typeDecl is not null)
+            {
+                foreach (var field in typeDecl.Members.OfType<FieldDeclarationSyntax>())
+                {
+                    foreach (var variable in field.Declaration.Variables)
+                        outerNames.Add(variable.Identifier.Text);
+                }
+            }
+        }
+
         return outerNames;
     }
+
+    static SyntaxNode GetLocalScopeRoot(SyntaxNode member) => member switch
+    {
+        LocalFunctionStatementSyntax => FindEnclosingExecutableMember(member) ?? member,
+        _ => member
+    };
+
+    static SyntaxNode? FindEnclosingExecutableMember(SyntaxNode member) =>
+        member.Ancestors().FirstOrDefault(a => a is MethodDeclarationSyntax
+            or ConstructorDeclarationSyntax
+            or AccessorDeclarationSyntax
+            or OperatorDeclarationSyntax
+            or ConversionOperatorDeclarationSyntax
+            or LocalFunctionStatementSyntax);
+
+    static IEnumerable<ParameterSyntax> GetParameters(SyntaxNode member) => member switch
+    {
+        MethodDeclarationSyntax m => m.ParameterList.Parameters,
+        ConstructorDeclarationSyntax c => c.ParameterList.Parameters,
+        OperatorDeclarationSyntax o => o.ParameterList.Parameters,
+        ConversionOperatorDeclarationSyntax co => co.ParameterList.Parameters,
+        LocalFunctionStatementSyntax lf => lf.ParameterList?.Parameters ?? [],
+        _ => []
+    };
 }

@@ -91,7 +91,9 @@ public sealed class UnilyzeConfigTests : IDisposable
     {
         var higher = new UnilyzeConfig(["Assets/Plugins"]);
         var result = UnilyzeConfig.Merge(UnilyzeConfig.Empty, higher);
-        Assert.Same(higher, result);
+        Assert.Equal(higher.ExcludeDirs, result.ExcludeDirs);
+        Assert.Equal(higher.DisableDefaultExcludes, result.DisableDefaultExcludes);
+        Assert.Equal(higher.DisableGeneratedCodeExcludes, result.DisableGeneratedCodeExcludes);
     }
 
     [Fact]
@@ -99,7 +101,9 @@ public sealed class UnilyzeConfigTests : IDisposable
     {
         var lower = new UnilyzeConfig(["Assets/Plugins"]);
         var result = UnilyzeConfig.Merge(lower, UnilyzeConfig.Empty);
-        Assert.Same(lower, result);
+        Assert.Equal(lower.ExcludeDirs, result.ExcludeDirs);
+        Assert.Equal(lower.DisableDefaultExcludes, result.DisableDefaultExcludes);
+        Assert.Equal(lower.DisableGeneratedCodeExcludes, result.DisableGeneratedCodeExcludes);
     }
 
     [Fact]
@@ -165,10 +169,11 @@ public sealed class UnilyzeConfigTests : IDisposable
         var result = UnilyzeConfig.LoadMerged(projectRoot);
 
         Assert.NotNull(result.ExcludeDirs);
-        Assert.Single(result.ExcludeDirs!);
-        Assert.Equal(
+        Assert.Contains(
             Path.GetFullPath(Path.Combine(projectRoot, "Assets/Plugins")),
-            result.ExcludeDirs![0]);
+            result.ExcludeDirs!);
+        Assert.Contains(result.ExcludeDirs!,
+            dir => dir.EndsWith($"{Path.DirectorySeparatorChar}obj", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -182,7 +187,10 @@ public sealed class UnilyzeConfigTests : IDisposable
         var result = UnilyzeConfig.LoadMerged(projectRoot, ["Assets/Tests"]);
 
         Assert.NotNull(result.ExcludeDirs);
-        Assert.Equal(2, result.ExcludeDirs!.Count);
+        Assert.Contains(Path.GetFullPath(Path.Combine(projectRoot, "Assets/Plugins")), result.ExcludeDirs!);
+        Assert.Contains(Path.GetFullPath(Path.Combine(projectRoot, "Assets/Tests")), result.ExcludeDirs!);
+        Assert.Contains(result.ExcludeDirs!,
+            dir => dir.EndsWith($"{Path.DirectorySeparatorChar}obj", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -192,16 +200,46 @@ public sealed class UnilyzeConfigTests : IDisposable
         var result = UnilyzeConfig.LoadMerged(projectRoot, ["Assets/Plugins"]);
 
         Assert.NotNull(result.ExcludeDirs);
-        Assert.Single(result.ExcludeDirs!);
+        Assert.Contains(Path.GetFullPath(Path.Combine(projectRoot, "Assets/Plugins")), result.ExcludeDirs!);
+        Assert.Contains(result.ExcludeDirs!,
+            dir => dir.EndsWith($"{Path.DirectorySeparatorChar}obj", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
-    public void LoadMerged_NoConfigNoCliReturnsNullExcludeDirs()
+    public void LoadMerged_NoConfigNoCli_AppliesDefaultExcludeDirs()
     {
         var projectRoot = _tempDir;
         var result = UnilyzeConfig.LoadMerged(projectRoot);
 
+        Assert.NotNull(result.ExcludeDirs);
+        Assert.Contains(result.ExcludeDirs!,
+            dir => dir.EndsWith($"{Path.DirectorySeparatorChar}obj", StringComparison.OrdinalIgnoreCase));
+        Assert.False(result.DisableDefaultExcludes);
+        Assert.False(result.DisableGeneratedCodeExcludes);
+    }
+
+    [Fact]
+    public void LoadMerged_DisableDefaultExcludes_SkipsBuiltInDirs()
+    {
+        WriteTempFile(".unilyze.json", """
+            { "disableDefaultExcludes": true }
+            """);
+
+        var result = UnilyzeConfig.LoadMerged(_tempDir);
+
         Assert.Null(result.ExcludeDirs);
+        Assert.True(result.DisableDefaultExcludes);
+    }
+
+    [Fact]
+    public void Merge_BooleanFlags_UnionDisableFlags()
+    {
+        var lower = new UnilyzeConfig(DisableDefaultExcludes: true);
+        var higher = new UnilyzeConfig(DisableGeneratedCodeExcludes: true);
+        var result = UnilyzeConfig.Merge(lower, higher);
+
+        Assert.True(result.DisableDefaultExcludes);
+        Assert.True(result.DisableGeneratedCodeExcludes);
     }
 
     // --- SaveFile ---

@@ -80,7 +80,10 @@ try
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
         var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
-        result = AnalysisPipeline.Build(path!, prefix, assembly, config.ExcludeDirs, requestedLevel);
+        result = AnalysisPipeline.Build(
+            path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
+            excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+            applyAnyDepthExcludes: !config.DisableDefaultExcludes);
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -644,7 +647,10 @@ static int RunHotspot(string[] args)
         {
             var hotspotRoot = ProgramHelpers.ResolveProjectRoot(path);
             var hotspotConfig = UnilyzeConfig.LoadMerged(hotspotRoot, hotspotExcludeDirs);
-            var result = AnalysisPipeline.Build(path, null, null, hotspotConfig.ExcludeDirs);
+            var result = AnalysisPipeline.Build(
+                path, null, null, hotspotConfig.ExcludeDirs,
+                excludeGeneratedCode: !hotspotConfig.DisableGeneratedCodeExcludes,
+                applyAnyDepthExcludes: !hotspotConfig.DisableDefaultExcludes);
             typeMetrics = result.TypeMetrics ?? [];
         }
 
@@ -888,26 +894,48 @@ static int ConfigList(string projectRoot)
 
     var global = UnilyzeConfig.LoadFile(globalPath);
     var project = UnilyzeConfig.LoadFile(projectPath);
+    var merged = UnilyzeConfig.LoadMerged(projectRoot);
 
     var hasAny = false;
 
-    if (global.ExcludeDirs is { Count: > 0 })
+    void PrintConfigSection(string label, string path, UnilyzeConfig config)
     {
-        hasAny = true;
-        Console.WriteLine($"[global] {globalPath}");
-        Console.WriteLine("  excludeDirs:");
-        foreach (var dir in global.ExcludeDirs)
-            Console.WriteLine($"    {dir}");
-    }
+        var sectionHasValues = config.ExcludeDirs is { Count: > 0 }
+            || config.DisableDefaultExcludes
+            || config.DisableGeneratedCodeExcludes;
+        if (!sectionHasValues)
+            return;
 
-    if (project.ExcludeDirs is { Count: > 0 })
-    {
         if (hasAny) Console.WriteLine();
         hasAny = true;
-        Console.WriteLine($"[project] {projectPath}");
-        Console.WriteLine("  excludeDirs:");
-        foreach (var dir in project.ExcludeDirs)
-            Console.WriteLine($"    {dir}");
+        Console.WriteLine($"[{label}] {path}");
+
+        if (config.ExcludeDirs is { Count: > 0 })
+        {
+            Console.WriteLine("  excludeDirs:");
+            foreach (var dir in config.ExcludeDirs)
+                Console.WriteLine($"    {dir}");
+        }
+
+        Console.WriteLine($"  disableDefaultExcludes: {config.DisableDefaultExcludes.ToString().ToLowerInvariant()}");
+        Console.WriteLine($"  disableGeneratedCodeExcludes: {config.DisableGeneratedCodeExcludes.ToString().ToLowerInvariant()}");
+    }
+
+    PrintConfigSection("global", globalPath, global);
+    PrintConfigSection("project", projectPath, project);
+
+    if (hasAny)
+    {
+        Console.WriteLine();
+        Console.WriteLine("[effective]");
+        Console.WriteLine($"  disableDefaultExcludes: {merged.DisableDefaultExcludes.ToString().ToLowerInvariant()}");
+        Console.WriteLine($"  disableGeneratedCodeExcludes: {merged.DisableGeneratedCodeExcludes.ToString().ToLowerInvariant()}");
+        if (merged.ExcludeDirs is { Count: > 0 })
+        {
+            Console.WriteLine("  excludeDirs:");
+            foreach (var dir in merged.ExcludeDirs)
+                Console.WriteLine($"    {dir}");
+        }
     }
 
     if (!hasAny)

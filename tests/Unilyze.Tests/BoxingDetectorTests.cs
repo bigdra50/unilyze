@@ -110,4 +110,36 @@ public class BoxingDetectorTests
         var results = Detect(code);
         Assert.Contains(results, r => r.Description.Contains("string interpolation"));
     }
+
+    [Fact]
+    public void PropertyGetter_ValueTypeToObject_DetectsBoxing()
+    {
+        var code = """
+            class C {
+                public object Value {
+                    get {
+                        int x = 42;
+                        return x;
+                    }
+                }
+            }
+            """;
+        var results = Detect(code);
+        Assert.Contains(results, r => r.MethodName == "get_Value" && r.Description.Contains("Boxing"));
+    }
+
+    [Fact]
+    public void OperatorBody_ValueTypeToObject_DetectsBoxing()
+    {
+        var code = """
+            struct S {
+                public static S operator +(S a, S b) {
+                    object o = 1;
+                    return a;
+                }
+            }
+            """;
+        var results = Detect(code, "S");
+        Assert.Contains(results, r => r.MethodName == "op_Addition" && r.Description.Contains("Boxing"));
+    }
 }

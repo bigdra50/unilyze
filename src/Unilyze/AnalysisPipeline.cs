@@ -12,10 +12,12 @@ internal static class AnalysisPipeline
     public static AnalysisResult Build(
         string path, string? prefix, string? assemblyFilter,
         IReadOnlyList<string>? excludeDirectories = null,
-        AnalysisLevel? requestedLevel = null)
+        AnalysisLevel? requestedLevel = null,
+        bool excludeGeneratedCode = true,
+        bool applyAnyDepthExcludes = true)
     {
         var assetsDir = ProgramHelpers.ResolveAssetsDir(path);
-        var asmdefs = AsmdefInfo.Discover(assetsDir);
+        var asmdefs = AsmdefInfo.Discover(assetsDir, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes);
 
         IReadOnlyList<AsmdefInfo> targets;
         if (asmdefs.Count == 0)
@@ -29,14 +31,15 @@ internal static class AnalysisPipeline
         }
 
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path);
-        var csprojInfo = ResolveCsprojInfo(projectRoot);
+        var csprojInfo = ResolveCsprojInfo(projectRoot, excludeDirectories);
 
         // Cap DLL collection at the requested level so the pin is deterministic.
         var cap = requestedLevel ?? AnalysisLevel.Complete;
         var resolved = UnityDllResolver.Resolve(projectRoot, cap);
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
 
-        var (allTypes, allSyntaxTrees) = CollectTypes(targets, preprocessorSymbols, excludeDirectories);
+        var (allTypes, allSyntaxTrees) = CollectTypes(
+            targets, preprocessorSymbols, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes);
         var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap);
         var analysisLevel = compilationResult.Level.ToString();
 
@@ -125,9 +128,9 @@ internal static class AnalysisPipeline
             ToolVersionInfo.Current);
     }
 
-    static CsprojInfo? ResolveCsprojInfo(string projectRoot)
+    static CsprojInfo? ResolveCsprojInfo(string projectRoot, IReadOnlyList<string>? excludeDirectories)
     {
-        var csprojFiles = CsprojParser.DiscoverCsprojFiles(projectRoot);
+        var csprojFiles = CsprojParser.DiscoverCsprojFiles(projectRoot, excludeDirectories);
         if (csprojFiles.Count == 0) return null;
 
         var allRefs = new List<string>();
@@ -164,7 +167,8 @@ internal static class AnalysisPipeline
 
     static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypes(
         IReadOnlyList<AsmdefInfo> targets, IReadOnlyList<string> preprocessorSymbols,
-        IReadOnlyList<string>? additionalExclude = null)
+        IReadOnlyList<string>? additionalExclude = null, bool excludeGeneratedCode = true,
+        bool applyAnyDepthExcludes = true)
     {
         var allTypes = new List<TypeNodeInfo>();
         var allTrees = new List<SyntaxTree>();
@@ -172,7 +176,7 @@ internal static class AnalysisPipeline
         {
             var merged = MergeExcludeDirectories(asm.ExcludeDirectories, additionalExclude);
             var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
-                asm.Directory, asm.Name, preprocessorSymbols, merged);
+                asm.Directory, asm.Name, preprocessorSymbols, merged, excludeGeneratedCode, applyAnyDepthExcludes);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }
