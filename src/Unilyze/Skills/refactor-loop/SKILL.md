@@ -60,14 +60,23 @@ print_final_summary()
 UNILYZE_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.unilyze"
 mkdir -p "$UNILYZE_DIR"
 
+# before/after スナップショットで同一のフィルタを使う (quality-audit.json 再利用時も同じ条件で生成されていること)
+UNILYZE_FILTER="--prefix App."
+
 # /quality-audit で作成済みなら再利用
 if [ -f "$UNILYZE_DIR/quality-audit.json" ]; then
   cp "$UNILYZE_DIR/quality-audit.json" "$UNILYZE_DIR/refactor-before.json"
+  # quality-audit.json も $UNILYZE_FILTER と同じフィルタで生成されている必要がある
 else
-  # --prefix または -a で自前コードに絞る (サードパーティ除外)
-  unilyze -p <path> --prefix "App." -f json -o "$UNILYZE_DIR/refactor-before.json"
+  unilyze -p <path> $UNILYZE_FILTER -f json -o "$UNILYZE_DIR/refactor-before.json"
 fi
 ```
+
+#### Snapshot naming convention
+
+- before snapshot: `$UNILYZE_DIR/refactor-before.json`
+- after snapshot: `$UNILYZE_DIR/refactor-after.json`
+- both must be produced with the same `$UNILYZE_FILTER`; mismatched filters cause spurious Added/Removed in diff
 
 hotspot を取得して優先順位を決定する (ループ開始時に1回だけ実行)。
 git 履歴が十分にある場合のみ有効。非 git リポジトリや作りたてのリポジトリではスキップし、CodeHealth 順で進める。
@@ -130,8 +139,9 @@ dotnet test  # or project-specific test command
 ### Step 4: 定量比較
 
 ```bash
-unilyze -p <path> -f json -o "$UNILYZE_DIR/refactor-after.json"
-unilyze diff "$UNILYZE_DIR/refactor-before.json" "$UNILYZE_DIR/refactor-after.json" 2>&1
+unilyze -p <path> $UNILYZE_FILTER -f json -o "$UNILYZE_DIR/refactor-after.json"
+# --changed-only keeps aggregate Summary counts but omits unchanged types from JSON output
+unilyze diff "$UNILYZE_DIR/refactor-before.json" "$UNILYZE_DIR/refactor-after.json" --changed-only 2>&1
 ```
 
 判定ロジック:

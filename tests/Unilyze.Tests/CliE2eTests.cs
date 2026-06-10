@@ -393,6 +393,54 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Diff_ChangedOnly_OmitsUnchangedBucket()
+    {
+        var unchangedMetrics = new TypeMetrics(
+            "StableClass", "TestNs", "TestAssembly",
+            50, 2, 1, 2.0, 3, 2.0, 3, 0, 9.0, [], CodeSmells: []);
+        var degradedBefore = new TypeMetrics(
+            "BadClass", "TestNs", "TestAssembly",
+            100, 5, 2, 3.0, 5, 3.0, 5, 0, 9.0, [], CodeSmells: []);
+        var degradedAfter = degradedBefore with { CodeHealth = 6.0 };
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [unchangedMetrics, degradedBefore]), jsonOpts));
+        File.WriteAllText(afterFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [unchangedMetrics, degradedAfter]), jsonOpts));
+
+        var (exitCode, stdout, stderr) = Run("diff", beforeFile, afterFile, "--changed-only");
+        Assert.Equal(0, exitCode);
+        var doc = JsonDocument.Parse(stdout);
+        Assert.Equal(0, doc.RootElement.GetProperty("unchanged").GetArrayLength());
+        Assert.True(doc.RootElement.GetProperty("summary").GetProperty("unchangedCount").GetInt32() > 0);
+        Assert.True(doc.RootElement.GetProperty("degraded").GetArrayLength() > 0);
+        Assert.Contains("Unchanged: 1", stderr);
+    }
+
+    [Fact]
+    public void Diff_SameSnapshot_ChangedOnly_ZeroAddedRemoved()
+    {
+        var metrics = new TypeMetrics(
+            "StableClass", "TestNs", "TestAssembly",
+            50, 2, 1, 2.0, 3, 2.0, 3, 0, 9.0, [], CodeSmells: []);
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var snapshotFile = Path.Combine(_tempDir, "snapshot.json");
+        File.WriteAllText(snapshotFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [metrics]), jsonOpts));
+
+        var (exitCode, stdout, _) = Run("diff", snapshotFile, snapshotFile, "--changed-only");
+        Assert.Equal(0, exitCode);
+        var doc = JsonDocument.Parse(stdout);
+        Assert.Equal(0, doc.RootElement.GetProperty("added").GetArrayLength());
+        Assert.Equal(0, doc.RootElement.GetProperty("removed").GetArrayLength());
+        Assert.Equal(0, doc.RootElement.GetProperty("summary").GetProperty("addedCount").GetInt32());
+        Assert.Equal(0, doc.RootElement.GetProperty("summary").GetProperty("removedCount").GetInt32());
+    }
+
+    [Fact]
     public void DiffSubcommand_MarkdownFormat_OutputsGfmTables()
     {
         var warning = new CodeSmell(CodeSmellKind.GodClass, SmellSeverity.Warning, "BadClass", null, "large");
