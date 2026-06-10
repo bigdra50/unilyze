@@ -390,7 +390,7 @@ unilyze schema    # JSON field reference
 ## Known Limitations
 
 - HTML graph loads Cytoscape from CDN. Falls back to offline report when unavailable.
-- Windows is untested.
+- Windows is covered by CI (windows-latest, net10.0).
 
 ## License
 
