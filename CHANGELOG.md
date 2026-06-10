@@ -31,7 +31,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - Assembly metric aggregation builds a one-time reverse index instead of re-scanning dependencies per assembly (faster on multi-asmdef projects; metric values unchanged)
 
 ### Fixed
-
+- `skills install` was a silent no-op in Windows-built binaries: embedded skill resource names use the build OS's path separator and the backslash form failed to parse ([#42](https://github.com/bigdra50/unilyze/issues/42))
 - `statusline --help` output-format description now matches the actual output (min CodeHealth, MI, boxing, and cycles tokens were missing; smell marker was wrong)
 
 ## [0.3.0] - 2026-06-08

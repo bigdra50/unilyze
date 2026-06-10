@@ -187,8 +187,10 @@ static class SkillInstaller
 
         foreach (var resourceName in resourceNames)
         {
-            // Strip "Skills/" prefix -> "<skillName>/SKILL.md" or "<skillName>/references/foo.md"
-            var relative = resourceName[ResourcePrefix.Length..];
+            // Strip "Skills/" prefix -> "<skillName>/SKILL.md" or "<skillName>/references/foo.md".
+            // %(RecursiveDir) in the csproj LogicalName expands with the build OS's separator,
+            // so Windows-built assemblies carry backslashes here; normalize before parsing.
+            var relative = resourceName[ResourcePrefix.Length..].Replace('\\', '/');
             var slashIndex = relative.IndexOf('/');
             if (slashIndex < 0) continue;
 

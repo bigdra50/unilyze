@@ -19,8 +19,13 @@ public sealed class CliE2eTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_tempDir))
-            Directory.Delete(_tempDir, true);
+        if (!Directory.Exists(_tempDir))
+            return;
+
+        // git marks object files read-only; Windows refuses to recursively delete them.
+        foreach (var file in Directory.EnumerateFiles(_tempDir, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+        Directory.Delete(_tempDir, true);
     }
 
     private static (int ExitCode, string StdOut, string StdErr) Run(params string[] args)
