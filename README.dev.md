@@ -129,6 +129,7 @@ Related files:
 4. Confirm README / docs / package metadata match the implementation
 5. Confirm HTML fallback and `--no-open` are not broken
 6. Apply the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
+7. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into the new version section, set the release date, and prefix `[metrics]` entries per the tag convention)
 
 ## NuGet Publish
 
