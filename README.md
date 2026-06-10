@@ -250,23 +250,23 @@ unilyze config remove-exclude-dir Assets/Plugins       # Remove from project con
 
 | Metric | Description | Granularity |
 |--------|-------------|-------------|
-| Cognitive Complexity | SonarSource-compliant cognitive complexity | Method |
-| Cyclomatic Complexity | McCabe 1976-compliant cyclomatic complexity | Method |
-| Halstead D/E/B | Difficulty, Effort, EstimatedBugs from operator/operand counts | Method |
-| LCOM-HS | Henderson-Sellers cohesion (0.0-1.0+) | Type |
-| WMC | Weighted Methods per Class (sum of CycCC) | Type |
-| NOC | Number of Children (direct subclass count) | Type |
-| RFC | Response For a Class (methods + unique external calls) | Type |
-| CBO | Coupling Between Objects (number of coupled types) | Type |
-| DIT | Depth of Inheritance (inheritance chain depth) | Type |
-| Ca / Ce | Afferent / Efferent Coupling | Type |
-| Instability | Ce / (Ca + Ce) (0.0: stable - 1.0: unstable) | Type |
-| Maintainability Index | Computed from Halstead Volume, CycCC, LoC (0-100) | Method |
-| TypeRank | PageRank-based importance score (damping=0.85) | Type |
-| Code Health | Composite score (1.0: worst - 10.0: best) | Type |
-| Abstractness | (abstract + interface) / total types | Assembly |
-| DfMS | Distance from Main Sequence \|A + I - 1\| | Assembly |
-| Relational Cohesion | (R + 1) / N internal relationship density | Assembly |
+| [Cognitive Complexity](./docs/metrics.md#cognitive-complexity-cogcc) | SonarSource-compliant cognitive complexity | Method |
+| [Cyclomatic Complexity](./docs/metrics.md#cyclomatic-complexity-cyccc) | McCabe 1976-compliant cyclomatic complexity | Method |
+| [Halstead D/E/B](./docs/metrics.md#halstead-complexity-measures) | Difficulty, Effort, EstimatedBugs from operator/operand counts | Method |
+| [LCOM-HS](./docs/metrics.md#lcom-hs-henderson-sellers) | Henderson-Sellers cohesion (0.0-1.0+) | Type |
+| [WMC](./docs/metrics.md#wmc-weighted-methods-per-class) | Weighted Methods per Class (sum of CycCC) | Type |
+| [NOC](./docs/metrics.md#noc-number-of-children) | Number of Children (direct subclass count) | Type |
+| [RFC](./docs/metrics.md#rfc-response-for-a-class) | Response For a Class (methods + unique external calls) | Type |
+| [CBO](./docs/metrics.md#cbo-coupling-between-objects) | Coupling Between Objects (number of coupled types) | Type |
+| [DIT](./docs/metrics.md#dit-depth-of-inheritance) | Depth of Inheritance (inheritance chain depth) | Type |
+| [Ca / Ce](./docs/metrics.md#ca--ce-afferent--efferent-coupling) | Afferent / Efferent Coupling | Type |
+| [Instability](./docs/metrics.md#instability-i) | Ce / (Ca + Ce) (0.0: stable - 1.0: unstable) | Type |
+| [Maintainability Index](./docs/metrics.md#maintainability-index-mi) | Computed from Halstead Volume, CycCC, LoC (0-100) | Method |
+| [TypeRank](./docs/metrics.md#typerank) | PageRank-based importance score (damping=0.85) | Type |
+| [Code Health](./docs/metrics.md#code-health) | Composite score (1.0: worst - 10.0: best) | Type |
+| [Abstractness](./docs/metrics.md#abstractness-a) | (abstract + interface) / total types | Assembly |
+| [DfMS](./docs/metrics.md#distance-from-main-sequence-dfms) | Distance from Main Sequence \|A + I - 1\| | Assembly |
+| [Relational Cohesion](./docs/metrics.md#relational-cohesion-h) | (R + 1) / N internal relationship density | Assembly |
 
 Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs/metrics.md) for detailed specifications.
 

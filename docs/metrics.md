@@ -169,6 +169,145 @@ R = M 内から呼び出されるユニークな外部メソッド数
 | <= 50 | 一般的な範囲 |
 | > 50 | テスト・理解が困難になる傾向 |
 
+## CBO (Coupling Between Objects)
+
+準拠仕様: Chidamber & Kemerer (1994)
+
+### 公式
+
+```
+CBO = 型 T が結合するユニークな外部型の数
+```
+
+型 T の宣言・メンバー・メソッド本体から参照される型の集合から、自身と除外型を除いた件数。
+
+### カウント規約
+
+実装: `CboCalculator.cs`
+
+| パス | 解決方法 |
+|------|---------|
+| Semantic | 型宣言の descendant から `TypeSyntax` / `ObjectCreationExpression` / `CastExpression` を走査し、`SemanticModel` で `ITypeSymbol` を解決。`INamedTypeSymbol.OriginalDefinition` を集合に追加（ジェネリック型引数・配列要素型も再帰収集） |
+| Syntactic (fallback) | base list、フィールド/プロパティ型、メソッド/コンストラクタのシグネチャと本体（局所変数宣言・`new`・cast・`typeof`）から型名文字列を収集 |
+
+共通の除外:
+
+- 自身の型
+- Semantic 時: `SpecialType` が `None` 以外の組み込み型、`System.ValueType` / `System.Enum` / `System.Delegate` / `System.MulticastDelegate` / `System.Attribute` / `System.Void`
+- Syntactic 時: C# プリミティブ名（`int`, `string`, `object` 等）
+
+CBO は `TypeDependency` グラフとは独立に、型宣言 AST から直接算出する。DI 登録エッジは CBO には含まれない。
+
+### しきい値（コードスメル）
+
+| レベル | 条件 |
+|--------|------|
+| Warning (`HighCoupling`) | CBO >= 15 |
+| Critical (`HighCoupling`) | CBO >= 25 |
+
+定数: `SmellThresholds.HighCouplingCboWarning` / `HighCouplingCboCritical`
+
+### 注意点
+
+- SemanticModel が利用できない `SyntaxOnly` 解析では過小評価される（外部エンジン型への結合が不可視）
+- 公式 Metrics エンジンの ClassCoupling とはカウント対象・粒度が異なる（「バリデーション (検証)」参照）
+
+## DIT (Depth of Inheritance)
+
+準拠仕様: Chidamber & Kemerer (1994)
+
+### 公式
+
+```
+DIT = 型 T から `System.Object` 手前までの継承チェーン長
+```
+
+interface / struct は 0。class / record は直接・間接の基底 class を数える。
+
+### カウント規約
+
+実装: `DitCalculator.cs`
+
+| パス | 規約 |
+|------|------|
+| Semantic | interface → 0。struct → 0。それ以外は `INamedTypeSymbol.BaseType` を `System.Object` に到達するまで辿り、段数をカウント（`System.Object` 自身は数えない） |
+| Syntactic (fallback) | interface / struct / record struct → 0。base list なし → 0。先頭 base が `QualifiedNameSyntax`（外部型）→ 1。同一 syntax tree 内で同名 interface 宣言があれば 0、それ以外 → 1 |
+
+Semantic 計算が失敗した場合、`SemanticEnricher` は syntactic fallback または `TypeNodeInfo.BaseType` の有無（0/1）に縮退する。
+
+### しきい値（コードスメル）
+
+| レベル | 条件 |
+|--------|------|
+| Warning (`DeepInheritance`) | DIT >= 5 |
+
+定数: `SmellThresholds.DeepInheritanceDitWarning`
+
+### 注意点
+
+- 公式 Metrics エンジンは `object` 継承を 1 として数える規約差があり、全件でオフセットが生じる（「バリデーション (検証)」参照）
+- エンジン型（`UnityEngine.MonoBehaviour` 等）を跨ぐ継承は Semantic 解析が必須。`SyntaxOnly` では過小評価される
+
+## Ca / Ce (Afferent / Efferent Coupling)
+
+Martin の安定度分析に基づく型単位の結合度。
+
+### 公式
+
+```
+Ca(T) = T を依存先 (To) とするユニーク有向エッジ数
+Ce(T) = T を依存元 (From) とするユニーク有向エッジ数
+```
+
+入力は `DependencyBuilder.Build` が生成する `TypeDependency` リスト（継承・interface 実装・メンバー型・コンストラクタ/メソッド引数・ジェネリック制約）に加え、解決済みの DI 登録エッジ（VContainer / Zenject）。
+
+### カウント規約
+
+実装: `CouplingMetricsCalculator.cs`
+
+- 解析対象型集合（`allTypes`）に含まれる `FromTypeId` / `ToTypeId` のみカウント
+- 自己参照 (`From == To`) は除外
+- 同一 `(From, To)` ペアは 1 回のみ（`DependencyKind` が複数あっても重複しない）
+- `FromTypeId` または `ToTypeId` が null（解析対象外への未解決エッジ）は除外
+
+Ca / Ce にしきい値ベースのコードスメル判定はない。
+
+### 注意点
+
+- Ca / Ce は依存グラフ上のエッジ数であり、CBO（型宣言 AST からの型参照集合）とは定義が異なる
+- 解析対象外の型への DI 登録はエッジとして接続されず、Ca / Ce に寄与しない
+
+## Instability (I)
+
+Martin の Instability。型単位とアセンブリ単位で算出粒度が異なる。
+
+### 公式（型単位）
+
+```
+I(T) = Ce(T) / (Ca(T) + Ce(T))     ※ Ca + Ce > 0 の場合
+I(T) = null                        ※ Ca + Ce = 0 の場合
+```
+
+実装: `CouplingMetricsCalculator.cs`（型ごと）。JSON 出力では小数第 2 位に丸める。
+
+### 公式（アセンブリ単位）
+
+```
+I(assembly) = Σ Ce / (Σ Ca + Σ Ce)
+```
+
+アセンブリ内全型の Ca / Ce をそれぞれ合算。実装: `AssemblyMetrics.ComputeAssemblyInstability`。`Distance from Main Sequence` の I はこちらを使用する。
+
+### 解釈
+
+| 値 | 意味 |
+|-----|------|
+| 0.0 | 完全に安定（他型からのみ依存される） |
+| 1.0 | 完全に不安定（他型へのみ依存する） |
+| null（型のみ） | 入出力結合がゼロ |
+
+Ca / Ce / Instability にコードスメルしきい値はない。
+
 ## Halstead Complexity Measures
 
 準拠仕様: Halstead, M.H. (1977) "Elements of Software Science"
@@ -190,6 +329,59 @@ R = M 内から呼び出されるユニークな外部メソッド数
 | Difficulty (D) | `(n1 / 2) * (N2 / n2)` | 理解の困難さ。n2=0 の場合は 0 |
 | Effort (E) | `D * V` | 実装に必要な精神的労力 |
 | EstimatedBugs (B) | `E^(2/3) / 3000` | 推定バグ数 |
+
+## Maintainability Index (MI)
+
+準拠仕様: Oman & Hagemeister (1992) — Visual Studio / Microsoft Code Metrics 系の正規化 MI
+
+### 公式（メソッド単位）
+
+```
+loc = max(1, メソッド宣言の行数)
+V   = Halstead Volume（HalsteadCalculator.cs）
+
+raw = 171 - 5.2 × ln(V) - 0.23 × CycCC - 16.2 × ln(loc)
+MI  = max(0, raw × 100 / 171)        ※ V > 0
+MI  = 100                            ※ V <= 0
+```
+
+`ln` は自然対数（`Math.Log`）。CycCC は unilyze の Cyclomatic Complexity（McCabe 拡張解釈）。MI は初回の syntactic 解析時点の CycCC で計算され、Semantic enrich で CycCC が更新されても MI 自体は再計算されない。
+
+### 型単位の集約
+
+実装: `CodeHealthCalculator.cs`
+
+```
+AverageMaintainabilityIndex = 型内メソッド MI の算術平均（小数第 1 位）
+MinMaintainabilityIndex     = 型内メソッド MI の最小（小数第 1 位）
+```
+
+メソッドを持たない型は MI 非対象。プロジェクト平均（statusline / badge）はメソッドを持つ型のみを分母とする。
+
+### しきい値（コードスメル）
+
+| レベル | 条件 |
+|--------|------|
+| Warning (`LowMaintainability`) | メソッド MI < 60 |
+
+定数: `SmellThresholds.LowMaintainabilityMiWarning`
+
+badge / statusline の色分け（参考）: green >= 80, yellow >= 60, red < 60（`BadgeFormatter.cs` / `StatuslineFormatter.cs`）
+
+### 注意点
+
+- 行数はメソッド本体だけでなく、シグネチャを含む宣言全体の行スパン（`MemberExtractor.cs`）
+- 公式 Metrics エンジンは型単位で集約するため、メソッド平均との規約差で相関は高いが一致しない（「バリデーション (検証)」参照）
+- SyntaxOnly でも CodeHealth と同様おおむね安定
+
+### 妥当性の限界
+
+MI は 1992 年の Visual Basic コードに対する回帰分析から得られた固定係数（171, 5.2, 0.23, 16.2）に依存しており、現代の C# / Unity コードベースへの当てはまりには限界がある。
+
+- Arie van Deursen "Think Twice Before Using the Maintainability Index" (https://avandeursen.com/2014/08/29/think-twice-before-using-the-maintainability-index/)
+- Borg et al. "Ghost Echoes Revealed: Benchmarking Maintainability Metrics and Machine Learning Predictions Against Human Assessments" (ICSME 2024, arXiv:2408.10754)
+
+後者を含む近年の評価では、MI を含む古典的メトリクスは人間の保守性評価との一致が弱いことが示されている。unilyze では MI を参考値として出力するが、単独の品質ゲート指標としては推奨しない。Phase 3 では CodeHealth を主指標に一本化し、MI は後方互換または補助表示に縮退する方針である。
 
 ## TypeRank
 
