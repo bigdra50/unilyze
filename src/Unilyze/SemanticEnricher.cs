@@ -187,13 +187,44 @@ internal static class SemanticEnricher
             var detected = new List<DetectedSmell>();
             foreach (var detector in SmellDetectorRegistry.All)
                 detected.AddRange(detector.Detect(td, mdl));
-            return detected;
+
+            var unityContext = UnityContextClassifier.Classify(td, mdl);
+            return ApplyHotPathEscalation(detected, unityContext);
         }
         catch (Exception)
         {
             // Roslyn internal errors — graceful degradation
             return [];
         }
+    }
+
+    static IReadOnlyList<DetectedSmell> ApplyHotPathEscalation(
+        List<DetectedSmell> detected,
+        UnityTypeContext context)
+    {
+        if (!context.IsMonoBehaviour)
+            return detected;
+
+        for (var i = 0; i < detected.Count; i++)
+        {
+            var smell = detected[i];
+            if (!ShouldEscalateHotPathSmell(context, smell))
+                continue;
+
+            detected[i] = smell with { Severity = SmellSeverity.Critical };
+        }
+
+        return detected;
+    }
+
+    static bool ShouldEscalateHotPathSmell(UnityTypeContext context, DetectedSmell smell)
+    {
+        if (smell.MethodName is null || !context.HotPathMethodNames.Contains(smell.MethodName))
+            return false;
+
+        return smell.Kind is CodeSmellKind.BoxingAllocation
+            or CodeSmellKind.ClosureCapture
+            or CodeSmellKind.ParamsArrayAllocation;
     }
 
     static List<CodeSmell> ConvertDetectedSmells(

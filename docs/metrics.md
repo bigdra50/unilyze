@@ -467,6 +467,11 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 
 既知のコードスメルをルールベースで検出する。
 
+スメル検出はしきい値依存のヒューリスティックであり、ground truth ではない。
+Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smells and detection tools" (JSERD) によると、ツール間一致率は 67-100%、recall は 0-58%、precision は 0-100% であり、しきい値の差だけで結果が割れる。
+しきい値は下表に記載されている。
+計測値の互換性は [メトリクス互換性ポリシー](#メトリクス互換性ポリシー) を参照する。
+
 <!-- smell-thresholds:start -->
 | スメル | 判定条件 (Warning) | 判定条件 (Critical) |
 |--------|-------------------|-------------------|
@@ -481,6 +486,58 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 | DeepInheritance | DIT >= 5 | — |
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
 <!-- smell-thresholds:end -->
+
+### Unity hot-path severity escalation
+
+`BoxingAllocation`, `ClosureCapture`, and `ParamsArrayAllocation` are normally Warning-level smells. When the enclosing type derives from `UnityEngine.MonoBehaviour` and the smell occurs inside a Unity hot-path method, severity escalates to Critical.
+
+Hot-path methods are:
+
+- `Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`
+- Coroutines: methods whose return type is `System.Collections.IEnumerator`
+
+Lifecycle methods such as `Awake`, `Start`, `OnEnable`, `OnDisable`, and `OnDestroy` are **not** hot paths and keep Warning severity.
+
+Escalation rewrites only `Severity` (Warning → Critical); `Kind` is unchanged so boxing/closure/params counts and CodeHealth are unaffected.
+
+#### SyntaxOnly caveats
+
+Under `SyntaxOnly` analysis:
+
+- **ClosureCapture only:** Boxing and Params require a `SemanticModel` and emit nothing under SyntaxOnly, so hot-path escalation applies to ClosureCapture only.
+- **MonoBehaviour detection:** the syntactic fallback matches the direct base-list type name against `MonoBehaviour` and cannot see through intermediate project base classes (e.g. `Player : BaseView` where `BaseView : MonoBehaviour` is not recognized without semantic resolution).
+
+### 検出責務ルーティング
+
+各スメルの検出責務を、決定的ルール検出（構造系・グラフ系・セマンティック系）と LLM 委譲（セマンティックな意図判断）に分ける。
+Souza et al. (arXiv:2601.09873) はスメル種別ごとに最適な検出器が異なり、構造系は決定的ルール、セマンティック系は LLM が有利と報告している。
+Wu, Mu et al. (iSMELL, ASE 2024) はメトリクスツールと LLM の組み合わせが LLM 単体を上回ると報告しており、決定的検出と LLM 解釈の分担を支持する。
+LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/quality-audit/references/blind-spots.md) を参照し、Phase 3 チェックリストで確認する。
+
+| スメル | SARIF ルール | 検出責務 | 根拠 |
+|--------|-------------|---------|------|
+| GodClass | UNI001 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| LongMethod | UNI002 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| ExcessiveParameters | UNI003 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| HighComplexity | UNI004 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| DeepNesting | UNI005 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| LowCohesion | UNI006 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| HighCoupling | UNI007 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| LowMaintainability | UNI008 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| CyclicDependency | UNI009 | ルール検出（グラフ解析） | 依存グラフ解析必須 |
+| DeepInheritance | UNI010 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
+| BoxingAllocation | UNI011 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| ClosureCapture | UNI012 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| ParamsArrayAllocation | UNI013 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| コメントとコードの不整合 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| トップレベルステートメント | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| ランタイムリスク (Dispose 漏れ / デッドロック) | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 
 ## バリデーション (検証)
 

@@ -274,6 +274,8 @@ Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs
 
 ## Code Smell Detection
 
+Metric-threshold smell detection is heuristic, not ground truth. See [docs/metrics.md](./docs/metrics.md#code-smell) for reliability caveats and the detection-responsibility routing table.
+
 | Kind | Warning | Critical |
 |------|---------|----------|
 | GodClass | lines >= 500 OR methods >= 20 | lines >= 1000 |
@@ -334,6 +336,8 @@ Each type row gets:
 - Inline `▲`/`▼` deltas next to Health, Max CogCC, CBO, DIT cells
 - A `Changed only` toggle in the diff summary bar
 - A "Changes vs Baseline" / "Methods Changed" / "Smells Δ" section in the type detail panel
+
+In graph mode, changed types get colored halos (green added / red degraded / blue improved), the tap detail panel shows the same baseline sections, and `Changed only` hides unchanged types from the graph. Removed types appear in the summary and table views only (they have no node in the after-graph).
 
 The viewer otherwise behaves like a normal `unilyze` HTML report (dependency graph, hotspots, cycles, assembly coupling).
 
