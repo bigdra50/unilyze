@@ -49,6 +49,22 @@ internal static class SonarCogCCHelper
         return await RunSonarBuild(sourceFiles, packageReferences);
     }
 
+    /// <summary>
+    /// Run SonarAnalyzer S3776 on source file paths.
+    /// Returns fileName -> (declaration start line (1-based) -> CogCC score).
+    /// </summary>
+    public static async Task<Dictionary<string, Dictionary<int, int>>> GetCognitiveComplexitiesByLineFromPaths(
+        IEnumerable<string> filePaths, IEnumerable<string>? packageReferences = null)
+    {
+        var sourceFiles = new Dictionary<string, string>();
+        foreach (var path in filePaths)
+        {
+            var fileName = Path.GetFileName(path);
+            sourceFiles[fileName] = await File.ReadAllTextAsync(path);
+        }
+        return await RunSonarBuildByLine(sourceFiles, packageReferences);
+    }
+
     private static async Task<Dictionary<string, Dictionary<string, int>>> RunSonarBuild(
         Dictionary<string, string> sourceFiles, IEnumerable<string>? packageReferences = null)
     {
@@ -122,35 +138,15 @@ internal static class SonarCogCCHelper
 
             // Parse S3776 diagnostics from build output
             // Format: "FileName.cs(line,col): warning S3776: ... from N to the 0 allowed."
-            var diagRegex = new Regex(@"(\w+\.cs)\((\d+),(\d+)\).*(warning|error) S3776:.*from (\d+) to the");
             var results = new Dictionary<string, Dictionary<string, int>>();
-
-            foreach (Match match in diagRegex.Matches(output))
+            foreach (var (fileName, declaration, methodName, score) in ParseSonarDiagnostics(output, sourceFiles))
             {
-                var fileName = match.Groups[1].Value;
-                var line = int.Parse(match.Groups[2].Value);
-                var col = int.Parse(match.Groups[3].Value);
-                var score = int.Parse(match.Groups[5].Value);
-
-                if (!sourceFiles.TryGetValue(fileName, out var sourceCode))
+                if (methodName == null)
                     continue;
 
-                var tree = CSharpSyntaxTree.ParseText(sourceCode,
-                    CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
-                var root = tree.GetRoot();
-                var lines = tree.GetText().Lines;
-
-                if (line - 1 >= lines.Count) continue;
-                var position = lines[line - 1].Start + col - 1;
-                var node = root.FindToken(position).Parent;
-                var methodName = ExtractMethodName(node);
-
-                if (methodName != null)
-                {
-                    if (!results.ContainsKey(fileName))
-                        results[fileName] = new Dictionary<string, int>();
-                    results[fileName][methodName] = score;
-                }
+                if (!results.ContainsKey(fileName))
+                    results[fileName] = new Dictionary<string, int>();
+                results[fileName][methodName] = score;
             }
 
             return results;
@@ -159,6 +155,122 @@ internal static class SonarCogCCHelper
         {
             try { Directory.Delete(tempDir, true); }
             catch { /* best effort cleanup */ }
+        }
+    }
+
+    private static async Task<Dictionary<string, Dictionary<int, int>>> RunSonarBuildByLine(
+        Dictionary<string, string> sourceFiles, IEnumerable<string>? packageReferences = null)
+    {
+        if (!File.Exists(SonarAnalyzerDllPath))
+            throw new FileNotFoundException($"SonarAnalyzer.CSharp.dll not found at {SonarAnalyzerDllPath}");
+
+        var tempDir = Path.Combine(Path.GetTempPath(), $"sonar_cogcc_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            foreach (var (fileName, content) in sourceFiles)
+                await File.WriteAllTextAsync(Path.Combine(tempDir, fileName), content);
+
+            await File.WriteAllTextAsync(Path.Combine(tempDir, "SonarLint.xml"), """
+                <AnalysisInput>
+                  <Settings>
+                    <Setting>
+                      <Key>sonar.cs.analyzeGeneratedCode</Key>
+                      <Value>true</Value>
+                    </Setting>
+                  </Settings>
+                  <Rules>
+                    <Rule>
+                      <Key>S3776</Key>
+                      <Parameters>
+                        <Parameter><Key>threshold</Key><Value>0</Value></Parameter>
+                      </Parameters>
+                    </Rule>
+                  </Rules>
+                </AnalysisInput>
+                """);
+
+            await File.WriteAllTextAsync(Path.Combine(tempDir, ".globalconfig"),
+                "is_global = true\ndotnet_diagnostic.S3776.severity = warning\n");
+
+            var pkgRefsXml = "";
+            if (packageReferences != null)
+            {
+                var lines = packageReferences
+                    .Select(pr => $"    <PackageReference Include=\"{pr.Split('/')[0]}\" Version=\"{pr.Split('/')[1]}\" />");
+                pkgRefsXml = $"\n  <ItemGroup>\n{string.Join("\n", lines)}\n  </ItemGroup>";
+            }
+
+            await File.WriteAllTextAsync(Path.Combine(tempDir, "SonarTest.csproj"), $"""
+                <Project Sdk="Microsoft.NET.Sdk">
+                  <PropertyGroup>
+                    <TargetFramework>net8.0</TargetFramework>
+                    <OutputType>Library</OutputType>
+                    <LangVersion>latest</LangVersion>
+                    <ImplicitUsings>enable</ImplicitUsings>
+                    <Nullable>enable</Nullable>
+                    <WarningsAsErrors />
+                    <NoWarn>CS8019;CS0168;CS0219;CS8600;CS8601;CS8602;CS8603;CS8604;CS8618;CS8625;CS0162</NoWarn>
+                  </PropertyGroup>
+                  <ItemGroup>
+                    <Analyzer Include="{SonarAnalyzerDllPath}" />
+                    <AdditionalFiles Include="SonarLint.xml" />
+                  </ItemGroup>{pkgRefsXml}
+                </Project>
+                """);
+
+            await RunDotnet(tempDir, "restore -v quiet");
+            var output = await RunDotnet(tempDir, "build --no-restore -nologo -v quiet");
+
+            var results = new Dictionary<string, Dictionary<int, int>>();
+            foreach (var (fileName, declaration, _, score) in ParseSonarDiagnostics(output, sourceFiles))
+            {
+                if (declaration == null)
+                    continue;
+
+                var declStartLine = GetDeclarationStartLine(declaration);
+                if (!results.ContainsKey(fileName))
+                    results[fileName] = new Dictionary<int, int>();
+                results[fileName][declStartLine] = score;
+            }
+
+            return results;
+        }
+        finally
+        {
+            try { Directory.Delete(tempDir, true); }
+            catch { /* best effort cleanup */ }
+        }
+    }
+
+    private static IEnumerable<(string FileName, SyntaxNode? Declaration, string? MethodName, int Score)>
+        ParseSonarDiagnostics(string output, Dictionary<string, string> sourceFiles)
+    {
+        var diagRegex = new Regex(@"(\w+\.cs)\((\d+),(\d+)\).*(warning|error) S3776:.*from (\d+) to the");
+
+        foreach (Match match in diagRegex.Matches(output))
+        {
+            var fileName = match.Groups[1].Value;
+            var line = int.Parse(match.Groups[2].Value);
+            var col = int.Parse(match.Groups[3].Value);
+            var score = int.Parse(match.Groups[5].Value);
+
+            if (!sourceFiles.TryGetValue(fileName, out var sourceCode))
+                continue;
+
+            var tree = CSharpSyntaxTree.ParseText(sourceCode,
+                CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest));
+            var root = tree.GetRoot();
+            var lines = tree.GetText().Lines;
+
+            if (line - 1 >= lines.Count)
+                continue;
+
+            var position = lines[line - 1].Start + col - 1;
+            var node = root.FindToken(position).Parent;
+            var (declaration, methodName) = ExtractOwningDeclaration(node);
+            yield return (fileName, declaration, methodName, score);
         }
     }
 
@@ -184,19 +296,22 @@ internal static class SonarCogCCHelper
         return output;
     }
 
-    private static string? ExtractMethodName(SyntaxNode? node)
+    private static (SyntaxNode? Declaration, string? MethodName) ExtractOwningDeclaration(SyntaxNode? node)
     {
         var current = node;
         while (current != null)
         {
             if (current is Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax method)
-                return method.Identifier.Text;
+                return (method, method.Identifier.Text);
             if (current is Microsoft.CodeAnalysis.CSharp.Syntax.ConstructorDeclarationSyntax ctor)
-                return ctor.Identifier.Text;
+                return (ctor, ctor.Identifier.Text);
             if (current is Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax prop)
-                return prop.Identifier.Text;
+                return (prop, prop.Identifier.Text);
             current = current.Parent;
         }
-        return null;
+        return (null, null);
     }
+
+    private static int GetDeclarationStartLine(SyntaxNode declaration) =>
+        declaration.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
 }
