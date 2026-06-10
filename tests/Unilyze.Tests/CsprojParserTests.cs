@@ -185,16 +185,17 @@ public class CsprojParserTests : IDisposable
     }
 
     [Fact]
-    public void DiscoverCsprojFiles_ExcludesLibraryDir()
+    public void DiscoverCsprojFiles_ExcludesDefaultDirs()
     {
         var dir = CreateTempDir();
 
-        // Create a .csproj in a Library/ subdirectory (should be excluded)
-        var libraryDir = Path.Combine(dir, "Library");
-        Directory.CreateDirectory(libraryDir);
-        File.WriteAllText(Path.Combine(libraryDir, "Cached.csproj"), "<Project />");
+        foreach (var excluded in new[] { "Library", "obj", "bin" })
+        {
+            var excludedDir = Path.Combine(dir, excluded);
+            Directory.CreateDirectory(excludedDir);
+            File.WriteAllText(Path.Combine(excludedDir, $"{excluded}.csproj"), "<Project />");
+        }
 
-        // Create a .csproj outside Library/ (should be included)
         var srcDir = Path.Combine(dir, "src");
         Directory.CreateDirectory(srcDir);
         var validPath = Path.Combine(srcDir, "App.csproj");
@@ -203,6 +204,6 @@ public class CsprojParserTests : IDisposable
         var result = CsprojParser.DiscoverCsprojFiles(dir);
 
         Assert.Single(result);
-        Assert.DoesNotContain(result, p => p.Contains("Library"));
+        Assert.Equal(Path.GetFullPath(validPath), result[0]);
     }
 }

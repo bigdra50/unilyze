@@ -34,14 +34,18 @@ public static class CsprojParser
         }
     }
 
-    public static IReadOnlyList<string> DiscoverCsprojFiles(string projectRoot)
+    public static IReadOnlyList<string> DiscoverCsprojFiles(
+        string projectRoot,
+        IReadOnlyList<string>? excludeDirectories = null)
     {
         var results = new List<string>();
+        var excludes = excludeDirectories ?? DefaultExcludes.ResolveProjectPaths(projectRoot);
 
         // Check for .sln and extract .csproj paths
         foreach (var sln in Directory.EnumerateFiles(projectRoot, "*.sln", SearchOption.TopDirectoryOnly))
         {
-            results.AddRange(ExtractCsprojFromSln(sln, projectRoot));
+            results.AddRange(ExtractCsprojFromSln(sln, projectRoot)
+                .Where(path => !DefaultExcludes.IsUnderExcludedDirectory(path, excludes)));
         }
 
         if (results.Count > 0) return results.Distinct().ToList();
@@ -51,7 +55,7 @@ public static class CsprojParser
         {
             results.AddRange(
                 Directory.EnumerateFiles(projectRoot, "*.csproj", SearchOption.AllDirectories)
-                    .Where(p => !p.Contains("Library" + Path.DirectorySeparatorChar)));
+                    .Where(path => !DefaultExcludes.IsUnderExcludedDirectory(path, excludes)));
         }
         catch (UnauthorizedAccessException) { }
 

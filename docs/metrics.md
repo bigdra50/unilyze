@@ -403,6 +403,9 @@ JSON 出力のルートに `metricsVersion`（int）と `toolVersion`（string�
 (1) `AnalysisResult.CurrentMetricsVersion` をインクリメント、(2) 最低 minor バンプ、(3) CHANGELOG に `[metrics]` エントリを追加、
 の 3 点をセットで行う。patch リリースで metricsVersion を上げてはならない。
 
+同一リリースウィンドウ（`[Unreleased]` 期間）では `metricsVersion` のバンプは 1 回にまとめる。
+未リリースのバージョン番号に対応する定義は流動的であり、タグ付け前に複数の `[metrics]` 変更が入っても番号の再割り当ては行わない。
+
 ### 将来課題
 
 （解決済み: issue #30 で `metricsVersion` / `toolVersion` を実装。上記「metricsVersion による機械的検出」を参照。）

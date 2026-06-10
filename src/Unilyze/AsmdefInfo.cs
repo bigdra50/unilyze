@@ -9,10 +9,16 @@ public sealed record AsmdefInfo(
     IReadOnlyList<string>? UnresolvedReferences = null,
     IReadOnlyList<string>? ExcludeDirectories = null)
 {
-    public static IReadOnlyList<AsmdefInfo> Discover(string assetsDir)
+    public static IReadOnlyList<AsmdefInfo> Discover(
+        string assetsDir,
+        IReadOnlyList<string>? excludeDirectories = null,
+        bool excludeGeneratedCode = true,
+        bool applyAnyDepthExcludes = true)
     {
         var asmdefFiles = System.IO.Directory
             .EnumerateFiles(assetsDir, "*.asmdef", SearchOption.AllDirectories)
+            .Where(file => !DefaultExcludes.ShouldExcludeSourceFile(
+                file, excludeDirectories, excludeGeneratedCode: false, assetsDir, applyAnyDepthExcludes))
             .ToList();
 
         var guidToAssemblyName = BuildGuidLookup(asmdefFiles);
@@ -30,7 +36,9 @@ public sealed record AsmdefInfo(
             results.Add(new AsmdefInfo(name, dir, refs, unresolvedRefs.Count > 0 ? unresolvedRefs : null));
         }
 
-        if (results.Count > 0 && HasLooseFiles(assetsDir, results))
+        results = ApplyNestedAsmdefExcludes(results);
+
+        if (results.Count > 0 && HasLooseFiles(assetsDir, results, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes))
         {
             var asmdefDirs = results.Select(a => Path.GetFullPath(a.Directory)).ToList();
             var refs = results.Select(a => a.Name).ToList();
@@ -40,7 +48,46 @@ public sealed record AsmdefInfo(
         return results;
     }
 
-    static bool HasLooseFiles(string assetsDir, IReadOnlyList<AsmdefInfo> asmdefs)
+    static List<AsmdefInfo> ApplyNestedAsmdefExcludes(IReadOnlyList<AsmdefInfo> asmdefs)
+    {
+        var fullDirs = asmdefs
+            .Select(asm => (Asm: asm, FullDir: Path.GetFullPath(asm.Directory)))
+            .ToList();
+
+        var updated = new List<AsmdefInfo>(asmdefs.Count);
+        foreach (var (asm, fullDir) in fullDirs)
+        {
+            var nestedDirs = fullDirs
+                .Where(other => !other.FullDir.Equals(fullDir, StringComparison.OrdinalIgnoreCase)
+                    && DefaultExcludes.IsStrictSubdirectory(other.FullDir, fullDir))
+                .Select(other => other.FullDir)
+                .ToList();
+
+            if (nestedDirs.Count == 0 && asm.ExcludeDirectories is not { Count: > 0 })
+            {
+                updated.Add(asm);
+                continue;
+            }
+
+            var merged = asm.ExcludeDirectories?.ToList() ?? [];
+            foreach (var nestedDir in nestedDirs)
+            {
+                if (!merged.Any(existing => existing.Equals(nestedDir, StringComparison.OrdinalIgnoreCase)))
+                    merged.Add(nestedDir);
+            }
+
+            updated.Add(asm with { ExcludeDirectories = merged });
+        }
+
+        return updated;
+    }
+
+    static bool HasLooseFiles(
+        string assetsDir,
+        IReadOnlyList<AsmdefInfo> asmdefs,
+        IReadOnlyList<string>? excludeDirectories,
+        bool excludeGeneratedCode,
+        bool applyAnyDepthExcludes)
     {
         var asmdefDirs = asmdefs
             .Select(a => Path.GetFullPath(a.Directory) + Path.DirectorySeparatorChar)
@@ -48,6 +95,10 @@ public sealed record AsmdefInfo(
 
         foreach (var csFile in System.IO.Directory.EnumerateFiles(assetsDir, "*.cs", SearchOption.AllDirectories))
         {
+            if (DefaultExcludes.ShouldExcludeSourceFile(
+                    csFile, excludeDirectories, excludeGeneratedCode, assetsDir, applyAnyDepthExcludes))
+                continue;
+
             var fullPath = Path.GetFullPath(csFile);
             if (!asmdefDirs.Any(ad => fullPath.StartsWith(ad, StringComparison.OrdinalIgnoreCase)))
                 return true;

@@ -73,7 +73,10 @@ internal static class StatuslineRunner
         try
         {
             var config = UnilyzeConfig.LoadMerged(fullPath);
-            var result = AnalysisPipeline.Build(fullPath, null, null, config.ExcludeDirs, requestedLevel);
+            var result = AnalysisPipeline.Build(
+                fullPath, null, null, config.ExcludeDirs, requestedLevel,
+                excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+                applyAnyDepthExcludes: !config.DisableDefaultExcludes);
             var summary = StatuslineFormatter.ComputeSummary(result);
             var formatted = StatuslineFormatter.Format(summary);
 

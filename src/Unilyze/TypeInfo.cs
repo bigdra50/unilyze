@@ -80,17 +80,19 @@ public static class TypeAnalyzer
 
     public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(
         string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null,
-        IReadOnlyList<string>? excludeDirectories = null)
+        IReadOnlyList<string>? excludeDirectories = null, bool excludeGeneratedCode = true,
+        bool applyAnyDepthExcludes = true)
     {
         var parseOptions = CSharpParseOptions.Default
             .WithLanguageVersion(LanguageVersion.Latest);
         if (preprocessorSymbols is { Count: > 0 })
             parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
 
-        var allFiles = Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories);
-        var csFiles = excludeDirectories is { Count: > 0 }
-            ? allFiles.Where(f => !IsUnderAnyDirectory(f, excludeDirectories)).ToList()
-            : allFiles.ToList();
+        var csFiles = Directory
+            .EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
+                f, excludeDirectories, excludeGeneratedCode, directory, applyAnyDepthExcludes))
+            .ToList();
         var rawTypes = new ConcurrentBag<TypeNodeInfo>();
         var trees = new ConcurrentBag<SyntaxTree>();
 
@@ -306,20 +308,6 @@ public static class TypeAnalyzer
             Attributes = parts.SelectMany(p => p.Attributes).DistinctBy(a => a.Name).ToList(),
             GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList()
         };
-    }
-
-    static bool IsUnderAnyDirectory(string filePath, IReadOnlyList<string> directories)
-    {
-        var fullPath = Path.GetFullPath(filePath);
-        foreach (var dir in directories)
-        {
-            var normalizedDir = dir.EndsWith(Path.DirectorySeparatorChar)
-                ? dir
-                : dir + Path.DirectorySeparatorChar;
-            if (fullPath.StartsWith(normalizedDir, StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
     }
 
     static string GetNamespace(SyntaxNode node)
