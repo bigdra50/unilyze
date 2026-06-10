@@ -487,6 +487,26 @@ Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smell
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
 <!-- smell-thresholds:end -->
 
+### Unity hot-path severity escalation
+
+`BoxingAllocation`, `ClosureCapture`, and `ParamsArrayAllocation` are normally Warning-level smells. When the enclosing type derives from `UnityEngine.MonoBehaviour` and the smell occurs inside a Unity hot-path method, severity escalates to Critical.
+
+Hot-path methods are:
+
+- `Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`
+- Coroutines: methods whose return type is `System.Collections.IEnumerator`
+
+Lifecycle methods such as `Awake`, `Start`, `OnEnable`, `OnDisable`, and `OnDestroy` are **not** hot paths and keep Warning severity.
+
+Escalation rewrites only `Severity` (Warning → Critical); `Kind` is unchanged so boxing/closure/params counts and CodeHealth are unaffected.
+
+#### SyntaxOnly caveats
+
+Under `SyntaxOnly` analysis:
+
+- **ClosureCapture only:** Boxing and Params require a `SemanticModel` and emit nothing under SyntaxOnly, so hot-path escalation applies to ClosureCapture only.
+- **MonoBehaviour detection:** the syntactic fallback matches the direct base-list type name against `MonoBehaviour` and cannot see through intermediate project base classes (e.g. `Player : BaseView` where `BaseView : MonoBehaviour` is not recognized without semantic resolution).
+
 ### 検出責務ルーティング
 
 各スメルの検出責務を、決定的ルール検出（構造系・グラフ系・セマンティック系）と LLM 委譲（セマンティックな意図判断）に分ける。
