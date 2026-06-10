@@ -44,7 +44,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> DiffBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--no-open", "--fail-on-regression",
+        "-h", "--help", "--no-open", "--fail-on-regression", "--fail-on-version-mismatch",
     };
 
     static readonly HashSet<string> HotspotValueOptions = new(StringComparer.Ordinal)
@@ -327,7 +327,8 @@ internal static class ProgramHelpers
         {
             if (args[i].StartsWith('-'))
             {
-                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--fail-on-regression")
+                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open"
+                    or "--fail-on-regression" or "--fail-on-version-mismatch")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {

@@ -390,8 +390,19 @@ patch リリースで計測値を変えてはならない。
 コードを変えていないのに値が動いた場合、unilyze のバージョン差を疑うこと。
 バージョンを固定して計測すれば、この影響は発生しない。
 
+### metricsVersion による機械的検出
+
+JSON 出力のルートに `metricsVersion`（int）と `toolVersion`（string）を含める。
+`metricsVersion` は計測定義の互換性を表す整数で、計測値を変える変更のたびにインクリメントする。
+`toolVersion` はスナップショット生成時の unilyze アセンブリバージョンである。
+
+`diff` と `trend` は入力間で `metricsVersion` が異なる場合、stderr に 1 行警告を出す。
+`diff --fail-on-version-mismatch` を指定すると、バージョン不一致時に exit code 2 で終了する（CI ゲート用）。
+
+**metricsVersion のインクリメント規則:** 計測値を変える任意の変更（カウント規約・分母/分子・しきい値・重みの変更）では、
+(1) `AnalysisResult.CurrentMetricsVersion` をインクリメント、(2) 最低 minor バンプ、(3) CHANGELOG に `[metrics]` エントリを追加、
+の 3 点をセットで行う。patch リリースで metricsVersion を上げてはならない。
+
 ### 将来課題
 
-JSON 出力に `metricsVersion` フィールドを追加し、計測値がどの定義バージョンで算出されたかを機械的に判別できるようにする案がある（issue #20 のオプション項目）。
-これがあれば `diff` / `trend` がバージョン跨ぎの比較を検出して警告できる。
-今回は実装しない。
+（解決済み: issue #30 で `metricsVersion` / `toolVersion` を実装。上記「metricsVersion による機械的検出」を参照。）

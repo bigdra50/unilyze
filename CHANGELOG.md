@@ -11,6 +11,10 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+### Added
+
+- `metricsVersion` and `toolVersion` on JSON output root ([#30](https://github.com/bigdra50/unilyze/issues/30)): `metricsVersion` tracks metric-definition compatibility; `toolVersion` records the unilyze assembly version; `diff` / `trend` warn on cross-version comparisons; `diff --fail-on-version-mismatch` exits 2 for CI gates
+
 ### Changed
 
 - Unknown subcommands and options are now usage errors: one-line stderr message, exit `1`, and a `Did you mean '...'?` suggestion for near-misses (previously `config`/`skills` exited `0` and misspelled flags were silently ignored)

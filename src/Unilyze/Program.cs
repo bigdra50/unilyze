@@ -308,6 +308,10 @@ static int PrintSchema()
     analyze (unilyze -f json):
       .projectPath                         string   Analyzed project path
       .analyzedAt                          string   ISO 8601 timestamp
+      .metricsVersion                      int      Metric definition version (see CurrentMetricsVersion;
+                                                    0 in legacy snapshots that predate this field)
+      .toolVersion                         string?  unilyze assembly version that produced this snapshot;
+                                                    null in older snapshots
       .analysisLevel                       string?  Resolved analysis depth:
                                                     "SyntaxOnly" (no Unity DLLs; semantic
                                                     metrics understated), "CoreEngine",
@@ -462,6 +466,7 @@ static int RunDiff(string[] args)
     var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
     var noOpen = opts.ContainsKey("--no-open");
     var failOnRegression = opts.ContainsKey("--fail-on-regression");
+    var failOnVersionMismatch = opts.ContainsKey("--fail-on-version-mismatch");
 
     OutputFormat format;
     try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
@@ -499,6 +504,17 @@ static int RunDiff(string[] args)
                 + $"after: {after.AnalysisLevel ?? "unknown"}). Metric deltas may be unreliable.");
         }
 
+        // Mismatched metrics versions mean tool-induced definition drift may contaminate deltas.
+        var versionExit = 0;
+        if (before.MetricsVersion != after.MetricsVersion)
+        {
+            Console.Error.WriteLine(
+                $"Warning: metrics versions differ (before: {ToolVersionInfo.FormatMetricsVersion(before.MetricsVersion)}, "
+                + $"after: {ToolVersionInfo.FormatMetricsVersion(after.MetricsVersion)}). Metric deltas may be unreliable.");
+            if (failOnVersionMismatch)
+                versionExit = 2;
+        }
+
         var diff = DiffCalculator.Compare(before, after);
         var diffJson = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);
 
@@ -531,11 +547,15 @@ static int RunDiff(string[] args)
             if (output == null && !noOpen)
                 TryOpenInBrowser(htmlPath);
 
-            return gateExit;
+            return gateExit != 0 ? gateExit : versionExit;
         }
 
         var writeResult = WriteOutput(diffJson, output);
-        return writeResult != 0 ? writeResult : gateExit;
+        if (writeResult != 0)
+            return writeResult;
+        if (gateExit != 0)
+            return gateExit;
+        return versionExit;
     }
     catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
     {
@@ -581,18 +601,20 @@ static int PrintDiffUsage()
       unilyze diff <before.json> <after.json> -o out.html       Render diff as interactive HTML viewer
       unilyze diff <before.json> <after.json> -f html           Render HTML to temp dir and open in browser
       unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
+      unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
 
     Options:
       -o, --output             Output file path (format inferred from extension: .html or .json)
       -f, --format             Output format: json, html (default: json when no -o specified)
           --no-open            When generating HTML, do not auto-open in browser
           --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
+          --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
       -h, --help               Show this help
 
     Exit codes:
       0  Success / no regression
       1  Usage error
-      2  Regression detected (with --fail-on-regression)
+      2  Regression detected (with --fail-on-regression) or metricsVersion mismatch (with --fail-on-version-mismatch)
     """);
     return 0;
 }
@@ -754,6 +776,14 @@ static int RunTrend(string[] args)
         {
             Console.Error.WriteLine("No valid analysis results found.");
             return 1;
+        }
+
+        var distinctMetricsVersions = results.Select(r => r.MetricsVersion).Distinct().ToList();
+        if (distinctMetricsVersions.Count > 1)
+        {
+            var formatted = string.Join(", ", distinctMetricsVersions.Select(ToolVersionInfo.FormatMetricsVersion));
+            Console.Error.WriteLine(
+                $"Warning: metrics versions differ across snapshots ({formatted}). Trend deltas may be unreliable.");
         }
 
         var trend = TrendAnalyzer.Analyze(results);

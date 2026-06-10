@@ -120,7 +120,9 @@ internal static class AnalysisPipeline
             deps,
             typeMetrics,
             analysisLevel,
-            cycles.Count > 0 ? cycles : null);
+            cycles.Count > 0 ? cycles : null,
+            AnalysisResult.CurrentMetricsVersion,
+            ToolVersionInfo.Current);
     }
 
     static CsprojInfo? ResolveCsprojInfo(string projectRoot)
