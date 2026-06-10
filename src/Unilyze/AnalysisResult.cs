@@ -11,7 +11,16 @@ public sealed record AnalysisResult(
     IReadOnlyList<TypeDependency> Dependencies,
     IReadOnlyList<TypeMetrics>? TypeMetrics = null,
     string? AnalysisLevel = null,
-    IReadOnlyList<CyclicDependency>? CyclicDependencies = null);
+    IReadOnlyList<CyclicDependency>? CyclicDependencies = null,
+    int MetricsVersion = 0,
+    string? ToolVersion = null)
+{
+    /// <summary>
+    /// Metric definition version written to JSON as <c>metricsVersion</c>.
+    /// Increment when any change alters measured values (requires minor bump + CHANGELOG [metrics] entry).
+    /// </summary>
+    public const int CurrentMetricsVersion = 1;
+}
 
 public sealed record AssemblyInfo(
     string Name,

@@ -221,6 +221,71 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void JsonOutput_IncludesMetricsVersionAndToolVersion()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal(AnalysisResult.CurrentMetricsVersion, root.GetProperty("metricsVersion").GetInt32());
+        Assert.Equal(JsonValueKind.String, root.GetProperty("toolVersion").ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(root.GetProperty("toolVersion").GetString()));
+    }
+
+    [Fact]
+    public void DiffSubcommand_MismatchedMetricsVersions_WarnsOnStderr()
+    {
+        var before = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], MetricsVersion: 1);
+        var after = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], MetricsVersion: 2);
+        var beforeJson = JsonSerializer.Serialize(before, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var afterJson = JsonSerializer.Serialize(after, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, beforeJson);
+        File.WriteAllText(afterFile, afterJson);
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("metrics versions differ", stderr);
+    }
+
+    [Fact]
+    public void DiffSubcommand_SameMetricsVersions_NoVersionWarning()
+    {
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], MetricsVersion: AnalysisResult.CurrentMetricsVersion);
+        var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, json);
+        File.WriteAllText(afterFile, json);
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile);
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("metrics versions differ", stderr);
+    }
+
+    [Fact]
+    public void DiffSubcommand_FailOnVersionMismatch_ExitsTwo()
+    {
+        var before = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], MetricsVersion: 1);
+        var after = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], MetricsVersion: 2);
+        var beforeJson = JsonSerializer.Serialize(before, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        var afterJson = JsonSerializer.Serialize(after, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, beforeJson);
+        File.WriteAllText(afterFile, afterJson);
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile, "--fail-on-version-mismatch");
+        Assert.Equal(2, exitCode);
+        Assert.Contains("metrics versions differ", stderr);
+    }
+
+    [Fact]
     public void Badge_Help_MentionsLevel()
     {
         var (exitCode, stdout, _) = Run("badge", "--help");
