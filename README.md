@@ -18,6 +18,8 @@ Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyz
 
 - .NET 8.0 or later
 
+**.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+
 ## Quick Start
 
 ```
@@ -348,6 +350,17 @@ A regression is any of: average or min CodeHealth dropped, warning smell count i
 The gate is evaluated on these **project-wide aggregates**, which is intentionally distinct from the per-type `Degraded`/`Improved` counts shown in the diff summary. A single type can degrade while the aggregates stay flat (e.g. another type improves enough to offset it), so it is possible to see `Degraded: 1` in the summary yet get exit `0`. If you want to gate on any individual type degrading rather than on aggregates, judge on the per-type `Degraded` count from the summary instead.
 
 Exit codes: `0` no regression, `1` usage error, `2` regression detected.
+
+### Markdown output (CI / PR comments)
+
+`unilyze diff <before.json> <after.json> -f markdown` emits GFM tables suitable for GitHub PR comments and `$GITHUB_STEP_SUMMARY`.
+
+```bash
+unilyze diff before.json after.json -f markdown >> "$GITHUB_STEP_SUMMARY"
+unilyze diff before.json after.json -f markdown | gh pr comment "$PR" --body-file -
+```
+
+With `--fail-on-regression`, the markdown body is unchanged; only the exit code reflects the gate (stdout still contains the verdict line).
 
 ## Agent Workflow
 

@@ -4,5 +4,6 @@ public enum OutputFormat
 {
     Json,
     Html,
-    Sarif
+    Sarif,
+    Markdown
 }

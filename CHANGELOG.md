@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `diff -f markdown` output for PR comments and GITHUB_STEP_SUMMARY ([#37](https://github.com/bigdra50/unilyze/issues/37))
 - SARIF and JSON code smells now include the source line number of each occurrence ([#36](https://github.com/bigdra50/unilyze/issues/36))
 - `metricsVersion` and `toolVersion` on JSON output root ([#30](https://github.com/bigdra50/unilyze/issues/30)): `metricsVersion` tracks metric-definition compatibility; `toolVersion` records the unilyze assembly version; `diff` / `trend` warn on cross-version comparisons; `diff --fail-on-version-mismatch` exits 2 for CI gates
 - `SmellThresholds` registry as single source for code-smell detection thresholds ([#32](https://github.com/bigdra50/unilyze/issues/32)); drift-guard test keeps `docs/metrics.md` in sync
@@ -20,6 +21,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Changed
 
+- Dropped `net9.0` (STS, EOL) from supported target frameworks; supported runtimes are now `net8.0` and `net10.0` per the .NET version support policy ([#43](https://github.com/bigdra50/unilyze/issues/43)). **Global-tool impact:** environments with only a .NET 9 runtime can no longer run the tool; install a .NET 8 or .NET 10 runtime instead.
 - **[metrics]** HighCoupling warning threshold raised from CBO >= 14 to CBO >= 15, aligning code with the documented contract ([#32](https://github.com/bigdra50/unilyze/issues/32))
 - **[metrics]** DeepInheritance warning threshold lowered from DIT >= 6 to DIT >= 5, aligning code with the documented contract ([#32](https://github.com/bigdra50/unilyze/issues/32))
 - **[metrics]** LowMaintainability warning threshold raised from MI < 20 to MI < 60; LowMaintainability no longer has a Critical tier (docs never defined one) ([#32](https://github.com/bigdra50/unilyze/issues/32))

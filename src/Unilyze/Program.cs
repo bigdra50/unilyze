@@ -115,6 +115,12 @@ try
         return WriteOutput(sarif, output);
     }
 
+    if (format == OutputFormat.Markdown)
+    {
+        Console.Error.WriteLine("Unsupported format: 'markdown'");
+        return 1;
+    }
+
     Console.Error.WriteLine($"Unsupported format: '{format.ToString().ToLower()}'");
     return 1;
 }
@@ -514,13 +520,21 @@ static int RunDiff(string[] args)
 
         PrintDiffSummary(diff);
 
+        StatuslineFormatter.Summary? beforeSummary = null;
+        StatuslineFormatter.Summary? afterSummary = null;
+        DiffGateResult? gate = null;
+
+        if (failOnRegression || format == OutputFormat.Markdown)
+        {
+            beforeSummary = StatuslineFormatter.ComputeSummary(before);
+            afterSummary = StatuslineFormatter.ComputeSummary(after);
+        }
+
         // Evaluate the regression gate once; output stays unchanged on pass.
         var gateExit = 0;
         if (failOnRegression)
         {
-            var beforeSummary = StatuslineFormatter.ComputeSummary(before);
-            var afterSummary = StatuslineFormatter.ComputeSummary(after);
-            var gate = DiffGate.EvaluateRegression(beforeSummary, afterSummary);
+            gate = DiffGate.EvaluateRegression(beforeSummary!, afterSummary!);
             if (gate.HasRegression)
             {
                 Console.Error.WriteLine(gate.Reason);
@@ -542,6 +556,18 @@ static int RunDiff(string[] args)
                 TryOpenInBrowser(htmlPath);
 
             return gateExit != 0 ? gateExit : versionExit;
+        }
+
+        if (format == OutputFormat.Markdown)
+        {
+            var markdown = MarkdownDiffFormatter.Generate(
+                diff, beforeSummary!, afterSummary!, failOnRegression ? gate : null);
+            var markdownWrite = WriteOutput(markdown, output);
+            if (markdownWrite != 0)
+                return markdownWrite;
+            if (gateExit != 0)
+                return gateExit;
+            return versionExit;
         }
 
         var writeResult = WriteOutput(diffJson, output);
@@ -594,12 +620,13 @@ static int PrintDiffUsage()
       unilyze diff <before.json> <after.json> -o out.json       Save diff JSON to file
       unilyze diff <before.json> <after.json> -o out.html       Render diff as interactive HTML viewer
       unilyze diff <before.json> <after.json> -f html           Render HTML to temp dir and open in browser
+      unilyze diff <before.json> <after.json> -f markdown       Output GFM markdown to stdout (CI / PR comments)
       unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
       unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
 
     Options:
       -o, --output             Output file path (format inferred from extension: .html or .json)
-      -f, --format             Output format: json, html (default: json when no -o specified)
+      -f, --format             Output format: json, html, markdown (default: json when no -o specified)
           --no-open            When generating HTML, do not auto-open in browser
           --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
           --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
