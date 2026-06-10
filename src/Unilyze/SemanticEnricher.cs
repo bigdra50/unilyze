@@ -8,12 +8,6 @@ internal static class SemanticEnricher
 {
     readonly record struct CohesionMetrics(double? Lcom, int? Cbo, int? Dit, int? Rfc);
 
-    sealed record DetectorResults(
-        IReadOnlyList<BoxingOccurrence> Boxings,
-        IReadOnlyList<ClosureCapture> Closures,
-        IReadOnlyList<ParamsAllocation> ParamsAllocs,
-        ExceptionFlowResult? ExceptionFlow);
-
     public static IReadOnlyList<TypeMetrics> Enrich(
         IReadOnlyList<TypeMetrics> typeMetrics,
         IReadOnlyList<TypeNodeInfo> allTypes,
@@ -70,15 +64,19 @@ internal static class SemanticEnricher
 
         var wmc = WmcCalculator.Calculate(typeInfo?.Members ?? []);
 
-        var detectorResults = RunFeatureDetectors(metrics, typeDeclLookup, compilationResult, modelCache);
-        var allSmells = ConvertDetectorResultsToSmells(smells, metrics, detectorResults);
+        var detected = RunFeatureDetectors(metrics, typeDeclLookup, compilationResult, modelCache);
+        var allSmells = ConvertDetectedSmells(smells, detected);
+
+        var boxingCount = CountByKind(detected, CodeSmellKind.BoxingAllocation);
+        var closureCount = CountByKind(detected, CodeSmellKind.ClosureCapture);
+        var paramsCount = CountByKind(detected, CodeSmellKind.ParamsArrayAllocation);
 
         return current with
         {
             Wmc = wmc,
-            BoxingCount = detectorResults.Boxings.Count > 0 ? detectorResults.Boxings.Count : null,
-            ClosureCaptureCount = detectorResults.Closures.Count > 0 ? detectorResults.Closures.Count : null,
-            ParamsAllocationCount = detectorResults.ParamsAllocs.Count > 0 ? detectorResults.ParamsAllocs.Count : null,
+            BoxingCount = boxingCount > 0 ? boxingCount : null,
+            ClosureCaptureCount = closureCount > 0 ? closureCount : null,
+            ParamsAllocationCount = paramsCount > 0 ? paramsCount : null,
             CodeSmells = allSmells.Count > 0 ? allSmells : null
         };
     }
@@ -161,65 +159,49 @@ internal static class SemanticEnricher
         return typeInfo.BaseType != null ? 1 : 0;
     }
 
-    static DetectorResults RunFeatureDetectors(
+    static IReadOnlyList<DetectedSmell> RunFeatureDetectors(
         TypeMetrics metrics,
         Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
         CompilationResult compilationResult,
         ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
     {
-        IReadOnlyList<BoxingOccurrence> boxings = [];
-        IReadOnlyList<ClosureCapture> closures = [];
-        IReadOnlyList<ParamsAllocation> paramsAllocs = [];
-        ExceptionFlowResult? exceptionFlow = null;
+        if (!typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
+            return [];
 
-        if (typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
+        SemanticModel? mdl = null;
+        if (compilationResult.Compilation is not null)
+            mdl = modelCache.GetOrAdd(td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
+
+        try
         {
-            SemanticModel? mdl = null;
-            if (compilationResult.Compilation is not null)
-                mdl = modelCache.GetOrAdd(td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
-
-            try
-            {
-                boxings = BoxingDetector.Detect(td, mdl);
-                closures = ClosureDetector.Detect(td, mdl);
-                paramsAllocs = ParamsArrayDetector.Detect(td, mdl);
-                exceptionFlow = ExceptionFlowAnalyzer.Analyze(td, mdl);
-            }
-            catch (Exception)
-            {
-                // Roslyn internal errors — graceful degradation
-            }
+            var detected = new List<DetectedSmell>();
+            foreach (var detector in SmellDetectorRegistry.All)
+                detected.AddRange(detector.Detect(td, mdl));
+            return detected;
         }
-
-        return new DetectorResults(boxings, closures, paramsAllocs, exceptionFlow);
+        catch (Exception)
+        {
+            // Roslyn internal errors — graceful degradation
+            return [];
+        }
     }
 
-    static List<CodeSmell> ConvertDetectorResultsToSmells(
+    static List<CodeSmell> ConvertDetectedSmells(
         IReadOnlyList<CodeSmell> baseSmells,
-        TypeMetrics metrics,
-        DetectorResults detectorResults)
+        IReadOnlyList<DetectedSmell> detected)
     {
-        var allSmells = new List<CodeSmell>(baseSmells);
-        foreach (var b in detectorResults.Boxings)
-            allSmells.Add(new CodeSmell(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, metrics.TypeName, b.MethodName, b.Description));
-        foreach (var c in detectorResults.Closures)
-            allSmells.Add(new CodeSmell(CodeSmellKind.ClosureCapture, SmellSeverity.Warning, metrics.TypeName, c.MethodName, $"captures: {string.Join(", ", c.CapturedVariables)}"));
-        foreach (var p in detectorResults.ParamsAllocs)
-            allSmells.Add(new CodeSmell(CodeSmellKind.ParamsArrayAllocation, SmellSeverity.Warning, metrics.TypeName, p.MethodName, $"params call to {p.CalledMethod} ({p.ArgCount} args)"));
-        if (detectorResults.ExceptionFlow is not null)
-            AddExceptionFlowSmells(allSmells, metrics.TypeName, detectorResults.ExceptionFlow);
+        var allSmells = new List<CodeSmell>(baseSmells.Count + detected.Count);
+        allSmells.AddRange(baseSmells);
+        foreach (var d in detected)
+        {
+            allSmells.Add(new CodeSmell(
+                d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line));
+        }
         return allSmells;
     }
 
-    static void AddExceptionFlowSmells(List<CodeSmell> smells, string typeName, ExceptionFlowResult flow)
-    {
-        foreach (var ca in flow.CatchAllClauses.Where(c => !c.HasRethrow))
-            smells.Add(new CodeSmell(CodeSmellKind.CatchAllException, SmellSeverity.Warning, typeName, ca.MethodName, $"catch-all at line {ca.Line}"));
-        foreach (var mi in flow.MissingInnerExceptions)
-            smells.Add(new CodeSmell(CodeSmellKind.MissingInnerException, SmellSeverity.Warning, typeName, mi.MethodName, $"throw new {mi.NewExceptionType} without inner exception"));
-        foreach (var se in flow.SystemExceptionThrows)
-            smells.Add(new CodeSmell(CodeSmellKind.ThrowingSystemException, SmellSeverity.Warning, typeName, se.MethodName, "throw new Exception() directly"));
-    }
+    static int CountByKind(IReadOnlyList<DetectedSmell> detected, CodeSmellKind kind)
+        => detected.Count(d => d.Kind == kind);
 
     static TypeMetrics RecalculateCycCC(
         TypeMetrics metrics,

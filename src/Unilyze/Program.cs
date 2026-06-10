@@ -364,6 +364,7 @@ static int PrintSchema()
         .severity                          string   "Warning" or "Critical"
         .message                           string   Human-readable description
         .methodName                        string?  Affected method (null for type-level)
+        .line                              int?     Source line of the occurrence (optional; null for type-level smells)
       .methods[]                           object   Per-method metrics
 
     methods[]:

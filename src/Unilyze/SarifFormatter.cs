@@ -158,8 +158,8 @@ public static class SarifFormatter
             }
         };
 
-        int? startLine = null;
-        if (smell.MethodName is not null)
+        int? startLine = smell.Line;
+        if (startLine is null && smell.MethodName is not null)
         {
             var method = typeMetrics.Methods.FirstOrDefault(m => m.MethodName == smell.MethodName);
             startLine = method?.StartLine;

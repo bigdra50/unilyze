@@ -2460,42 +2460,48 @@
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "MethodBoxing",
-          "message": "Boxing: Int32 -\u003E Object"
+          "message": "Boxing: Int32 -\u003E Object",
+          "line": 9
         },
         {
           "kind": "BoxingAllocation",
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyBoxing",
-          "message": "Boxing: Int32 -\u003E Object"
+          "message": "Boxing: Int32 -\u003E Object",
+          "line": 17
         },
         {
           "kind": "ClosureCapture",
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "MethodClosure",
-          "message": "captures: captured"
+          "message": "captures: captured",
+          "line": 25
         },
         {
           "kind": "ClosureCapture",
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyClosure",
-          "message": "captures: captured"
+          "message": "captures: captured",
+          "line": 33
         },
         {
           "kind": "ParamsArrayAllocation",
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "MethodParams",
-          "message": "params call to LogParams (3 args)"
+          "message": "params call to LogParams (3 args)",
+          "line": 39
         },
         {
           "kind": "ParamsArrayAllocation",
           "severity": "Warning",
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyParams",
-          "message": "params call to SumParams (3 args)"
+          "message": "params call to SumParams (3 args)",
+          "line": 46
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/AllocationPatterns.cs",
