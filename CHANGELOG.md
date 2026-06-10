@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Diff overlay now works in graph mode: changed types get bucket halos, the tap panel shows baseline sections, and `Changed only` filters graph nodes ([#73](https://github.com/bigdra50/unilyze/issues/73))
 - `diff --changed-only` filters JSON output to changed type buckets (added/removed/degraded/improved) plus the aggregate summary, omitting unchanged types ([#38](https://github.com/bigdra50/unilyze/issues/38))
 - `diff -f markdown` output for PR comments and GITHUB_STEP_SUMMARY ([#37](https://github.com/bigdra50/unilyze/issues/37))
 - SARIF and JSON code smells now include the source line number of each occurrence ([#36](https://github.com/bigdra50/unilyze/issues/36))

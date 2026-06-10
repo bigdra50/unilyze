@@ -110,12 +110,19 @@ CycCC と CogCC の使い分け:
 
 ### Phase 3: 盲点補完
 
-unilyze の計測対象外を AI が確認する。詳細は [references/blind-spots.md](references/blind-spots.md) を参照。
+unilyze の計測対象外を AI が確認する。
+[docs/metrics.md の検出責務ルーティング](../../../docs/metrics.md#検出責務ルーティング) の LLM 委譲行に対応するチェックリスト。
+詳細は [references/blind-spots.md](references/blind-spots.md) を参照。
 
-主な確認項目:
-- トップレベルステートメント (Program.cs 等) の行数・複雑度
-- IDisposable の Dispose 漏れ
-- Process.Start のデッドロックパターン
+| 確認項目 | 着目箇所 | メトリクスで漏れる理由 |
+|---------|---------|---------------------|
+| Feature Envy | メソッド内の他型フィールド参照・外部型への過度な委譲 | 責務配置は行数・複雑度では判定できない |
+| 命名品質 | 型名・メソッド名・パラメータ名と実装の対応 | 命名は静的メトリクスに現れない |
+| 意図とコードの乖離 | コメント・テスト名・API 名と実装ロジックの不一致 | 意図はコード構造から推定できない |
+| コメントとコードの不整合 | XML doc / インラインコメントと実装 | コメント内容は計測対象外 |
+| トップレベルステートメントの行数・複雑度 | Program.cs 等のトップレベル本体 | 型に属さず TypeMetrics に含まれない |
+| IDisposable の Dispose 漏れ | using 未使用の IDisposable 生成 | 所有権・ライフサイクルは静的解析困難 |
+| Process.Start のデッドロックパターン | StandardOutput/Error の同期 ReadToEnd | 実行時デッドロックはメトリクス化不可 |
 
 > catch (Exception) の握り潰しは CatchAllException、inner exception 未設定は MissingInnerException として自動検出されるようになった。盲点から除外。
 
