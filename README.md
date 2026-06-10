@@ -18,6 +18,8 @@ Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyz
 
 - .NET 8.0 or later
 
+**.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+
 ## Quick Start
 
 ```

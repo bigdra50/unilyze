@@ -6,6 +6,10 @@ namespace Unilyze;
 
 internal static class SemanticEnricher
 {
+    // Test-only hooks: simulate Roslyn-internal failures for fallback-path coverage.
+    internal static Func<TypeDeclarationSyntax, bool>? TestSimulateRoslynFailureInCohesion;
+    internal static Func<TypeDeclarationSyntax, bool>? TestSimulateRoslynFailureInFeatureDetect;
+
     readonly record struct CohesionMetrics(double? Lcom, int? Cbo, int? Dit, int? Rfc);
 
     public static IReadOnlyList<TypeMetrics> Enrich(
@@ -126,6 +130,9 @@ internal static class SemanticEnricher
 
         try
         {
+            if (TestSimulateRoslynFailureInCohesion?.Invoke(typeDecl) == true)
+                throw new NullReferenceException("Simulated Roslyn internal error");
+
             lcom = LcomCalculator.Calculate(typeDecl, model);
             cbo = CboCalculator.Calculate(typeDecl, model);
             rfc = RfcCalculator.Calculate(typeDecl, model);
@@ -174,6 +181,9 @@ internal static class SemanticEnricher
 
         try
         {
+            if (TestSimulateRoslynFailureInFeatureDetect?.Invoke(td) == true)
+                throw new NullReferenceException("Simulated Roslyn internal error");
+
             var detected = new List<DetectedSmell>();
             foreach (var detector in SmellDetectorRegistry.All)
                 detected.AddRange(detector.Detect(td, mdl));
