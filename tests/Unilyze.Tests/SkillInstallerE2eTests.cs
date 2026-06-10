@@ -80,6 +80,8 @@ public sealed class SkillInstallerE2eTests : IDisposable
         const string prefix = "Skills/";
         return Assembly.GetAssembly(typeof(SkillInstaller))!
             .GetManifestResourceNames()
+            // Windows-built assemblies carry backslashes from %(RecursiveDir); normalize like SkillInstaller does.
+            .Select(name => name.Replace('\\', '/'))
             .Where(name => name.StartsWith(prefix, StringComparison.Ordinal)
                 && name.EndsWith("/SKILL.md", StringComparison.Ordinal))
             .Select(name =>
