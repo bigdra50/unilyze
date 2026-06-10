@@ -7,9 +7,28 @@ For installation and usage, see [README.md](README.md).
 
 - unilyze supports `.NET 8.0 or later`
 - A single latest SDK is sufficient for daily development. Current standard: `.NET SDK 10.0.103`
-- Install `net8.0;net9.0;net10.0` runtimes only when running the full local test matrix
+- Install `net8.0;net10.0` runtimes only when running the full local test matrix
 
-CI matrix: `net8.0;net9.0;net10.0`.
+CI matrix: `net8.0;net10.0`.
+
+### .NET version support policy
+
+Supported runtimes are the **current LTS** and the **previous LTS** (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+
+### TFM and Roslyn maintenance
+
+**Adding or removing a TFM**
+
+1. Edit `<TargetFrameworks>` in [src/Unilyze/Unilyze.csproj](src/Unilyze/Unilyze.csproj) and [tests/Unilyze.Tests/Unilyze.Tests.csproj](tests/Unilyze.Tests/Unilyze.Tests.csproj).
+2. Update the `test` job matrix in [.github/workflows/ci.yml](.github/workflows/ci.yml) (add or remove the matching `dotnet-version` / `framework` pair).
+3. Update the inline comment in `ci.yml` that documents the multi-target TFMs (near the `quality-gate` job).
+4. Update [README.md](README.md) policy note, this section, and the [Release Checklist](#release-checklist) below.
+5. Add a [CHANGELOG.md](CHANGELOG.md) entry under `[Unreleased]` → `### Changed`, including global-tool impact when dropping a runtime.
+
+**Roslyn / `Microsoft.CodeAnalysis` packages**
+
+- Track the latest stable release on NuGet; perform major-version bumps only after reviewing Roslyn release notes and API breaking changes.
+- Current pin: `Microsoft.CodeAnalysis.CSharp` **4.12.0**. Latest stable: **5.3.0**. Bumping the package version is separate work from TFM policy changes.
 
 ## Repository Map
 
@@ -33,10 +52,9 @@ Running the following is normally sufficient:
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 --no-restore -v minimal
 ```
 
-Run `net8.0` / `net9.0` additionally only for local compatibility checks:
+Run `net8.0` additionally only for local compatibility checks:
 
 ```bash
-dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 --no-restore -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net8.0 --no-restore -v minimal
 ```
 
@@ -141,8 +159,8 @@ Related files:
 
 ## Release Checklist
 
-1. Green `dotnet test` on `net9.0` / `net10.0`
-2. Green CI matrix on `net8.0` / `net9.0` / `net10.0`
+1. Green `dotnet test` on `net8.0` / `net10.0`
+2. Green CI matrix on `net8.0` / `net10.0`
 3. Pass pack/install smoke
 4. Confirm README / docs / package metadata match the implementation
 5. Confirm HTML fallback and `--no-open` are not broken
