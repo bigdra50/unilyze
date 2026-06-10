@@ -23,6 +23,10 @@ static class SkillInstaller
         if (args.Length < 2)
             return PrintUsage();
 
+        var usageError = ProgramHelpers.ValidateSkillsArgs(args);
+        if (usageError != 0)
+            return usageError;
+
         var subcommand = args[1];
         var targetIds = ParseTargetFlags(args);
         var global = args.Any(a => a is "-g" or "--global");
@@ -32,7 +36,7 @@ static class SkillInstaller
             "install" => Install(targetIds, global),
             "uninstall" => Uninstall(targetIds, global),
             "list" => List(targetIds, global),
-            _ => PrintUsage(),
+            _ => ProgramHelpers.ReportUnknown("subcommand", subcommand, ProgramHelpers.SkillsSubcommands),
         };
     }
 

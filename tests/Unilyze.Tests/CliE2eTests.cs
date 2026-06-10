@@ -468,6 +468,257 @@ public sealed class CliE2eTests : IDisposable
         Assert.Contains("--fail-over requires a value", stderr);
     }
 
+    [Fact]
+    public void Analyze_UnknownOption_ExitsUsageError()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("-p", _tempDir, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Analyze_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("nonexistent");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'nonexistent'", stderr);
+    }
+
+    [Fact]
+    public void Config_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("config", "nonexistent");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'nonexistent'", stderr);
+    }
+
+    [Fact]
+    public void Config_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("config", "list", "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Config_List_HappyPath_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("config", "list");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("No configuration found.", stdout);
+    }
+
+    [Fact]
+    public void Skills_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("skills", "nonexistent");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'nonexistent'", stderr);
+    }
+
+    [Fact]
+    public void Skills_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("skills", "list", "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Skills_List_HappyPath_ExitsZero()
+    {
+        var (exitCode, _, stderr) = Run("skills", "list");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unilyze Skills Status:", stderr);
+    }
+
+    [Fact]
+    public void Diff_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("dif");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'dif'", stderr);
+        Assert.Contains("Did you mean 'diff'?", stderr);
+    }
+
+    [Fact]
+    public void Diff_UnknownOption_ExitsUsageError()
+    {
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, "{}");
+        File.WriteAllText(afterFile, "{}");
+
+        var (exitCode, _, stderr) = Run("diff", beforeFile, afterFile, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Hotspot_UnknownSubcommand_ExitsUsageError()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("hotspot", "bogus", "-p", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'bogus'", stderr);
+    }
+
+    [Fact]
+    public void Hotspot_UnknownOption_ExitsUsageError()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("hotspot", "-p", _tempDir, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Hotspot_HappyPath_ExitsZero()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        var (exitCode, _, stderr) = Run("hotspot", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Hotspot analysis:", stderr);
+    }
+
+    [Fact]
+    public void Trend_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("trendd");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'trendd'", stderr);
+        Assert.Contains("Did you mean 'trend'?", stderr);
+    }
+
+    [Fact]
+    public void Trend_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("trend", _tempDir, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Trend_HappyPath_ExitsZero()
+    {
+        var snapshot = JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], []),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(Path.Combine(_tempDir, "snapshot.json"), snapshot);
+
+        var (exitCode, stdout, _) = Run("trend", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("snapshotCount", stdout);
+    }
+
+    [Fact]
+    public void Statusline_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("statuslin", "-p", ".");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'statuslin'", stderr);
+        Assert.Contains("Did you mean 'statusline'?", stderr);
+    }
+
+    [Fact]
+    public void Statusline_UnknownOption_ExitsUsageError()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("statusline", "-p", _tempDir, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Badge_UnknownSubcommand_ExitsUsageError()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("badge", "bogus", "-p", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'bogus'", stderr);
+    }
+
+    [Fact]
+    public void Metrics_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("metrics", "bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'bogus'", stderr);
+    }
+
+    [Fact]
+    public void Metrics_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("metrics", "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Metrics_HappyPath_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("metrics");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unilyze metrics", stdout);
+    }
+
+    [Fact]
+    public void Schema_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("schema", "bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'bogus'", stderr);
+    }
+
+    [Fact]
+    public void Schema_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("schema", "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Schema_HappyPath_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("schema");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unilyze schema", stdout);
+    }
+
+    private void InitGitRepo()
+    {
+        static void RunGit(string workingDirectory, params string[] args)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "git",
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            foreach (var arg in args)
+                psi.ArgumentList.Add(arg);
+
+            using var proc = Process.Start(psi)
+                ?? throw new InvalidOperationException("Failed to start git");
+            proc.WaitForExit(30_000);
+            if (proc.ExitCode != 0)
+            {
+                var stderr = proc.StandardError.ReadToEnd();
+                throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+            }
+        }
+
+        RunGit(_tempDir, "init");
+        RunGit(_tempDir, "add", ".");
+        RunGit(_tempDir, "-c", "user.email=test@test.com", "-c", "user.name=test", "commit", "-m", "init");
+    }
+
     private void WriteSimpleProject()
     {
         var csFile = Path.Combine(_tempDir, "Sample.cs");

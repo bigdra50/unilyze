@@ -1,6 +1,13 @@
 using System.Text.Json;
 using Unilyze;
 
+if (args.Length >= 1 && !args[0].StartsWith('-'))
+{
+    var topLevelError = ProgramHelpers.ValidateTopLevelCommand(args[0]);
+    if (topLevelError != 0)
+        return topLevelError;
+}
+
 if (args.Length >= 1 && args[0] == "diff")
     return RunDiff(args[1..]);
 if (args.Length >= 1 && args[0] == "hotspot")
@@ -8,9 +15,9 @@ if (args.Length >= 1 && args[0] == "hotspot")
 if (args.Length >= 1 && args[0] == "trend")
     return RunTrend(args[1..]);
 if (args.Length >= 1 && args[0] == "metrics")
-    return PrintMetrics();
+    return RunMetrics(args[1..]);
 if (args.Length >= 1 && args[0] == "schema")
-    return PrintSchema();
+    return RunSchema(args[1..]);
 if (args.Length >= 1 && args[0] == "statusline")
     return StatuslineRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "badge")
@@ -27,6 +34,10 @@ if (opts.ContainsKey("-h") || opts.ContainsKey("--help") || (args.Length == 1 &&
     return PrintUsage();
 if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1 && args[0] is "version"))
     return PrintVersion();
+
+var analyzeUsageError = ProgramHelpers.ValidateAnalyzeOptions(args);
+if (analyzeUsageError != 0)
+    return analyzeUsageError;
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
@@ -188,13 +199,29 @@ Subcommands:
   skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
   statusline      Output compact code health for status line display
 
-Exit codes:
-  0  Success
-  1  Error (invalid option, file not found, etc.)
+Exit codes (all commands):
+  0  Success / gate passed
+  1  Usage error (unknown subcommand/option, invalid argument, file not found, etc.)
+  2  Quality gate failed (badge/diff with --fail-under, --fail-over, or --fail-on-regression)
 """);
     return 0;
 }
 
+static int RunMetrics(string[] args)
+{
+    var usageError = ProgramHelpers.ValidateMetricsArgs(args);
+    if (usageError != 0)
+        return usageError;
+    return PrintMetrics();
+}
+
+static int RunSchema(string[] args)
+{
+    var usageError = ProgramHelpers.ValidateSchemaArgs(args);
+    if (usageError != 0)
+        return usageError;
+    return PrintSchema();
+}
 
 static int PrintMetrics()
 {
@@ -416,8 +443,12 @@ static void TryOpenInBrowser(string path)
 
 static int RunDiff(string[] args)
 {
-    if (args.Length == 0 || args.Any(a => a is "-h" or "--help"))
+    if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
         return PrintDiffUsage();
+
+    var usageError = ProgramHelpers.ValidateDiffArgs(args);
+    if (usageError != 0)
+        return usageError;
 
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 2)
@@ -568,8 +599,12 @@ static int PrintDiffUsage()
 
 static int RunHotspot(string[] args)
 {
-    if (args.Any(a => a is "-h" or "--help"))
+    if (ProgramHelpers.IsHelpRequest(args))
         return PrintHotspotUsage();
+
+    var usageError = ProgramHelpers.ValidateHotspotArgs(args);
+    if (usageError != 0)
+        return usageError;
 
     var opts = ProgramHelpers.ParseOptions(args);
     var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path");
@@ -666,8 +701,12 @@ static int PrintHotspotUsage()
 
 static int RunTrend(string[] args)
 {
-    if (args.Length == 0 || args.Any(a => a is "-h" or "--help"))
+    if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
         return PrintTrendUsage();
+
+    var usageError = ProgramHelpers.ValidateTrendArgs(args);
+    if (usageError != 0)
+        return usageError;
 
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 1)
@@ -768,8 +807,12 @@ static int PrintTrendUsage()
 
 static int RunConfig(string[] args)
 {
-    if (args.Length == 0 || args.Any(a => a is "-h" or "--help"))
+    if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
         return PrintConfigUsage();
+
+    var usageError = ProgramHelpers.ValidateConfigArgs(args);
+    if (usageError != 0)
+        return usageError;
 
     var subcommand = args[0];
     var isGlobal = args.Contains("--global");
@@ -814,8 +857,7 @@ static int RunConfig(string[] args)
             return 0;
 
         default:
-            Console.Error.WriteLine($"Unknown config subcommand: '{subcommand}'");
-            return PrintConfigUsage();
+            return ProgramHelpers.ReportUnknown("subcommand", subcommand, ProgramHelpers.ConfigSubcommands);
     }
 }
 

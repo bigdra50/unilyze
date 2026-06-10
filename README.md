@@ -58,6 +58,8 @@ unilyze schema                                     # JSON field reference
 
 Run `unilyze --help` for all options.
 
+**Exit codes** (all commands): `0` success / gate passed, `1` usage error (unknown subcommand or option, invalid argument, missing file, etc.), `2` quality gate failed (`badge` with `--fail-under` / `--fail-over`, or `diff` with `--fail-on-regression`). Unknown subcommands and options print a one-line error to stderr; a close match may suggest `Did you mean '…'?`.
+
 ### Status Line Integration
 
 `unilyze statusline` outputs a compact one-line code health summary for use with [Claude Code's status line](https://docs.anthropic.com/en/docs/claude-code/statusline):
