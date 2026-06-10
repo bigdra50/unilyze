@@ -31,7 +31,8 @@ public sealed record CodeSmell(
     SmellSeverity Severity,
     string TypeName,
     string? MethodName,
-    string Message);
+    string Message,
+    int? Line = null);
 
 public static class CodeSmellDetector
 {
