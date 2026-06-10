@@ -275,6 +275,7 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 
 既知のコードスメルをルールベースで検出する。
 
+<!-- smell-thresholds:start -->
 | スメル | 判定条件 (Warning) | 判定条件 (Critical) |
 |--------|-------------------|-------------------|
 | GodClass | 行数 >= 500 or メソッド数 >= 20 | 行数 >= 1000 |
@@ -283,7 +284,11 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 | HighComplexity | CycCC >= 15 or CogCC >= 15 | — |
 | DeepNesting | ネスト深度 >= 4 | ネスト深度 >= 6 |
 | LowCohesion | LCOM >= 0.8 | — |
+| HighCoupling | CBO >= 15 | CBO >= 25 |
+| LowMaintainability | MI < 60 | — |
+| DeepInheritance | DIT >= 5 | — |
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
+<!-- smell-thresholds:end -->
 
 ## バリデーション (検証)
 

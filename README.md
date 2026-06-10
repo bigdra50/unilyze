@@ -280,7 +280,7 @@ Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs
 | ExcessiveParameters | params > 5 | - |
 | DeepNesting | depth >= 4 | depth >= 6 |
 | LowCohesion | LCOM >= 0.8 | - |
-| HighCoupling | CBO >= 15 | - |
+| HighCoupling | CBO >= 15 | CBO >= 25 |
 | LowMaintainability | MI < 60 | - |
 | DeepInheritance | DIT >= 5 | - |
 | CyclicDependency | Cyclic dependencies between types/assemblies | - |

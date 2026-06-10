@@ -38,16 +38,23 @@
 
 | Range | Rating |
 |-------|--------|
-| <= 13 | Good |
-| 14 - 24 | Warning |
+| <= 14 | Good |
+| 15 - 24 | Warning |
 | >= 25 | Poor |
+
+## DIT (Depth of Inheritance Tree)
+
+| Range | Rating |
+|-------|--------|
+| <= 4 | Good |
+| >= 5 | Warning |
 
 ## Maintainability Index (MI)
 
 | Range | Rating |
 |-------|--------|
-| >= 40 | Good |
-| 20 - 39 | Warning |
+| >= 60 | Good |
+| 20 - 59 | Warning |
 | < 20 | Poor |
 
 ## Lines
@@ -97,7 +104,7 @@ Normalized PageRank score (sum = 1.0). Higher = more depended upon. Top 5% are c
 | LongMethod | Critical/Warning |
 | HighComplexity | Critical/Warning |
 | HighCoupling | Critical/Warning |
-| LowMaintainability | Critical/Warning |
+| LowMaintainability | Warning |
 | ExcessiveParameters | Warning |
 | DeepNesting | Warning |
 | LowCohesion | Warning |

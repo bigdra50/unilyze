@@ -228,7 +228,7 @@ static int RunSchema(string[] args)
 
 static int PrintMetrics()
 {
-    Console.WriteLine("""
+    Console.WriteLine($"""
     unilyze metrics - Metric definitions and thresholds
 
     Metrics (per method):
@@ -274,17 +274,7 @@ static int PrintMetrics()
         avgCogCC (25%), maxCogCC (20%), lineCount (15%),
         methodCount (10%), maxNestingDepth (15%), excessiveParamMethods (15%).
 
-    CodeSmell detection thresholds:
-      GodClass             lines >= 500 OR methods >= 20     (Critical: lines >= 1000)
-      LongMethod           lines >= 80 OR CogCC >= 25       (Critical: lines >= 150 OR CogCC >= 40)
-      HighComplexity       CycCC >= 15 OR CogCC >= 15
-      DeepNesting          depth >= 4                        (Critical: depth >= 6)
-      ExcessiveParameters  params > 5
-      LowCohesion          LCOM >= 0.8
-      HighCoupling         CBO >= 15
-      DeepInheritance      DIT >= 5
-      LowMaintainability   MI < 60
-      CyclicDependency     type participates in a dependency cycle
+    {SmellThresholds.FormatMetricsCliHelp()}
 
     Performance analysis (per type, SemanticModel required):
       BoxingAllocation     Value type boxed to reference type (object, interface, virtual call)

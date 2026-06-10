@@ -290,7 +290,7 @@ public class DitAndCouplingTests
             "C", "TestNs", "TestAssembly",
             100, 5, 2, 3.0, 5, 3.0, 5, 0, 8.0, []);
 
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, dit: 6);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, dit: 5);
 
         var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.DeepInheritance);
         Assert.Equal(SmellSeverity.Warning, smell.Severity);
@@ -307,7 +307,7 @@ public class DitAndCouplingTests
             "C", "TestNs", "TestAssembly",
             100, 5, 2, 3.0, 5, 3.0, 5, 0, 8.0, []);
 
-        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, dit: 5);
+        var smells = CodeSmellDetector.Detect(metrics, typeInfo, null, dit: 4);
 
         Assert.DoesNotContain(smells, s => s.Kind == CodeSmellKind.DeepInheritance);
     }

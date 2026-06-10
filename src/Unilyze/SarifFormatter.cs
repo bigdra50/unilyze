@@ -54,12 +54,18 @@ public static class SarifFormatter
         {
             var (ruleId, kind, desc) = RuleDefinitions[i];
             ruleIndexByKind[kind] = i;
-            rulesArray.Add(new JsonObject
+            var ruleObj = new JsonObject
             {
                 ["id"] = ruleId,
                 ["shortDescription"] = new JsonObject { ["text"] = desc },
                 ["defaultConfiguration"] = new JsonObject { ["level"] = "warning" },
-            });
+            };
+            var fullDescription = SmellThresholds.GetSarifFullDescription(kind);
+            if (fullDescription is not null)
+            {
+                ruleObj["fullDescription"] = new JsonObject { ["text"] = fullDescription };
+            }
+            rulesArray.Add(ruleObj);
         }
 
         var run = new JsonObject

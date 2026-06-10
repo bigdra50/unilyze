@@ -189,7 +189,7 @@ public class MaintainabilityIndexTests
     {
         var methods = new List<MethodMetrics>
         {
-            new("BadMethod", 5, 3, 2, 2, 50, MaintainabilityIndex: 15.0)
+            new("BadMethod", 5, 3, 2, 2, 50, MaintainabilityIndex: 55.0)
         };
         var metrics = new TypeMetrics(
             "TestClass", "TestNs", "TestAssembly",
@@ -204,11 +204,11 @@ public class MaintainabilityIndexTests
     }
 
     [Fact]
-    public void CriticalMaintainability_SmellDetected()
+    public void VeryLowMaintainability_StillWarningOnly()
     {
         var methods = new List<MethodMetrics>
         {
-            new("TerribleMethod", 5, 3, 2, 2, 50, MaintainabilityIndex: 5.0)
+            new("TerribleMethod", 5, 3, 2, 2, 50, MaintainabilityIndex: 15.0)
         };
         var metrics = new TypeMetrics(
             "TestClass", "TestNs", "TestAssembly",
@@ -219,6 +219,6 @@ public class MaintainabilityIndexTests
             "TestAssembly", "test.cs", false, 200);
         var smells = CodeSmellDetector.Detect(metrics, typeInfo, lcom: null);
         var smell = Assert.Single(smells, s => s.Kind == CodeSmellKind.LowMaintainability);
-        Assert.Equal(SmellSeverity.Critical, smell.Severity);
+        Assert.Equal(SmellSeverity.Warning, smell.Severity);
     }
 }
