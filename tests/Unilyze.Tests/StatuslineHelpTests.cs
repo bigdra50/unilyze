@@ -16,5 +16,7 @@ public sealed class StatuslineHelpTests
         Assert.Contains("[syntax]", help);
         Assert.Contains("[core]", help);
         Assert.Contains("[full]", help);
+        Assert.Contains("--verbose", help);
+        Assert.Contains("--quiet", help);
     }
 }
