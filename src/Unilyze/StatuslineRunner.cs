@@ -101,10 +101,10 @@ internal static class StatuslineRunner
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    static int PrintUsage()
+    internal static string BuildUsageText()
     {
         var tempDir = Path.GetTempPath();
-        Console.WriteLine($$"""
+        return $$"""
             unilyze statusline - Output compact code health for status line display
 
             Usage:
@@ -118,22 +118,34 @@ internal static class StatuslineRunner
               --level        Pin analysis level: syntax, core, full, complete
               -h, --help     Show this help
 
-            Output format: CH:9.4 ⚠87 🔴5 [core]
-              CH       = Average Code Health (1.0-10.0)
-              ⚠        = Warning code smells count
-              🔴       = Critical code smells count (hidden if 0)
-              [level]  = Analysis level marker, shown only below Complete
-                         ([syntax] / [core] / [full])
+            Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
+              CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown
+              MI:<n>         = Average Maintainability Index (integer), always shown
+              <n>smells      = Warning code smells count, always shown
+              🔴<n>          = Critical code smells count (hidden if 0)
+              📦<n>          = Boxing allocation count (hidden if 0)
+              ♻<n>           = Cyclic dependency count (hidden if 0)
+              [level]        = Analysis level marker, shown only below Complete
+                               ([syntax] / [core] / [full])
 
             Color coding:
-              Code Health: green (>=8.0), yellow (>=5.0), red (<5.0)
-              Warnings: yellow
+              Code Health (avg and min): green (>=8.0), yellow (>=5.0), red (<5.0)
+              Maintainability Index: green (>=80), yellow (>=60), red (<60)
+              Warnings (smells): yellow
               Criticals: red
+              Boxing: cyan
+              Cyclic dependencies: red
+              Level marker: yellow
 
             Cache:
               Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
               Use --refresh to control cache lifetime (default: 60 seconds)
-            """);
+            """;
+    }
+
+    static int PrintUsage()
+    {
+        Console.WriteLine(BuildUsageText());
         return 0;
     }
 }
