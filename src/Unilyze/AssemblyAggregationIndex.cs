@@ -20,6 +20,19 @@ internal sealed class AssemblyAggregationIndex
         IReadOnlyList<TypeNodeInfo> allTypes,
         IReadOnlyList<TypeDependency> dependencies)
     {
+        var (typesByAssembly, typeIdToAssembly) = MapTypesToAssemblies(allTypes);
+        var internalRelationCounts = CountInternalRelations(dependencies, typeIdToAssembly);
+
+        var readonlyTypesByAssembly = typesByAssembly.ToDictionary(
+            static kv => kv.Key,
+            static kv => (IReadOnlyList<TypeNodeInfo>)kv.Value);
+
+        return new AssemblyAggregationIndex(readonlyTypesByAssembly, typeIdToAssembly, internalRelationCounts);
+    }
+
+    static (Dictionary<string, List<TypeNodeInfo>> TypesByAssembly, Dictionary<string, string> TypeIdToAssembly)
+        MapTypesToAssemblies(IReadOnlyList<TypeNodeInfo> allTypes)
+    {
         var typesByAssembly = new Dictionary<string, List<TypeNodeInfo>>();
         var typeIdToAssembly = new Dictionary<string, string>(allTypes.Count);
 
@@ -36,6 +49,13 @@ internal sealed class AssemblyAggregationIndex
             list.Add(type);
         }
 
+        return (typesByAssembly, typeIdToAssembly);
+    }
+
+    static Dictionary<string, int> CountInternalRelations(
+        IReadOnlyList<TypeDependency> dependencies,
+        Dictionary<string, string> typeIdToAssembly)
+    {
         var internalRelationCounts = new Dictionary<string, int>();
         var seenByAssembly = new Dictionary<string, HashSet<(string From, string To)>>();
 
@@ -62,10 +82,6 @@ internal sealed class AssemblyAggregationIndex
                 internalRelationCounts[fromAssembly] = internalRelationCounts.GetValueOrDefault(fromAssembly) + 1;
         }
 
-        var readonlyTypesByAssembly = typesByAssembly.ToDictionary(
-            static kv => kv.Key,
-            static kv => (IReadOnlyList<TypeNodeInfo>)kv.Value);
-
-        return new AssemblyAggregationIndex(readonlyTypesByAssembly, typeIdToAssembly, internalRelationCounts);
+        return internalRelationCounts;
     }
 }
