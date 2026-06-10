@@ -2098,13 +2098,19 @@ function showTip(node,px,py){
   tip.classList.add('show');
 }
 
+// Expanded compounds can span most of the viewport; hovering their background
+// (the space between child nodes) reads as "tooltip over empty canvas", and the
+// tooltip anchors at the compound's center far from the cursor — skip them.
+// Their info stays reachable via tap (detail panel).
 cy.on('mouseover','node',e=>{
+  if(e.target.data('nodeType')==='compound')return;
   const rp=e.target.renderedPosition();
   const cr=document.getElementById('cy').getBoundingClientRect();
   showTip(e.target,cr.left+rp.x,cr.top+rp.y);
 });
 cy.on('mouseout','node',hideTip);
 cy.on('mousemove','node',e=>{
+  if(e.target.data('nodeType')==='compound')return;
   const rp=e.target.renderedPosition();
   const cr=document.getElementById('cy').getBoundingClientRect();
   // Tooltip was hidden manually (viewport change, canvas mouseleave, rebuild)
