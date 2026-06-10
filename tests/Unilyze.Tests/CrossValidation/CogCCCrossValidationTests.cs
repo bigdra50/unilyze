@@ -26,8 +26,8 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
 
         Assert.True(csFiles.Count > 0, $"No .cs files found in {SourceDir}");
 
-        // 1. Calculate CogCC with Unilyze for each method
-        var unilyzeMethods = new Dictionary<string, int>();
+        // 1. Calculate CogCC with Unilyze for each method/ctor, keyed by (fileName, declaration start line)
+        var unilyzeMethods = new Dictionary<(string FileName, int DeclStartLine), (int Score, string Label)>();
         foreach (var file in csFiles)
         {
             var code = await File.ReadAllTextAsync(file);
@@ -40,80 +40,62 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
             {
                 SyntaxNode? body = method.Body ?? (SyntaxNode?)method.ExpressionBody;
                 var score = CognitiveComplexity.Calculate(body);
-                // Use parent type to disambiguate overloads
+                var declStartLine = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
                 var parentType = method.Parent is TypeDeclarationSyntax td ? td.Identifier.Text : "";
-                var key = $"{fileName}:{parentType}.{method.Identifier.Text}";
-                unilyzeMethods[key] = score;
+                var label = $"{fileName}:{parentType}.{method.Identifier.Text}";
+                unilyzeMethods[(fileName, declStartLine)] = (score, label);
             }
 
             foreach (var ctor in root.DescendantNodes().OfType<ConstructorDeclarationSyntax>())
             {
                 SyntaxNode? body = ctor.Body ?? (SyntaxNode?)ctor.ExpressionBody;
                 var score = CognitiveComplexity.Calculate(body);
+                var declStartLine = ctor.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
                 var parentType = ctor.Parent is TypeDeclarationSyntax td ? td.Identifier.Text : "Unknown";
-                var key = $"{fileName}:{parentType}.ctor";
-                unilyzeMethods[key] = score;
+                var label = $"{fileName}:{parentType}.ctor";
+                unilyzeMethods[(fileName, declStartLine)] = (score, label);
             }
         }
 
         output.WriteLine($"Unilyze found {unilyzeMethods.Count} methods");
-        output.WriteLine($"  Non-zero CogCC: {unilyzeMethods.Count(kv => kv.Value > 0)}");
+        output.WriteLine($"  Non-zero CogCC: {unilyzeMethods.Count(kv => kv.Value.Score > 0)}");
 
-        // 2. Run SonarAnalyzer on the same source files
-        var sonarResults = await SonarCogCCHelper.GetCognitiveComplexitiesFromPaths(
+        // 2. Run SonarAnalyzer on the same source files (line-keyed results)
+        var sonarResults = await SonarCogCCHelper.GetCognitiveComplexitiesByLineFromPaths(
             csFiles,
             [
                 "Microsoft.CodeAnalysis.CSharp/4.12.0",
                 "System.Text.Json/8.0.0",
             ]);
 
-        // Flatten sonar results
-        var sonarMethods = new Dictionary<string, int>();
-        foreach (var (fileName, methods) in sonarResults)
+        var sonarMethods = new Dictionary<(string FileName, int DeclStartLine), int>();
+        foreach (var (fileName, lines) in sonarResults)
         {
-            foreach (var (methodName, score) in methods)
-            {
-                // SonarAnalyzer reports method name without parent type
-                // Find matching Unilyze key by method name suffix
-                var matchingKeys = unilyzeMethods.Keys
-                    .Where(k => k.StartsWith($"{fileName}:") && k.EndsWith($".{methodName}"))
-                    .ToList();
-                foreach (var matchKey in matchingKeys)
-                    sonarMethods[matchKey] = score;
-
-                // Also try ctor match
-                if (methodName.Length > 0 && char.IsUpper(methodName[0]))
-                {
-                    var ctorKeys = unilyzeMethods.Keys
-                        .Where(k => k.StartsWith($"{fileName}:{methodName}.ctor"))
-                        .ToList();
-                    foreach (var ctorKey in ctorKeys)
-                        sonarMethods[ctorKey] = score;
-                }
-            }
+            foreach (var (declStartLine, score) in lines)
+                sonarMethods[(fileName, declStartLine)] = score;
         }
 
         output.WriteLine($"SonarAnalyzer found {sonarMethods.Count} methods with CogCC > 0");
 
-        // 3. Match and compare
-        var matched = new List<(string Key, int Unilyze, int Sonar)>();
+        // 3. Match and compare by (fileName, declaration start line)
+        var matched = new List<(string Label, int Unilyze, int Sonar)>();
 
         // Methods found by both
         foreach (var key in unilyzeMethods.Keys.Intersect(sonarMethods.Keys))
-            matched.Add((key, unilyzeMethods[key], sonarMethods[key]));
+            matched.Add((unilyzeMethods[key].Label, unilyzeMethods[key].Score, sonarMethods[key]));
 
         // Methods only in Unilyze with score 0 => SonarAnalyzer agrees (no diagnostic = 0)
         foreach (var key in unilyzeMethods.Keys.Except(sonarMethods.Keys))
         {
-            if (unilyzeMethods[key] == 0)
-                matched.Add((key, 0, 0));
+            if (unilyzeMethods[key].Score == 0)
+                matched.Add((unilyzeMethods[key].Label, 0, 0));
         }
 
         // Methods only in Unilyze with score > 0 => potential disagreement
         foreach (var key in unilyzeMethods.Keys.Except(sonarMethods.Keys))
         {
-            if (unilyzeMethods[key] > 0)
-                matched.Add((key, unilyzeMethods[key], 0));
+            if (unilyzeMethods[key].Score > 0)
+                matched.Add((unilyzeMethods[key].Label, unilyzeMethods[key].Score, 0));
         }
 
         Assert.True(matched.Count > 0,
@@ -146,6 +128,7 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
         var divergences = matched
             .Where(m => m.Unilyze != m.Sonar)
             .OrderByDescending(m => Math.Abs(m.Unilyze - m.Sonar))
+            .Select(m => (m.Label, m.Unilyze, m.Sonar))
             .ToList();
 
         if (divergences.Count > 0)
@@ -156,7 +139,7 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
             report.AppendLine("  ---------------------------------------------|---------|-------|------");
             foreach (var d in divergences)
             {
-                var name = d.Key.Length > 45 ? d.Key[..45] : d.Key.PadRight(45);
+                var name = d.Label.Length > 45 ? d.Label[..45] : d.Label.PadRight(45);
                 report.AppendLine($"  {name}| {d.Unilyze,7} | {d.Sonar,5} | {d.Unilyze - d.Sonar,5}");
             }
         }
@@ -166,10 +149,12 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
         // Assertions
         Assert.True(rho >= 0.9,
             $"Spearman rho ({rho:F3}) should be >= 0.9\n{report}");
-        Assert.True(exactMatchRate >= 0.5,
-            $"Exact match rate ({exactMatchRate:P1}) should be >= 50%\n{report}");
-        Assert.True(within1Rate >= 0.8,
-            $"Within +-1 rate ({within1Rate:P1}) should be >= 80%\n{report}");
+        // Measured on this corpus (unilyze src): exact=372/384=96.9%, within1=376/384=97.9%.
+        // Threshold set ~2pp below measured values to detect regressions without flaking on normal variation.
+        Assert.True(exactMatchRate >= 0.95,
+            $"Exact match rate ({exactMatchRate:P1}) should be >= 95%\n{report}");
+        Assert.True(within1Rate >= 0.95,
+            $"Within +-1 rate ({within1Rate:P1}) should be >= 95%\n{report}");
     }
 
     private static double CalculateSpearmanRho(double[] x, double[] y)
