@@ -274,6 +274,8 @@ Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs
 
 ## Code Smell Detection
 
+Metric-threshold smell detection is heuristic, not ground truth. See [docs/metrics.md](./docs/metrics.md#code-smell) for reliability caveats and the detection-responsibility routing table.
+
 | Kind | Warning | Critical |
 |------|---------|----------|
 | GodClass | lines >= 500 OR methods >= 20 | lines >= 1000 |
