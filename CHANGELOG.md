@@ -17,6 +17,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Changed
 
+- **[metrics]** Allocation detection (boxing, closure capture, params array) now scans property/indexer accessors, operators, conversion operators, local functions, and field/property initializers in addition to methods and constructors; counts may increase ([#35](https://github.com/bigdra50/unilyze/issues/35))
 - Unknown subcommands and options are now usage errors: one-line stderr message, exit `1`, and a `Did you mean '...'?` suggestion for near-misses (previously `config`/`skills` exited `0` and misspelled flags were silently ignored)
 - Assembly metric aggregation builds a one-time reverse index instead of re-scanning dependencies per assembly (faster on multi-asmdef projects; metric values unchanged)
 

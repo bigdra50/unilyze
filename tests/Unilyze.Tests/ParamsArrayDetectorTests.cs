@@ -111,4 +111,48 @@ public class ParamsArrayDetectorTests
         Assert.Single(results);
         Assert.Equal(2, results[0].ArgCount);
     }
+
+    [Fact]
+    public void PropertyGetter_ParamsCall_Detected()
+    {
+        var code = """
+            class Helper {
+                public static void Log(params object[] args) { }
+            }
+            class C {
+                public object Value {
+                    get {
+                        Helper.Log("a", "b", "c");
+                        return null;
+                    }
+                }
+            }
+            """;
+        var results = Detect(code);
+        Assert.Single(results);
+        Assert.Equal("get_Value", results[0].MethodName);
+        Assert.Equal(3, results[0].ArgCount);
+    }
+
+    [Fact]
+    public void LocalFunction_ParamsCall_Detected()
+    {
+        var code = """
+            class Helper {
+                public static void Log(params object[] args) { }
+            }
+            class C {
+                void Foo() {
+                    void Local() {
+                        Helper.Log(1, 2);
+                    }
+                    Local();
+                }
+            }
+            """;
+        var results = Detect(code);
+        Assert.Single(results);
+        Assert.Equal("Foo.Local", results[0].MethodName);
+        Assert.Equal(2, results[0].ArgCount);
+    }
 }

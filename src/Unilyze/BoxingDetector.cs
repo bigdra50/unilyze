@@ -21,17 +21,8 @@ public static class BoxingDetector
 
         var results = new List<BoxingOccurrence>();
 
-        foreach (var method in typeDecl.Members.OfType<MethodDeclarationSyntax>())
-        {
-            var methodName = method.Identifier.Text;
-            DetectInMember(method, methodName, model, results);
-        }
-
-        foreach (var ctor in typeDecl.Members.OfType<ConstructorDeclarationSyntax>())
-        {
-            var methodName = ctor.Identifier.Text + ".ctor";
-            DetectInMember(ctor, methodName, model, results);
-        }
+        foreach (var (scanRoot, memberName) in MemberBodyEnumerator.Enumerate(typeDecl))
+            DetectInMember(scanRoot, memberName, model, results);
 
         return results;
     }
@@ -39,27 +30,14 @@ public static class BoxingDetector
     static void DetectInMember(SyntaxNode member, string methodName, SemanticModel model,
         List<BoxingOccurrence> results)
     {
-        foreach (var node in member.DescendantNodes())
-        {
-            switch (node)
-            {
-                case ExpressionSyntax expr:
-                    CheckBoxingConversion(expr, methodName, model, results);
-                    break;
-            }
-        }
+        foreach (var expr in MemberBodyEnumerator.DescendantNodesExcludingLocalFunctions<ExpressionSyntax>(member))
+            CheckBoxingConversion(expr, methodName, model, results);
 
-        // Check string interpolation boxing separately
-        foreach (var interpolation in member.DescendantNodes().OfType<InterpolationSyntax>())
-        {
+        foreach (var interpolation in MemberBodyEnumerator.DescendantNodesExcludingLocalFunctions<InterpolationSyntax>(member))
             CheckInterpolationBoxing(interpolation, methodName, model, results);
-        }
 
-        // Check virtual method calls on structs
-        foreach (var invocation in member.DescendantNodes().OfType<InvocationExpressionSyntax>())
-        {
+        foreach (var invocation in MemberBodyEnumerator.DescendantNodesExcludingLocalFunctions<InvocationExpressionSyntax>(member))
             CheckVirtualCallOnStruct(invocation, methodName, model, results);
-        }
     }
 
     static void CheckBoxingConversion(ExpressionSyntax expr, string methodName,
