@@ -482,6 +482,26 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
 <!-- smell-thresholds:end -->
 
+### Unity hot-path severity escalation
+
+`BoxingAllocation`, `ClosureCapture`, and `ParamsArrayAllocation` are normally Warning-level smells. When the enclosing type derives from `UnityEngine.MonoBehaviour` and the smell occurs inside a Unity hot-path method, severity escalates to Critical.
+
+Hot-path methods are:
+
+- `Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`
+- Coroutines: methods whose return type is `System.Collections.IEnumerator`
+
+Lifecycle methods such as `Awake`, `Start`, `OnEnable`, `OnDisable`, and `OnDestroy` are **not** hot paths and keep Warning severity.
+
+Escalation rewrites only `Severity` (Warning → Critical); `Kind` is unchanged so boxing/closure/params counts and CodeHealth are unaffected.
+
+#### SyntaxOnly caveats
+
+Under `SyntaxOnly` analysis:
+
+- **ClosureCapture only:** Boxing and Params require a `SemanticModel` and emit nothing under SyntaxOnly, so hot-path escalation applies to ClosureCapture only.
+- **MonoBehaviour detection:** the syntactic fallback matches the direct base-list type name against `MonoBehaviour` and cannot see through intermediate project base classes (e.g. `Player : BaseView` where `BaseView : MonoBehaviour` is not recognized without semantic resolution).
+
 ## バリデーション (検証)
 
 ### Complete vs SyntaxOnly 解析の差分

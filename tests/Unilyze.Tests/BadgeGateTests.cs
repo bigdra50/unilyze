@@ -111,6 +111,15 @@ public sealed class BadgeGateTests
     }
 
     [Fact]
+    public void Evaluate_Smells_HotPathEscalatedCritical_FailsEvenWithFailOver999()
+    {
+        // Unity hot-path escalation produces Critical smells that bypass --fail-over entirely.
+        var result = BadgeGate.Evaluate(BadgeMetric.Smells, Summary(warnings: 0, criticals: 1), null, "999");
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("critical smell", result.Message);
+    }
+
+    [Fact]
     public void Evaluate_Smells_ZeroThreshold_AnyWarningFails()
     {
         var passes = BadgeGate.Evaluate(BadgeMetric.Smells, Summary(warnings: 0), null, "0");
