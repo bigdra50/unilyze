@@ -462,4 +462,34 @@ internal static class ProgramHelpers
 
         return Path.GetFullPath(path);
     }
+
+    public static int WriteOutput(string content, string? outputPath)
+    {
+        if (outputPath != null)
+        {
+            File.WriteAllText(outputPath, content);
+            Console.Error.WriteLine($"Written to {outputPath}");
+            return 0;
+        }
+        Console.Write(content);
+        return 0;
+    }
+
+    public static void TryOpenInBrowser(string path)
+    {
+        try
+        {
+            var url = "file://" + Path.GetFullPath(path);
+            if (OperatingSystem.IsMacOS())
+                System.Diagnostics.Process.Start("open", url)?.Dispose();
+            else if (OperatingSystem.IsWindows())
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
+            else if (OperatingSystem.IsLinux())
+                System.Diagnostics.Process.Start("xdg-open", url)?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Warning: Failed to open browser automatically: {ex.Message}");
+        }
+    }
 }
