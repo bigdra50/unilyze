@@ -10,9 +10,14 @@ internal static class StatuslineRunner
 
     public static int Run(string[] args)
     {
-        var opts = ProgramHelpers.ParseOptions(args);
-        if (opts.ContainsKey("-h") || opts.ContainsKey("--help"))
+        if (ProgramHelpers.IsHelpRequest(args))
             return PrintUsage();
+
+        var usageError = ProgramHelpers.ValidateStatuslineArgs(args);
+        if (usageError != 0)
+            return usageError;
+
+        var opts = ProgramHelpers.ParseOptions(args);
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();

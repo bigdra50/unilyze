@@ -7,9 +7,14 @@ internal static class BadgeRunner
 
     public static int Run(string[] args)
     {
-        var opts = ProgramHelpers.ParseOptions(args);
-        if (opts.ContainsKey("-h") || opts.ContainsKey("--help"))
+        if (ProgramHelpers.IsHelpRequest(args))
             return PrintUsage();
+
+        var usageError = ProgramHelpers.ValidateBadgeArgs(args);
+        if (usageError != 0)
+            return usageError;
+
+        var opts = ProgramHelpers.ParseOptions(args);
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");

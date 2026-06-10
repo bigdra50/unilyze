@@ -2,6 +2,324 @@ namespace Unilyze;
 
 internal static class ProgramHelpers
 {
+    public static readonly string[] TopLevelCommands =
+    [
+        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
+        "help", "version",
+    ];
+
+    static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
+        "-f", "--format", "--exclude-dir", "--level",
+    };
+
+    static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help", "-v", "--version", "--no-open",
+    };
+
+    static readonly HashSet<string> NoValueOptions = new(StringComparer.Ordinal);
+
+    static readonly HashSet<string> ConfigValueOptions = NoValueOptions;
+
+    static readonly HashSet<string> ConfigBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "--global", "-h", "--help",
+    };
+
+    public static readonly string[] ConfigSubcommands = ["list", "add-exclude-dir", "remove-exclude-dir"];
+
+    static readonly HashSet<string> SkillsBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-g", "--global", "--claude", "--codex", "--cursor", "--gemini", "--windsurf",
+    };
+
+    public static readonly string[] SkillsSubcommands = ["install", "uninstall", "list"];
+
+    static readonly HashSet<string> DiffValueOptions = new(StringComparer.Ordinal)
+    {
+        "-o", "--output", "-f", "--format",
+    };
+
+    static readonly HashSet<string> DiffBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help", "--no-open", "--fail-on-regression",
+    };
+
+    static readonly HashSet<string> HotspotValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-i", "--input", "--since", "-n", "-o", "--output", "--exclude-dir",
+    };
+
+    static readonly HashSet<string> HotspotBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> TrendValueOptions = new(StringComparer.Ordinal)
+    {
+        "-o", "--output",
+    };
+
+    static readonly HashSet<string> TrendBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> StatuslineValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "--refresh", "--level",
+    };
+
+    static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-o", "--output", "--metric", "--format", "--level", "--fail-under", "--fail-over",
+    };
+
+    static readonly HashSet<string> BadgeBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> MetricsBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> SchemaBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    public static bool IsHelpRequest(string[] args) =>
+        args.Any(a => a is "-h" or "--help");
+
+    public static int ReportUnknown(string kind, string token, IEnumerable<string> candidates)
+    {
+        var message = $"Unknown {kind}: '{token}'";
+        var suggestion = FindClosestMatch(token, candidates);
+        if (suggestion is not null)
+            message += $". Did you mean '{suggestion}'?";
+        Console.Error.WriteLine(message);
+        return 1;
+    }
+
+    public static string? FindUnknownOption(
+        string[] args,
+        IReadOnlySet<string> valueOptions,
+        IReadOnlySet<string> booleanOptions)
+    {
+        var known = new HashSet<string>(valueOptions, StringComparer.Ordinal);
+        foreach (var option in booleanOptions)
+            known.Add(option);
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (!args[i].StartsWith('-'))
+                continue;
+            if (!known.Contains(args[i]))
+                return args[i];
+            if (valueOptions.Contains(args[i]))
+                i++;
+        }
+
+        return null;
+    }
+
+    public static string? FindUnexpectedPositional(
+        string[] args,
+        IReadOnlySet<string> valueOptions)
+    {
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (!args[i].StartsWith('-'))
+                return args[i];
+            if (valueOptions.Contains(args[i]))
+                i++;
+        }
+
+        return null;
+    }
+
+    public static int ValidateAnalyzeOptions(string[] args)
+    {
+        var unknown = FindUnknownOption(args, AnalyzeValueOptions, AnalyzeBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, AnalyzeValueOptions.Concat(AnalyzeBooleanOptions));
+    }
+
+    public static int ValidateConfigArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        if (args.Length == 0)
+            return 0;
+
+        var subcommand = args[0];
+        if (!ConfigSubcommands.Contains(subcommand))
+            return ReportUnknown("subcommand", subcommand, ConfigSubcommands);
+
+        var unknown = FindUnknownOption(args[1..], ConfigValueOptions, ConfigBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, ConfigBooleanOptions);
+    }
+
+    public static int ValidateSkillsArgs(string[] args)
+    {
+        if (args.Length < 2)
+            return 0;
+
+        if (IsHelpRequest(args))
+            return 0;
+
+        var subcommand = args[1];
+        if (!SkillsSubcommands.Contains(subcommand))
+            return ReportUnknown("subcommand", subcommand, SkillsSubcommands);
+
+        var unknown = FindUnknownOption(args[2..], NoValueOptions, SkillsBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, SkillsBooleanOptions);
+    }
+
+    public static int ValidateDiffArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, DiffValueOptions, DiffBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, DiffValueOptions.Concat(DiffBooleanOptions));
+    }
+
+    public static int ValidateHotspotArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, HotspotValueOptions, HotspotBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, HotspotValueOptions.Concat(HotspotBooleanOptions));
+
+        var extra = FindUnexpectedPositional(args, HotspotValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["hotspot"]);
+    }
+
+    public static int ValidateTrendArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, TrendValueOptions, TrendBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, TrendValueOptions.Concat(TrendBooleanOptions));
+    }
+
+    public static int ValidateStatuslineArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, StatuslineValueOptions, StatuslineBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, StatuslineValueOptions.Concat(StatuslineBooleanOptions));
+
+        var extra = FindUnexpectedPositional(args, StatuslineValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["statusline"]);
+    }
+
+    public static int ValidateBadgeArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, BadgeValueOptions, BadgeBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, BadgeValueOptions.Concat(BadgeBooleanOptions));
+
+        var extra = FindUnexpectedPositional(args, BadgeValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["badge"]);
+    }
+
+    public static int ValidateMetricsArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, NoValueOptions, MetricsBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, MetricsBooleanOptions);
+
+        var extra = args.FirstOrDefault(a => !a.StartsWith('-'));
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["metrics"]);
+    }
+
+    public static int ValidateSchemaArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, NoValueOptions, SchemaBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, SchemaBooleanOptions);
+
+        var extra = args.FirstOrDefault(a => !a.StartsWith('-'));
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["schema"]);
+    }
+
+    public static int ValidateTopLevelCommand(string command)
+    {
+        if (TopLevelCommands.Contains(command))
+            return 0;
+        return ReportUnknown("subcommand", command, TopLevelCommands.Where(c => c is not "help" and not "version"));
+    }
+
+    public static string? FindClosestMatch(string token, IEnumerable<string> candidates, int maxDistance = 2)
+    {
+        string? best = null;
+        var bestDistance = int.MaxValue;
+
+        foreach (var candidate in candidates)
+        {
+            var distance = LevenshteinDistance(token, candidate);
+            if (distance > maxDistance || distance >= bestDistance)
+                continue;
+            bestDistance = distance;
+            best = candidate;
+        }
+
+        return best;
+    }
+
+    public static int LevenshteinDistance(string a, string b)
+    {
+        if (a.Length == 0) return b.Length;
+        if (b.Length == 0) return a.Length;
+
+        var previous = new int[b.Length + 1];
+        var current = new int[b.Length + 1];
+
+        for (var j = 0; j <= b.Length; j++)
+            previous[j] = j;
+
+        for (var i = 1; i <= a.Length; i++)
+        {
+            current[0] = i;
+            for (var j = 1; j <= b.Length; j++)
+            {
+                var cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                current[j] = Math.Min(
+                    Math.Min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + cost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[b.Length];
+    }
+
     public static Dictionary<string, string> ParseOptions(string[] args)
     {
         var opts = new Dictionary<string, string>();
