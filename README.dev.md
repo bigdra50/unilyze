@@ -17,7 +17,11 @@ CI matrix: `net8.0;net9.0;net10.0`.
 - [scripts/release-smoke.sh](scripts/release-smoke.sh): Release smoke test for standard `.NET tool` workflow
 - [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit tests
 - [docs/metrics.md](docs/metrics.md): Metric definitions
-- [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke
+- [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke / CodeHealth gate
+
+## CI CodeHealth Gate
+
+The `quality-gate` job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `unilyze badge --metric codehealth --fail-under` against `src/Unilyze` (SyntaxOnly analysis, matching [`.github/workflows/badges.yml`](.github/workflows/badges.yml)). The threshold is set to the measured floor of min CodeHealth so current main passes while a drop in the worst type fails CI. Re-measure and adjust `--fail-under` when refactoring intentionally improves or reshapes the metric baseline.
 
 ## Local Validation
 
