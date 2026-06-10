@@ -17,17 +17,8 @@ public static class ParamsArrayDetector
 
         var results = new List<ParamsAllocation>();
 
-        foreach (var method in typeDecl.Members.OfType<MethodDeclarationSyntax>())
-        {
-            var methodName = method.Identifier.Text;
-            DetectInMember(method, methodName, model, results);
-        }
-
-        foreach (var ctor in typeDecl.Members.OfType<ConstructorDeclarationSyntax>())
-        {
-            var methodName = ctor.Identifier.Text + ".ctor";
-            DetectInMember(ctor, methodName, model, results);
-        }
+        foreach (var (scanRoot, memberName) in MemberBodyEnumerator.Enumerate(typeDecl))
+            DetectInMember(scanRoot, memberName, model, results);
 
         return results;
     }
@@ -35,7 +26,7 @@ public static class ParamsArrayDetector
     static void DetectInMember(SyntaxNode member, string methodName, SemanticModel model,
         List<ParamsAllocation> results)
     {
-        foreach (var invocation in member.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        foreach (var invocation in MemberBodyEnumerator.DescendantNodesExcludingLocalFunctions<InvocationExpressionSyntax>(member))
         {
             var symbolInfo = model.GetSymbolInfo(invocation);
             if (symbolInfo.Symbol is not IMethodSymbol calledMethod)

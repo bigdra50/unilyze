@@ -114,4 +114,41 @@ public class ClosureDetectorTests
         var results = DetectSyntactic(code);
         Assert.Empty(results);
     }
+
+    [Fact]
+    public void FieldInitializer_CapturesOuterVariable_Detected()
+    {
+        var code = """
+            using System;
+            class C {
+                static int count = 0;
+                Action a = () => Console.WriteLine(count);
+            }
+            """;
+        var results = DetectSyntactic(code);
+        Assert.Single(results);
+        Assert.Equal("a.init", results[0].MethodName);
+        Assert.Contains("count", results[0].CapturedVariables);
+    }
+
+    [Fact]
+    public void LocalFunction_CapturesOuterVariable_Detected()
+    {
+        var code = """
+            using System;
+            class C {
+                void Foo() {
+                    int count = 0;
+                    void Local() {
+                        Action a = () => Console.WriteLine(count);
+                    }
+                    Local();
+                }
+            }
+            """;
+        var results = DetectSemantic(code);
+        Assert.Single(results);
+        Assert.Equal("Foo.Local", results[0].MethodName);
+        Assert.Contains("count", results[0].CapturedVariables);
+    }
 }
