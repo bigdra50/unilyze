@@ -1342,8 +1342,37 @@ function collapseDescendants(ns){
   node.children.forEach(ch=>{expanded.delete(ch);collapseDescendants(ch)});
 }
 
+// --- Hover cleanup helpers ---
+// cytoscape synthesizes mouseover/mouseout only from canvas mousemove hit-tests,
+// so tooltips and hover styles must also be cleared when the pointer leaves the
+// canvas (overlay panels, toolbar, window) or when elements move/vanish under a
+// stationary pointer (rebuild, layout, pan/zoom, badge rebuild).
+const tip=document.getElementById('tip');
+const btipEl=document.getElementById('btip');
+let tipNode=null;
+let hoverEdge=null;
+function hideTip(){tip.classList.remove('show');tipNode=null}
+function hideBtip(){btipEl.classList.remove('show')}
+function clearEdgeHover(){
+  if(!hoverEdge)return;
+  if(hoverEdge.removed()){
+    cy.nodes().removeStyle('border-width border-color');
+  }else{
+    hoverEdge.removeStyle('opacity width z-index');
+    hoverEdge.connectedNodes().removeStyle('border-width border-color');
+  }
+  hoverEdge=null;
+}
+function applyEdgeHover(edge){
+  hoverEdge=edge;
+  // meta edges carry no 'w' data — fall back to their stylesheet width (1.5)
+  edge.style({'opacity':1,'width':(edge.data('w')||1.5)+1.5,'z-index':999});
+  edge.connectedNodes().style({'border-width':2.5,'border-color':'#58a6ff'});
+}
+
 // --- Rebuild view ---
 function rebuild(){
+  hideTip();clearEdgeHover();
   cy.startBatch();
   cy.elements('edge[?meta]').remove();
 
@@ -1491,7 +1520,6 @@ rebuild();layout();
 
 // --- Health Badges ---
 const badgeEl=document.getElementById('badges');
-const btipEl=document.getElementById('btip');
 let _badgeRaf=0;
 
 // LOD thresholds — inspired by map apps
@@ -1521,6 +1549,7 @@ function markBadgesDirty(){ _badgesDirty=true; }
 function rebuildBadges(){
   cancelAnimationFrame(_badgeRaf);
   _badgeRaf=requestAnimationFrame(()=>{
+    hideBtip();
     _badgesDirty=false;
     badgeEl.style.transform='';
     badgeEl.innerHTML='';
@@ -1732,7 +1761,7 @@ badgeEl.addEventListener('mouseover',e=>{
   btipEl.classList.add('show');
 });
 badgeEl.addEventListener('mouseout',e=>{
-  if(e.target.closest('.hb')) btipEl.classList.remove('show');
+  if(e.target.closest('.hb')) hideBtip();
 });
 
 // --- Detail Panel ---
@@ -1930,6 +1959,7 @@ const efPanel=document.getElementById('efPanel');
   });
 })();
 function applyEdgeFilter(){
+  clearEdgeHover();
   cy.startBatch();
   cy.edges(':not([?meta])').forEach(e=>{
     const vis=_edgeVis.get(e.data('kind'));
@@ -1982,10 +2012,10 @@ if(asmWithHealth.length){
 document.getElementById('st').textContent=stText;
 
 // --- Tooltip ---
-const tip=document.getElementById('tip');
-let tipNode=null;
-
 function showTip(node,px,py){
+  // cytoscape fires mousemove before mouseover in the same dispatch, so a fresh
+  // node entry reaches here twice — skip the redundant rebuild.
+  if(tipNode===node&&tip.classList.contains('show'))return;
   tipNode=node;
   const d=node.data();
   let h='';
@@ -2073,11 +2103,18 @@ cy.on('mouseover','node',e=>{
   const cr=document.getElementById('cy').getBoundingClientRect();
   showTip(e.target,cr.left+rp.x,cr.top+rp.y);
 });
-cy.on('mouseout','node',()=>{tip.classList.remove('show');tipNode=null});
+cy.on('mouseout','node',hideTip);
 cy.on('mousemove','node',e=>{
-  if(!tipNode)return;
   const rp=e.target.renderedPosition();
   const cr=document.getElementById('cy').getBoundingClientRect();
+  // Tooltip was hidden manually (viewport change, canvas mouseleave, rebuild)
+  // while cytoscape still considers this node hovered, so mouseover won't
+  // re-fire on re-entry — re-show from mousemove instead. Skip while a mouse
+  // button is held (right-drag / box selection would resurrect a hidden tip).
+  if(!tipNode){
+    if(e.originalEvent&&e.originalEvent.buttons)return;
+    showTip(e.target,cr.left+rp.x,cr.top+rp.y);return
+  }
   const px=cr.left+rp.x,py=cr.top+rp.y;
   const bw=document.body.clientWidth,bh=document.body.clientHeight;
   const tw=tip.offsetWidth||280,th=tip.offsetHeight||200;
@@ -2087,15 +2124,28 @@ cy.on('mousemove','node',e=>{
   tip.style.left=tx+'px';tip.style.top=ty+'px';
 });
 // --- Edge hover: highlight hovered edge + connected nodes only ---
-cy.on('mouseover','edge',e=>{
-  const edge=e.target;
-  edge.style({'opacity':1,'width':edge.data('w')+1.5,'z-index':999});
-  edge.connectedNodes().style({'border-width':2.5,'border-color':'#58a6ff'});
-});
+cy.on('mouseover','edge',e=>{applyEdgeHover(e.target)});
 cy.on('mouseout','edge',e=>{
   e.target.removeStyle('opacity width z-index');
   e.target.connectedNodes().removeStyle('border-width border-color');
+  if(hoverEdge===e.target)hoverEdge=null;
 });
+// Same re-entry asymmetry as the node tooltip: after a manual clear, cytoscape
+// still considers this edge hovered and won't re-fire mouseover — re-apply here.
+cy.on('mousemove','edge',e=>{
+  if(hoverEdge||(e.originalEvent&&e.originalEvent.buttons))return;
+  applyEdgeHover(e.target);
+});
+
+// Tap can slide the detail panel in under a stationary pointer; WebKit does not
+// recompute hover (and thus #cy mouseleave) until the pointer moves — hide now.
+cy.on('tap',hideTip);
+
+// Pointer left the canvas (overlay panel, toolbar, window) — cytoscape sees no
+// further mousemove and never fires mouseout, so clear hover state here.
+document.getElementById('cy').addEventListener('mouseleave',()=>{hideTip();clearEdgeHover();});
+// Pan/zoom/fit/layout animations move elements out from under a stationary pointer.
+cy.on('viewport',()=>{hideTip();clearEdgeHover();});
 
 // --- Shared utility ---
 const escAttr=s=>esc(s).replace(/"/g,'&quot;');
