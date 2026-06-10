@@ -20,12 +20,15 @@ public sealed record AssemblyMetrics(
         string assemblyName,
         IReadOnlyList<TypeNodeInfo> types,
         IReadOnlyList<TypeDependency>? dependencies = null,
-        IReadOnlyDictionary<string, CouplingInfo>? couplingMap = null)
+        IReadOnlyDictionary<string, CouplingInfo>? couplingMap = null,
+        int? internalRelationCount = null)
     {
         var abstractness = ComputeAbstractness(types);
         var instability = ComputeAssemblyInstability(assemblyName, types, couplingMap);
         var dfms = instability.HasValue ? Math.Abs(abstractness + instability.Value - 1.0) : (double?)null;
-        var relCohesion = ComputeRelationalCohesion(assemblyName, types, dependencies);
+        var relCohesion = internalRelationCount.HasValue || dependencies is not null
+            ? ComputeRelationalCohesion(types, internalRelationCount, dependencies)
+            : null;
 
         return new AssemblyMetrics(
             AssemblyName: assemblyName,
@@ -79,15 +82,21 @@ public sealed record AssemblyMetrics(
     }
 
     static double? ComputeRelationalCohesion(
-        string assemblyName,
         IReadOnlyList<TypeNodeInfo> types,
+        int? internalRelationCount,
         IReadOnlyList<TypeDependency>? dependencies)
     {
-        if (dependencies is null) return null;
-
         var n = types.Count;
         if (n <= 1) return null;
 
+        var r = internalRelationCount ?? CountInternalRelations(types, dependencies!);
+        return (double)(r + 1) / n;
+    }
+
+    static int CountInternalRelations(
+        IReadOnlyList<TypeNodeInfo> types,
+        IReadOnlyList<TypeDependency> dependencies)
+    {
         var assemblyTypeIds = new HashSet<string>(types.Select(TypeIdentity.GetTypeId));
 
         var seen = new HashSet<(string, string)>();
@@ -101,6 +110,6 @@ public sealed record AssemblyMetrics(
                 r++;
         }
 
-        return (double)(r + 1) / n;
+        return r;
     }
 }

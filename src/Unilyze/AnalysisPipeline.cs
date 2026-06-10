@@ -95,13 +95,16 @@ internal static class AnalysisPipeline
         var typeRankMap = RankCalculator.CalculateTypeRank(deps, allTypes);
         typeMetrics = EnrichWithNewMetrics(typeMetrics, nocMap, typeRankMap);
 
+        var aggregationIndex = AssemblyAggregationIndex.Build(allTypes, deps);
+
         var assemblyInfos = targets.Select(a =>
         {
-            var types = allTypes.Where(t => t.Assembly == a.Name).ToList();
-            var asmDeps = deps.Where(d =>
-                allTypes.Any(t => TypeIdentity.GetTypeId(t) == d.FromTypeId && t.Assembly == a.Name) ||
-                allTypes.Any(t => TypeIdentity.GetTypeId(t) == d.ToTypeId && t.Assembly == a.Name)).ToList();
-            var metrics = AssemblyMetrics.Compute(a.Name, types, asmDeps, couplingMap);
+            var types = aggregationIndex.TypesByAssembly.TryGetValue(a.Name, out var asmTypes)
+                ? asmTypes
+                : [];
+            var internalRelationCount = aggregationIndex.InternalRelationCounts.GetValueOrDefault(a.Name);
+            var metrics = AssemblyMetrics.Compute(
+                a.Name, types, couplingMap: couplingMap, internalRelationCount: internalRelationCount);
             var asmTypeMetrics = typeMetrics.Where(m => m.Assembly == a.Name).ToList();
             var health = CodeHealthCalculator.ComputeAssemblyHealth(asmTypeMetrics);
             return new AssemblyInfo(a.Name, a.Directory, a.References, metrics, health);
