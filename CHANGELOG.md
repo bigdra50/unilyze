@@ -11,6 +11,15 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+### Changed
+
+- Unknown subcommands and options are now usage errors: one-line stderr message, exit `1`, and a `Did you mean '...'?` suggestion for near-misses (previously `config`/`skills` exited `0` and misspelled flags were silently ignored)
+- Assembly metric aggregation builds a one-time reverse index instead of re-scanning dependencies per assembly (faster on multi-asmdef projects; metric values unchanged)
+
+### Fixed
+
+- `statusline --help` output-format description now matches the actual output (min CodeHealth, MI, boxing, and cycles tokens were missing; smell marker was wrong)
+
 ## [0.3.0] - 2026-06-08
 
 First release since v0.2.2. Minor bump because several metric definitions changed.
