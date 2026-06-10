@@ -13,3 +13,6 @@ artifacts/
 .gemini/skills/
 .windsurf/skills/
 .claude/settings.local.json
+
+# Golden corpus csproj is generated at test runtime with a machine-specific HintPath
+tests/fixtures/golden/Golden.csproj

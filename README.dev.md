@@ -47,6 +47,20 @@ dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 -v minimal
 ```
 
+### Golden corpus (metrics compatibility)
+
+`tests/Unilyze.Tests/GoldenCorpusTests.cs` analyzes the fixed fixture at `tests/fixtures/golden/` and compares normalized JSON output against `tests/fixtures/golden/expected.json`. CI fails on any unintended metric drift.
+
+The test writes `Golden.csproj` at runtime (Reference + HintPath) so analysis elevates to CoreEngine and semantic metrics (boxing, CBO, DIT) are pinned even without Unity installed.
+
+If metric values move intentionally, confirm the change, then regenerate the baseline and update the compatibility artifacts together:
+
+```bash
+UNILYZE_GOLDEN_UPDATE=1 dotnet test tests/Unilyze.Tests -f net10.0 --filter GoldenCorpus
+```
+
+Review the `expected.json` diff in your PR. When the change alters measured values, also bump `AnalysisResult.CurrentMetricsVersion` and add a `[metrics]` entry to `CHANGELOG.md` per the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー). Do not auto-regenerate in CI.
+
 ### Pack / Install Smoke
 
 Release readiness is determined by [scripts/release-smoke.sh](scripts/release-smoke.sh), which validates the standard `.NET tool` workflow.
