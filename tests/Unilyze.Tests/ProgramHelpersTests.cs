@@ -134,6 +134,7 @@ public sealed class ProgramHelpersTests
     [InlineData("json", OutputFormat.Json)]
     [InlineData("html", OutputFormat.Html)]
     [InlineData("sarif", OutputFormat.Sarif)]
+    [InlineData("markdown", OutputFormat.Markdown)]
     [InlineData("JSON", OutputFormat.Json)]
     [InlineData("Html", OutputFormat.Html)]
     public void ResolveFormat_ExplicitFormat_ReturnsCorrect(string fmt, OutputFormat expected)

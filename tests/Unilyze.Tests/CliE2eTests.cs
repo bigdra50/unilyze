@@ -393,6 +393,58 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void DiffSubcommand_MarkdownFormat_OutputsGfmTables()
+    {
+        var warning = new CodeSmell(CodeSmellKind.GodClass, SmellSeverity.Warning, "BadClass", null, "large");
+        var beforeMetrics = new TypeMetrics(
+            "BadClass", "TestNs", "TestAssembly",
+            100, 5, 2, 3.0, 5, 3.0, 5, 0, 9.0, [],
+            CodeSmells: []);
+        var afterMetrics = new TypeMetrics(
+            "BadClass", "TestNs", "TestAssembly",
+            100, 5, 2, 10.0, 15, 3.0, 5, 0, 6.0, [],
+            CodeSmells: [warning]);
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [beforeMetrics]), jsonOpts));
+        File.WriteAllText(afterFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [afterMetrics]), jsonOpts));
+
+        var (exitCode, stdout, _) = Run("diff", beforeFile, afterFile, "-f", "markdown");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Avg CH", stdout);
+        Assert.Contains("Warnings", stdout);
+        Assert.Contains("| Degraded | 1 |", stdout);
+        Assert.Matches(@"\|\s*-{3,}", stdout);
+    }
+
+    [Fact]
+    public void DiffSubcommand_MarkdownFormat_FailOnRegression_ExitsTwoAndPrintsMarkdown()
+    {
+        var beforeMetrics = new TypeMetrics(
+            "BadClass", "TestNs", "TestAssembly",
+            100, 5, 2, 3.0, 5, 3.0, 5, 0, 9.0, [], CodeSmells: []);
+        var afterMetrics = beforeMetrics with { CodeHealth = 6.0 };
+
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [beforeMetrics]), jsonOpts));
+        File.WriteAllText(afterFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [afterMetrics]), jsonOpts));
+
+        var (exitCode, stdout, stderr) = Run("diff", beforeFile, afterFile, "-f", "markdown", "--fail-on-regression");
+        Assert.Equal(2, exitCode);
+        Assert.Contains("**Verdict:** FAIL", stdout);
+        Assert.Contains("Avg CH", stdout);
+        Assert.Contains("regression:", stderr);
+    }
+
+    [Fact]
     public void Statusline_Help_ExitsZero()
     {
         var (exitCode, stdout, _) = Run("statusline", "--help");

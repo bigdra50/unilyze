@@ -368,7 +368,8 @@ internal static class ProgramHelpers
                 "json" => OutputFormat.Json,
                 "html" => OutputFormat.Html,
                 "sarif" => OutputFormat.Sarif,
-                _ => throw new ArgumentException($"Unknown format: '{formatStr}'. Valid formats: json, html, sarif")
+                "markdown" => OutputFormat.Markdown,
+                _ => throw new ArgumentException($"Unknown format: '{formatStr}'. Valid formats: json, html, sarif, markdown")
             };
         }
 
