@@ -337,6 +337,8 @@ Each type row gets:
 - A `Changed only` toggle in the diff summary bar
 - A "Changes vs Baseline" / "Methods Changed" / "Smells Δ" section in the type detail panel
 
+In graph mode, changed types get colored halos (green added / red degraded / blue improved), the tap detail panel shows the same baseline sections, and `Changed only` hides unchanged types from the graph. Removed types appear in the summary and table views only (they have no node in the after-graph).
+
 The viewer otherwise behaves like a normal `unilyze` HTML report (dependency graph, hotspots, cycles, assembly coupling).
 
 ### Regression gate

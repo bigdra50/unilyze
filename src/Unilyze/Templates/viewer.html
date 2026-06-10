@@ -436,6 +436,8 @@ const DIFF = __DIFF_DATA_PLACEHOLDER__;
 const HIGHER_IS_BETTER = new Set(['CodeHealth','AverageMaintainabilityIndex','MinMaintainabilityIndex']);
 const dl = {}; // typeKey -> TypeDiff annotated with _bucket
 const diffState = { changedOnly: false };
+let cy; // Cytoscape instance (set when graph mode initializes)
+let diffChangedOnlyHandler = null; // graph-mode refresh (rebuild+layout), set after cy init
 if (DIFF) {
   // TypeDiff.typeKey is a display-friendly qualified name (e.g. "Foo.Bar"),
   // but the offline view's row.id uses TypeId form ("Asm::Foo.Bar"). Index both
@@ -470,8 +472,12 @@ function initDiffSummary(){
   cb.checked = !!diffState.changedOnly;
   cb.addEventListener('change', () => {
     diffState.changedOnly = cb.checked;
-    const q = document.getElementById('q');
-    if (q) q.dispatchEvent(new Event('input'));
+    if (typeof cy !== 'undefined' && cy && diffChangedOnlyHandler) {
+      diffChangedOnlyHandler();
+    } else {
+      const q = document.getElementById('q');
+      if (q) q.dispatchEvent(new Event('input'));
+    }
   });
 }
 
@@ -510,6 +516,54 @@ function healthColor(score){
   if(score>=4) return '#e3b341';
   if(score>=2) return '#f97583';
   return '#ff7b72';
+}
+
+function renderDiffSections(td, escFn){
+  const e=escFn||escapeHtml;
+  if(!td) return '';
+  let html='';
+  const allDeltas=[].concat(td.doubleDeltas||[],td.intDeltas||[])
+    .filter(d=>typeof d.delta==='number'&&Math.abs(d.delta)>1e-4);
+  if(allDeltas.length){
+    html+='<div class="section-title">Changes vs Baseline</div><div class="diff-section">';
+    allDeltas.forEach(d=>{
+      const isFloat=Number.isFinite(d.delta)&&!Number.isInteger(d.delta);
+      const fmtVal=v=>isFloat?(+v).toFixed(2):String(v);
+      html+='<div class="dline">' +
+        '<span class="dn">'+e(d.name)+'</span>' +
+        '<span class="dv">'+fmtVal(d.before)+' → '+fmtVal(d.after)+'</span>' +
+        deltaSpan(d.name,d.delta,v=>isFloat?(+v).toFixed(2):String(v)) +
+        '</div>';
+    });
+    html+='</div>';
+  }
+  const methodDiffs=(td.methodDiffs||[]).filter(md=>md.status!=='Unchanged');
+  if(methodDiffs.length){
+    html+='<div class="section-title">Methods Changed ('+methodDiffs.length+')</div><div class="diff-section">';
+    methodDiffs.forEach(md=>{
+      const parts=(md.intDeltas||[])
+        .filter(d=>d.delta!==0)
+        .map(d=>e(d.name)+' '+d.before+'→'+d.after+' '+(d.delta>0?'+':'')+d.delta);
+      html+='<div class="dline">' +
+        '<span class="dn">'+e(md.methodName)+'('+md.parameterCount+')</span>' +
+        '<span class="da">'+(parts.length?parts.join(' · '):'—')+'</span>' +
+        '</div>';
+    });
+    html+='</div>';
+  }
+  if(td.smellChanges && td.smellChanges.length){
+    html+='<div class="section-title">Smells Δ ('+td.smellChanges.length+')</div><div class="diff-section">';
+    td.smellChanges.forEach(sc=>{
+      const tag=sc.isResolved?'<span class="metric-delta up">- FIXED</span>':'<span class="metric-delta down">+ NEW</span>';
+      html+='<div class="dline">' +
+        '<span class="dn">'+e(sc.smell.kind)+'</span>' +
+        '<span class="dv">'+e(sc.smell.message||'')+'</span>' +
+        tag +
+        '</div>';
+    });
+    html+='</div>';
+  }
+  return html;
 }
 
 function escapeHtml(value){
@@ -766,49 +820,7 @@ function renderOfflineReport(){
       }
     }
 
-    if(td){
-      const allDeltas=[].concat(td.doubleDeltas||[],td.intDeltas||[])
-        .filter(d=>typeof d.delta==='number'&&Math.abs(d.delta)>1e-4);
-      if(allDeltas.length){
-        html+='<div class="section-title">Changes vs Baseline</div><div class="diff-section">';
-        allDeltas.forEach(d=>{
-          const isFloat=Number.isFinite(d.delta)&&!Number.isInteger(d.delta);
-          const fmtVal=v=>isFloat?(+v).toFixed(2):String(v);
-          html+='<div class="dline">' +
-            '<span class="dn">'+escapeHtml(d.name)+'</span>' +
-            '<span class="dv">'+fmtVal(d.before)+' → '+fmtVal(d.after)+'</span>' +
-            deltaSpan(d.name,d.delta,v=>isFloat?(+v).toFixed(2):String(v)) +
-            '</div>';
-        });
-        html+='</div>';
-      }
-      const methodDiffs=(td.methodDiffs||[]).filter(md=>md.status!=='Unchanged');
-      if(methodDiffs.length){
-        html+='<div class="section-title">Methods Changed ('+methodDiffs.length+')</div><div class="diff-section">';
-        methodDiffs.forEach(md=>{
-          const parts=(md.intDeltas||[])
-            .filter(d=>d.delta!==0)
-            .map(d=>escapeHtml(d.name)+' '+d.before+'→'+d.after+' '+(d.delta>0?'+':'')+d.delta);
-          html+='<div class="dline">' +
-            '<span class="dn">'+escapeHtml(md.methodName)+'('+md.parameterCount+')</span>' +
-            '<span class="da">'+(parts.length?parts.join(' · '):'—')+'</span>' +
-            '</div>';
-        });
-        html+='</div>';
-      }
-      if(td.smellChanges && td.smellChanges.length){
-        html+='<div class="section-title">Smells Δ ('+td.smellChanges.length+')</div><div class="diff-section">';
-        td.smellChanges.forEach(sc=>{
-          const tag=sc.isResolved?'<span class="metric-delta up">- FIXED</span>':'<span class="metric-delta down">+ NEW</span>';
-          html+='<div class="dline">' +
-            '<span class="dn">'+escapeHtml(sc.smell.kind)+'</span>' +
-            '<span class="dv">'+escapeHtml(sc.smell.message||'')+'</span>' +
-            tag +
-            '</div>';
-        });
-        html+='</div>';
-      }
-    }
+    if(td) html+=renderDiffSections(td);
 
     if(type.baseType){
       html+='<div class="section-title">Base Type</div>';
@@ -1170,18 +1182,21 @@ nsTree.forEach((node,path)=>{
   }});
 });
 
-// Type nodes with ownerNs + health color
+// Type nodes with ownerNs + health color + diff bucket
 DATA.types.forEach(t=>{
   const tk=typeKey(t);
   const m=tm[tk];
   const hc=m?healthColor(m.codeHealth):null;
-  els.push({group:'nodes',data:{
+  const diffEntry=dl[t.assembly+'::'+tk]||dl[tk];
+  const nodeData={
     id:'t:'+tk, typeId:tk, label:t.name, nodeType:'type', kind:t.kind,
     assembly:t.assembly, color:ac[t.assembly]||'#6e7681',
     healthColor:hc, health:m?m.codeHealth:null,
     shape:KS[t.kind]||'round-rectangle', ownerNs:t.namespace||'(global)',
     mc:(t.members||[]).length
-  }});
+  };
+  if(diffEntry&&diffEntry._bucket) nodeData.diffBucket=diffEntry._bucket;
+  els.push({group:'nodes',data:nodeData});
 });
 
 // Edge opacity per kind (structural edges prominent, usage edges subtle)
@@ -1234,7 +1249,7 @@ els.forEach(e=>{
   if(d.nodeType==='type') d.nw=_mw(d.label,_mf.type);
   else if(d.nodeType==='namespace') d.nw=_mw(d.label,_mf.ns);
 });
-const cy = cytoscape({
+cy = cytoscape({
   container:document.getElementById('cy'),
   elements:els,
   style:[
@@ -1288,7 +1303,16 @@ const cy = cytoscape({
     {selector:'.dim',style:{'opacity':.12}},
     {selector:'.hl',style:{'opacity':1,'border-width':3,'z-index':999}},
     {selector:'.cycle',style:{'border-color':'#f97583','border-width':3,'opacity':1,'z-index':999}},
-    {selector:'.cycle-edge',style:{'line-color':'#f97583','target-arrow-color':'#f97583','opacity':1,'width':2.5,'z-index':999}}
+    {selector:'.cycle-edge',style:{'line-color':'#f97583','target-arrow-color':'#f97583','opacity':1,'width':2.5,'z-index':999}},
+    {selector:'node[diffBucket="added"]',style:{
+      'underlay-color':'#3fb950','underlay-opacity':.35,'underlay-padding':6
+    }},
+    {selector:'node[diffBucket="degraded"]',style:{
+      'underlay-color':'#f97583','underlay-opacity':.35,'underlay-padding':6
+    }},
+    {selector:'node[diffBucket="improved"]',style:{
+      'underlay-color':'#58a6ff','underlay-opacity':.35,'underlay-padding':6
+    }}
   ],
   layout:{name:'preset'},
   wheelSensitivity:.3,minZoom:.08,maxZoom:5
@@ -1414,7 +1438,14 @@ function rebuild(){
   // Type nodes
   cy.nodes('[nodeType="type"]').forEach(n=>{
     const ns=n.data('ownerNs');
-    if(isVisible(ns)&&expanded.has(ns)){
+    const tk=n.data('typeId');
+    const asm=n.data('assembly');
+    let hideByDiff=false;
+    if(diffState.changedOnly&&DIFF){
+      const diffEntry=dl[asm+'::'+tk]||dl[tk];
+      hideByDiff=!diffEntry||diffEntry._bucket==='unchanged';
+    }
+    if(isVisible(ns)&&expanded.has(ns)&&!hideByDiff){
       const cpId='cp:'+ns;
       if(!n.parent().length||n.parent().id()!==cpId) n.move({parent:cpId});
       n.style('display','element');
@@ -1461,6 +1492,8 @@ function layout(){
     layoutDagre(vis);
   }
 }
+
+diffChangedOnlyHandler=function(){rebuild();layout();};
 
 function layoutDagre(vis){
   vis.layout({
@@ -1774,7 +1807,10 @@ cy.on('tap','node[nodeType="type"]',e=>{
   const c=ac[t.assembly]||'#6e7681';
   const tk=typeKey(t);
   const mx=tm[tk];
-  let h='<h2 style="color:'+c+'">'+esc(t.name)+'</h2>';
+  const gtd=dl[t.assembly+'::'+tk]||dl[tk];
+  let h='<h2 style="color:'+c+'">';
+  if(gtd) h+=diffBucketBadge(gtd._bucket);
+  h+=esc(t.name)+'</h2>';
   h+='<div class="meta">'+esc(t.kind)+' &middot; '+esc(t.assembly)+'</div>';
   if(t.namespace)h+='<div class="meta">'+esc(t.namespace)+'</div>';
 
@@ -1812,6 +1848,8 @@ cy.on('tap','node[nodeType="type"]',e=>{
       });
     }
   }
+
+  if(gtd) h+=renderDiffSections(gtd, esc);
 
   if(t.baseType){h+='<div class="section-title">Base Type</div>';
     h+='<div class="member"><span class="t">'+esc(t.baseType)+'</span></div>';}

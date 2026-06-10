@@ -45,6 +45,9 @@ public sealed class HtmlFormatterTests
         Assert.Contains("\"degraded\":", html);
         Assert.Contains("\"summary\":", html);
         Assert.Contains("diffSum", html);
+        // graph-mode diff wiring (#73): bucket data attribute and halo styling
+        Assert.Contains("diffBucket", html);
+        Assert.Contains("underlay-color", html);
     }
 
     static AnalysisResult MakeEmptyResult() => new(
