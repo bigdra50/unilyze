@@ -1,0 +1,125 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [metrics] tag convention
+
+Any changelog entry that changes a computed metric value **must** be prefixed with `[metrics]` and **requires** at least a minor version bump. See the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー) for which changes count as metric-definition changes and the full release procedure.
+
+## [Unreleased]
+
+## [0.3.0] - 2026-06-08
+
+First release since v0.2.2. Minor bump because several metric definitions changed.
+
+### Added
+
+- Analysis levels ([#16](https://github.com/bigdra50/unilyze/issues/16), [#17](https://github.com/bigdra50/unilyze/issues/17)): resolved level (`SyntaxOnly` / `CoreEngine` / `FullEngine` / `Complete`) reported on stderr, JSON (`analysisLevel`), badge endpoint JSON/SVG, and statusline marker; `--level <syntax|core|full|complete>` pins the level deterministically and exits non-zero when it cannot be satisfied
+- Quality gates ([#18](https://github.com/bigdra50/unilyze/issues/18)): `unilyze badge --fail-under` (codehealth/mi) and `--fail-over` (smells); `unilyze diff --fail-on-regression`; exit codes `0` pass, `1` usage error, `2` gate failed
+- DI graph integration ([#19](https://github.com/bigdra50/unilyze/issues/19)): VContainer/Zenject registration edges resolved to TypeIds and integrated into the dependency graph, cycle detection, CBO/Ca/Ce, and TypeRank
+- `badge` subcommand with shields.io endpoint JSON output and `--format svg` for self-contained SVG badges (including private repositories)
+- Metric compatibility policy in `docs/metrics.md` and release checklist ([#20](https://github.com/bigdra50/unilyze/issues/20))
+- Official Microsoft.CodeAnalysis Metrics cross-validation harness (`scripts/crossval`)
+- CI workflow to publish self-analysis badges to the `badges` branch
+- Badges section and metric validation results in documentation
+
+### Changed
+
+- **[metrics]** Deconstruction `foreach` is now counted in cyclomatic complexity, cognitive complexity, and nesting depth (values may increase)
+- **[metrics]** Method-less types are excluded from the average MI denominator (average MI may rise)
+- **[metrics]** Removed the `I[A-Z]` DIT heuristic
+- Dogfooding badges switched to `--format svg`
+- Exclude test projects from self-analysis metrics
+- Multiple internal refactors (TypeNameFormat, MemberExtractor, BaseTypeResolver, SemanticEnricher, CycleDetector, ClosureDetector, DI container resolvers, RankCalculator, TypeAnalyzer, AnalysisPipeline, HTML viewer embedded resource)
+
+### Fixed
+
+- **[metrics]** `when`-filtered catch clauses are no longer flagged as `CatchAllException` (fewer false positives)
+- `--level syntax` pin no longer silently re-elevates via csproj references
+- Badge gate fails closed when the metric is unavailable
+- Badge gate rejects value-less flags instead of skipping the gate
+- `--fail-on-regression` included in `diff` inline usage string
+- DI registration endpoints resolved to TypeIds for graph integration
+
+## [0.2.2] - 2026-05-19
+
+### Added
+
+- Interactive HTML viewer for `unilyze diff` output
+- Documentation for the HTML diff viewer
+
+## [0.2.1] - 2026-03-25
+
+### Added
+
+- `--exclude-dir` option and `.unilyze.json` configuration file for directory exclusion ([#1](https://github.com/bigdra50/unilyze/issues/1))
+- `config` subcommand (`list` / `add-exclude-dir` / `remove-exclude-dir`)
+
+### Changed
+
+- Added documentation for the `statusline` subcommand
+
+## [0.2.0] - 2026-03-23
+
+### Added
+
+- `statusline` subcommand: compact one-line code health summary for editor status lines, with per-project caching and file-based locking
+
+### Changed
+
+- Projects with no analyzable types return empty output (no `CH:0.0` displayed)
+- Statusline cache key hash changed from SHA256 to MD5 for faster shell-side computation
+
+## [0.1.9] - 2026-03-16
+
+New analyzers and calculators; documentation updates and expanded test coverage.
+
+## [0.1.8] - 2026-03-16
+
+Performance improvements: parallel file parsing, CyclomaticComplexity walker rewrite, and Halstead single-pass calculation.
+
+## [0.1.7] - 2026-03-16
+
+Default graph layout changed from Bezier/Dagre to ELK.
+
+## [0.1.6] - 2026-03-16
+
+README updates for `metrics`/`schema` subcommands, skill installation, and CodeSmell thresholds.
+
+## [0.1.5] - 2026-03-16
+
+Fix crash from Roslyn internal exception (NullableWalker NRE).
+
+## [0.1.4] - 2026-03-16
+
+Add `metrics` and `schema` subcommands for agent-oriented self-contained help; metrics comparison validation report.
+
+## [0.1.3] - 2026-03-16
+
+Fix NestingDepth over-counting on `else if` chains; add demo video and NuGet version badge to docs.
+
+## [0.1.2] - 2026-03-15
+
+Fix `hotspot` default `-p` to current directory; auto-trigger NuGet publish on `v*` tag push; docs improvements.
+
+## [0.1.1] - 2026-03-15
+
+Initial public release.
+
+[Unreleased]: https://github.com/bigdra50/unilyze/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/bigdra50/unilyze/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/bigdra50/unilyze/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/bigdra50/unilyze/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/bigdra50/unilyze/compare/v0.1.9...v0.2.0
+[0.1.9]: https://github.com/bigdra50/unilyze/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/bigdra50/unilyze/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/bigdra50/unilyze/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/bigdra50/unilyze/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/bigdra50/unilyze/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/bigdra50/unilyze/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/bigdra50/unilyze/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/bigdra50/unilyze/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/bigdra50/unilyze/releases/tag/v0.1.1
