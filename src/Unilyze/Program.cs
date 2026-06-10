@@ -457,7 +457,7 @@ static int RunDiff(string[] args)
     var positional = args.Where(a => !a.StartsWith('-')).ToList();
     if (positional.Count < 2)
     {
-        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression]");
+        Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression] [--changed-only]");
         return 1;
     }
 
@@ -467,6 +467,7 @@ static int RunDiff(string[] args)
     var noOpen = opts.ContainsKey("--no-open");
     var failOnRegression = opts.ContainsKey("--fail-on-regression");
     var failOnVersionMismatch = opts.ContainsKey("--fail-on-version-mismatch");
+    var changedOnly = opts.ContainsKey("--changed-only");
 
     OutputFormat format;
     try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
@@ -570,7 +571,10 @@ static int RunDiff(string[] args)
             return versionExit;
         }
 
-        var writeResult = WriteOutput(diffJson, output);
+        var jsonOutput = changedOnly
+            ? JsonSerializer.Serialize(diff with { Unchanged = Array.Empty<TypeDiff>() }, AnalysisJsonContext.Default.DiffResult)
+            : diffJson;
+        var writeResult = WriteOutput(jsonOutput, output);
         if (writeResult != 0)
             return writeResult;
         if (gateExit != 0)
@@ -623,6 +627,7 @@ static int PrintDiffUsage()
       unilyze diff <before.json> <after.json> -f markdown       Output GFM markdown to stdout (CI / PR comments)
       unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
       unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
+      unilyze diff <before.json> <after.json> --changed-only             Omit unchanged types from JSON output
 
     Options:
       -o, --output             Output file path (format inferred from extension: .html or .json)
@@ -630,6 +635,7 @@ static int PrintDiffUsage()
           --no-open            When generating HTML, do not auto-open in browser
           --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
           --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
+          --changed-only       Omit unchanged types from JSON output (summary counts preserved)
       -h, --help               Show this help
 
     Exit codes:
