@@ -1,6 +1,6 @@
 # CI Quality Gate Tutorial
 
-This walkthrough sets up a pull-request check that **fails when code quality regresses** and **posts a markdown diff summary** to the PR. It complements the command reference in [README.md](../../README.md) (Badges, Diff Viewer) and, when available, [docs/ci-integration.md](../ci-integration.md) for canonical workflow YAML and option tables.
+This walkthrough sets up a pull-request check that **fails when code quality regresses** and **posts a markdown diff summary** to the PR. It complements the short pointers in [README.md](../../README.md) and the full reference in [docs/ci-integration.md](../ci-integration.md) (badges, quality gates, GitHub Action, diff regression).
 
 unilyze runs at **SyntaxOnly** in CI (no Unity install required). Code Health and Maintainability Index are stable at this level; smell counts are level-dependent — see [docs/metrics.md](../metrics.md).
 
@@ -138,7 +138,7 @@ With `--fail-on-regression`, a failing gate still prints the full markdown to st
 
 Do **not** duplicate the full workflow YAML here. Canonical sources:
 
-- Badge publishing: [.github/workflows/badges.yml](../../.github/workflows/badges.yml) and the [Badges section in README.md](../../README.md#badges)
+- Badge publishing: [.github/workflows/badges.yml](../../.github/workflows/badges.yml) and [docs/ci-integration.md](../ci-integration.md#publishing-badges-from-actions)
 - This repo's own gate: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) (`quality-gate` job)
 
 A minimal PR gate job runs these shell steps (adapt paths to your project):
@@ -150,15 +150,15 @@ unilyze badge -p . --metric codehealth --fail-under 7
 unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression >> "$GITHUB_STEP_SUMMARY"
 ```
 
-For private repositories, generate SVG badges with `unilyze badge --format svg` and commit them under `.github/badges/` instead of using shields.io endpoint URLs — see [README.md](../../README.md#private-repositories).
+For private repositories, generate SVG badges with `unilyze badge --format svg` and commit them under `.github/badges/` instead of using shields.io endpoint URLs — see [docs/ci-integration.md#private-repositories](../ci-integration.md#private-repositories).
 
 ## Aggregate vs per-type regression
 
 `--fail-on-regression` evaluates **project-wide aggregates**. A single type can show `Degraded: 1` in the diff summary while aggregates stay flat (another type improved enough to offset it), yielding exit `0`. To gate on any individual type degrading, inspect the per-type `Degraded` count in the summary instead.
 
-## Official GitHub Action (in progress)
+## Official GitHub Action
 
-A composite GitHub Action that bundles install, snapshot, gate, and PR comment steps is under development ([#79](https://github.com/bigdra50/unilyze/issues/79), coordinated with `diff --base-ref` in [#78](https://github.com/bigdra50/unilyze/issues/78)). Until it ships, use the manual steps above. When the Action lands, add it as a fast-path alternative — the exit-code contract and gate semantics stay the same.
+Use [`bigdra50/unilyze@v1`](../../README.md#github-action) for a composite step that bundles install, snapshot, gates, and optional PR comments. Manual shell steps above remain valid — exit-code contract and gate semantics are identical. Full input table: [docs/ci-integration.md](../ci-integration.md#github-action).
 
 ## Quick local smoke test
 

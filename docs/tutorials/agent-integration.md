@@ -264,7 +264,7 @@ Example output:
 
 ## Claude Code status line (optional)
 
-`unilyze statusline` emits a one-line summary for Claude Code's status bar. See [README.md](../../README.md#status-line-integration) for the shell snippet.
+`unilyze statusline` emits a one-line summary for Claude Code's status bar. See [docs/statusline.md](../statusline.md) for the shell snippet and `--background-refresh` setup.
 
 ## Agent workflow summary
 
