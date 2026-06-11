@@ -1,0 +1,75 @@
+name: Action self-test
+
+on:
+  pull_request:
+    paths:
+      - action.yml
+      - .github/workflows/action-selftest.yml
+      - README.md
+      - README.dev.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install actionlint
+        shell: bash
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash
+          sudo mv actionlint /usr/local/bin/
+
+      - name: Lint workflows and action metadata
+        shell: bash
+        run: actionlint .github/workflows/*.yml
+
+  selftest:
+    runs-on: ubuntu-latest
+    needs: actionlint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack Unilyze for local tool install
+        shell: bash
+        run: |
+          dotnet restore src/Unilyze/Unilyze.csproj
+          dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
+
+      - name: Read package version
+        id: package
+        shell: bash
+        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
+
+      - name: Run composite action (local path)
+        id: action
+        uses: ./
+        with:
+          project-path: src/Unilyze
+          unilyze-version: ${{ steps.package.outputs.version }}
+          nuget-source: ./artifacts/nupkg
+          metric: codehealth
+          fail-under: "8.0"
+
+      - name: Assert action outputs
+        shell: bash
+        env:
+          CODEHEALTH: ${{ steps.action.outputs.codehealth }}
+          MI: ${{ steps.action.outputs.mi }}
+          SMELLS: ${{ steps.action.outputs.smells }}
+          GATE_RESULT: ${{ steps.action.outputs.gate-result }}
+        run: |
+          set -euo pipefail
+          test -n "$CODEHEALTH"
+          test -n "$MI"
+          test -n "$SMELLS"
+          test "$GATE_RESULT" = "passed"
+          echo "codehealth=$CODEHEALTH mi=$MI smells=$SMELLS gate=$GATE_RESULT"

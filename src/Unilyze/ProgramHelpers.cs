@@ -7,7 +7,7 @@ internal static class ProgramHelpers
     public static readonly string[] TopLevelCommands =
     [
         "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
-        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "skills",
+        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "calibrate", "skills",
         "help", "version",
     ];
 
@@ -80,6 +80,16 @@ internal static class ProgramHelpers
         "-h", "--help",
     };
 
+    static readonly HashSet<string> CalibrateValueOptions = new(StringComparer.Ordinal)
+    {
+        "-o", "--output",
+    };
+
+    static readonly HashSet<string> CalibrateBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
     static readonly HashSet<string> StatuslineValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "--refresh", "--level", "--baseline",
@@ -87,7 +97,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--verbose", "--quiet",
+        "-h", "--help", "--verbose", "--quiet", "--background-refresh",
     };
 
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
@@ -275,6 +285,15 @@ internal static class ProgramHelpers
         return unknown is null ? 0 : ReportUnknown("option", unknown, TrendValueOptions.Concat(TrendBooleanOptions));
     }
 
+    public static int ValidateCalibrateArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, CalibrateValueOptions, CalibrateBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, CalibrateValueOptions.Concat(CalibrateBooleanOptions));
+    }
+
     public static int ValidateStatuslineArgs(string[] args)
     {
         if (IsHelpRequest(args))
@@ -404,7 +423,7 @@ internal static class ProgramHelpers
             {
                 if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open"
                     or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
-                    or "--verbose" or "--quiet")
+                    or "--verbose" or "--quiet" or "--background-refresh")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {

@@ -33,6 +33,14 @@ cd ~/MyUnityProject
 unilyze
 ```
 
+## Tutorials
+
+Step-by-step walkthroughs for the highest-value workflows:
+
+- [CI quality gate](./docs/tutorials/ci-quality-gate.md) — badge gates, `diff --fail-on-regression`, PR markdown comments, `--base-ref` baselines
+- [Agent integration](./docs/tutorials/agent-integration.md) — `skills install`, evidence packs (`query`), refactor-loop and quality-audit workflows
+- [Continuous refactoring](./docs/tutorials/continuous-refactoring.md) — `hotspot` prioritization, snapshot history, `trend` interpretation
+
 ## Usage
 
 ```bash
@@ -51,8 +59,8 @@ unilyze config list                                # Show/manage configuration
 unilyze diff <before.json> <after.json>            # Compare snapshots (JSON)
 unilyze diff --base-ref origin/main after.json     # Diff against a git ref (temp worktree)
 unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (interactive HTML)
-unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
-unilyze trend <dir-of-jsons>                       # Quality trend
+unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity (see [tutorial](./docs/tutorials/continuous-refactoring.md))
+unilyze trend <dir-of-jsons>                       # Quality trend (see [tutorial](./docs/tutorials/continuous-refactoring.md))
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
 unilyze badge -p ~/MyUnityProject -o badge.json    # shields.io endpoint JSON (CI badges)
 unilyze metrics                                    # Metric definitions & thresholds
@@ -81,25 +89,18 @@ CH:9.8/5.9 MI:52 111smells 🔴1 📦66
 | `♻N` | Cyclic dependencies (hidden if 0) |
 | `[level]` | Analysis level marker, shown only below `Complete` (`[syntax]` / `[core]` / `[full]`) |
 
-Results are cached per project (default 60s). Add to `~/.claude/statusline.sh`:
+Results are cached per project (default 60s). Run `unilyze statusline --help` for the platform cache directory. Add to `~/.claude/statusline.sh`:
 
 ```bash
 # Unilyze Code Health (Unity projects only)
 if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; then
-    UNILYZE_HASH=$(md5 -qs "$PROJECT_DIR")
-    UNILYZE_CACHE="${TMPDIR:-/tmp/}unilyze-sl-${UNILYZE_HASH}.txt"
-    if [[ -f "$UNILYZE_CACHE" ]]; then
-        UNILYZE_STATUS=$(cat "$UNILYZE_CACHE" 2>/dev/null)
-        CACHE_AGE=$(( $(date +%s) - $(stat -f %m "$UNILYZE_CACHE" 2>/dev/null || echo 0) ))
-        [[ $CACHE_AGE -gt 60 ]] && (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
-    elif command -v unilyze &>/dev/null; then
-        (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
-    fi
-    [[ -n "${UNILYZE_STATUS:-}" ]] && echo "$UNILYZE_STATUS"
+    unilyze statusline -p "$PROJECT_DIR" --background-refresh
 fi
 ```
 
 ### Badges
+
+See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) for an end-to-end PR gate walkthrough.
 
 `unilyze badge` outputs [shields.io endpoint JSON](https://shields.io/badges/endpoint-badge) so you can show code quality badges in your README:
 
@@ -148,6 +149,62 @@ The gate is fail-closed: if the metric is unavailable (0 types analyzed, or no m
 Exit codes: `0` success / gate passed, `1` usage error, `2` quality gate failed.
 
 In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are approximately stable across analysis levels (averages match in validation; min values can shift where `#if UNITY_EDITOR` code is excluded at SyntaxOnly). Smell counts are level-dependent: at SyntaxOnly only the syntax-level subset is reported (semantic smells such as boxing are not included), so smell badges are not comparable across levels. See [docs/metrics.md](./docs/metrics.md) for validation data.
+
+### GitHub Action
+
+Use the official composite action instead of copy-pasting workflow YAML:
+
+```yaml
+# .github/workflows/unilyze.yml
+name: Unilyze
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  # Required only when uploading SARIF in a follow-up step:
+  # security-events: write
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # required when base-ref is set
+
+      - uses: bigdra50/unilyze@v1
+        id: unilyze
+        with:
+          project-path: .
+          metric: codehealth
+          fail-under: "7.0"
+          base-ref: origin/main          # optional diff regression gate
+          fail-on-regression: "true"
+          baseline: .unilyze/baseline.json  # optional brownfield baseline
+          sarif: "false"                   # set true and upload sarif-path in a later step
+
+      # Optional: upload SARIF when sarif: true
+      # - uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: ${{ steps.unilyze.outputs.sarif-path }}
+      #     category: unilyze
+```
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `project-path` | `.` | Project directory to analyze |
+| `metric` | `codehealth` | Gate metric: `codehealth`, `mi`, or `smells` |
+| `fail-under` | *(empty)* | Fail when min CodeHealth or avg MI is below this value |
+| `fail-over` | *(empty)* | Fail when smell warnings exceed this count |
+| `base-ref` | *(empty)* | Git ref for diff gate; writes markdown to `$GITHUB_STEP_SUMMARY` |
+| `baseline` | *(empty)* | Baseline JSON path to suppress known smells |
+| `sarif` | `false` | Emit SARIF; upload with `upload-sarif` using the `sarif-path` output |
+| `pr-comment` | `false` | Upsert one sticky PR comment with diff markdown |
+
+Outputs: `codehealth`, `mi`, `smells`, `gate-result` (`passed` / `failed` / `skipped`), and `sarif-path` when SARIF is generated.
 
 To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
 
@@ -416,6 +473,8 @@ unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
 Use `-p` to override the project path (default: `projectPath` from the after snapshot). Use `--level` to pin the base-side analysis level; if it differs from the after snapshot, the existing level-mismatch warning still applies. Unknown refs, non-repo directories, and a missing `git` binary exit `1` with a one-line stderr hint (fetch the branch or widen `fetch-depth` on shallow clones).
 
 ## Agent Workflow
+
+See the [agent integration tutorial](./docs/tutorials/agent-integration.md) for skills install, snapshot conventions, and the refactor-loop workflow.
 
 ```
 unilyze (measure) -> unilyze query (evidence) -> fix -> unilyze diff (verify)
