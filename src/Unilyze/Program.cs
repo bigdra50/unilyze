@@ -112,6 +112,8 @@ try
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             includeApiSurface: includeApiSurface,
             analysisConfig: resolved);
+            analysisConfig: resolved,
+            maxParallelism: config.MaxParallelism);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);

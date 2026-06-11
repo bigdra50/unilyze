@@ -104,6 +104,8 @@ internal static class QueryRunner
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
                 includeApiSurface: includeApiSurface,
                 analysisConfig: resolved);
+                analysisConfig: resolved,
+                maxParallelism: config.MaxParallelism);
         }
 
         if (Directory.Exists(projectRoot))

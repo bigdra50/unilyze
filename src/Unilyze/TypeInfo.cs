@@ -82,7 +82,7 @@ public static class TypeAnalyzer
     public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(
         string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null,
         IReadOnlyList<string>? excludeDirectories = null, bool excludeGeneratedCode = true,
-        bool applyAnyDepthExcludes = true)
+        bool applyAnyDepthExcludes = true, int? maxParallelism = null)
     {
         var parseOptions = CSharpParseOptions.Default
             .WithLanguageVersion(LanguageVersion.Latest);
@@ -96,8 +96,12 @@ public static class TypeAnalyzer
             .ToList();
         var rawTypes = new ConcurrentBag<TypeNodeInfo>();
         var trees = new ConcurrentBag<SyntaxTree>();
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = UnilyzeConfig.ResolveMaxParallelism(maxParallelism)
+        };
 
-        Parallel.ForEach(csFiles, file =>
+        Parallel.ForEach(csFiles, parallelOptions, file =>
         {
             var source = File.ReadAllText(file);
             var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: file);

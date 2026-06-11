@@ -16,11 +16,14 @@ internal static class AnalysisPipeline
         bool applyAnyDepthExcludes = true,
         bool includeApiSurface = false,
         IAnalysisLogSink? logSink = null,
-        ResolvedAnalysisConfig? analysisConfig = null)
+        ResolvedAnalysisConfig? analysisConfig = null,
+        int? maxParallelism = null)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
             excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig);
+            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig,
+            maxParallelism);
         return Build(options);
     }
 

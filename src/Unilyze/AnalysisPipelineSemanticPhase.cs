@@ -29,7 +29,7 @@ internal static class AnalysisPipelineSemanticPhase
         typeMetrics = SemanticEnricher.Enrich(
             typeMetrics, allTypes, allSyntaxTrees, compilationResult,
             config.Profile, config.SmellOverrides, config.InformationalSmellKinds,
-            config.DisabledRuleKinds);
+            config.DisabledRuleKinds, options.EffectiveMaxParallelism);
         allTypes = TypeRoleStamper.ApplyRoles(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         return (allTypes, deps, typeMetrics.ToList(), couplingMap);

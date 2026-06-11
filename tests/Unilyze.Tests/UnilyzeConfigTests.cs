@@ -25,6 +25,35 @@ public sealed class UnilyzeConfigTests : IDisposable
     // --- LoadFile ---
 
     [Fact]
+    public void LoadFile_MaxParallelism_ParsesValue()
+    {
+        var path = WriteTempFile("config.json", """{ "maxParallelism": 4 }""");
+        var result = UnilyzeConfig.LoadFile(path);
+        Assert.Equal(4, result.MaxParallelism);
+    }
+
+    [Fact]
+    public void ResolveMaxParallelism_UsesProcessorCountWhenUnset()
+    {
+        Assert.Equal(Environment.ProcessorCount, UnilyzeConfig.ResolveMaxParallelism(null));
+    }
+
+    [Fact]
+    public void ResolveMaxParallelism_UsesConfigWhenPositive()
+    {
+        Assert.Equal(2, UnilyzeConfig.ResolveMaxParallelism(2));
+    }
+
+    [Fact]
+    public void Merge_MaxParallelism_HigherWins()
+    {
+        var lower = new UnilyzeConfig(MaxParallelism: 2);
+        var higher = new UnilyzeConfig(MaxParallelism: 8);
+        var result = UnilyzeConfig.Merge(lower, higher);
+        Assert.Equal(8, result.MaxParallelism);
+    }
+
+    [Fact]
     public void LoadFile_NonExistent_ReturnsEmpty()
     {
         var result = UnilyzeConfig.LoadFile(Path.Combine(_tempDir, "nonexistent.json"));

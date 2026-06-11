@@ -10,7 +10,8 @@ internal sealed record AnalysisBuildOptions(
     bool ApplyAnyDepthExcludes = true,
     bool IncludeApiSurface = false,
     IAnalysisLogSink? LogSink = null,
-    ResolvedAnalysisConfig? AnalysisConfig = null)
+    ResolvedAnalysisConfig? AnalysisConfig = null,
+    int? MaxParallelism = null)
 {
     static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(
         EffectiveSmellThresholds.Default,
@@ -25,4 +26,6 @@ internal sealed record AnalysisBuildOptions(
     public IAnalysisLogSink EffectiveLog => LogSink ?? new ConsoleAnalysisLogSink(quiet: false);
 
     public AnalysisLevel EffectiveCap => RequestedLevel ?? AnalysisLevel.Complete;
+
+    public int EffectiveMaxParallelism => UnilyzeConfig.ResolveMaxParallelism(MaxParallelism);
 }
