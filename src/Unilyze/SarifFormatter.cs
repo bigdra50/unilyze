@@ -27,6 +27,10 @@ public static class SarifFormatter
         ("UNI014", CodeSmellKind.CatchAllException, "Catch-all exception without rethrow"),
         ("UNI015", CodeSmellKind.MissingInnerException, "Missing inner exception in rethrow"),
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
+        ("UNI017", CodeSmellKind.ExpensiveUnityApiInHotPath, "Expensive Unity API in hot path"),
+        ("UNI018", CodeSmellKind.LinqInHotPath, "LINQ in hot path"),
+        ("UNI019", CodeSmellKind.CollectionAllocationInHotPath, "Collection allocation in hot path"),
+        ("UNI020", CodeSmellKind.StringConcatenationInHotPath, "String concatenation in hot path"),
     ];
 
     public static string Generate(AnalysisResult result)
