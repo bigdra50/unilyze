@@ -8,5 +8,8 @@ public enum TypeRole
     PlainCSharp,
     MonoBehaviour,
     ScriptableObject,
-    EditorExtension
+    EditorExtension,
+    EcsSystem,
+    EcsJob,
+    EcsComponentData
 }

@@ -26,6 +26,8 @@ KIND_TO_RULE_ID: dict[str, str] = {
     "WeakTemporization": "UNI021",
     "AsyncVoidMethod": "UNI022",
     "BlockingTaskWait": "UNI023",
+    "MissingBurstCompile": "UNI024",
+    "ManagedReferenceInComponentData": "UNI025",
 }
 
 RULE_ID_TO_KIND = {rule_id: kind for kind, rule_id in KIND_TO_RULE_ID.items()}

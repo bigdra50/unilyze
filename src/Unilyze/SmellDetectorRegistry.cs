@@ -14,5 +14,7 @@ public static class SmellDetectorRegistry
         new LinqInHotPathDetector(),
         new CollectionAllocationInHotPathDetector(),
         new StringConcatenationInHotPathDetector(),
+        new EcsBurstSmellDetector(),
+        new ManagedComponentDataSmellDetector(),
     ];
 }

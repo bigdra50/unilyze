@@ -24,7 +24,9 @@ public enum CodeSmellKind
     CollectionAllocationInHotPath,
     StringConcatenationInHotPath,
     AsyncVoidMethod,
-    BlockingTaskWait
+    BlockingTaskWait,
+    MissingBurstCompile,
+    ManagedReferenceInComponentData
 }
 
 public enum SmellSeverity
