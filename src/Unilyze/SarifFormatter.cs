@@ -31,6 +31,7 @@ public static class SarifFormatter
         ("UNI018", CodeSmellKind.LinqInHotPath, "LINQ in hot path"),
         ("UNI019", CodeSmellKind.CollectionAllocationInHotPath, "Collection allocation in hot path"),
         ("UNI020", CodeSmellKind.StringConcatenationInHotPath, "String concatenation in hot path"),
+        ("UNI021", CodeSmellKind.WeakTemporization, "Frame-rate dependent update"),
     ];
 
     public static string Generate(AnalysisResult result)

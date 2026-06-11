@@ -123,6 +123,8 @@ public static class SmellThresholds
             "throw new X() in catch block without inner exception.",
         CodeSmellKind.ThrowingSystemException =>
             "throw new Exception() directly (use a specific exception type).",
+        CodeSmellKind.WeakTemporization =>
+            "Incremental transform mutation in Update/LateUpdate without Time.deltaTime scaling (frame-rate dependent).",
         CodeSmellKind.ExpensiveUnityApiInHotPath =>
             "Expensive Unity API call (GetComponent, Find, Camera.main, etc.) inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Cache references; Camera.main is cached on Unity 2020.2+.",
         CodeSmellKind.LinqInHotPath =>

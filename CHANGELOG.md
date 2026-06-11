@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- WeakTemporization smell (UNI017): flags incremental `transform` mutations in Unity `Update`/`LateUpdate` without delta-time scaling ([#79](https://github.com/bigdra50/unilyze/issues/79))
+- **[metrics]** WeakTemporization (UNI017) reported as Warning on Unity `Update`/`LateUpdate` transform mutations lacking delta-time scaling; `metricsVersion` stays 3 (folds into the #70 release-window bump) ([#79](https://github.com/bigdra50/unilyze/issues/79))
 - Diff overlay now works in graph mode: changed types get bucket halos, the tap panel shows baseline sections, and `Changed only` filters graph nodes ([#73](https://github.com/bigdra50/unilyze/issues/73))
 - `diff --changed-only` filters JSON output to changed type buckets (added/removed/degraded/improved) plus the aggregate summary, omitting unchanged types ([#38](https://github.com/bigdra50/unilyze/issues/38))
 - `diff -f markdown` output for PR comments and GITHUB_STEP_SUMMARY ([#37](https://github.com/bigdra50/unilyze/issues/37))
