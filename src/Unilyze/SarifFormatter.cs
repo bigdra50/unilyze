@@ -181,6 +181,18 @@ public static class SarifFormatter
                     resultObj["properties"] = properties;
                 }
 
+                if (smell.Baselined == true)
+                {
+                    resultObj["suppressions"] = new JsonArray
+                    {
+                        new JsonObject
+                        {
+                            ["kind"] = "external",
+                            ["justification"] = "Baselined in .unilyze/baseline.json",
+                        }
+                    };
+                }
+
                 results.Add(resultObj);
             }
         }

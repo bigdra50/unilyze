@@ -24,6 +24,8 @@ if (args.Length >= 1 && args[0] == "badge")
     return BadgeRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "config")
     return ConfigRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "baseline")
+    return BaselineRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -38,6 +40,11 @@ if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1
 var analyzeUsageError = ProgramHelpers.ValidateAnalyzeOptions(args);
 if (analyzeUsageError != 0)
     return analyzeUsageError;
+if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
+{
+    Console.Error.WriteLine("--baseline requires a file path.");
+    return 1;
+}
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
@@ -90,6 +97,12 @@ try
             thresholds: resolved.Thresholds,
             disabledRuleKinds: resolved.DisabledRuleKinds,
             disableCycles: resolved.DisableCycles);
+
+        var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
+        var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
+        if (baselineError is 1)
+            return 1;
+
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -180,6 +193,7 @@ Options:
       --exclude-dir  Exclude directory from analysis (repeatable, relative to project root)
       --level        Pin analysis level: syntax, core, full, complete
                      (caps auto-resolved level; fails if the level cannot be reached)
+      --baseline     Suppress known smells from a baseline file (see 'unilyze baseline create')
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version
   -h, --help         Show this help
@@ -192,6 +206,7 @@ Configuration:
     { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }
 
 Subcommands:
+  baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds
