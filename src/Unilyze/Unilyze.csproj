@@ -7,7 +7,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>unilyze</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
-    <Version>0.3.0</Version>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
     <Authors>bigdra50</Authors>
     <Description>CLI tool to analyze Unity project .asmdef and C# source code with Roslyn, generating dependency graphs and code quality metrics.</Description>
     <PackageProjectUrl>https://github.com/bigdra50/unilyze</PackageProjectUrl>
@@ -36,5 +36,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
   </ItemGroup>
+  <Target Name="UnilyzeAssemblyVersion" AfterTargets="MinVer">
+    <PropertyGroup>
+      <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</AssemblyVersion>
+    </PropertyGroup>
+  </Target>
 </Project>

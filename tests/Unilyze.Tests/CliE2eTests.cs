@@ -187,7 +187,7 @@ public sealed class CliE2eTests : IDisposable
         var (unpinnedExit, unpinnedStdout, _) = Run("-p", _tempDir, "-f", "json");
         Assert.Equal(0, unpinnedExit);
         var unpinnedRoot = JsonDocument.Parse(unpinnedStdout).RootElement;
-        Assert.Equal("CoreEngine", unpinnedRoot.GetProperty("analysisLevel").GetString());
+        Assert.Equal("Complete", unpinnedRoot.GetProperty("analysisLevel").GetString());
 
         var (pinnedExit, pinnedStdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "syntax");
         Assert.Equal(0, pinnedExit);
@@ -196,13 +196,14 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
-    public void Level_Complete_OnNonUnityProject_ExitsNonZero()
+    public void Level_Complete_OnNonUnityProject_ExitsZero()
     {
-        // A bare directory of .cs files can only resolve to SyntaxOnly, so a Complete pin must fail.
         WriteSimpleProject();
-        var (exitCode, _, stderr) = Run("-p", _tempDir, "-f", "json", "--level", "complete");
-        Assert.Equal(1, exitCode);
-        Assert.Contains("Requested analysis level", stderr);
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "complete");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
@@ -222,7 +223,7 @@ public sealed class CliE2eTests : IDisposable
 
         var root = JsonDocument.Parse(stdout).RootElement;
         Assert.True(root.TryGetProperty("analysisLevel", out var level));
-        Assert.Equal("SyntaxOnly", level.GetString());
+        Assert.Equal("Complete", level.GetString());
     }
 
     [Fact]
@@ -306,16 +307,18 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal(0, exitCode);
 
         var root = JsonDocument.Parse(stdout).RootElement;
-        Assert.Equal("SyntaxOnly", root.GetProperty("analysisLevel").GetString());
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
-    public void Badge_LevelComplete_OnNonUnityProject_ExitsNonZero()
+    public void Badge_LevelComplete_OnNonUnityProject_ExitsZero()
     {
         WriteSimpleProject();
-        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--level", "complete");
-        Assert.Equal(1, exitCode);
-        Assert.Contains("Requested analysis level", stderr);
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir, "--level", "complete");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
@@ -327,10 +330,19 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
-    public void Statusline_SyntaxOnlyProject_ShowsLevelMarker()
+    public void Statusline_DotnetProject_ShowsNoSyntaxMarker()
     {
         WriteSimpleProject();
         var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("[syntax]", stdout);
+    }
+
+    [Fact]
+    public void Statusline_SyntaxPinnedProject_ShowsLevelMarker()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--level", "syntax");
         Assert.Equal(0, exitCode);
         Assert.Contains("[syntax]", stdout);
     }
@@ -342,6 +354,82 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal(0, exitCode);
         Assert.Contains("--verbose", stdout);
         Assert.Contains("--quiet", stdout);
+    }
+
+    [Fact]
+    public void Statusline_Help_MentionsBackgroundRefresh()
+    {
+        var (exitCode, stdout, _) = Run("statusline", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--background-refresh", stdout);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefreshFlag_IsAccepted()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, _) = Run("statusline", "-p", _tempDir, "--background-refresh");
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_ColdStart_ExitsQuicklyAndCreatesCache()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--background-refresh");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.True(string.IsNullOrEmpty(stdout));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.Exists(cachePath) && File.ReadAllText(cachePath).Contains("CH:"))
+                return;
+            Thread.Sleep(250);
+        }
+
+        Assert.True(File.Exists(cachePath), $"Expected cache file at {cachePath}");
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_StaleCache_PrintsStaleAndRefreshesInBackground()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        const string staleContent = "CH:STALE/1.0 MI:0 0smells";
+        File.WriteAllText(cachePath, staleContent);
+        File.SetLastWriteTimeUtc(cachePath, DateTime.UtcNow.AddHours(-2));
+
+        var beforeMtime = File.GetLastWriteTimeUtc(cachePath);
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(staleContent, stdout);
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.GetLastWriteTimeUtc(cachePath) > beforeMtime
+                && File.ReadAllText(cachePath) != staleContent)
+                return;
+            Thread.Sleep(250);
+        }
+
+        Assert.True(File.GetLastWriteTimeUtc(cachePath) > beforeMtime, "Expected background refresh to update cache mtime");
+        Assert.NotEqual(staleContent, File.ReadAllText(cachePath));
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
     }
 
     [Fact]
@@ -1289,6 +1377,32 @@ public sealed class CliE2eTests : IDisposable
                 public string Greet(string name) => $"Hello, {name}!";
             }
             """);
+    }
+
+    private static string ResolveStatuslineCachePath(string projectPath)
+    {
+        var fullPath = ProgramHelpers.ResolveProjectRoot(projectPath);
+        var hash = ComputeStatuslineCacheHash(fullPath);
+        return Path.Combine(Path.GetTempPath(), $"unilyze-sl-{hash}.txt");
+    }
+
+    private static string ComputeStatuslineCacheHash(string path)
+    {
+        var bytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(path));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static void TryDeleteStatuslineCache(string cachePath)
+    {
+        try
+        {
+            if (File.Exists(cachePath))
+                File.Delete(cachePath);
+        }
+        catch
+        {
+            // Best-effort cleanup for isolated E2E runs.
+        }
     }
 
     private void WriteCsprojWithValidReference()
