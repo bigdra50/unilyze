@@ -186,6 +186,12 @@ internal static class BaselineMatcher
 
                 foreach (var smell in ordered)
                 {
+                    if (smell.Suppressed == true)
+                    {
+                        updatedSmells.Add(smell);
+                        continue;
+                    }
+
                     if (entry is null
                         || !remaining.TryGetValue(group.Key, out var budget)
                         || budget <= 0
@@ -211,7 +217,7 @@ internal static class BaselineMatcher
         return result with
         {
             TypeMetrics = updatedMetrics,
-            SuppressedCount = suppressedCount,
+            SuppressedCount = (result.SuppressedCount ?? 0) + suppressedCount,
         };
     }
 
