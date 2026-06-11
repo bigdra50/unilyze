@@ -19,6 +19,11 @@ public enum CodeSmellKind
     MissingInnerException,
     ThrowingSystemException,
     WeakTemporization
+    ThrowingSystemException,
+    ExpensiveUnityApiInHotPath,
+    LinqInHotPath,
+    CollectionAllocationInHotPath,
+    StringConcatenationInHotPath
 }
 
 public enum SmellSeverity

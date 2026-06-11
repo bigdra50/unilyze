@@ -9,5 +9,9 @@ public static class SmellDetectorRegistry
         new ParamsSmellDetector(),
         new ExceptionFlowSmellDetector(),
         new WeakTemporizationSmellDetector(),
+        new ExpensiveUnityApiInHotPathDetector(),
+        new LinqInHotPathDetector(),
+        new CollectionAllocationInHotPathDetector(),
+        new StringConcatenationInHotPathDetector(),
     ];
 }
