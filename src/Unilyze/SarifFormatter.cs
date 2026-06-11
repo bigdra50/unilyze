@@ -27,10 +27,18 @@ public static class SarifFormatter
         ("UNI014", CodeSmellKind.CatchAllException, "Catch-all exception without rethrow"),
         ("UNI015", CodeSmellKind.MissingInnerException, "Missing inner exception in rethrow"),
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
+        ("UNI022", CodeSmellKind.AsyncVoidMethod, "async void method"),
+        ("UNI023", CodeSmellKind.BlockingTaskWait, "Blocking wait on Task"),
+        ("UNI017", CodeSmellKind.ExpensiveUnityApiInHotPath, "Expensive Unity API in hot path"),
+        ("UNI018", CodeSmellKind.LinqInHotPath, "LINQ in hot path"),
+        ("UNI019", CodeSmellKind.CollectionAllocationInHotPath, "Collection allocation in hot path"),
+        ("UNI020", CodeSmellKind.StringConcatenationInHotPath, "String concatenation in hot path"),
+        ("UNI021", CodeSmellKind.WeakTemporization, "Frame-rate dependent update"),
     ];
 
-    public static string Generate(AnalysisResult result)
+    public static string Generate(AnalysisResult result, EffectiveSmellThresholds? thresholds = null)
     {
+        thresholds ??= EffectiveSmellThresholds.Default;
         var version = typeof(SarifFormatter).Assembly.GetName().Version?.ToString(3) ?? "0.1.0";
 
         var sarif = new JsonObject
@@ -39,14 +47,51 @@ public static class SarifFormatter
             ["version"] = "2.1.0",
             ["runs"] = new JsonArray
             {
-                BuildRun(result, version)
+                BuildRun(result, version, thresholds)
             }
         };
 
         return sarif.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
-    static JsonObject BuildRun(AnalysisResult result, string version)
+    static readonly Dictionary<string, CodeSmellKind> RuleIdToKind = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["UNI001"] = CodeSmellKind.GodClass,
+        ["UNI002"] = CodeSmellKind.LongMethod,
+        ["UNI003"] = CodeSmellKind.ExcessiveParameters,
+        ["UNI004"] = CodeSmellKind.HighComplexity,
+        ["UNI005"] = CodeSmellKind.DeepNesting,
+        ["UNI006"] = CodeSmellKind.LowCohesion,
+        ["UNI007"] = CodeSmellKind.HighCoupling,
+        ["UNI008"] = CodeSmellKind.LowMaintainability,
+        ["UNI009"] = CodeSmellKind.CyclicDependency,
+        ["UNI010"] = CodeSmellKind.DeepInheritance,
+        ["UNI011"] = CodeSmellKind.BoxingAllocation,
+        ["UNI012"] = CodeSmellKind.ClosureCapture,
+        ["UNI013"] = CodeSmellKind.ParamsArrayAllocation,
+        ["UNI014"] = CodeSmellKind.CatchAllException,
+        ["UNI015"] = CodeSmellKind.MissingInnerException,
+        ["UNI016"] = CodeSmellKind.ThrowingSystemException,
+    };
+
+    public static bool TryGetKind(string ruleId, out CodeSmellKind kind)
+        => RuleIdToKind.TryGetValue(ruleId, out kind);
+
+    public static string? GetRuleId(CodeSmellKind kind)
+    {
+        foreach (var (ruleId, ruleKind, _) in RuleDefinitions)
+        {
+            if (ruleKind == kind)
+                return ruleId;
+        }
+
+        return null;
+    }
+
+    public static IEnumerable<(string RuleId, CodeSmellKind Kind)> EnumerateRules()
+        => RuleDefinitions.Select(static r => (r.RuleId, r.Kind));
+
+    static JsonObject BuildRun(AnalysisResult result, string version, EffectiveSmellThresholds thresholds)
     {
         var ruleIndexByKind = new Dictionary<CodeSmellKind, int>();
         var rulesArray = new JsonArray();
@@ -60,7 +105,7 @@ public static class SarifFormatter
                 ["shortDescription"] = new JsonObject { ["text"] = desc },
                 ["defaultConfiguration"] = new JsonObject { ["level"] = "warning" },
             };
-            var fullDescription = SmellThresholds.GetSarifFullDescription(kind);
+            var fullDescription = SmellThresholds.GetSarifFullDescription(kind, thresholds);
             if (fullDescription is not null)
             {
                 ruleObj["fullDescription"] = new JsonObject { ["text"] = fullDescription };

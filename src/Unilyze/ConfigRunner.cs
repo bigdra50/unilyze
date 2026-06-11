@@ -75,6 +75,8 @@ internal static class ConfigRunner
         PrintSection("global", globalPath, global, ref hasAny);
         PrintSection("project", projectPath, project, ref hasAny);
 
+        hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 };
+
         if (hasAny)
         {
             Console.WriteLine();
@@ -87,6 +89,10 @@ internal static class ConfigRunner
                 foreach (var dir in merged.ExcludeDirs)
                     Console.WriteLine($"    {dir}");
             }
+
+            var effectiveThresholds = EffectiveSmellThresholds.FromOverrides(merged.Smells);
+            PrintEffectiveThresholds(effectiveThresholds);
+            PrintEffectiveRules(merged.ResolveAnalysisConfig());
         }
 
         if (!hasAny)
@@ -116,6 +122,44 @@ internal static class ConfigRunner
 
         Console.WriteLine($"  disableDefaultExcludes: {config.DisableDefaultExcludes.ToString().ToLowerInvariant()}");
         Console.WriteLine($"  disableGeneratedCodeExcludes: {config.DisableGeneratedCodeExcludes.ToString().ToLowerInvariant()}");
+    }
+
+    static void PrintEffectiveThresholds(EffectiveSmellThresholds thresholds)
+    {
+        Console.WriteLine("  smells:");
+        foreach (var (key, value, overridden) in EffectiveSmellThresholds.BuildConfigEntries(thresholds))
+            Console.WriteLine($"    {key}: {value}{(overridden ? "*" : "")}");
+    }
+
+    static void PrintEffectiveRules(ResolvedAnalysisConfig resolved)
+    {
+        Console.WriteLine("  rules:");
+        Console.WriteLine($"    UNI001: {RuleState("UNI001", resolved)}");
+        Console.WriteLine($"    UNI002: {RuleState("UNI002", resolved)}");
+        Console.WriteLine($"    UNI003: {RuleState("UNI003", resolved)}");
+        Console.WriteLine($"    UNI004: {RuleState("UNI004", resolved)}");
+        Console.WriteLine($"    UNI005: {RuleState("UNI005", resolved)}");
+        Console.WriteLine($"    UNI006: {RuleState("UNI006", resolved)}");
+        Console.WriteLine($"    UNI007: {RuleState("UNI007", resolved)}");
+        Console.WriteLine($"    UNI008: {RuleState("UNI008", resolved)}");
+        Console.WriteLine($"    UNI009: {RuleState("UNI009", resolved)}");
+        Console.WriteLine($"    UNI010: {RuleState("UNI010", resolved)}");
+        Console.WriteLine($"    UNI011: {RuleState("UNI011", resolved)}");
+        Console.WriteLine($"    UNI012: {RuleState("UNI012", resolved)}");
+        Console.WriteLine($"    UNI013: {RuleState("UNI013", resolved)}");
+        Console.WriteLine($"    UNI014: {RuleState("UNI014", resolved)}");
+        Console.WriteLine($"    UNI015: {RuleState("UNI015", resolved)}");
+        Console.WriteLine($"    UNI016: {RuleState("UNI016", resolved)}");
+    }
+
+    static string RuleState(string ruleId, ResolvedAnalysisConfig resolved)
+    {
+        if (string.Equals(ruleId, "UNI009", StringComparison.OrdinalIgnoreCase))
+            return resolved.DisableCycles ? "off" : "on";
+
+        return SarifFormatter.TryGetKind(ruleId, out var kind) && resolved.DisabledRuleKinds.Contains(kind)
+            ? "off"
+            : "on";
     }
 
     static int PrintUsage()

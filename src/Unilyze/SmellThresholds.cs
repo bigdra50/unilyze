@@ -86,31 +86,38 @@ public static class SmellThresholds
         AppendDocsRow(sb, "DeepInheritance", $"DIT >= {DeepInheritanceDitWarning}", "—");
         AppendDocsRow(sb, "CatchAllException",
             "`catch (Exception)` without rethrow (excluding `when` filtered catches)", "—");
+        AppendDocsRow(sb, "AsyncVoidMethod",
+            "`async void` method (excluding Unity message methods and event handlers)", "—");
+        AppendDocsRow(sb, "BlockingTaskWait",
+            "`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask", "—");
         return sb.ToString().TrimEnd();
     }
 
-    public static string? GetSarifFullDescription(CodeSmellKind kind) => kind switch
+    public static string? GetSarifFullDescription(CodeSmellKind kind)
+        => GetSarifFullDescription(kind, EffectiveSmellThresholds.Default);
+
+    public static string? GetSarifFullDescription(CodeSmellKind kind, EffectiveSmellThresholds thresholds) => kind switch
     {
         CodeSmellKind.GodClass =>
-            $"Type exceeds size thresholds: lines >= {GodClassLinesWarning} or methods >= {GodClassMethodsWarning} (Critical: lines >= {GodClassLinesCritical}).",
+            $"Type exceeds size thresholds: lines >= {thresholds.GodClassLinesWarning} or methods >= {thresholds.GodClassMethodsWarning} (Critical: lines >= {thresholds.GodClassLinesCritical}).",
         CodeSmellKind.LongMethod =>
-            $"Method exceeds length thresholds: lines >= {LongMethodLinesWarning} or CogCC >= {LongMethodCogCcWarning} (Critical: lines >= {LongMethodLinesCritical} or CogCC >= {LongMethodCogCcCritical}).",
+            $"Method exceeds length thresholds: lines >= {thresholds.LongMethodLinesWarning} or CogCC >= {thresholds.LongMethodCogCcWarning} (Critical: lines >= {thresholds.LongMethodLinesCritical} or CogCC >= {thresholds.LongMethodCogCcCritical}).",
         CodeSmellKind.ExcessiveParameters =>
-            $"Method has more than {ExcessiveParametersMax} parameters.",
+            $"Method has more than {thresholds.ExcessiveParametersMax} parameters.",
         CodeSmellKind.HighComplexity =>
-            $"Method complexity exceeds thresholds: CycCC >= {HighComplexityCycCcWarning} or CogCC >= {HighComplexityCogCcWarning}.",
+            $"Method complexity exceeds thresholds: CycCC >= {thresholds.HighComplexityCycCcWarning} or CogCC >= {thresholds.HighComplexityCogCcWarning}.",
         CodeSmellKind.DeepNesting =>
-            $"Method nesting depth >= {DeepNestingDepthWarning} (Critical: >= {DeepNestingDepthCritical}).",
+            $"Method nesting depth >= {thresholds.DeepNestingDepthWarning} (Critical: >= {thresholds.DeepNestingDepthCritical}).",
         CodeSmellKind.LowCohesion =>
-            $"Type LCOM >= {LowCohesionLcomWarning:0.0}.",
+            $"Type LCOM >= {thresholds.LowCohesionLcomWarning:0.0}.",
         CodeSmellKind.HighCoupling =>
-            $"Type CBO >= {HighCouplingCboWarning} (Critical: >= {HighCouplingCboCritical}).",
+            $"Type CBO >= {thresholds.HighCouplingCboWarning} (Critical: >= {thresholds.HighCouplingCboCritical}).",
         CodeSmellKind.LowMaintainability =>
-            $"Method MI < {LowMaintainabilityMiWarning:0}.",
+            $"Method MI < {thresholds.LowMaintainabilityMiWarning:0}.",
         CodeSmellKind.CyclicDependency =>
             "Type participates in a dependency cycle.",
         CodeSmellKind.DeepInheritance =>
-            $"Type DIT >= {DeepInheritanceDitWarning}.",
+            $"Type DIT >= {thresholds.DeepInheritanceDitWarning}.",
         CodeSmellKind.BoxingAllocation =>
             "Value type boxed to reference type (object, interface, virtual call).",
         CodeSmellKind.ClosureCapture =>
@@ -123,6 +130,20 @@ public static class SmellThresholds
             "throw new X() in catch block without inner exception.",
         CodeSmellKind.ThrowingSystemException =>
             "throw new Exception() directly (use a specific exception type).",
+        CodeSmellKind.AsyncVoidMethod =>
+            "async void method (excluding Unity message methods and event handlers). Exceptions are not observable by callers; in Unity they surface only in the log (silent failure).",
+        CodeSmellKind.BlockingTaskWait =>
+            ".Result / .Wait() / .GetAwaiter().GetResult() blocking wait on Task/ValueTask/UniTask (can deadlock or stall the frame on the main thread).",
+        CodeSmellKind.WeakTemporization =>
+            "Incremental transform mutation in Update/LateUpdate without Time.deltaTime scaling (frame-rate dependent).",
+        CodeSmellKind.ExpensiveUnityApiInHotPath =>
+            "Expensive Unity API call (GetComponent, Find, Camera.main, etc.) inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Cache references; Camera.main is cached on Unity 2020.2+.",
+        CodeSmellKind.LinqInHotPath =>
+            "LINQ query or operator inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). LINQ allocates enumerators and often intermediate collections.",
+        CodeSmellKind.CollectionAllocationInHotPath =>
+            "Collection or array allocation inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Reuse buffers or pre-allocate outside hot paths.",
+        CodeSmellKind.StringConcatenationInHotPath =>
+            "String concatenation, interpolation, or string.Format/Join inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Prefer StringBuilder or cached strings.",
         _ => null,
     };
 

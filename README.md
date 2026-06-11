@@ -207,7 +207,7 @@ In the status line, a marker (`[syntax]` / `[core]` / `[full]`) is appended when
 
 ## Configuration
 
-unilyze loads settings from config files and CLI options. All scopes are merged additively (union).
+unilyze loads settings from config files and CLI options. Lists (such as `excludeDirs`) are merged additively (union). Maps (`smells`, `rules`) are merged key-wise: project keys override global keys for the same entry; keys present in only one scope are preserved.
 
 | Scope | Path |
 |-------|------|
@@ -238,6 +238,36 @@ unilyze -p ~/MyUnityProject --exclude-dir Assets/Plugins --exclude-dir Assets/Th
 ```
 
 The `statusline` subcommand automatically reads config files, so no CLI options are needed for status line integration.
+
+### Smell Threshold Overrides
+
+Override detection thresholds per smell (keys are case-insensitive; unspecified keys keep defaults):
+
+```jsonc
+// .unilyze.json
+{
+  "smells": {
+    "LongMethod": { "lines": 100, "criticalLines": 200 },
+    "HighCoupling": { "cbo": 20 }
+  }
+}
+```
+
+### Rule Enable/Disable
+
+Toggle individual UNI rules with `"on"` or `"off"` (case-insensitive):
+
+```jsonc
+// .unilyze.json
+{
+  "rules": {
+    "UNI011": "off",
+    "UNI009": "off"
+  }
+}
+```
+
+`UNI009` disables cyclic-dependency detection entirely (`CyclicDependencies` becomes `null`). Other rule IDs map to `CodeSmellKind` values and filter smells, counts, SARIF, badge, and statusline output.
 
 ### Managing Config
 
@@ -306,6 +336,12 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 | CatchAllException | `catch (Exception)` without rethrow |
 | MissingInnerException | `throw new X()` in catch without passing inner exception |
 | ThrowingSystemException | `throw new Exception()` directly (use specific exception types) |
+
+## Unity Frame-Rate Analysis
+
+| Kind | Detection |
+|------|-----------|
+| WeakTemporization (UNI021) | Incremental `transform` mutation in `Update`/`LateUpdate` without `Time.deltaTime` scaling |
 
 ## DI Container Detection
 
