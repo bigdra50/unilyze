@@ -532,6 +532,10 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| ExpensiveUnityApiInHotPath | UNI017 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
+| LinqInHotPath | UNI018 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
+| CollectionAllocationInHotPath | UNI019 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
+| StringConcatenationInHotPath | UNI020 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
