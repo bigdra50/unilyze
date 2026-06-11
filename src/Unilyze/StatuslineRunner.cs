@@ -25,8 +25,15 @@ internal static class StatuslineRunner
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
+        var baselinePath = opts.GetValueOrDefault("--baseline");
         if (!int.TryParse(refreshStr, out var refreshSeconds))
             refreshSeconds = DefaultRefreshSeconds;
+
+        if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
+        {
+            Console.Error.WriteLine("--baseline requires a file path.");
+            return 1;
+        }
 
         if (!TryParseRequestedLevel(opts.GetValueOrDefault("--level"), out var requestedLevel))
             return 1;
@@ -63,7 +70,7 @@ internal static class StatuslineRunner
 
         try
         {
-            return RunAnalysisAndServe(fullPath, requestedLevel, log, cacheTxtPath);
+            return RunAnalysisAndServe(fullPath, requestedLevel, log, cacheTxtPath, baselinePath);
         }
         catch (Exception ex)
         {
@@ -132,7 +139,8 @@ internal static class StatuslineRunner
         string fullPath,
         AnalysisLevel? requestedLevel,
         ConsoleAnalysisLogSink log,
-        string cacheTxtPath)
+        string cacheTxtPath,
+        string? baselinePath)
     {
         var config = UnilyzeConfig.LoadMerged(fullPath);
         var resolved = config.ResolveAnalysisConfig();
@@ -144,7 +152,14 @@ internal static class StatuslineRunner
             thresholds: resolved.Thresholds,
             disabledRuleKinds: resolved.DisabledRuleKinds,
             disableCycles: resolved.DisableCycles);
-        var summary = StatuslineFormatter.ComputeSummary(result);
+
+        var effectiveBaseline = baselinePath ?? config.Baseline;
+        var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
+        if (baselineError is 1)
+            return 1;
+
+        var excludeBaselined = effectiveBaseline is not null;
+        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
         var formatted = StatuslineFormatter.Format(summary);
 
         File.WriteAllText(cacheTxtPath, formatted);
@@ -175,6 +190,7 @@ internal static class StatuslineRunner
               -p, --path     Project root (default: .)
               --refresh      Cache refresh interval in seconds (default: 60)
               --level        Pin analysis level: syntax, core, full, complete
+              --baseline     Suppress known smells from a baseline file in smell counts
               --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
               --quiet        Suppress info lines on stderr (warnings still shown)
               -h, --help     Show this help
