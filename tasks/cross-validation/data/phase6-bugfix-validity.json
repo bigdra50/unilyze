@@ -1,0 +1,424 @@
+{
+  "projects": [
+    {
+      "label": "BossRoom",
+      "repo_path": "/tmp/cross-validation-repos/bossroom",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-bossroom-mv2.json",
+      "type_count": 226,
+      "bugfix_commits": 159,
+      "heuristic_validation": {
+        "positive_sample_size": 50,
+        "negative_sample_size": 0,
+        "precision_on_positive_sample": 0.9,
+        "negative_accuracy_on_negative_sample": NaN,
+        "overall_agreement": 0.9,
+        "positive_examples": [
+          {
+            "sha": "33bc24c5",
+            "subject": "fix: synced WinState was causing issues on a replay attempt (MTT-4490) (#724)"
+          },
+          {
+            "sha": "384cfc76",
+            "subject": "Fix: Added null reference check to ClientInputSender script [MTT-6672] (#880)"
+          },
+          {
+            "sha": "f3469692",
+            "subject": "fix: NetworkAnimator being called on clients (#512) (#529)"
+          },
+          {
+            "sha": "107af0fb",
+            "subject": "Fix: Refactor of click target feedback (#569)"
+          },
+          {
+            "sha": "7f7b9a61",
+            "subject": "Fixed variable name change conflict (#587)"
+          }
+        ],
+        "negative_examples": []
+      },
+      "density_per_touch": {
+        "density_key": "bugfixDensityPerTouch",
+        "types_total": 226,
+        "types_with_any_commits": 226,
+        "types_with_bugfix": 181,
+        "types_with_nonzero_density": 181,
+        "codeHealth": {
+          "n": 181,
+          "spearman_rho": 0.18807097598392214,
+          "spearman_p": 0.011232791574176658
+        },
+        "lineCount": {
+          "n": 181,
+          "spearman_rho": -0.24585578154319604,
+          "spearman_p": 0.0008496547959772797
+        },
+        "avgCogCC": {
+          "n": 181,
+          "spearman_rho": -0.024856598018404615,
+          "spearman_p": 0.7397791582086368
+        }
+      },
+      "density_per_kloc": {
+        "density_key": "bugfixDensityPerKLoc",
+        "types_total": 226,
+        "types_with_any_commits": 226,
+        "types_with_bugfix": 181,
+        "types_with_nonzero_density": 181,
+        "codeHealth": {
+          "n": 181,
+          "spearman_rho": 0.5562375125824565,
+          "spearman_p": 4.317316357837007e-16
+        },
+        "lineCount": {
+          "n": 181,
+          "spearman_rho": -0.9614062698378733,
+          "spearman_p": 2.950189903053949e-102
+        },
+        "avgCogCC": {
+          "n": 181,
+          "spearman_rho": -0.7054150752068011,
+          "spearman_p": 1.4696279379167976e-28
+        }
+      }
+    },
+    {
+      "label": "HelloMarioFramework",
+      "repo_path": "/tmp/cross-validation-repos/HelloMarioFramework",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-hmf-mv2.json",
+      "type_count": 109,
+      "bugfix_commits": 2,
+      "heuristic_validation": {
+        "positive_sample_size": 2,
+        "negative_sample_size": 0,
+        "precision_on_positive_sample": 1.0,
+        "negative_accuracy_on_negative_sample": NaN,
+        "overall_agreement": 1.0,
+        "positive_examples": [
+          {
+            "sha": "573bac81",
+            "subject": "Fix RealtimeCSG Tutorial URL"
+          },
+          {
+            "sha": "9e43452c",
+            "subject": "Fix Galoomba animation bug"
+          }
+        ],
+        "negative_examples": []
+      },
+      "density_per_touch": {
+        "density_key": "bugfixDensityPerTouch",
+        "types_total": 109,
+        "types_with_any_commits": 109,
+        "types_with_bugfix": 3,
+        "types_with_nonzero_density": 3,
+        "codeHealth": {
+          "n": 3,
+          "spearman_rho": -0.5000000000000001,
+          "spearman_p": 0.6666666666666666
+        },
+        "lineCount": {
+          "n": 3,
+          "spearman_rho": 0.0,
+          "spearman_p": 1.0
+        },
+        "avgCogCC": {
+          "n": 3,
+          "spearman_rho": 0.8660254037844387,
+          "spearman_p": 0.33333333333333326
+        }
+      },
+      "density_per_kloc": {
+        "density_key": "bugfixDensityPerKLoc",
+        "types_total": 109,
+        "types_with_any_commits": 109,
+        "types_with_bugfix": 3,
+        "types_with_nonzero_density": 3,
+        "codeHealth": {
+          "n": 3,
+          "spearman_rho": 0.8660254037844387,
+          "spearman_p": 0.33333333333333326
+        },
+        "lineCount": {
+          "n": 3,
+          "spearman_rho": -1.0,
+          "spearman_p": 0.0
+        },
+        "avgCogCC": {
+          "n": 3,
+          "spearman_rho": -0.5,
+          "spearman_p": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "label": "UniTask",
+      "repo_path": "/tmp/cross-validation-repos/UniTask",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-unitask-mv2.json",
+      "type_count": 685,
+      "bugfix_commits": 87,
+      "heuristic_validation": {
+        "positive_sample_size": 50,
+        "negative_sample_size": 0,
+        "precision_on_positive_sample": 0.96,
+        "negative_accuracy_on_negative_sample": NaN,
+        "overall_agreement": 0.96,
+        "positive_examples": [
+          {
+            "sha": "623936c7",
+            "subject": "Fix timeoutTask continues to remain."
+          },
+          {
+            "sha": "9a4720d1",
+            "subject": "Fix:Addressed generic parameter attributes error in the .Net Framework"
+          },
+          {
+            "sha": "cf19f186",
+            "subject": "fix: typo"
+          },
+          {
+            "sha": "0715dd31",
+            "subject": "fix BadImageFormatException"
+          },
+          {
+            "sha": "4a72ec2a",
+            "subject": "Fix cancellation token forwarding at FirstValueToUniTaskObserver and ToUniTaskObserver;"
+          }
+        ],
+        "negative_examples": []
+      },
+      "density_per_touch": {
+        "density_key": "bugfixDensityPerTouch",
+        "types_total": 685,
+        "types_with_any_commits": 685,
+        "types_with_bugfix": 635,
+        "types_with_nonzero_density": 635,
+        "codeHealth": {
+          "n": 635,
+          "spearman_rho": 0.0375358063376875,
+          "spearman_p": 0.34499506496916527
+        },
+        "lineCount": {
+          "n": 635,
+          "spearman_rho": 0.20029649971376873,
+          "spearman_p": 3.5990603339961475e-07
+        },
+        "avgCogCC": {
+          "n": 635,
+          "spearman_rho": 0.29291415570201607,
+          "spearman_p": 4.978073190886417e-14
+        }
+      },
+      "density_per_kloc": {
+        "density_key": "bugfixDensityPerKLoc",
+        "types_total": 685,
+        "types_with_any_commits": 685,
+        "types_with_bugfix": 635,
+        "types_with_nonzero_density": 635,
+        "codeHealth": {
+          "n": 635,
+          "spearman_rho": 0.5689409733026779,
+          "spearman_p": 9.659439985850479e-56
+        },
+        "lineCount": {
+          "n": 635,
+          "spearman_rho": -0.9063093425030929,
+          "spearman_p": 5.84413156032603e-239
+        },
+        "avgCogCC": {
+          "n": 635,
+          "spearman_rho": -0.4525957471352802,
+          "spearman_p": 2.1681768075338197e-33
+        }
+      }
+    },
+    {
+      "label": "VContainer",
+      "repo_path": "/tmp/cross-validation-repos/VContainer",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-vcontainer-mv2.json",
+      "type_count": 234,
+      "bugfix_commits": 138,
+      "heuristic_validation": {
+        "positive_sample_size": 50,
+        "negative_sample_size": 0,
+        "precision_on_positive_sample": 0.96,
+        "negative_accuracy_on_negative_sample": NaN,
+        "overall_agreement": 0.96,
+        "positive_examples": [
+          {
+            "sha": "5b52278c",
+            "subject": "Fix the algorithm to target generated type"
+          },
+          {
+            "sha": "1c7cde5d",
+            "subject": "Fix incorrect setter validation"
+          },
+          {
+            "sha": "0a41dfb7",
+            "subject": "Fix a bug that RegisterComponentInHierarchy with As*"
+          },
+          {
+            "sha": "55c5b10d",
+            "subject": "Fix a issue with root lifetimescope running even though not play mode"
+          },
+          {
+            "sha": "47e450a9",
+            "subject": "fix: Exception thrown when InjectGameObject is reentered"
+          }
+        ],
+        "negative_examples": []
+      },
+      "density_per_touch": {
+        "density_key": "bugfixDensityPerTouch",
+        "types_total": 234,
+        "types_with_any_commits": 234,
+        "types_with_bugfix": 175,
+        "types_with_nonzero_density": 175,
+        "codeHealth": {
+          "n": 175,
+          "spearman_rho": 0.17237587868235002,
+          "spearman_p": 0.02254378034528084
+        },
+        "lineCount": {
+          "n": 175,
+          "spearman_rho": -0.23308616569511087,
+          "spearman_p": 0.0019078526020985629
+        },
+        "avgCogCC": {
+          "n": 175,
+          "spearman_rho": -0.363486390927705,
+          "spearman_p": 7.646280381929983e-07
+        }
+      },
+      "density_per_kloc": {
+        "density_key": "bugfixDensityPerKLoc",
+        "types_total": 234,
+        "types_with_any_commits": 234,
+        "types_with_bugfix": 175,
+        "types_with_nonzero_density": 175,
+        "codeHealth": {
+          "n": 175,
+          "spearman_rho": 0.4995538000052136,
+          "spearman_p": 1.9573540350106963e-12
+        },
+        "lineCount": {
+          "n": 175,
+          "spearman_rho": -0.8612158624270893,
+          "spearman_p": 9.911312102368547e-53
+        },
+        "avgCogCC": {
+          "n": 175,
+          "spearman_rho": -0.5552180705620658,
+          "spearman_p": 1.538499004686638e-15
+        }
+      }
+    },
+    {
+      "label": "Unilyze (self)",
+      "repo_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-self-mv2.json",
+      "type_count": 202,
+      "bugfix_commits": 0,
+      "heuristic_validation": {
+        "positive_sample_size": 0,
+        "negative_sample_size": 0,
+        "precision_on_positive_sample": NaN,
+        "negative_accuracy_on_negative_sample": NaN,
+        "overall_agreement": NaN,
+        "positive_examples": [],
+        "negative_examples": []
+      },
+      "density_per_touch": {
+        "density_key": "bugfixDensityPerTouch",
+        "types_total": 202,
+        "types_with_any_commits": 202,
+        "types_with_bugfix": 0,
+        "types_with_nonzero_density": 0,
+        "codeHealth": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        },
+        "lineCount": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        },
+        "avgCogCC": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        }
+      },
+      "density_per_kloc": {
+        "density_key": "bugfixDensityPerKLoc",
+        "types_total": 202,
+        "types_with_any_commits": 202,
+        "types_with_bugfix": 0,
+        "types_with_nonzero_density": 0,
+        "codeHealth": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        },
+        "lineCount": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        },
+        "avgCogCC": {
+          "n": 0,
+          "spearman_rho": NaN,
+          "spearman_p": NaN
+        }
+      }
+    }
+  ],
+  "pooled": {
+    "label": "pooled",
+    "type_count": 1456,
+    "density_per_touch": {
+      "density_key": "bugfixDensityPerTouch",
+      "types_total": 1456,
+      "types_with_any_commits": 1456,
+      "types_with_bugfix": 994,
+      "types_with_nonzero_density": 994,
+      "codeHealth": {
+        "n": 994,
+        "spearman_rho": 0.07968640075044511,
+        "spearman_p": 0.011965155463923806
+      },
+      "lineCount": {
+        "n": 994,
+        "spearman_rho": 0.060558290376516895,
+        "spearman_p": 0.05631150522187412
+      },
+      "avgCogCC": {
+        "n": 994,
+        "spearman_rho": 0.1367311373976766,
+        "spearman_p": 1.5202482353508241e-05
+      }
+    },
+    "density_per_kloc": {
+      "density_key": "bugfixDensityPerKLoc",
+      "types_total": 1456,
+      "types_with_any_commits": 1456,
+      "types_with_bugfix": 994,
+      "types_with_nonzero_density": 994,
+      "codeHealth": {
+        "n": 994,
+        "spearman_rho": 0.5471770590301739,
+        "spearman_p": 1.0393835118367014e-78
+      },
+      "lineCount": {
+        "n": 994,
+        "spearman_rho": -0.9097550373251786,
+        "spearman_p": 0.0
+      },
+      "avgCogCC": {
+        "n": 994,
+        "spearman_rho": -0.5164132877584074,
+        "spearman_p": 7.484909268497184e-69
+      }
+    }
+  }
+}

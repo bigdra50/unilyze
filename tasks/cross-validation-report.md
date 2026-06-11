@@ -58,6 +58,35 @@ VContainer の 20件の差異は `goto` ネスト増分とローカル関数帰�
 
 2件の近似は丸め境界と大型クラスの推定値。実質的な計算エラーはゼロ。
 
+### Phase 6: CodeHealth validity — collinearity + bug-fix density (Issue #90)
+
+CodeHealth は Phase 1–5 まで個別メトリクス（CycCC/CogCC/OOP/smell）のみ検証され、合成スコア自体の根拠データがなかった。Phase 6 で v2 重み再設計のための定量エビデンスを収集した（SonarQube 出力は ground truth に不使用）。
+
+**Corpus**: BossRoom / HelloMarioFramework / UniTask / VContainer / Unilyze 自身を現行 unilyze (`metricsVersion: 3`, SyntaxOnly) で再計測 (`data/unilyze-*-mv2.json`)。clone は `/tmp/cross-validation-repos/`。
+
+#### 6a. CogCC × LOC 共線性 (re-measured, pooled)
+
+| Scope | Pearson r | Spearman ρ | n |
+|-------|-----------|------------|---|
+| method CogCC × method lineCount | 0.859 | 0.775 | 6157 |
+| type avgCogCC × type lineCount | 0.284 | 0.644 | 1456 |
+
+メソッド粒度では CogCC と LOC が強く共線。型粒度でも Spearman ρ ≈ 0.64 が残り、CodeHealth の CogCC 45% + lineCount 15% は実効的に size 軸を二重計上している可能性が高い。6×6 入力行列では avgCogCC ↔ maxCogCC (ρ=0.98)、avgCogCC ↔ maxNesting (ρ=0.94) も確認。
+
+#### 6b. 外的妥当性 — bug-fix commit density vs CodeHealth (SZZ-lite)
+
+git log から fix/bug キーワードで bug-fix コミットを分類（heuristic precision 90–96%）、型別 bugfixDensityPerKLoc と Spearman 相関:
+
+| Metric | ρ (pooled, n=994) | 解釈 |
+|--------|-------------------|------|
+| CodeHealth (composite) | **+0.547** (p≈10⁻⁷⁸) | 低 CH 型ほど fix 密度が高い方向と整合するが、正規化の confound あり |
+| lineCount (baseline) | −0.910 | 単一入力の方が |ρ| が大きい — composite の優位は未確認 |
+| avgCogCC (baseline) | −0.516 | CogCC 単独 baseline |
+
+**結論 (Phase 3 向け)**: 共線性データは CogCC 重み削減・非補償的集約の根拠になる。外的妥当性は「composite > 最強単一入力」を示さず、絶対 ρ も控えめ — v2 設計は相対比較と構造的重複の解消を主目的とすべき。
+
+詳細: [Phase 6: CodeHealth validity](cross-validation/phase6-codehealth-validity.md)
+
 ### Phase 5: Code Smell — Unilyze vs jb inspectcode (質的比較)
 
 両ツールのルールカテゴリは完全に非重複 (overlap ~0%)。
@@ -83,6 +112,7 @@ Unilyze はこの空白を埋めるツールとして独自の価値を持つ。
 | DIT | ○ | 15型で全件一致。syntactic モードで interface-only = DIT 0 を正しく処理 |
 | CBO | ○ | 15型で全件一致。syntactic 収集位置の制約を理解した上で正確 |
 | Code Smell | ○ | 構造的メトリクスベースの検出。jb inspectcode とは問題空間が非重複で補完的 |
+| CodeHealth | △ | Phase 6: CogCC×LOC 共線性 (method ρ≈0.78) と bug-fix 密度相関 (ρ≈0.55) を初記録。composite > lineCount baseline は未確認 |
 | MI | — | 今回の比較対象外 (macOS で使える無料の MI 計測ツールがない) |
 
 ## 既知の定義差異一覧
@@ -156,6 +186,7 @@ HelloMarioFramework に対して similarity-csharp (threshold=0.7) を実行し�
 - [Phase 2: CogCC SonarAnalyzer 比較](cross-validation/phase2-cogcc-sonar.md)
 - [Phase 4: OOP メトリクス手計算](cross-validation/phase4-manual-oop-metrics.md)
 - [Phase 5: Code Smell 質的比較](cross-validation/phase5-codesmell-qualitative.md)
+- [Phase 6: CodeHealth validity](cross-validation/phase6-codehealth-validity.md)
 - [Extra: similarity-csharp 相関分析](cross-validation/phase-extra-similarity-correlation.md)
 
 ## Phase 6: Code Smell precision corpus（基盤整備）
@@ -231,6 +262,10 @@ Unity プロジェクトは `UNILYZE_EDITORS_ROOT` と `corpus-projects.json` �
 - `cross-validation/data/sonar-cogcc-*.json` — SonarAnalyzer 出力
 - `cross-validation/data/manual-oop-metrics.csv` — 手計算結果
 - `cross-validation/data/jb-inspect-unilyze.sarif` — jb inspectcode SARIF
+- `cross-validation/data/unilyze-*-mv2.json` — Phase 6 再計測 corpus (metricsVersion 3)
+- `cross-validation/data/phase6-collinearity.json` — 共線性分析結果
+- `cross-validation/data/phase6-bugfix-validity.json` — bug-fix 密度相関結果
+- `cross-validation/data/phase6-corpus-shas.json` — corpus 固定 SHA
 
 ## 環境
 
