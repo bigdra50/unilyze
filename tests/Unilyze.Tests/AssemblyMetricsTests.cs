@@ -3,9 +3,10 @@ namespace Unilyze.Tests;
 public class AssemblyMetricsTests
 {
     static TypeNodeInfo MakeType(string name, string kind, string ns = "",
-        IReadOnlyList<string>? modifiers = null, IReadOnlyList<MemberInfo>? members = null)
+        IReadOnlyList<string>? modifiers = null, IReadOnlyList<MemberInfo>? members = null,
+        TypeRole? role = null, IReadOnlyList<AttributeInfo>? attributes = null)
         => new(name, ns, kind, modifiers ?? [], null, [], members ?? [],
-            [], [], [], null, "TestAsm", "test.cs", false);
+            [], attributes ?? [], [], null, "TestAsm", "test.cs", false, Role: role);
 
     [Fact]
     public void EmptyTypes_AllCountsZero()
@@ -344,5 +345,41 @@ public class AssemblyMetricsTests
         };
         var result = AssemblyMetrics.Compute("TestAsm", types, dependencies: deps);
         Assert.Equal(0.5, result.RelationalCohesion);
+    }
+
+    // --- Burst coverage ---
+
+    [Fact]
+    public void BurstCoverage_NoEcsTypes_ReturnsNull()
+    {
+        var types = new[] { MakeType("C1", "class") };
+        var result = AssemblyMetrics.Compute("TestAsm", types);
+        Assert.Null(result.BurstCoverage);
+        Assert.Null(result.EcsTypeCount);
+    }
+
+    [Fact]
+    public void BurstCoverage_MixedEligibleTypes_ComputesRatio()
+    {
+        var burstAttr = new[] { new AttributeInfo("BurstCompile", null) };
+        var types = new[]
+        {
+            MakeType("S1", "struct", role: TypeRole.EcsSystem, attributes: burstAttr),
+            MakeType("S2", "struct", role: TypeRole.EcsSystem),
+            MakeType("J1", "struct", role: TypeRole.EcsJob),
+            MakeType("C1", "struct", role: TypeRole.EcsComponentData),
+        };
+        var result = AssemblyMetrics.Compute("TestAsm", types);
+        Assert.Equal(4, result.EcsTypeCount);
+        Assert.Equal(0.3333, result.BurstCoverage);
+    }
+
+    [Fact]
+    public void BurstCoverage_OnlyComponentData_ReturnsNullCoverageWithEcsCount()
+    {
+        var types = new[] { MakeType("C1", "struct", role: TypeRole.EcsComponentData) };
+        var result = AssemblyMetrics.Compute("TestAsm", types);
+        Assert.Equal(1, result.EcsTypeCount);
+        Assert.Null(result.BurstCoverage);
     }
 }

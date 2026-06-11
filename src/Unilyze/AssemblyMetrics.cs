@@ -14,7 +14,9 @@ public sealed record AssemblyMetrics(
     IReadOnlyList<string> Namespaces,
     double Abstractness = 0.0,
     double? DistanceFromMainSequence = null,
-    double? RelationalCohesion = null)
+    double? RelationalCohesion = null,
+    double? BurstCoverage = null,
+    int? EcsTypeCount = null)
 {
     public static AssemblyMetrics Compute(
         string assemblyName,
@@ -29,6 +31,7 @@ public sealed record AssemblyMetrics(
         var relCohesion = internalRelationCount.HasValue || dependencies is not null
             ? ComputeRelationalCohesion(types, internalRelationCount, dependencies)
             : null;
+        var (burstCoverage, ecsTypeCount) = ComputeEcsMetrics(types);
 
         return new AssemblyMetrics(
             AssemblyName: assemblyName,
@@ -44,7 +47,26 @@ public sealed record AssemblyMetrics(
             Namespaces: types.Select(t => t.Namespace).Where(n => n.Length > 0).Distinct().Order().ToList(),
             Abstractness: abstractness,
             DistanceFromMainSequence: dfms.HasValue ? Math.Round(dfms.Value, 4) : null,
-            RelationalCohesion: relCohesion.HasValue ? Math.Round(relCohesion.Value, 4) : null);
+            RelationalCohesion: relCohesion.HasValue ? Math.Round(relCohesion.Value, 4) : null,
+            BurstCoverage: burstCoverage,
+            EcsTypeCount: ecsTypeCount);
+    }
+
+    static (double? BurstCoverage, int? EcsTypeCount) ComputeEcsMetrics(IReadOnlyList<TypeNodeInfo> types)
+    {
+        var ecsTypes = types.Where(t => t.Role is TypeRole.EcsSystem or TypeRole.EcsJob or TypeRole.EcsComponentData).ToList();
+        if (ecsTypes.Count == 0)
+            return (null, null);
+
+        var eligible = ecsTypes.Where(t => EcsContextClassifier.IsBurstEligible(t.Role!.Value, t.Kind)).ToList();
+        double? burstCoverage = null;
+        if (eligible.Count > 0)
+        {
+            var covered = eligible.Count(EcsBurstCompileChecker.IsBurstCovered);
+            burstCoverage = Math.Round((double)covered / eligible.Count, 4);
+        }
+
+        return (burstCoverage, ecsTypes.Count);
     }
 
     static double ComputeAbstractness(IReadOnlyList<TypeNodeInfo> types)

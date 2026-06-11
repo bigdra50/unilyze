@@ -19,6 +19,16 @@ analyze (unilyze -f json):
   .suppressedCount                     int?     Count of smells suppressed by inline comments and/or --baseline;
                                                 present only when at least one smell was suppressed.
   .assemblies[]                        object   Assembly info
+    .name                              string   Assembly name (from .asmdef)
+    .metrics.abstractness              float    Abstractness (0.0-1.0)
+    .metrics.distanceFromMainSequence  float?   |A + I - 1| (0.0 = ideal)
+    .metrics.relationalCohesion        float?   (R + 1) / N
+    .metrics.burstCoverage             float?   Burst-eligible ECS types with [BurstCompile] / eligible;
+                                                null when assembly has no ISystem/IJobEntity/IJobChunk structs
+    .metrics.ecsTypeCount               int?     Count of ECS-classified types (ISystem, IJob*, IComponentData);
+                                                null when assembly has no ECS types
+    .sourceFiles[]                     string   Relative .cs file paths
+    .referencedAssemblies[]            string   Referenced assembly names
     .name                              string   Assembly name (from .asmdef or .csproj)
     .directory                         string   Source directory path
     .references[]                       string   Referenced assembly names

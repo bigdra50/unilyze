@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- **[metrics]** DOTS/ECS smell detectors UNI024 (`MissingBurstCompile` on `ISystem`/`IJobEntity`/`IJobChunk` structs) and UNI025 (`ManagedReferenceInComponentData` on `struct IComponentData`); per-assembly `burstCoverage` and `ecsTypeCount` metrics when ECS types exist; `metricsVersion` stays 3 ([#133](https://github.com/bigdra50/unilyze/issues/133))
 - Opt-in `--include-api-surface` flag emits per-type API surface (XML doc presence/summary, public signature strings, identifier lists, doc coverage counts) in analyze JSON and `query` evidence packs; quality-audit skill adds a review-coverage phase (CRScore-style pseudo-reference matching) ([#134](https://github.com/bigdra50/unilyze/issues/134))
 - Finding `id` on every code smell in JSON output (byte-equal to SARIF `unilyzeFingerprint/v1`), `unilyze triage` subcommand (`set`/`list`/`prune`) persisting verdicts to `.unilyze/triage.json`, and per-smell `triage` field when verdicts apply ([#126](https://github.com/bigdra50/unilyze/issues/126))
 - Optional `"maxParallelism"` in `.unilyze.json` to cap `Parallel.ForEach` parse and semantic pre-warm concurrency (default: `Environment.ProcessorCount`); mitigates rc=134 (SIGABRT) OOM hypothesis during Complete-level analysis ([#62](https://github.com/bigdra50/unilyze/issues/62))

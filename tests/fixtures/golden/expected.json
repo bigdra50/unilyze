@@ -7,34 +7,39 @@
       "references": [],
       "metrics": {
         "assemblyName": "Assembly-CSharp",
-        "typeCount": 48,
-        "classCount": 45,
+        "typeCount": 64,
+        "classCount": 49,
         "recordCount": 0,
-        "interfaceCount": 2,
+        "interfaceCount": 6,
         "enumCount": 0,
         "delegateCount": 0,
-        "publicTypeCount": 48,
+        "publicTypeCount": 64,
         "sealedTypeCount": 0,
-        "totalMembers": 140,
+        "totalMembers": 154,
         "namespaces": [
+          "Burst",
+          "Golden.Ecs",
           "GoldenFixture",
           "GoldenFixture.Coupling",
           "GoldenFixture.Cycles",
           "GoldenFixture.DI",
           "GoldenFixture.Inheritance",
+          "Unity.Entities",
           "UnityEngine",
           "VContainer"
         ],
-        "abstractness": 0.041666666666666664,
-        "distanceFromMainSequence": 0.4583,
-        "relationalCohesion": 0.75
+        "abstractness": 0.09375,
+        "distanceFromMainSequence": 0.4062,
+        "relationalCohesion": 0.75,
+        "burstCoverage": 0.5,
+        "ecsTypeCount": 6
       },
       "healthMetrics": {
-        "averageCodeHealth": 9.7,
+        "averageCodeHealth": 9.8,
         "minCodeHealth": 4.9,
         "highComplexityTypeCount": 0,
-        "totalMethods": 83,
-        "averageCognitiveComplexity": 0.6
+        "totalMethods": 92,
+        "averageCognitiveComplexity": 0.5
       }
     }
   ],
@@ -197,6 +202,28 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.AllocationPatterns",
       "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "BurstCompileAttribute",
+      "namespace": "Burst",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "Attribute",
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/BurstStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 3,
+      "qualifiedName": "Burst.BurstCompileAttribute",
+      "typeId": "Assembly-CSharp::Burst.BurstCompileAttribute",
       "role": "PlainCSharp"
     },
     {
@@ -1093,6 +1120,394 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.DeepNestingTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "MissingBurstSystem",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public",
+        "partial"
+      ],
+      "interfaces": [
+        "ISystem"
+      ],
+      "members": [
+        {
+          "name": "OnCreate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 7,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnUpdate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 8,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnDestroy",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 9,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 6,
+      "startLine": 5,
+      "qualifiedName": "Golden.Ecs.MissingBurstSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem",
+      "role": "EcsSystem"
+    },
+    {
+      "name": "AnnotatedBurstSystem",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public",
+        "partial"
+      ],
+      "interfaces": [
+        "ISystem"
+      ],
+      "members": [
+        {
+          "name": "OnCreate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 15,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnUpdate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 16,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnDestroy",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 17,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [
+        {
+          "name": "Burst.BurstCompile"
+        }
+      ],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 7,
+      "startLine": 12,
+      "qualifiedName": "Golden.Ecs.AnnotatedBurstSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem",
+      "role": "EcsSystem"
+    },
+    {
+      "name": "MissingBurstJob",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public",
+        "partial"
+      ],
+      "interfaces": [
+        "IJobEntity"
+      ],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 20,
+      "qualifiedName": "Golden.Ecs.MissingBurstJob",
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob",
+      "role": "EcsJob"
+    },
+    {
+      "name": "AnnotatedBurstJob",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public",
+        "partial"
+      ],
+      "interfaces": [
+        "IJobEntity"
+      ],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [
+        {
+          "name": "Burst.BurstCompile"
+        }
+      ],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 2,
+      "startLine": 22,
+      "qualifiedName": "Golden.Ecs.AnnotatedBurstJob",
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob",
+      "role": "EcsJob"
+    },
+    {
+      "name": "ManagedSystem",
+      "namespace": "Golden.Ecs",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "SystemBase",
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 25,
+      "qualifiedName": "Golden.Ecs.ManagedSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "UnmanagedComponent",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [
+        "IComponentData"
+      ],
+      "members": [
+        {
+          "name": "Target",
+          "type": "Entity",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "Value",
+          "type": "float",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 5,
+      "startLine": 27,
+      "qualifiedName": "Golden.Ecs.UnmanagedComponent",
+      "typeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent",
+      "role": "EcsComponentData"
+    },
+    {
+      "name": "ManagedComponent",
+      "namespace": "Golden.Ecs",
+      "kind": "struct",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [
+        "IComponentData"
+      ],
+      "members": [
+        {
+          "name": "Label",
+          "type": "string",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 4,
+      "startLine": 33,
+      "qualifiedName": "Golden.Ecs.ManagedComponent",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent",
+      "role": "EcsComponentData"
+    },
+    {
+      "name": "ManagedComponentClass",
+      "namespace": "Golden.Ecs",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [
+        "IComponentData"
+      ],
+      "members": [
+        {
+          "name": "Label",
+          "type": "string",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "isNested": false,
+      "lineCount": 4,
+      "startLine": 38,
+      "qualifiedName": "Golden.Ecs.ManagedComponentClass",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass",
       "role": "PlainCSharp"
     },
     {
@@ -3153,6 +3568,232 @@
       "role": "PlainCSharp"
     },
     {
+      "name": "ISystem",
+      "namespace": "Unity.Entities",
+      "kind": "interface",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "OnCreate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 5,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnUpdate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 6,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "OnDestroy",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [],
+          "parameters": [
+            {
+              "name": "state",
+              "type": "SystemState"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 7,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 6,
+      "startLine": 3,
+      "qualifiedName": "Unity.Entities.ISystem",
+      "typeId": "Assembly-CSharp::Unity.Entities.ISystem",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "SystemBase",
+      "namespace": "Unity.Entities",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 10,
+      "qualifiedName": "Unity.Entities.SystemBase",
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemBase",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "IJobEntity",
+      "namespace": "Unity.Entities",
+      "kind": "interface",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 12,
+      "qualifiedName": "Unity.Entities.IJobEntity",
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobEntity",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "IJobChunk",
+      "namespace": "Unity.Entities",
+      "kind": "interface",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 14,
+      "qualifiedName": "Unity.Entities.IJobChunk",
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobChunk",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "IComponentData",
+      "namespace": "Unity.Entities",
+      "kind": "interface",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 16,
+      "qualifiedName": "Unity.Entities.IComponentData",
+      "typeId": "Assembly-CSharp::Unity.Entities.IComponentData",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "SystemState",
+      "namespace": "Unity.Entities",
+      "kind": "struct",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 1,
+      "startLine": 18,
+      "qualifiedName": "Unity.Entities.SystemState",
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemState",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "Entity",
+      "namespace": "Unity.Entities",
+      "kind": "struct",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "Index",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "isNested": false,
+      "lineCount": 4,
+      "startLine": 20,
+      "qualifiedName": "Unity.Entities.Entity",
+      "typeId": "Assembly-CSharp::Unity.Entities.Entity",
+      "role": "PlainCSharp"
+    },
+    {
       "name": "UnityHotPathTarget",
       "namespace": "GoldenFixture",
       "kind": "class",
@@ -3537,6 +4178,83 @@
       "toTypeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5"
     },
     {
+      "fromType": "MissingBurstSystem",
+      "toType": "ISystem",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.ISystem"
+    },
+    {
+      "fromType": "MissingBurstSystem",
+      "toType": "SystemState",
+      "kind": "MethodParam",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.SystemState"
+    },
+    {
+      "fromType": "AnnotatedBurstSystem",
+      "toType": "ISystem",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.ISystem"
+    },
+    {
+      "fromType": "AnnotatedBurstSystem",
+      "toType": "SystemState",
+      "kind": "MethodParam",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.SystemState"
+    },
+    {
+      "fromType": "MissingBurstJob",
+      "toType": "IJobEntity",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.IJobEntity"
+    },
+    {
+      "fromType": "AnnotatedBurstJob",
+      "toType": "IJobEntity",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.IJobEntity"
+    },
+    {
+      "fromType": "ManagedSystem",
+      "toType": "SystemBase",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.SystemBase"
+    },
+    {
+      "fromType": "UnmanagedComponent",
+      "toType": "IComponentData",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.IComponentData"
+    },
+    {
+      "fromType": "UnmanagedComponent",
+      "toType": "Entity",
+      "kind": "FieldType",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.Entity"
+    },
+    {
+      "fromType": "ManagedComponent",
+      "toType": "IComponentData",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.IComponentData"
+    },
+    {
+      "fromType": "ManagedComponentClass",
+      "toType": "IComponentData",
+      "kind": "InterfaceImpl",
+      "fromTypeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.IComponentData"
+    },
+    {
       "fromType": "MonoBehaviourGodClassTarget",
       "toType": "MonoBehaviour",
       "kind": "Inheritance",
@@ -3570,6 +4288,13 @@
       "kind": "MethodParam",
       "fromTypeId": "Assembly-CSharp::UnityEngine.Transform",
       "toTypeId": "Assembly-CSharp::UnityEngine.Vector3"
+    },
+    {
+      "fromType": "ISystem",
+      "toType": "SystemState",
+      "kind": "MethodParam",
+      "fromTypeId": "Assembly-CSharp::Unity.Entities.ISystem",
+      "toTypeId": "Assembly-CSharp::Unity.Entities.SystemState"
     },
     {
       "fromType": "UnityHotPathTarget",
@@ -3697,7 +4422,7 @@
       "wmc": 5,
       "noc": 0,
       "rfc": 6,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "boxingCount": 2,
       "closureCaptureCount": 2,
       "paramsAllocationCount": 2,
@@ -3763,6 +4488,33 @@
       "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns"
     },
     {
+      "typeName": "BurstCompileAttribute",
+      "namespace": "Burst",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/BurstStubs.cs",
+      "startLine": 3,
+      "qualifiedName": "Burst.BurstCompileAttribute",
+      "typeId": "Assembly-CSharp::Burst.BurstCompileAttribute"
+    },
+    {
       "typeName": "CouplingT01",
       "namespace": "GoldenFixture.Coupling",
       "assembly": "Assembly-CSharp",
@@ -3784,7 +4536,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
@@ -3812,7 +4564,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
@@ -3840,7 +4592,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
@@ -3868,7 +4620,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
@@ -3896,7 +4648,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
@@ -3924,7 +4676,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
@@ -3952,7 +4704,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
@@ -3980,7 +4732,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
@@ -4008,7 +4760,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
@@ -4036,7 +4788,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
@@ -4064,7 +4816,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
@@ -4092,7 +4844,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
@@ -4120,7 +4872,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
@@ -4148,7 +4900,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
@@ -4176,7 +4928,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
@@ -4204,7 +4956,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010777,
+      "typeRank": 0.008626,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
@@ -4248,7 +5000,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "HighCoupling",
@@ -4285,7 +5037,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.068224,
+      "typeRank": 0.054604,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
@@ -4313,7 +5065,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.068224,
+      "typeRank": 0.054604,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
@@ -4341,7 +5093,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.068224,
+      "typeRank": 0.054604,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
@@ -4369,7 +5121,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.068224,
+      "typeRank": 0.054604,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
@@ -4413,7 +5165,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
@@ -4441,7 +5193,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.046353,
+      "typeRank": 0.0371,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
@@ -4469,7 +5221,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.042494,
+      "typeRank": 0.034011,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
@@ -4497,7 +5249,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.037953,
+      "typeRank": 0.030376,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
@@ -4525,7 +5277,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.032611,
+      "typeRank": 0.026101,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
@@ -4553,7 +5305,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.026326,
+      "typeRank": 0.021071,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
@@ -4581,7 +5333,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.018932,
+      "typeRank": 0.015153,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -4618,7 +5370,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -4670,7 +5422,7 @@
       "wmc": 7,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -4711,6 +5463,345 @@
       "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget"
     },
     {
+      "typeName": "MissingBurstSystem",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 6,
+      "methodCount": 3,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "OnCreate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 7,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnUpdate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 8,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnDestroy",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 9,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "cbo": 2,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 2,
+      "instability": 1,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
+      "wmc": 3,
+      "noc": 0,
+      "rfc": 3,
+      "typeRank": 0.008191,
+      "codeSmells": [
+        {
+          "kind": "MissingBurstCompile",
+          "severity": "Warning",
+          "typeName": "MissingBurstSystem",
+          "message": "Burst-eligible ECS type is not Burst-compiled; add [BurstCompile] on the type or lifecycle methods, or disable UNI024 via rules if intentional",
+          "line": 5,
+          "id": "194ceb046d250dafeb0a3c7f5ca9a553c51f7e8e6348eaf334801b6d2b2a3f84"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 5,
+      "qualifiedName": "Golden.Ecs.MissingBurstSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem"
+    },
+    {
+      "typeName": "AnnotatedBurstSystem",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 7,
+      "methodCount": 3,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "OnCreate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 15,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnUpdate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 16,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnDestroy",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 17,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "cbo": 3,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 2,
+      "instability": 1,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
+      "wmc": 3,
+      "noc": 0,
+      "rfc": 3,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 12,
+      "qualifiedName": "Golden.Ecs.AnnotatedBurstSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem"
+    },
+    {
+      "typeName": "MissingBurstJob",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "codeSmells": [
+        {
+          "kind": "MissingBurstCompile",
+          "severity": "Warning",
+          "typeName": "MissingBurstJob",
+          "message": "Burst-eligible ECS type is not Burst-compiled; add [BurstCompile] on the type or lifecycle methods, or disable UNI024 via rules if intentional",
+          "line": 20,
+          "id": "594e4976958cf605e3d17d17b4b9296e3c3afada1450483daeb140ea4a5361f0"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 20,
+      "qualifiedName": "Golden.Ecs.MissingBurstJob",
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob"
+    },
+    {
+      "typeName": "AnnotatedBurstJob",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 2,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 2,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 22,
+      "qualifiedName": "Golden.Ecs.AnnotatedBurstJob",
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob"
+    },
+    {
+      "typeName": "ManagedSystem",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 25,
+      "qualifiedName": "Golden.Ecs.ManagedSystem",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem"
+    },
+    {
+      "typeName": "UnmanagedComponent",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 5,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 2,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 2,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 27,
+      "qualifiedName": "Golden.Ecs.UnmanagedComponent",
+      "typeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent"
+    },
+    {
+      "typeName": "ManagedComponent",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 4,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "codeSmells": [
+        {
+          "kind": "ManagedReferenceInComponentData",
+          "severity": "Warning",
+          "typeName": "ManagedComponent",
+          "methodName": "Label",
+          "message": "IComponentData struct declares a reference-type field; use unmanaged types or class IComponentData for intentional managed components",
+          "line": 35,
+          "id": "d2ed8d1ea5c116db049283e39e84bdb44a00002d7a9e5e503272cb447ffd342f"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 33,
+      "qualifiedName": "Golden.Ecs.ManagedComponent",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent"
+    },
+    {
+      "typeName": "ManagedComponentClass",
+      "namespace": "Golden.Ecs",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 4,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+      "startLine": 38,
+      "qualifiedName": "Golden.Ecs.ManagedComponentClass",
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass"
+    },
+    {
       "typeName": "ExcessiveParametersTarget",
       "namespace": "GoldenFixture",
       "assembly": "Assembly-CSharp",
@@ -4747,7 +5838,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -5061,7 +6152,7 @@
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -5120,7 +6211,7 @@
       "wmc": 17,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "HighComplexity",
@@ -5181,7 +6272,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "LongMethod",
@@ -5360,7 +6451,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -5412,7 +6503,7 @@
       "wmc": 19,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -5743,7 +6834,7 @@
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -5921,7 +7012,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -5958,7 +7049,7 @@
       "wmc": 0,
       "noc": 4,
       "rfc": 0,
-      "typeRank": 0.040679,
+      "typeRank": 0.032558,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 3,
       "qualifiedName": "UnityEngine.MonoBehaviour",
@@ -5986,7 +7077,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.052672,
+      "typeRank": 0.042157,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 8,
       "qualifiedName": "UnityEngine.Vector3",
@@ -6057,7 +7148,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.044811,
+      "typeRank": 0.035865,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -6093,7 +7184,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 22,
       "qualifiedName": "UnityEngine.Time",
@@ -6136,11 +7227,248 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 28,
       "qualifiedName": "UnityEngine.Mathf",
       "typeId": "Assembly-CSharp::UnityEngine.Mathf"
+    },
+    {
+      "typeName": "ISystem",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 6,
+      "methodCount": 3,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "OnCreate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 5,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnUpdate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 6,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "OnDestroy",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 7,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 2,
+      "efferentCoupling": 1,
+      "instability": 0.33,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
+      "wmc": 3,
+      "noc": 0,
+      "rfc": 3,
+      "typeRank": 0.015153,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 3,
+      "qualifiedName": "Unity.Entities.ISystem",
+      "typeId": "Assembly-CSharp::Unity.Entities.ISystem"
+    },
+    {
+      "typeName": "SystemBase",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 1,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 1,
+      "rfc": 0,
+      "typeRank": 0.015153,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 10,
+      "qualifiedName": "Unity.Entities.SystemBase",
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemBase"
+    },
+    {
+      "typeName": "IJobEntity",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 2,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.022115,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 12,
+      "qualifiedName": "Unity.Entities.IJobEntity",
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobEntity"
+    },
+    {
+      "typeName": "IJobChunk",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.008191,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 14,
+      "qualifiedName": "Unity.Entities.IJobChunk",
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobChunk"
+    },
+    {
+      "typeName": "IComponentData",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 3,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.025596,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 16,
+      "qualifiedName": "Unity.Entities.IComponentData",
+      "typeId": "Assembly-CSharp::Unity.Entities.IComponentData"
+    },
+    {
+      "typeName": "SystemState",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 1,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 3,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.028033,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 18,
+      "qualifiedName": "Unity.Entities.SystemState",
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemState"
+    },
+    {
+      "typeName": "Entity",
+      "namespace": "Unity.Entities",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 4,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 1,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.011672,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+      "startLine": 20,
+      "qualifiedName": "Unity.Entities.Entity",
+      "typeId": "Assembly-CSharp::Unity.Entities.Entity"
     },
     {
       "typeName": "UnityHotPathTarget",
@@ -6180,7 +7508,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "ExpensiveUnityApiInHotPath",
@@ -6264,7 +7592,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.027631,
+      "typeRank": 0.022115,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
@@ -6321,7 +7649,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
@@ -6379,7 +7707,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010234,
+      "typeRank": 0.008191,
       "codeSmells": [
         {
           "kind": "WeakTemporization",

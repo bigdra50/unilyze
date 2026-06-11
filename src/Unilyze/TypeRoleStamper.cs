@@ -33,7 +33,9 @@ internal static class TypeRoleStamper
                     compilationResult.Compilation);
             }
 
-            stamped[i] = type with { Role = UnityContextClassifier.ClassifyRole(type, typeDecl, model) };
+            var role = EcsContextClassifier.ClassifyEcsRole(type, typeDecl, model)
+                ?? UnityContextClassifier.ClassifyRole(type, typeDecl, model);
+            stamped[i] = type with { Role = role };
         });
 
         return stamped;
