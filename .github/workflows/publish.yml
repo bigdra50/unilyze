@@ -12,37 +12,26 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
       - name: Ensure API key is configured
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           if [[ -z "${NUGET_API_KEY}" ]]; then
             echo "Repository secret NUGET_API_KEY is not set." >&2
-            exit 1
-          fi
-
-      - name: Read package version
-        id: package
-        shell: bash
-        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
-
-      - name: Verify tag matches package version
-        if: startsWith(github.ref, 'refs/tags/v')
-        shell: bash
-        run: |
-          tag="${GITHUB_REF#refs/tags/v}"
-          pkg="${{ steps.package.outputs.version }}"
-          if [[ "$tag" != "$pkg" ]]; then
-            echo "::error::Tag v$tag does not match csproj Version $pkg"
             exit 1
           fi
 
@@ -58,10 +47,23 @@ jobs:
       - name: Pack
         run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
 
+      - name: Resolve package version
+        id: package
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            nupkg=$(find ./artifacts/nupkg -maxdepth 1 -name 'Unilyze.*.nupkg' -print -quit)
+            version=$(basename "$nupkg" .nupkg | sed 's/^Unilyze\.//')
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       - name: Release smoke
         run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version "${{ steps.package.outputs.version }}"
 
       - name: Push package to NuGet
+        if: startsWith(github.ref, 'refs/tags/v')
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
@@ -69,3 +71,20 @@ jobs:
             --api-key "${NUGET_API_KEY}" \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            $0 ~ "^## \\[" ver "\\]" {found=1; next}
+            /^## \[/ {found=0}
+            found' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "::error::CHANGELOG.md has no section for $version (Release Checklist step 8)"
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag

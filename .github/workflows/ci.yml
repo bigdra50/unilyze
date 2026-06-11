@@ -99,6 +99,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -107,13 +109,16 @@ jobs:
       - name: Restore
         run: dotnet restore src/Unilyze/Unilyze.csproj
 
+      - name: Pack
+        run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
+
       - name: Read package version
         id: package
         shell: bash
-        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
-
-      - name: Pack
-        run: dotnet pack src/Unilyze/Unilyze.csproj -c Release --no-restore -o ./artifacts/nupkg
+        run: |
+          nupkg=$(find ./artifacts/nupkg -maxdepth 1 -name 'Unilyze.*.nupkg' -print -quit)
+          version=$(basename "$nupkg" .nupkg | sed 's/^Unilyze\.//')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Release smoke
         run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version "${{ steps.package.outputs.version }}"

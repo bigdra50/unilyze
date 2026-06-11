@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- MinVer-based versioning: git tags are the single source of truth for package, assembly, and CLI version output; semver tag push now creates a GitHub Release with the matching `CHANGELOG.md` section as its body ([#93](https://github.com/bigdra50/unilyze/issues/93))
 - `statusline --background-refresh` returns cached output immediately and refreshes stale or missing caches in a detached background process, enabling a cross-platform one-line status line integration without shell-side cache logic ([#92](https://github.com/bigdra50/unilyze/issues/92))
 - `calibrate` subcommand: derive smell-threshold candidates from two or more unilyze JSON snapshots using Alves, Ypma & Visser (ICSM 2010) LOC-weighted pooling and 70/80/90 percentiles (80/90/95 for parameter count); outputs risk bands and a `.unilyze.json` smells fragment without changing built-in defaults ([#86](https://github.com/bigdra50/unilyze/issues/86))
 - `diff --base-ref <git-ref> <after.json>` analyzes the base ref in a temporary git worktree and diffs against the after snapshot in one command; composes with `-f markdown`, `--fail-on-regression`, and `--changed-only` ([#82](https://github.com/bigdra50/unilyze/issues/82))
