@@ -9,6 +9,8 @@ public static class SarifFormatter
     const string ToolName = "unilyze";
     const string InformationUri = "https://github.com/bigdra50/unilyze";
 
+    public const string FingerprintKey = "unilyzeFingerprint/v1";
+
     static readonly (string RuleId, CodeSmellKind Kind, string ShortDescription)[] RuleDefinitions =
     [
         ("UNI001", CodeSmellKind.GodClass, "God class detected"),
@@ -72,6 +74,13 @@ public static class SarifFormatter
         ["UNI014"] = CodeSmellKind.CatchAllException,
         ["UNI015"] = CodeSmellKind.MissingInnerException,
         ["UNI016"] = CodeSmellKind.ThrowingSystemException,
+        ["UNI017"] = CodeSmellKind.ExpensiveUnityApiInHotPath,
+        ["UNI018"] = CodeSmellKind.LinqInHotPath,
+        ["UNI019"] = CodeSmellKind.CollectionAllocationInHotPath,
+        ["UNI020"] = CodeSmellKind.StringConcatenationInHotPath,
+        ["UNI021"] = CodeSmellKind.WeakTemporization,
+        ["UNI022"] = CodeSmellKind.AsyncVoidMethod,
+        ["UNI023"] = CodeSmellKind.BlockingTaskWait,
     };
 
     public static bool TryGetKind(string ruleId, out CodeSmellKind kind)
@@ -91,6 +100,14 @@ public static class SarifFormatter
     public static IEnumerable<(string RuleId, CodeSmellKind Kind)> EnumerateRules()
         => RuleDefinitions.Select(static r => (r.RuleId, r.Kind));
 
+    internal static string ComputeFingerprint(
+        string ruleId,
+        string relativePath,
+        string typeName,
+        string? methodName,
+        int occurrenceIndex)
+        => SarifFormattingHelpers.ComputeFingerprint(ruleId, relativePath, typeName, methodName, occurrenceIndex);
+
     static JsonObject BuildRun(AnalysisResult result, string version, EffectiveSmellThresholds thresholds)
     {
         var ruleIndexByKind = new Dictionary<CodeSmellKind, int>();
@@ -99,18 +116,7 @@ public static class SarifFormatter
         {
             var (ruleId, kind, desc) = RuleDefinitions[i];
             ruleIndexByKind[kind] = i;
-            var ruleObj = new JsonObject
-            {
-                ["id"] = ruleId,
-                ["shortDescription"] = new JsonObject { ["text"] = desc },
-                ["defaultConfiguration"] = new JsonObject { ["level"] = "warning" },
-            };
-            var fullDescription = SmellThresholds.GetSarifFullDescription(kind, thresholds);
-            if (fullDescription is not null)
-            {
-                ruleObj["fullDescription"] = new JsonObject { ["text"] = fullDescription };
-            }
-            rulesArray.Add(ruleObj);
+            rulesArray.Add(SarifFormattingHelpers.BuildRuleObject(ruleId, kind, desc, thresholds));
         }
 
         var run = new JsonObject
@@ -143,6 +149,7 @@ public static class SarifFormatter
     static JsonArray BuildResults(AnalysisResult result, Dictionary<CodeSmellKind, int> ruleIndexByKind)
     {
         var results = new JsonArray();
+        var occurrenceCounts = new Dictionary<SarifFormattingHelpers.OccurrenceKey, int>();
 
         if (result.TypeMetrics is null) return results;
 
@@ -155,121 +162,20 @@ public static class SarifFormatter
                 if (!ruleIndexByKind.TryGetValue(smell.Kind, out var ruleIndex)) continue;
 
                 var ruleId = RuleDefinitions[ruleIndex].RuleId;
-                var level = smell.Severity == SmellSeverity.Critical ? "error" : "warning";
+                var relativePath = string.IsNullOrEmpty(typeMetrics.FilePath)
+                    ? ""
+                    : Path.GetRelativePath(result.ProjectPath, typeMetrics.FilePath).Replace('\\', '/');
 
-                var messageText = smell.MethodName is not null
-                    ? $"{smell.TypeName}.{smell.MethodName}: {smell.Message}"
-                    : $"{smell.TypeName}: {smell.Message}";
+                var occurrenceKey = new SarifFormattingHelpers.OccurrenceKey(
+                    relativePath, smell.TypeName, smell.MethodName, ruleId);
+                occurrenceCounts.TryGetValue(occurrenceKey, out var occurrenceIndex);
+                occurrenceCounts[occurrenceKey] = occurrenceIndex + 1;
 
-                var resultObj = new JsonObject
-                {
-                    ["ruleId"] = ruleId,
-                    ["ruleIndex"] = ruleIndex,
-                    ["level"] = level,
-                    ["message"] = new JsonObject { ["text"] = messageText },
-                };
-
-                var location = BuildLocation(typeMetrics, smell, result.ProjectPath);
-                if (location is not null)
-                {
-                    resultObj["locations"] = new JsonArray { location };
-                }
-
-                var properties = BuildProperties(typeMetrics, smell);
-                if (properties is not null)
-                {
-                    resultObj["properties"] = properties;
-                }
-
-                if (smell.Baselined == true)
-                {
-                    resultObj["suppressions"] = new JsonArray
-                    {
-                        new JsonObject
-                        {
-                            ["kind"] = "external",
-                            ["justification"] = "Baselined in .unilyze/baseline.json",
-                        }
-                    };
-                }
-
-                results.Add(resultObj);
+                results.Add(SarifFormattingHelpers.BuildResultObject(
+                    ruleId, ruleIndex, smell, typeMetrics, result.ProjectPath, occurrenceIndex));
             }
         }
 
         return results;
-    }
-
-    static JsonObject? BuildLocation(TypeMetrics typeMetrics, CodeSmell smell, string projectPath)
-    {
-        if (string.IsNullOrEmpty(typeMetrics.FilePath)) return null;
-
-        var relativePath = GetRelativePath(projectPath, typeMetrics.FilePath);
-
-        var physicalLocation = new JsonObject
-        {
-            ["artifactLocation"] = new JsonObject
-            {
-                ["uri"] = relativePath,
-                ["uriBaseId"] = "%SRCROOT%",
-            }
-        };
-
-        int? startLine = smell.Line;
-        if (startLine is null && smell.MethodName is not null)
-        {
-            var method = typeMetrics.Methods.FirstOrDefault(m => m.MethodName == smell.MethodName);
-            startLine = method?.StartLine;
-        }
-        startLine ??= typeMetrics.StartLine;
-
-        if (startLine is > 0)
-        {
-            physicalLocation["region"] = new JsonObject
-            {
-                ["startLine"] = startLine.Value,
-            };
-        }
-
-        return new JsonObject { ["physicalLocation"] = physicalLocation };
-    }
-
-    static JsonObject? BuildProperties(TypeMetrics typeMetrics, CodeSmell smell)
-    {
-        var props = new JsonObject
-        {
-            ["typeName"] = smell.TypeName,
-            ["codeHealth"] = typeMetrics.CodeHealth,
-        };
-
-        if (smell.MethodName is not null)
-        {
-            props["methodName"] = smell.MethodName;
-            var method = typeMetrics.Methods.FirstOrDefault(m => m.MethodName == smell.MethodName);
-            if (method is not null)
-            {
-                props["cognitiveComplexity"] = method.CognitiveComplexity;
-                props["cyclomaticComplexity"] = method.CyclomaticComplexity;
-                props["maxNestingDepth"] = method.MaxNestingDepth;
-                props["parameterCount"] = method.ParameterCount;
-                props["methodLineCount"] = method.LineCount;
-            }
-        }
-        else
-        {
-            props["lineCount"] = typeMetrics.LineCount;
-            props["methodCount"] = typeMetrics.MethodCount;
-            if (typeMetrics.Lcom is not null)
-                props["lcom"] = typeMetrics.Lcom.Value;
-        }
-
-        return props;
-    }
-
-    static string GetRelativePath(string projectPath, string filePath)
-    {
-        if (string.IsNullOrEmpty(projectPath)) return filePath;
-        var relative = Path.GetRelativePath(projectPath, filePath);
-        return relative.Replace('\\', '/');
     }
 }
