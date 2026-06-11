@@ -5,6 +5,8 @@ public class MonoBehaviourGodClassTarget : UnityEngine.MonoBehaviour
 {
     int _a; int _b; int _c; int _d; int _e;
 
+    [UnityEngine.SerializeField] SerializedRefBase wiredTarget;
+
     public int M01() { _a++; return _a; }
     public int M02() { _b++; return _b; }
     public int M03() { _c++; return _c; }

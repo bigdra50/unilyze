@@ -7,15 +7,15 @@
       "references": [],
       "metrics": {
         "assemblyName": "Assembly-CSharp",
-        "typeCount": 64,
-        "classCount": 49,
+        "typeCount": 67,
+        "classCount": 52,
         "recordCount": 0,
         "interfaceCount": 6,
         "enumCount": 0,
         "delegateCount": 0,
-        "publicTypeCount": 64,
+        "publicTypeCount": 67,
         "sealedTypeCount": 0,
-        "totalMembers": 154,
+        "totalMembers": 155,
         "namespaces": [
           "Burst",
           "Golden.Ecs",
@@ -28,9 +28,9 @@
           "UnityEngine",
           "VContainer"
         ],
-        "abstractness": 0.09375,
-        "distanceFromMainSequence": 0.4062,
-        "relationalCohesion": 0.75,
+        "abstractness": 0.1044776119402985,
+        "distanceFromMainSequence": 0.3955,
+        "relationalCohesion": 0.7761,
         "burstCoverage": 0.5,
         "ecsTypeCount": 6
       },
@@ -2578,45 +2578,20 @@
           "lineCount": 0
         },
         {
+          "name": "wiredTarget",
+          "type": "SerializedRefBase",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [
+            {
+              "name": "UnityEngine.SerializeField"
+            }
+          ],
+          "lineCount": 0
+        },
+        {
           "name": "M01",
-          "type": "int",
-          "memberKind": "Method",
-          "modifiers": [
-            "public"
-          ],
-          "parameters": [],
-          "attributes": [],
-          "cognitiveComplexity": 0,
-          "cyclomaticComplexity": 1,
-          "maxNestingDepth": 0,
-          "lineCount": 1,
-          "startLine": 8,
-          "halsteadVolume": 2,
-          "halsteadDifficulty": 0,
-          "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
-        },
-        {
-          "name": "M02",
-          "type": "int",
-          "memberKind": "Method",
-          "modifiers": [
-            "public"
-          ],
-          "parameters": [],
-          "attributes": [],
-          "cognitiveComplexity": 0,
-          "cyclomaticComplexity": 1,
-          "maxNestingDepth": 0,
-          "lineCount": 1,
-          "startLine": 9,
-          "halsteadVolume": 2,
-          "halsteadDifficulty": 0,
-          "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
-        },
-        {
-          "name": "M03",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2635,7 +2610,7 @@
           "halsteadEstimatedBugs": 0
         },
         {
-          "name": "M04",
+          "name": "M02",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2654,7 +2629,7 @@
           "halsteadEstimatedBugs": 0
         },
         {
-          "name": "M05",
+          "name": "M03",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2673,7 +2648,7 @@
           "halsteadEstimatedBugs": 0
         },
         {
-          "name": "M06",
+          "name": "M04",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2686,13 +2661,13 @@
           "maxNestingDepth": 0,
           "lineCount": 1,
           "startLine": 13,
-          "halsteadVolume": 4.754887502163468,
-          "halsteadDifficulty": 1,
-          "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
         },
         {
-          "name": "M07",
+          "name": "M05",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2705,13 +2680,13 @@
           "maxNestingDepth": 0,
           "lineCount": 1,
           "startLine": 14,
-          "halsteadVolume": 4.754887502163468,
-          "halsteadDifficulty": 1,
-          "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
         },
         {
-          "name": "M08",
+          "name": "M06",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2730,7 +2705,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M09",
+          "name": "M07",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2749,7 +2724,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M10",
+          "name": "M08",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2768,7 +2743,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M11",
+          "name": "M09",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2787,7 +2762,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M12",
+          "name": "M10",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2806,7 +2781,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M13",
+          "name": "M11",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2825,7 +2800,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M14",
+          "name": "M12",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2844,7 +2819,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M15",
+          "name": "M13",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2863,7 +2838,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M16",
+          "name": "M14",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2882,7 +2857,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M17",
+          "name": "M15",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2901,7 +2876,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M18",
+          "name": "M16",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2920,7 +2895,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M19",
+          "name": "M17",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2939,7 +2914,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M20",
+          "name": "M18",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2958,7 +2933,7 @@
           "halsteadEstimatedBugs": 0.0009425525573729414
         },
         {
-          "name": "M21",
+          "name": "M19",
           "type": "int",
           "memberKind": "Method",
           "modifiers": [
@@ -2975,6 +2950,44 @@
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
           "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M20",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 29,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M21",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 30,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
         }
       ],
       "constructorParams": [],
@@ -2983,7 +2996,7 @@
       "assembly": "Assembly-CSharp",
       "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
       "isNested": false,
-      "lineCount": 26,
+      "lineCount": 28,
       "startLine": 4,
       "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
@@ -3293,6 +3306,80 @@
       "role": "MonoBehaviour"
     },
     {
+      "name": "SerializedRefBase",
+      "namespace": "GoldenFixture",
+      "kind": "class",
+      "modifiers": [
+        "public",
+        "abstract"
+      ],
+      "baseType": "MonoBehaviour",
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/SerializedRefBase.cs",
+      "isNested": false,
+      "lineCount": 3,
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.SerializedRefBase",
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase",
+      "role": "MonoBehaviour"
+    },
+    {
+      "name": "SerializedRefConcrete",
+      "namespace": "GoldenFixture",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "SerializedRefBase",
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/SerializedRefConcrete.cs",
+      "isNested": false,
+      "lineCount": 3,
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.SerializedRefConcrete",
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete",
+      "role": "MonoBehaviour"
+    },
+    {
+      "name": "SerializeFieldAttribute",
+      "namespace": "UnityEngine",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "Attribute",
+      "interfaces": [],
+      "members": [],
+      "constructorParams": [],
+      "attributes": [
+        {
+          "name": "AttributeUsage",
+          "arguments": {
+            "arg0": "AttributeTargets.Field"
+          }
+        }
+      ],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 2,
+      "startLine": 3,
+      "qualifiedName": "UnityEngine.SerializeFieldAttribute",
+      "typeId": "Assembly-CSharp::UnityEngine.SerializeFieldAttribute",
+      "role": "PlainCSharp"
+    },
+    {
       "name": "MonoBehaviour",
       "namespace": "UnityEngine",
       "kind": "class",
@@ -3320,7 +3407,7 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "isNested": false,
       "lineCount": 5,
-      "startLine": 3,
+      "startLine": 6,
       "qualifiedName": "UnityEngine.MonoBehaviour",
       "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour",
       "role": "PlainCSharp"
@@ -3354,7 +3441,7 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "isNested": false,
       "lineCount": 5,
-      "startLine": 8,
+      "startLine": 11,
       "qualifiedName": "UnityEngine.Vector3",
       "typeId": "Assembly-CSharp::UnityEngine.Vector3",
       "role": "PlainCSharp"
@@ -3397,7 +3484,7 @@
           "cyclomaticComplexity": 1,
           "maxNestingDepth": 0,
           "lineCount": 1,
-          "startLine": 17,
+          "startLine": 20,
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -3421,7 +3508,7 @@
           "cyclomaticComplexity": 1,
           "maxNestingDepth": 0,
           "lineCount": 1,
-          "startLine": 18,
+          "startLine": 21,
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -3453,7 +3540,7 @@
           "cyclomaticComplexity": 1,
           "maxNestingDepth": 0,
           "lineCount": 1,
-          "startLine": 19,
+          "startLine": 22,
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -3467,7 +3554,7 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "isNested": false,
       "lineCount": 7,
-      "startLine": 14,
+      "startLine": 17,
       "qualifiedName": "UnityEngine.Transform",
       "typeId": "Assembly-CSharp::UnityEngine.Transform",
       "role": "PlainCSharp"
@@ -3514,7 +3601,7 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "isNested": false,
       "lineCount": 5,
-      "startLine": 22,
+      "startLine": 25,
       "qualifiedName": "UnityEngine.Time",
       "typeId": "Assembly-CSharp::UnityEngine.Time",
       "role": "PlainCSharp"
@@ -3548,7 +3635,7 @@
           "cyclomaticComplexity": 1,
           "maxNestingDepth": 0,
           "lineCount": 1,
-          "startLine": 30,
+          "startLine": 33,
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -3562,7 +3649,7 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "isNested": false,
       "lineCount": 4,
-      "startLine": 28,
+      "startLine": 31,
       "qualifiedName": "UnityEngine.Mathf",
       "typeId": "Assembly-CSharp::UnityEngine.Mathf",
       "role": "PlainCSharp"
@@ -4262,11 +4349,32 @@
       "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
     },
     {
+      "fromType": "MonoBehaviourGodClassTarget",
+      "toType": "SerializedRefBase",
+      "kind": "FieldType",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "toTypeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase"
+    },
+    {
       "fromType": "MonoBehaviourLowCohesionTarget",
       "toType": "MonoBehaviour",
       "kind": "Inheritance",
       "fromTypeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
       "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "fromType": "SerializedRefBase",
+      "toType": "MonoBehaviour",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase",
+      "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "fromType": "SerializedRefConcrete",
+      "toType": "SerializedRefBase",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete",
+      "toTypeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase"
     },
     {
       "fromType": "MonoBehaviour",
@@ -4330,6 +4438,13 @@
       "kind": "DIRegistration",
       "fromTypeId": "Assembly-CSharp::GoldenFixture.DI.IGameService",
       "toTypeId": "Assembly-CSharp::GoldenFixture.DI.GameService"
+    },
+    {
+      "fromType": "MonoBehaviourGodClassTarget",
+      "toType": "SerializedRefConcrete",
+      "kind": "SerializedReference",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "toTypeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete"
     }
   ],
   "typeMetrics": [
@@ -4422,7 +4537,7 @@
       "wmc": 5,
       "noc": 0,
       "rfc": 6,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "boxingCount": 2,
       "closureCaptureCount": 2,
       "paramsAllocationCount": 2,
@@ -4508,7 +4623,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/BurstStubs.cs",
       "startLine": 3,
       "qualifiedName": "Burst.BurstCompileAttribute",
@@ -4536,7 +4651,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
@@ -4564,7 +4679,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
@@ -4592,7 +4707,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
@@ -4620,7 +4735,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
@@ -4648,7 +4763,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
@@ -4676,7 +4791,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
@@ -4704,7 +4819,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
@@ -4732,7 +4847,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
@@ -4760,7 +4875,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
@@ -4788,7 +4903,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
@@ -4816,7 +4931,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
@@ -4844,7 +4959,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
@@ -4872,7 +4987,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
@@ -4900,7 +5015,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
@@ -4928,7 +5043,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
@@ -4956,7 +5071,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008626,
+      "typeRank": 0.008071,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
@@ -5000,7 +5115,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "HighCoupling",
@@ -5037,7 +5152,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.054604,
+      "typeRank": 0.051093,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
@@ -5065,7 +5180,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.054604,
+      "typeRank": 0.051093,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
@@ -5093,7 +5208,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.054604,
+      "typeRank": 0.051093,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
@@ -5121,7 +5236,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.054604,
+      "typeRank": 0.051093,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
@@ -5165,7 +5280,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
@@ -5193,7 +5308,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.0371,
+      "typeRank": 0.034714,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
@@ -5221,7 +5336,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.034011,
+      "typeRank": 0.031824,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
@@ -5249,7 +5364,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.030376,
+      "typeRank": 0.028423,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
@@ -5277,7 +5392,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.026101,
+      "typeRank": 0.024422,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
@@ -5305,7 +5420,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.021071,
+      "typeRank": 0.019716,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
@@ -5333,7 +5448,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.015153,
+      "typeRank": 0.014178,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -5370,7 +5485,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -5422,7 +5537,7 @@
       "wmc": 7,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -5526,7 +5641,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "MissingBurstCompile",
@@ -5606,7 +5721,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 12,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstSystem",
@@ -5634,7 +5749,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "MissingBurstCompile",
@@ -5672,7 +5787,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 22,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstJob",
@@ -5700,7 +5815,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 25,
       "qualifiedName": "Golden.Ecs.ManagedSystem",
@@ -5728,7 +5843,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 27,
       "qualifiedName": "Golden.Ecs.UnmanagedComponent",
@@ -5756,7 +5871,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "ManagedReferenceInComponentData",
@@ -5795,7 +5910,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 38,
       "qualifiedName": "Golden.Ecs.ManagedComponentClass",
@@ -5838,7 +5953,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -6152,7 +6267,7 @@
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -6211,7 +6326,7 @@
       "wmc": 17,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "HighComplexity",
@@ -6272,7 +6387,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "LongMethod",
@@ -6451,7 +6566,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -6503,7 +6618,7 @@
       "wmc": 19,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -6539,7 +6654,7 @@
       "typeName": "MonoBehaviourGodClassTarget",
       "namespace": "GoldenFixture",
       "assembly": "Assembly-CSharp",
-      "lineCount": 26,
+      "lineCount": 28,
       "methodCount": 21,
       "maxNestingDepth": 0,
       "averageCognitiveComplexity": 0,
@@ -6556,7 +6671,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 8,
+          "startLine": 10,
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -6569,7 +6684,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 9,
+          "startLine": 11,
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -6582,7 +6697,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 10,
+          "startLine": 12,
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -6595,7 +6710,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 11,
+          "startLine": 13,
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -6608,7 +6723,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 12,
+          "startLine": 14,
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -6621,7 +6736,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 13,
+          "startLine": 15,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6634,7 +6749,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 14,
+          "startLine": 16,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6647,7 +6762,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 15,
+          "startLine": 17,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6660,7 +6775,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 16,
+          "startLine": 18,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6673,7 +6788,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 17,
+          "startLine": 19,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6686,7 +6801,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 18,
+          "startLine": 20,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6699,7 +6814,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 19,
+          "startLine": 21,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6712,7 +6827,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 20,
+          "startLine": 22,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6725,7 +6840,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 21,
+          "startLine": 23,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6738,7 +6853,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 22,
+          "startLine": 24,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6751,7 +6866,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 23,
+          "startLine": 25,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6764,7 +6879,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 24,
+          "startLine": 26,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6777,7 +6892,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 25,
+          "startLine": 27,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6790,7 +6905,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 26,
+          "startLine": 28,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6803,7 +6918,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 27,
+          "startLine": 29,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
@@ -6816,25 +6931,25 @@
           "maxNestingDepth": 0,
           "parameterCount": 0,
           "lineCount": 1,
-          "startLine": 28,
+          "startLine": 30,
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
           "halsteadEstimatedBugs": 0.0009
         }
       ],
-      "lcom": 0.84,
-      "cbo": 1,
+      "lcom": 0.88,
+      "cbo": 3,
       "dit": 1,
       "afferentCoupling": 0,
-      "efferentCoupling": 1,
+      "efferentCoupling": 3,
       "instability": 1,
       "averageMaintainabilityIndex": 95.7,
       "minMaintainabilityIndex": 95.1,
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -6847,7 +6962,7 @@
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "MonoBehaviourGodClassTarget",
-          "message": "LCOM 0.84 (threshold: 0.8)",
+          "message": "LCOM 0.88 (threshold: 0.8)",
           "id": "c2c8897f25eb60090ff1497b1e33e0603aecd17c18db94eaac5dc2f104f7974f"
         }
       ],
@@ -7012,7 +7127,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -7026,6 +7141,89 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget"
+    },
+    {
+      "typeName": "SerializedRefBase",
+      "namespace": "GoldenFixture",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 3,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 1,
+      "afferentCoupling": 2,
+      "efferentCoupling": 1,
+      "instability": 0.33,
+      "wmc": 0,
+      "noc": 1,
+      "rfc": 0,
+      "typeRank": 0.018196,
+      "filePath": "/golden-fixture/Assets/Scripts/SerializedRefBase.cs",
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.SerializedRefBase",
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase"
+    },
+    {
+      "typeName": "SerializedRefConcrete",
+      "namespace": "GoldenFixture",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 3,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 2,
+      "afferentCoupling": 1,
+      "efferentCoupling": 1,
+      "instability": 0.5,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.009835,
+      "filePath": "/golden-fixture/Assets/Scripts/SerializedRefConcrete.cs",
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.SerializedRefConcrete",
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete"
+    },
+    {
+      "typeName": "SerializeFieldAttribute",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 2,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 3,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.007664,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 3,
+      "qualifiedName": "UnityEngine.SerializeFieldAttribute",
+      "typeId": "Assembly-CSharp::UnityEngine.SerializeFieldAttribute"
     },
     {
       "typeName": "MonoBehaviour",
@@ -7043,15 +7241,15 @@
       "methods": [],
       "cbo": 1,
       "dit": 0,
-      "afferentCoupling": 4,
+      "afferentCoupling": 5,
       "efferentCoupling": 1,
-      "instability": 0.2,
+      "instability": 0.17,
       "wmc": 0,
-      "noc": 4,
+      "noc": 5,
       "rfc": 0,
-      "typeRank": 0.032558,
+      "typeRank": 0.041588,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-      "startLine": 3,
+      "startLine": 6,
       "qualifiedName": "UnityEngine.MonoBehaviour",
       "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
     },
@@ -7077,9 +7275,9 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.042157,
+      "typeRank": 0.047483,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-      "startLine": 8,
+      "startLine": 11,
       "qualifiedName": "UnityEngine.Vector3",
       "typeId": "Assembly-CSharp::UnityEngine.Vector3"
     },
@@ -7104,7 +7302,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 1,
           "lineCount": 1,
-          "startLine": 17,
+          "startLine": 20,
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -7117,7 +7315,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 1,
           "lineCount": 1,
-          "startLine": 18,
+          "startLine": 21,
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -7130,7 +7328,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 3,
           "lineCount": 1,
-          "startLine": 19,
+          "startLine": 22,
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -7148,7 +7346,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.035865,
+      "typeRank": 0.043014,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -7159,7 +7357,7 @@
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-      "startLine": 14,
+      "startLine": 17,
       "qualifiedName": "UnityEngine.Transform",
       "typeId": "Assembly-CSharp::UnityEngine.Transform"
     },
@@ -7184,9 +7382,9 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-      "startLine": 22,
+      "startLine": 25,
       "qualifiedName": "UnityEngine.Time",
       "typeId": "Assembly-CSharp::UnityEngine.Time"
     },
@@ -7211,7 +7409,7 @@
           "maxNestingDepth": 0,
           "parameterCount": 1,
           "lineCount": 1,
-          "startLine": 30,
+          "startLine": 33,
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
@@ -7227,9 +7425,9 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-      "startLine": 28,
+      "startLine": 31,
       "qualifiedName": "UnityEngine.Mathf",
       "typeId": "Assembly-CSharp::UnityEngine.Mathf"
     },
@@ -7297,7 +7495,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.015153,
+      "typeRank": 0.014178,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 3,
       "qualifiedName": "Unity.Entities.ISystem",
@@ -7325,7 +7523,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.015153,
+      "typeRank": 0.014178,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 10,
       "qualifiedName": "Unity.Entities.SystemBase",
@@ -7353,7 +7551,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.022115,
+      "typeRank": 0.020693,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 12,
       "qualifiedName": "Unity.Entities.IJobEntity",
@@ -7380,7 +7578,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 14,
       "qualifiedName": "Unity.Entities.IJobChunk",
@@ -7408,7 +7606,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.025596,
+      "typeRank": 0.02395,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 16,
       "qualifiedName": "Unity.Entities.IComponentData",
@@ -7436,7 +7634,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.028033,
+      "typeRank": 0.02623,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 18,
       "qualifiedName": "Unity.Entities.SystemState",
@@ -7464,7 +7662,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011672,
+      "typeRank": 0.010921,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 20,
       "qualifiedName": "Unity.Entities.Entity",
@@ -7508,7 +7706,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "ExpensiveUnityApiInHotPath",
@@ -7592,7 +7790,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.022115,
+      "typeRank": 0.020693,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
@@ -7649,7 +7847,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
@@ -7707,7 +7905,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.008191,
+      "typeRank": 0.007664,
       "codeSmells": [
         {
           "kind": "WeakTemporization",

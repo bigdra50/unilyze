@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- **[metrics]** Unity scene/prefab/`.asset` YAML cross-check adds `SerializedReference` dependency edges from Inspector wiring of `[SerializeField]`/public fields to concrete component types; affects Ca/Ce/Instability/TypeRank/cycles/DfMS on Unity projects with text-serialized assets; CBO unchanged (declaration-based); `metricsVersion` stays 3 (folds into P3-C02 release-window bump) ([#132](https://github.com/bigdra50/unilyze/issues/132))
 - **[metrics]** DOTS/ECS smell detectors UNI024 (`MissingBurstCompile` on `ISystem`/`IJobEntity`/`IJobChunk` structs) and UNI025 (`ManagedReferenceInComponentData` on `struct IComponentData`); per-assembly `burstCoverage` and `ecsTypeCount` metrics when ECS types exist; `metricsVersion` stays 3 ([#133](https://github.com/bigdra50/unilyze/issues/133))
 - Opt-in `--include-api-surface` flag emits per-type API surface (XML doc presence/summary, public signature strings, identifier lists, doc coverage counts) in analyze JSON and `query` evidence packs; quality-audit skill adds a review-coverage phase (CRScore-style pseudo-reference matching) ([#134](https://github.com/bigdra50/unilyze/issues/134))
 - Finding `id` on every code smell in JSON output (byte-equal to SARIF `unilyzeFingerprint/v1`), `unilyze triage` subcommand (`set`/`list`/`prune`) persisting verdicts to `.unilyze/triage.json`, and per-smell `triage` field when verdicts apply ([#126](https://github.com/bigdra50/unilyze/issues/126))
