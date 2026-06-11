@@ -63,6 +63,7 @@ var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 var noOpen = opts.ContainsKey("--no-open");
+var includeApiSurface = opts.ContainsKey("--include-api-surface");
 var cliExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 var cliProfile = opts.GetValueOrDefault("--profile");
 var levelStr = opts.GetValueOrDefault("--level");
@@ -109,6 +110,7 @@ try
             path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+            includeApiSurface: includeApiSurface,
             analysisConfig: resolved,
             maxParallelism: config.MaxParallelism);
 
@@ -216,6 +218,8 @@ Options:
       --baseline     Suppress known smells from a baseline file (see 'unilyze baseline create')
       --triage       Override triage verdict file (default: auto-discover <project>/.unilyze/triage.json)
       --no-triage    Disable triage verdict application
+      --include-api-surface
+                     Emit per-type API surface (doc comments, public signatures, identifiers)
       --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version

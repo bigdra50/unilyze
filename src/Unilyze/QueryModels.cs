@@ -15,7 +15,16 @@ public sealed record TypeEvidencePack(
     IReadOnlyList<TypeEvidenceSmell> Smells,
     IReadOnlyList<TypeEvidenceDependencyGroup> InboundDependencies,
     IReadOnlyList<TypeEvidenceDependencyGroup> OutboundDependencies,
-    IReadOnlyList<TypeEvidenceMethod> TopMethods);
+    IReadOnlyList<TypeEvidenceMethod> TopMethods,
+    TypeEvidenceApiSurface? ApiSurface = null);
+
+public sealed record TypeEvidenceApiSurface(
+    bool HasDocComment,
+    string? DocSummary,
+    IReadOnlyList<string> PublicSignatures,
+    IReadOnlyList<string> Identifiers,
+    int DocumentedPublicMemberCount,
+    int PublicMemberCount);
 
 public sealed record TypeEvidenceMetrics(
     double CodeHealth,

@@ -97,6 +97,8 @@ Phase 3: AI checks measurement blind spots (top-level statements, etc.)
 
 ```bash
 unilyze -p . -f json -o "$UNILYZE_DIR/quality-audit.json"
+# Optional: include API surface for naming/intent/comment review grounding
+unilyze -p . -f json --include-api-surface -o "$UNILYZE_DIR/quality-audit.json"
 ```
 
 Discover worst types with **evidence packs** — token-efficient per-type summaries with `file:line` anchors, smells, dependencies, and top methods:
@@ -104,6 +106,9 @@ Discover worst types with **evidence packs** — token-efficient per-type summar
 ```bash
 # Worst 5 types (markdown, default)
 unilyze query --worst 5 -i "$UNILYZE_DIR/quality-audit.json"
+
+# With API surface (doc comments, signatures, identifiers)
+unilyze query --worst 5 -i "$UNILYZE_DIR/quality-audit.json" --include-api-surface
 
 # Single type as JSON
 unilyze query --type MyService -i "$UNILYZE_DIR/quality-audit.json" -f json

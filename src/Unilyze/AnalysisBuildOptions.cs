@@ -8,6 +8,7 @@ internal sealed record AnalysisBuildOptions(
     AnalysisLevel? RequestedLevel = null,
     bool ExcludeGeneratedCode = true,
     bool ApplyAnyDepthExcludes = true,
+    bool IncludeApiSurface = false,
     IAnalysisLogSink? LogSink = null,
     ResolvedAnalysisConfig? AnalysisConfig = null,
     int? MaxParallelism = null)
