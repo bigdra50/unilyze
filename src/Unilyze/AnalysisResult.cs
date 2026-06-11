@@ -16,7 +16,8 @@ public sealed record AnalysisResult(
     string? ToolVersion = null,
     string? ProjectKind = null,
     string? Profile = null,
-    int? SuppressedCount = null)
+    int? SuppressedCount = null,
+    IReadOnlyList<TypeApiSurface>? ApiSurface = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.
@@ -53,6 +54,8 @@ public sealed record AssemblyInfo(
 [JsonSerializable(typeof(TypeEvidenceSmell))]
 [JsonSerializable(typeof(TypeEvidenceDependencyGroup))]
 [JsonSerializable(typeof(TypeEvidenceMethod))]
+[JsonSerializable(typeof(TypeApiSurface))]
+[JsonSerializable(typeof(TypeEvidenceApiSurface))]
 [JsonSerializable(typeof(MetricDelta<int>))]
 [JsonSerializable(typeof(MetricDelta<double>))]
 internal partial class AnalysisJsonContext : JsonSerializerContext;

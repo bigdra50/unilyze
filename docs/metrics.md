@@ -612,9 +612,9 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | CollectionAllocationInHotPath | UNI019 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | StringConcatenationInHotPath | UNI020 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| コメントとコードの不整合 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| 命名品質 | — | LLM 委譲 (`--include-api-surface` の identifiers / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
+| 意図とコードの乖離 | — | LLM 委譲 (`--include-api-surface` の docSummary / identifiers を入力) | 意図・文脈判断が必要でしきい値化できない |
+| コメントとコードの不整合 | — | LLM 委譲 (`--include-api-surface` の docSummary / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
 | トップレベルステートメント | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | ランタイムリスク (Dispose 漏れ / デッドロック) | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 

@@ -47,6 +47,8 @@ UNILYZE_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)/.unilyze"
 mkdir -p "$UNILYZE_DIR"
 
 unilyze -p <path> -f json -o "$UNILYZE_DIR/quality-audit.json"
+# 命名/意図/コメント整合レビュー用に API surface を含める場合:
+unilyze -p <path> -f json --include-api-surface -o "$UNILYZE_DIR/quality-audit.json"
 ```
 
 自前コードに絞る場合は `--prefix` または `-a` を使う:
@@ -68,14 +70,18 @@ unilyze -p <path> -a App.Domain -f json -o "$UNILYZE_DIR/quality-audit.json"
 # CodeHealth ワースト N 件 (Markdown, 既定)
 unilyze query --worst 5 -i "$UNILYZE_DIR/quality-audit.json"
 
+# API surface 付き (doc summary, public signatures, identifiers)
+unilyze query --worst 5 -i "$UNILYZE_DIR/quality-audit.json" --include-api-surface
+
 # 単一型 (JSON)
 unilyze query --type GodClassTarget -i "$UNILYZE_DIR/quality-audit.json" -f json
 
 # 直接解析 (スナップショット不要)
-unilyze query --worst 5 -p <path>
+unilyze query --worst 5 -p <path> --include-api-surface
 ```
 
 各 pack には型アンカー (`file:line`)、主要メトリクス、スメル (severity + line)、依存エッジ、CogCC 上位メソッドが含まれる。
+`--include-api-surface` 指定時は doc summary、public signatures、identifiers、doc coverage も付与される。
 Critical スメルだけ見る場合は pack 内の `[Critical]` 行を参照する。
 CBO > 14、boxing ホットスポット、DI 登録、例外フロー問題も pack 内の metrics / smells / dependencies で確認できる。
 サマリー統計は `unilyze statusline -p <path> --verbose` または JSON ルートの assembly health を参照。
@@ -101,15 +107,15 @@ unilyze の計測対象外を AI が確認する。
 [docs/metrics.md の検出責務ルーティング](../../../docs/metrics.md#検出責務ルーティング) の LLM 委譲行に対応するチェックリスト。
 詳細は [references/blind-spots.md](references/blind-spots.md) を参照。
 
-| 確認項目 | 着目箇所 | メトリクスで漏れる理由 |
-|---------|---------|---------------------|
-| Feature Envy | メソッド内の他型フィールド参照・外部型への過度な委譲 | 責務配置は行数・複雑度では判定できない |
-| 命名品質 | 型名・メソッド名・パラメータ名と実装の対応 | 命名は静的メトリクスに現れない |
-| 意図とコードの乖離 | コメント・テスト名・API 名と実装ロジックの不一致 | 意図はコード構造から推定できない |
-| コメントとコードの不整合 | XML doc / インラインコメントと実装 | コメント内容は計測対象外 |
-| トップレベルステートメントの行数・複雑度 | Program.cs 等のトップレベル本体 | 型に属さず TypeMetrics に含まれない |
-| IDisposable の Dispose 漏れ | using 未使用の IDisposable 生成 | 所有権・ライフサイクルは静的解析困難 |
-| Process.Start のデッドロックパターン | StandardOutput/Error の同期 ReadToEnd | 実行時デッドロックはメトリクス化不可 |
+| 確認項目 | 着目箇所 | メトリクスで漏れる理由 | 入力データ |
+|---------|---------|---------------------|-----------|
+| Feature Envy | メソッド内の他型フィールド参照・外部型への過度な委譲 | 責務配置は行数・複雑度では判定できない | query pack (smells, dependencies) |
+| 命名品質 | 型名・メソッド名・パラメータ名と実装の対応 | 命名は静的メトリクスに現れない | `--include-api-surface` の identifiers / publicSignatures |
+| 意図とコードの乖離 | コメント・テスト名・API 名と実装ロジックの不一致 | 意図はコード構造から推定できない | `--include-api-surface` の docSummary / identifiers |
+| コメントとコードの不整合 | XML doc / インラインコメントと実装 | コメント内容は計測対象外 | `--include-api-surface` の docSummary / publicSignatures |
+| トップレベルステートメントの行数・複雑度 | Program.cs 等のトップレベル本体 | 型に属さず TypeMetrics に含まれない | ソース直接読み |
+| IDisposable の Dispose 漏れ | using 未使用の IDisposable 生成 | 所有権・ライフサイクルは静的解析困難 | ソース直接読み |
+| Process.Start のデッドロックパターン | StandardOutput/Error の同期 ReadToEnd | 実行時デッドロックはメトリクス化不可 | ソース直接読み |
 
 > catch (Exception) の握り潰しは CatchAllException、inner exception 未設定は MissingInnerException として自動検出されるようになった。盲点から除外。
 
@@ -137,7 +143,31 @@ unilyze の計測対象外を AI が確認する。
 
 出典: [Goodhart's Law in Software Engineering](https://jellyfish.co/blog/goodharts-law-in-software-engineering-and-how-to-avoid-gaming-your-metrics/), [SPACE Framework](https://queue.acm.org/detail.cfm?id=3454124)
 
-### Phase 4: 統合レポート
+### Phase 4: Review coverage (CRScore-style)
+
+Phase 2/3 の AI レビューが、決定的根拠 (Critical smells + ワースト型) を網羅したかを検証する。
+CRScore (Naik et al., NAACL 2025) の comprehensiveness metric を quality-audit に適用したフェーズ。
+
+**疑似リファレンス集合の構築:**
+
+```bash
+unilyze query --worst <N> -i "$UNILYZE_DIR/quality-audit.json" --include-api-surface
+```
+
+1. 上記 pack から **Critical** severity の全スメルを列挙する (type + kind + method + anchor)
+2. ワースト型リスト (--worst N で選ばれた型) 自体も各 1 件のリファレンスとして含める
+3. 各リファレンスについて Phase 2/3 の Findings に対応する記述があるか照合する
+
+**判定ルール:**
+
+- カバー済み: Finding に同型・同スメル種別 (または同等の blind-spot 指摘) が存在
+- 未カバー: Finding に無く、かつ triage 理由も記録されていない → **必ず** Finding 追加または triage 理由を記載
+
+**カバレッジ比率:** `Review coverage: covered/total` (例: `12/15`)
+
+未カバー項目はレポートに `Uncovered pseudo-references` サブセクションとして列挙する。
+
+### Phase 5: 統合レポート
 
 ```
 ## Quality Audit Report
@@ -150,6 +180,11 @@ unilyze の計測対象外を AI が確認する。
 | Below threshold (CodeHealth < X) | N |
 | Critical CodeSmells | N |
 | Blind spot issues | N |
+| Review coverage | covered/total |
+
+### Uncovered pseudo-references
+
+- `{type}` / `{smellKind}` @ `{anchor}` — triage: {added as finding | reason for skip}
 
 ### Findings (優先度順)
 
@@ -179,7 +214,7 @@ Recommendation: {改善案}
 各 Finding には「メトリクス値」か「blind spot」のいずれかの根拠を必ず付ける。
 メトリクス閾値は `unilyze metrics` または [references/metrics-thresholds.md](references/metrics-thresholds.md) を参照。
 
-### Phase 5: スナップショット保持
+### Phase 6: スナップショット保持
 
 `$UNILYZE_DIR/quality-audit.json` を残す。`/refactor-loop` の初期スナップショットとして使用可能。
 trend 用に日付付きコピーも保存する:

@@ -64,6 +64,7 @@ internal static class QueryEvidenceFormatter
         AppendDependencies(sb, "Inbound", pack.InboundDependencies);
         AppendDependencies(sb, "Outbound", pack.OutboundDependencies);
         AppendTopMethods(sb, pack.TopMethods);
+        AppendApiSurface(sb, pack.ApiSurface);
     }
 
     static void AppendSmells(StringBuilder sb, IReadOnlyList<TypeEvidenceSmell> smells)
@@ -122,6 +123,43 @@ internal static class QueryEvidenceFormatter
         {
             var anchor = method.Anchor is null ? "" : $" `{method.Anchor}`";
             sb.AppendLine($"- {method.MethodName} (CogCC {method.CognitiveComplexity}){anchor}");
+        }
+    }
+
+    static void AppendApiSurface(StringBuilder sb, TypeEvidenceApiSurface? apiSurface)
+    {
+        if (apiSurface is null)
+            return;
+
+        sb.AppendLine();
+        sb.AppendLine("### API Surface");
+        sb.AppendLine($"- Doc comment: {(apiSurface.HasDocComment ? "yes" : "no")}");
+        if (apiSurface.DocSummary is not null)
+            sb.AppendLine($"- Summary: {apiSurface.DocSummary}");
+        sb.AppendLine(
+            $"- Public doc coverage: {apiSurface.DocumentedPublicMemberCount}/{apiSurface.PublicMemberCount}");
+
+        sb.AppendLine();
+        sb.AppendLine("#### Public signatures");
+        if (apiSurface.PublicSignatures.Count == 0)
+        {
+            sb.AppendLine("- _none_");
+        }
+        else
+        {
+            foreach (var signature in apiSurface.PublicSignatures)
+                sb.AppendLine($"- `{signature}`");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("#### Identifiers");
+        if (apiSurface.Identifiers.Count == 0)
+        {
+            sb.AppendLine("- _none_");
+        }
+        else
+        {
+            sb.AppendLine("- " + string.Join(", ", apiSurface.Identifiers));
         }
     }
 

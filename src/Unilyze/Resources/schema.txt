@@ -19,20 +19,38 @@ analyze (unilyze -f json):
   .suppressedCount                     int?     Count of smells suppressed by inline comments and/or --baseline;
                                                 present only when at least one smell was suppressed.
   .assemblies[]                        object   Assembly info
-    .name                              string   Assembly name (from .asmdef)
-    .metrics.abstractness              float    Abstractness (0.0-1.0)
-    .metrics.distanceFromMainSequence  float?   |A + I - 1| (0.0 = ideal)
-    .metrics.relationalCohesion        float?   (R + 1) / N
-    .sourceFiles[]                     string   Relative .cs file paths
-    .referencedAssemblies[]            string   Referenced assembly names
+    .name                              string   Assembly name (from .asmdef or .csproj)
+    .directory                         string   Source directory path
+    .references[]                       string   Referenced assembly names
+    .metrics                           object   Assembly-level metrics (abstractness, etc.)
+    .healthMetrics                     object?  Average/min CodeHealth and method counts
   .types[]                             object   Type topology nodes
     .name, .namespace, .assembly       string   Type identity
-    .kind                              string   "Class","Interface","Struct","Enum","Delegate"
-    .isPublic, .isSealed, .isAbstract  bool     Modifiers
+    .kind                              string   "class","interface","struct","enum","record","delegate"
+    .modifiers[]                        string   Modifier tokens (e.g. "public", "sealed")
+    .baseType                           string?  Base class name
+    .interfaces[]                       string   Implemented interfaces
+    .members[]                          object   Fields, properties, methods, etc.
+      .name, .type, .memberKind         string   Member identity
+      .modifiers[]                      string   Modifier tokens
+      .parameters[]                     object   Method/indexer parameters (.name, .type)
+    .typeId                             string?  Unique identifier (Assembly::QualifiedName)
+    .qualifiedName                      string?  Namespace.TypeName
   .dependencies[]                      object   Type-level dependencies
-    .source, .target                   string   Type names
-    .kind                              string   "Inheritance","Implementation","Association",
-                                                "Usage","Aggregation"
+    .fromType, .toType                 string   Type names
+    .fromTypeId, .toTypeId             string?  Stable type identifiers when available
+    .kind                              string   "Inheritance","InterfaceImpl","FieldType",
+                                                "PropertyType","MethodParam","ReturnType",
+                                                "EventType","GenericConstraint","DIRegistration"
+  .apiSurface[]                        object?  Opt-in per-type API surface (--include-api-surface)
+    .typeId                             string   Stable type identifier
+    .qualifiedName                      string   Namespace.TypeName
+    .hasDocComment                      bool     Whether XML doc comment is present
+    .docSummary                         string?  Normalized <summary> text (length-capped); null for inheritdoc-only
+    .publicSignatures[]                 string   Rendered public/protected declarations (no bodies)
+    .identifiers[]                      string   All declared type/member/parameter names
+    .documentedPublicMemberCount        int      Public/protected members with doc comments
+    .publicMemberCount                  int      Total public/protected members
   .typeMetrics[]                       object   Per-type metrics (see below)
 
 typeMetrics[]:

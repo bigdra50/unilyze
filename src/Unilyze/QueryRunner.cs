@@ -19,6 +19,7 @@ internal static class QueryRunner
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
         var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format") ?? "md";
         var typeName = opts.GetValueOrDefault("--type");
+        var includeApiSurface = opts.ContainsKey("--include-api-surface");
         var queryExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
 
         if (!int.TryParse(opts.GetValueOrDefault("--worst") ?? "5", out var worstCount) || worstCount < 1)
@@ -31,7 +32,7 @@ internal static class QueryRunner
 
         try
         {
-            var analysis = LoadAnalysis(input, path, queryExcludeDirs);
+            var analysis = LoadAnalysis(input, path, queryExcludeDirs, includeApiSurface);
             var metrics = analysis.TypeMetrics ?? [];
 
             var selection = typeName != null
@@ -44,7 +45,14 @@ internal static class QueryRunner
                 return 1;
             }
 
-            var queryResult = QueryEvidenceAssembler.Build(analysis, selection.Types);
+            if (includeApiSurface && input != null && analysis.ApiSurface is not { Count: > 0 })
+            {
+                Console.Error.WriteLine(
+                    "Snapshot lacks apiSurface; re-analyze with --include-api-surface and pass the new snapshot to -i.");
+                return 1;
+            }
+
+            var queryResult = QueryEvidenceAssembler.Build(analysis, selection.Types, includeApiSurface);
             var content = formatStr.ToLowerInvariant() switch
             {
                 "md" or "markdown" => QueryEvidenceFormatter.ToMarkdown(queryResult),
@@ -67,7 +75,11 @@ internal static class QueryRunner
         }
     }
 
-    static AnalysisResult LoadAnalysis(string? input, string path, IReadOnlyList<string> excludeDirs)
+    static AnalysisResult LoadAnalysis(
+        string? input,
+        string path,
+        IReadOnlyList<string> excludeDirs,
+        bool includeApiSurface)
     {
         AnalysisResult result;
         string projectRoot;
@@ -90,6 +102,7 @@ internal static class QueryRunner
                 path, null, null, config.ExcludeDirs,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+                includeApiSurface: includeApiSurface,
                 analysisConfig: resolved);
         }
 
@@ -130,6 +143,8 @@ internal static class QueryRunner
               -i, --input        Existing analysis JSON (skip fresh analysis)
               -f, --format       Output format: md, json (default: md)
               --exclude-dir      Exclude directory from analysis (repeatable)
+              --include-api-surface
+                                 Include doc comments, public signatures, and identifiers
               -o, --output       Output file path
               -h, --help         Show this help
             """);

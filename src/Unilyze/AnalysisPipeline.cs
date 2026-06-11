@@ -14,12 +14,13 @@ internal static class AnalysisPipeline
         AnalysisLevel? requestedLevel = null,
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
+        bool includeApiSurface = false,
         IAnalysisLogSink? logSink = null,
         ResolvedAnalysisConfig? analysisConfig = null)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
-            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig);
+            excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig);
         return Build(options);
     }
 
@@ -75,7 +76,10 @@ internal static class AnalysisPipeline
             ToolVersionInfo.Current,
             ProjectKind: discover.ProjectKind,
             Profile: profileField,
-            SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null);
+            SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null,
+            ApiSurface: options.IncludeApiSurface
+                ? ApiSurfaceExtractor.Extract(allSyntaxTrees, resolvedTypes)
+                : null);
 
         return FindingFingerprint.AssignIds(result);
     }
