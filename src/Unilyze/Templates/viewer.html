@@ -34,6 +34,8 @@ body{
 }
 .search:focus{border-color:var(--accent)}
 .search::placeholder{color:var(--dim)}
+.filter-chip{font-size:10px;padding:3px 8px}
+body.offline-mode .filter-chip{display:none}
 .btn{
   background:var(--bg);border:1px solid var(--border);border-radius:5px;
   padding:4px 10px;color:var(--dim);font-family:var(--font);font-size:11px;
@@ -318,7 +320,10 @@ body.offline-mode .panel{
 <body>
 <div class="toolbar">
   <h1>__TITLE__</h1><div class="sep"></div>
-  <input type="text" class="search" placeholder="Search types..." id="q">
+  <input type="text" class="search" placeholder="Search types...  ( / )" id="q" title="Search types by name or namespace">
+  <button class="btn filter-chip" id="fLowHealth" title="Types with Code Health below 7">Health &lt; 7</button>
+  <button class="btn filter-chip" id="fSmells" title="Types with one or more code smells">Smells</button>
+  <button class="btn filter-chip" id="fCycles" title="Types participating in circular dependencies">Cycles</button>
   <button class="btn" id="bExp">Expand All</button>
   <button class="btn" id="bCol">Collapse All</button>
   <button class="btn" id="bFit">Fit</button>
@@ -1046,8 +1051,10 @@ function renderOfflineReport(){
 
   closeBtn.onclick=()=>panelEl.classList.add('hidden');
 
-  searchEl.placeholder='Search types, namespaces, assemblies, dependencies...';
+  searchEl.placeholder='Search types, namespaces, assemblies, dependencies...  ( / )';
   searchEl.addEventListener('input',()=>render(searchEl.value));
+
+  installViewerKeyboard({offline:true});
 
   document.getElementById('bHot').onclick=()=>document.getElementById('offline-hotspots')?.scrollIntoView({behavior:'smooth',block:'start'});
   document.getElementById('bCyc').onclick=()=>document.getElementById('offline-cycles')?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1932,27 +1939,240 @@ cy.on('tap','node[nodeType="namespace"],node[nodeType="compound"]',e=>{
 cy.on('tap',e=>{if(e.target===cy)dp.classList.add('hidden')});
 document.getElementById('cls').onclick=()=>dp.classList.add('hidden');
 
-// --- Search ---
-let st;
-document.getElementById('q').addEventListener('input',function(){
-  clearTimeout(st);
-  st=setTimeout(()=>{
-    const v=this.value.trim().toLowerCase();
-    if(!v){cy.elements().removeClass('dim hl');return}
-    cy.elements().addClass('dim');
-    const mTypes=cy.nodes('[nodeType="type"]').filter(n=>
-      n.style('display')!=='none'&&n.data('label').toLowerCase().includes(v));
-    const mNs=cy.nodes('[nodeType="namespace"]').filter(n=>
-      n.style('display')!=='none'&&n.data('fullLabel').toLowerCase().includes(v));
-    const mCp=cy.nodes('[nodeType="compound"]').filter(n=>
-      n.style('display')!=='none'&&n.data('fullLabel').toLowerCase().includes(v));
-    const matched=mTypes.merge(mNs).merge(mCp);
-    matched.removeClass('dim').addClass('hl');
-    matched.connectedEdges().filter(e=>e.style('display')!=='none').removeClass('dim');
-    matched.connectedEdges().connectedNodes().filter(n=>n.style('display')!=='none').removeClass('dim');
-    if(matched.length)cy.animate({fit:{eles:matched,padding:60},duration:250});
-  },180);
-});
+// --- Search UX (#75): helpers shared with offline keyboard handling ---
+const SEARCH_EXPAND_CAP=50;
+const searchFilters={lowHealth:false,smells:false,cycles:false};
+let cycleTypeSet=null;
+
+function expandNamespaceAncestors(ns,expSet){
+  const parts=ns.split('.');
+  for(let i=1;i<=parts.length;i++) expSet.add(parts.slice(0,i).join('.'));
+}
+
+function typeMatchesText(tk,query){
+  const t=tl[tk]; if(!t) return false;
+  const q=query.toLowerCase();
+  if(t.name.toLowerCase().includes(q)) return true;
+  const full=(t.qualifiedName||qualifiedName(t.namespace,t.name)).toLowerCase();
+  return full.includes(q);
+}
+
+function typePassesQuickFilters(tk){
+  if(searchFilters.lowHealth){
+    const h=tm[tk]?.codeHealth;
+    if(h==null||h>=7) return false;
+  }
+  if(searchFilters.smells){
+    if(!(tm[tk]?.codeSmells||[]).length) return false;
+  }
+  if(searchFilters.cycles){
+    if(!cycleTypeSet||!cycleTypeSet.has(tk)) return false;
+  }
+  return true;
+}
+
+function hasActiveSearch(query){
+  return !!String(query||'').trim()||searchFilters.lowHealth||searchFilters.smells||searchFilters.cycles;
+}
+
+function collectSearchMatches(query){
+  const q=String(query||'').trim().toLowerCase();
+  const typeKeys=[];
+  const nsPaths=new Set();
+  if(!hasActiveSearch(query)) return {typeKeys,nsPaths,total:0};
+  Object.keys(tl).forEach(tk=>{
+    if(!typePassesQuickFilters(tk)) return;
+    if(q&&!typeMatchesText(tk,q)) return;
+    typeKeys.push(tk);
+  });
+  if(q){
+    nsTree.forEach((_,path)=>{
+      if(path.toLowerCase().includes(q)) nsPaths.add(path);
+    });
+  }
+  return {typeKeys,nsPaths,total:typeKeys.length+nsPaths.size};
+}
+
+function expandedSetChanged(before){
+  if(expanded.size!==before.size) return true;
+  for(const p of expanded) if(!before.has(p)) return true;
+  return false;
+}
+
+function graphNodesForSearch(typeKeys,nsPaths){
+  let matched=cy.collection();
+  typeKeys.forEach(tk=>{
+    const n=cy.getElementById('t:'+tk);
+    if(!n.empty()) matched=matched.merge(n);
+  });
+  nsPaths.forEach(path=>{
+    ['ns:','cp:'].forEach(pfx=>{
+      const n=cy.getElementById(pfx+path);
+      if(!n.empty()) matched=matched.merge(n);
+    });
+  });
+  return matched;
+}
+
+function applyGraphSearchHighlight(matchedEles,fit){
+  cy.elements().addClass('dim');
+  matchedEles.removeClass('dim').addClass('hl');
+  matchedEles.connectedEdges().filter(e=>e.style('display')!=='none').removeClass('dim');
+  matchedEles.connectedEdges().connectedNodes().filter(n=>n.style('display')!=='none').removeClass('dim');
+  if(fit&&matchedEles.length) cy.animate({fit:{eles:matchedEles,padding:60},duration:250});
+}
+
+function updateSearchStatus(suffix){
+  document.getElementById('st').textContent=stText+(suffix?' \u00b7 '+suffix:'');
+}
+
+function clearGraphSearch(){
+  cy.elements().removeClass('dim hl');
+  updateSearchStatus('');
+}
+
+function searchNeedsExpansion(typeKeys,nsPaths){
+  if(typeKeys.some(tk=>{
+    const ns=tl[tk].namespace||'(global)';
+    return !isVisible(ns)||!expanded.has(ns);
+  })) return true;
+  return [...nsPaths].some(path=>!isVisible(path)||!expanded.has(path));
+}
+
+function runGraphSearch(){
+  const query=document.getElementById('q')?.value||'';
+  if(!hasActiveSearch(query)){clearGraphSearch();return}
+  const {typeKeys,nsPaths,total}=collectSearchMatches(query);
+  if(total===0){clearGraphSearch();updateSearchStatus('0 matches');return}
+
+  const statusSuffix=total+' match'+(total===1?'':'es');
+  const overCap=typeKeys.length>SEARCH_EXPAND_CAP;
+
+  if(overCap){
+    updateSearchStatus(typeKeys.length+' matches \u2014 refine query');
+    const visible=cy.collection();
+    typeKeys.forEach(tk=>{
+      const n=cy.getElementById('t:'+tk);
+      if(!n.empty()&&n.style('display')!=='none') visible.merge(n);
+    });
+    nsPaths.forEach(path=>{
+      ['ns:','cp:'].forEach(pfx=>{
+        const n=cy.getElementById(pfx+path);
+        if(!n.empty()&&n.style('display')!=='none') visible.merge(n);
+      });
+    });
+    applyGraphSearchHighlight(visible,true);
+    return;
+  }
+
+  const finish=matched=>{
+    applyGraphSearchHighlight(matched,true);
+    updateSearchStatus(statusSuffix);
+  };
+
+  if(!searchNeedsExpansion(typeKeys,nsPaths)){
+    finish(graphNodesForSearch(typeKeys,nsPaths).filter(n=>n.style('display')!=='none'));
+    return;
+  }
+
+  const before=new Set(expanded);
+  typeKeys.forEach(tk=>expandNamespaceAncestors(tl[tk].namespace||'(global)',expanded));
+  nsPaths.forEach(path=>expandNamespaceAncestors(path,expanded));
+  if(!expandedSetChanged(before)){
+    finish(graphNodesForSearch(typeKeys,nsPaths).filter(n=>n.style('display')!=='none'));
+    return;
+  }
+  rebuild();layout();
+  cy.one('layoutstop',()=>finish(graphNodesForSearch(typeKeys,nsPaths)));
+}
+
+let searchDebounce;
+function scheduleGraphSearch(){
+  clearTimeout(searchDebounce);
+  searchDebounce=setTimeout(runGraphSearch,180);
+}
+
+function isEditableTarget(el){
+  if(!el) return false;
+  const tag=el.tagName;
+  return tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA'||el.isContentEditable;
+}
+
+function focusSearchInput(){
+  const q=document.getElementById('q');
+  if(!q) return;
+  q.focus(); q.select();
+}
+
+function clearSearchInput(){
+  const q=document.getElementById('q');
+  if(!q||!q.value) return false;
+  q.value='';
+  q.dispatchEvent(new Event('input'));
+  return true;
+}
+
+function handleEscapeKey(opts){
+  if(!opts?.offline){
+    const asmOv=document.getElementById('asmOv');
+    if(asmOv&&!asmOv.classList.contains('hidden')){
+      asmOv.classList.add('hidden');
+      return true;
+    }
+    const hp=document.getElementById('hp');
+    if(hp&&!hp.classList.contains('hidden')){
+      togglePanel('hp','bHot');
+      return true;
+    }
+    const cycp=document.getElementById('cycp');
+    if(cycp&&!cycp.classList.contains('hidden')){
+      togglePanel('cycp','bCyc');
+      return true;
+    }
+  }
+  const dp=document.getElementById('dp');
+  if(dp&&!dp.classList.contains('hidden')){
+    dp.classList.add('hidden');
+    return true;
+  }
+  return clearSearchInput();
+}
+
+function installViewerKeyboard(opts){
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      if(handleEscapeKey(opts)) e.preventDefault();
+      return;
+    }
+    if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+      const ae=document.activeElement;
+      if(isEditableTarget(ae)&&ae.id!=='q') return;
+      if(ae&&ae.id==='q') return;
+      e.preventDefault();
+      focusSearchInput();
+    }
+  });
+}
+
+function wireFilterChips(onChange){
+  [
+    ['fLowHealth','lowHealth'],
+    ['fSmells','smells'],
+    ['fCycles','cycles']
+  ].forEach(([id,key])=>{
+    const btn=document.getElementById(id);
+    if(!btn) return;
+    btn.onclick=()=>{
+      searchFilters[key]=!searchFilters[key];
+      btn.classList.toggle('active',searchFilters[key]);
+      onChange();
+    };
+  });
+}
+
+document.getElementById('q').addEventListener('input',scheduleGraphSearch);
+wireFilterChips(scheduleGraphSearch);
+installViewerKeyboard({offline:false});
 
 // --- Edge Style Toggle (Bezier / Taxi / ELK) ---
 document.getElementById('edgeStyle').addEventListener('change',function(){
@@ -2303,6 +2523,8 @@ function tarjanSCC(adj){
 
 function detectCycles(){
   cycles=tarjanSCC(buildAdjList());
+  cycleTypeSet=new Set();
+  cycles.forEach(scc=>scc.forEach(tn=>cycleTypeSet.add(tn)));
   const btn=document.getElementById('bCyc');
   btn.innerHTML=cycles.length>0
     ?'Cycles <span class="cnt">'+cycles.length+'</span>'
