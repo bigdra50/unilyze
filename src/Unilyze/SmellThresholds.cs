@@ -86,6 +86,10 @@ public static class SmellThresholds
         AppendDocsRow(sb, "DeepInheritance", $"DIT >= {DeepInheritanceDitWarning}", "—");
         AppendDocsRow(sb, "CatchAllException",
             "`catch (Exception)` without rethrow (excluding `when` filtered catches)", "—");
+        AppendDocsRow(sb, "AsyncVoidMethod",
+            "`async void` method (excluding Unity message methods and event handlers)", "—");
+        AppendDocsRow(sb, "BlockingTaskWait",
+            "`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask", "—");
         return sb.ToString().TrimEnd();
     }
 
@@ -126,6 +130,20 @@ public static class SmellThresholds
             "throw new X() in catch block without inner exception.",
         CodeSmellKind.ThrowingSystemException =>
             "throw new Exception() directly (use a specific exception type).",
+        CodeSmellKind.AsyncVoidMethod =>
+            "async void method (excluding Unity message methods and event handlers). Exceptions are not observable by callers; in Unity they surface only in the log (silent failure).",
+        CodeSmellKind.BlockingTaskWait =>
+            ".Result / .Wait() / .GetAwaiter().GetResult() blocking wait on Task/ValueTask/UniTask (can deadlock or stall the frame on the main thread).",
+        CodeSmellKind.WeakTemporization =>
+            "Incremental transform mutation in Update/LateUpdate without Time.deltaTime scaling (frame-rate dependent).",
+        CodeSmellKind.ExpensiveUnityApiInHotPath =>
+            "Expensive Unity API call (GetComponent, Find, Camera.main, etc.) inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Cache references; Camera.main is cached on Unity 2020.2+.",
+        CodeSmellKind.LinqInHotPath =>
+            "LINQ query or operator inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). LINQ allocates enumerators and often intermediate collections.",
+        CodeSmellKind.CollectionAllocationInHotPath =>
+            "Collection or array allocation inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Reuse buffers or pre-allocate outside hot paths.",
+        CodeSmellKind.StringConcatenationInHotPath =>
+            "String concatenation, interpolation, or string.Format/Join inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Prefer StringBuilder or cached strings.",
         _ => null,
     };
 

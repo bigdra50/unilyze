@@ -8,5 +8,11 @@ public static class SmellDetectorRegistry
         new ClosureSmellDetector(),
         new ParamsSmellDetector(),
         new ExceptionFlowSmellDetector(),
+        new AsyncFlowSmellDetector(),
+        new WeakTemporizationSmellDetector(),
+        new ExpensiveUnityApiInHotPathDetector(),
+        new LinqInHotPathDetector(),
+        new CollectionAllocationInHotPathDetector(),
+        new StringConcatenationInHotPathDetector(),
     ];
 }

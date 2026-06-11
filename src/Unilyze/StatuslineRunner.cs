@@ -19,41 +19,38 @@ internal static class StatuslineRunner
 
         var opts = ProgramHelpers.ParseOptions(args);
 
+        var verbose = opts.ContainsKey("--verbose");
+        var quiet = opts.ContainsKey("--quiet");
+        var log = new ConsoleAnalysisLogSink(quiet: quiet);
+
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
         if (!int.TryParse(refreshStr, out var refreshSeconds))
             refreshSeconds = DefaultRefreshSeconds;
 
-        var levelStr = opts.GetValueOrDefault("--level");
-        AnalysisLevel? requestedLevel = null;
-        if (levelStr != null)
+        if (!TryParseRequestedLevel(opts.GetValueOrDefault("--level"), out var requestedLevel))
+            return 1;
+
+        string fullPath;
+        try
         {
-            if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
-            {
-                Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
-                return 1;
-            }
-            requestedLevel = lvl;
+            fullPath = ProgramHelpers.ResolveProjectRoot(path);
+        }
+        catch (Exception ex)
+        {
+            if (verbose)
+                PrintVerboseException(ex);
+            return 1;
         }
 
-        var fullPath = ProgramHelpers.ResolveProjectRoot(path);
         var cacheHash = ComputePathHash(fullPath);
         var cacheDir = Path.GetTempPath();
         var cacheTxtPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt");
         var lockPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.lock");
 
-        // Cache hit: output cached result
-        if (File.Exists(cacheTxtPath))
-        {
-            var cacheAge = DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(cacheTxtPath));
-            if (cacheAge.TotalSeconds < refreshSeconds)
-            {
-                Console.Write(File.ReadAllText(cacheTxtPath));
-                return 0;
-            }
-        }
+        if (TryServeFreshCache(cacheTxtPath, refreshSeconds))
+            return 0;
 
-        // Try to acquire lock (non-blocking)
         FileStream? lockStream;
         try
         {
@@ -61,48 +58,98 @@ internal static class StatuslineRunner
         }
         catch (IOException)
         {
-            // Another process is updating — output stale cache if available
-            if (File.Exists(cacheTxtPath))
-            {
-                Console.Write(File.ReadAllText(cacheTxtPath));
-                return 0;
-            }
-            return 1;
+            return ServeStaleCacheOr(1, cacheTxtPath);
         }
 
         try
         {
-            var config = UnilyzeConfig.LoadMerged(fullPath);
-            var resolved = config.ResolveAnalysisConfig();
-            var result = AnalysisPipeline.Build(
-                fullPath, null, null, config.ExcludeDirs, requestedLevel,
-                excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
-                applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                thresholds: resolved.Thresholds,
-                disabledRuleKinds: resolved.DisabledRuleKinds,
-                disableCycles: resolved.DisableCycles);
-            var summary = StatuslineFormatter.ComputeSummary(result);
-            var formatted = StatuslineFormatter.Format(summary);
-
-            File.WriteAllText(cacheTxtPath, formatted);
-            Console.Write(formatted);
-            return 0;
+            return RunAnalysisAndServe(fullPath, requestedLevel, log, cacheTxtPath);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fallback to stale cache on error
-            if (File.Exists(cacheTxtPath))
-            {
-                Console.Write(File.ReadAllText(cacheTxtPath));
-                return 0;
-            }
-            return 1;
+            if (verbose)
+                PrintVerboseException(ex);
+            return ServeStaleCacheOr(
+                1,
+                cacheTxtPath,
+                verboseNote: verbose ? "Serving stale cache after analysis failure." : null);
         }
         finally
         {
             lockStream.Dispose();
             try { File.Delete(lockPath); } catch { /* best-effort cleanup */ }
         }
+    }
+
+    static bool TryParseRequestedLevel(string? levelStr, out AnalysisLevel? requestedLevel)
+    {
+        requestedLevel = null;
+        if (levelStr == null)
+            return true;
+
+        if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
+        {
+            Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
+            return false;
+        }
+
+        requestedLevel = lvl;
+        return true;
+    }
+
+    static void PrintVerboseException(Exception ex)
+    {
+        Console.Error.WriteLine($"{ex.GetType().Name}: {ex.Message}");
+        if (ex.StackTrace is not null)
+            Console.Error.WriteLine(ex.StackTrace);
+    }
+
+    static bool TryServeFreshCache(string cacheTxtPath, int refreshSeconds)
+    {
+        if (!File.Exists(cacheTxtPath))
+            return false;
+
+        var cacheAge = DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(cacheTxtPath));
+        if (cacheAge.TotalSeconds >= refreshSeconds)
+            return false;
+
+        Console.Write(File.ReadAllText(cacheTxtPath));
+        return true;
+    }
+
+    static int ServeStaleCacheOr(int fallbackExit, string cacheTxtPath, string? verboseNote = null)
+    {
+        if (!File.Exists(cacheTxtPath))
+            return fallbackExit;
+
+        if (verboseNote is not null)
+            Console.Error.WriteLine(verboseNote);
+        Console.Write(File.ReadAllText(cacheTxtPath));
+        return 0;
+    }
+
+    static int RunAnalysisAndServe(
+        string fullPath,
+        AnalysisLevel? requestedLevel,
+        ConsoleAnalysisLogSink log,
+        string cacheTxtPath)
+    {
+        var config = UnilyzeConfig.LoadMerged(fullPath);
+        var resolved = config.ResolveAnalysisConfig();
+        var result = AnalysisPipeline.Build(
+            fullPath, null, null, config.ExcludeDirs, requestedLevel,
+            excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+            applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+            logSink: log,
+            thresholds: resolved.Thresholds,
+            disabledRuleKinds: resolved.DisabledRuleKinds,
+            disableCycles: resolved.DisableCycles);
+        var summary = StatuslineFormatter.ComputeSummary(result);
+        var formatted = StatuslineFormatter.Format(summary);
+
+        File.WriteAllText(cacheTxtPath, formatted);
+        Console.Write(formatted);
+        return 0;
     }
 
     static string ComputePathHash(string path)
@@ -128,7 +175,12 @@ internal static class StatuslineRunner
               -p, --path     Project root (default: .)
               --refresh      Cache refresh interval in seconds (default: 60)
               --level        Pin analysis level: syntax, core, full, complete
+              --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
+              --quiet        Suppress info lines on stderr (warnings still shown)
               -h, --help     Show this help
+
+            Progress:
+              Per-phase progress is shown on stderr when stderr is a TTY.
 
             Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
               CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown

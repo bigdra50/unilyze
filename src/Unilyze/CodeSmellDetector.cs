@@ -17,7 +17,14 @@ public enum CodeSmellKind
     ParamsArrayAllocation,
     CatchAllException,
     MissingInnerException,
-    ThrowingSystemException
+    ThrowingSystemException,
+    WeakTemporization,
+    ExpensiveUnityApiInHotPath,
+    LinqInHotPath,
+    CollectionAllocationInHotPath,
+    StringConcatenationInHotPath,
+    AsyncVoidMethod,
+    BlockingTaskWait
 }
 
 public enum SmellSeverity

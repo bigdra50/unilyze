@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -15,12 +16,17 @@ internal static class AnalysisPipeline
         AnalysisLevel? requestedLevel = null,
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
+        IAnalysisLogSink? logSink = null,
         EffectiveSmellThresholds? thresholds = null,
         IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
         bool disableCycles = false)
     {
         thresholds ??= EffectiveSmellThresholds.Default;
         disabledRuleKinds ??= new HashSet<CodeSmellKind>();
+        var log = logSink ?? new ConsoleAnalysisLogSink(quiet: false);
+        var sw = Stopwatch.StartNew();
+
+        log.PhaseStarted("discover");
         var assetsDir = ProgramHelpers.ResolveAssetsDir(path);
         var asmdefs = AsmdefInfo.Discover(assetsDir, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes);
 
@@ -36,20 +42,27 @@ internal static class AnalysisPipeline
         }
 
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path);
-        var csprojInfo = ResolveCsprojInfo(projectRoot, excludeDirectories);
+        var csprojInfo = ResolveCsprojInfo(projectRoot, excludeDirectories, log);
 
         // Cap DLL collection at the requested level so the pin is deterministic.
         var cap = requestedLevel ?? AnalysisLevel.Complete;
         var resolved = UnityDllResolver.Resolve(projectRoot, cap);
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
+        log.PhaseCompleted("discover", sw.Elapsed);
+        sw.Restart();
 
+        log.PhaseStarted("parse");
         var (allTypes, allSyntaxTrees) = CollectTypes(
             targets, preprocessorSymbols, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes);
-        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap);
+        log.PhaseCompleted("parse", sw.Elapsed);
+        sw.Restart();
+
+        log.PhaseStarted("compile");
+        var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap, log);
         var analysisLevel = compilationResult.Level.ToString();
 
         // The level is always reported on stderr (issue 16: previously only when != SyntaxOnly).
-        Console.Error.WriteLine($"Analysis level: {analysisLevel}");
+        log.Info($"Analysis level: {analysisLevel}");
 
         var isUnityProject = File.Exists(
             Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt"));
@@ -59,7 +72,7 @@ internal static class AnalysisPipeline
         if (isUnityProject && compilationResult.Level == AnalysisLevel.SyntaxOnly
             && requestedLevel is not AnalysisLevel.SyntaxOnly)
         {
-            Console.Error.WriteLine(
+            log.Warning(
                 "Warning: Unity project detected but Unity DLLs could not be resolved; "
                 + "analysis degraded to SyntaxOnly. Semantic metrics (boxing, CBO, DIT, etc.) are understated.");
         }
@@ -71,7 +84,10 @@ internal static class AnalysisPipeline
                 $"Requested analysis level '{required}' could not be satisfied "
                 + $"(resolved '{compilationResult.Level}'). Unity DLLs may be missing.");
         }
+        log.PhaseCompleted("compile", sw.Elapsed);
+        sw.Restart();
 
+        log.PhaseStarted("semantic");
         allTypes = BaseTypeResolver.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         var deps = DependencyBuilder.Build(allTypes).ToList();
@@ -98,7 +114,10 @@ internal static class AnalysisPipeline
 
         typeMetrics = SemanticEnricher.Enrich(
             typeMetrics, allTypes, allSyntaxTrees, compilationResult, thresholds, disabledRuleKinds);
+        log.PhaseCompleted("semantic", sw.Elapsed);
+        sw.Restart();
 
+        log.PhaseStarted("aggregate");
         // Phase 1/2: WMC, NOC, TypeRank
         var nocMap = NocCalculator.Calculate(deps);
         var typeRankMap = RankCalculator.CalculateTypeRank(deps, allTypes);
@@ -125,6 +144,7 @@ internal static class AnalysisPipeline
             var detectedCycles = CycleDetector.DetectAll(deps, assemblyInfos);
             cycles = detectedCycles.Count > 0 ? detectedCycles : null;
         }
+        log.PhaseCompleted("aggregate", sw.Elapsed);
 
         return new AnalysisResult(
             Path.GetFullPath(path),
@@ -139,7 +159,8 @@ internal static class AnalysisPipeline
             ToolVersionInfo.Current);
     }
 
-    static CsprojInfo? ResolveCsprojInfo(string projectRoot, IReadOnlyList<string>? excludeDirectories)
+    static CsprojInfo? ResolveCsprojInfo(
+        string projectRoot, IReadOnlyList<string>? excludeDirectories, IAnalysisLogSink log)
     {
         var csprojFiles = CsprojParser.DiscoverCsprojFiles(projectRoot, excludeDirectories);
         if (csprojFiles.Count == 0) return null;
@@ -158,7 +179,7 @@ internal static class AnalysisPipeline
 
         if (allRefs.Count == 0 && allDefines.Count == 0) return null;
 
-        Console.Error.WriteLine($"Found {csprojFiles.Count} .csproj file(s), {allRefs.Count} references, {allDefines.Count} defines");
+        log.Info($"Found {csprojFiles.Count} .csproj file(s), {allRefs.Count} references, {allDefines.Count} defines");
         return new CsprojInfo(
             allRefs.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
             [],

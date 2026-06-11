@@ -337,6 +337,12 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 | MissingInnerException | `throw new X()` in catch without passing inner exception |
 | ThrowingSystemException | `throw new Exception()` directly (use specific exception types) |
 
+## Unity Frame-Rate Analysis
+
+| Kind | Detection |
+|------|-----------|
+| WeakTemporization (UNI021) | Incremental `transform` mutation in `Update`/`LateUpdate` without `Time.deltaTime` scaling |
+
 ## DI Container Detection
 
 Detects type registrations in Unity DI containers and integrates them into the dependency graph. Registration endpoints are resolved to analyzed types, so the resulting edges feed cycle detection, CBO/Ca/Ce coupling, and TypeRank like any other dependency:

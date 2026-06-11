@@ -14,7 +14,17 @@ public static class CompilationFactory
         IReadOnlyList<SyntaxTree> syntaxTrees,
         CsprojInfo? csprojInfo = null,
         AnalysisLevel maxLevel = AnalysisLevel.Complete)
+        => Create(resolved, syntaxTrees, csprojInfo, maxLevel, logSink: null);
+
+    internal static CompilationResult Create(
+        ResolvedDlls resolved,
+        IReadOnlyList<SyntaxTree> syntaxTrees,
+        CsprojInfo? csprojInfo,
+        AnalysisLevel maxLevel,
+        IAnalysisLogSink? logSink)
     {
+        var log = logSink ?? new ConsoleAnalysisLogSink(quiet: false);
+
         // A SyntaxOnly pin must not build a semantic model at all: the csproj
         // merge below would otherwise re-elevate SyntaxOnly to CoreEngine and
         // silently exceed the requested cap (issue 17).
@@ -26,7 +36,7 @@ public static class CompilationFactory
         if (resolved.Level == AnalysisLevel.SyntaxOnly || resolved.Paths.Count == 0)
             return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
 
-        var (references, failedCount) = LoadReferences(resolved.Paths);
+        var (references, failedCount) = LoadReferences(resolved.Paths, log);
 
         if (references.Count == 0)
             return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
@@ -38,10 +48,10 @@ public static class CompilationFactory
             var failRatio = (double)failedCount / resolved.Paths.Count;
             if (failRatio > 0.5)
             {
-                Console.Error.WriteLine($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load, downgrading to SyntaxOnly");
+                log.Warning($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load, downgrading to SyntaxOnly");
                 return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
             }
-            Console.Error.WriteLine($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load");
+            log.Warning($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load");
         }
 
         var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
@@ -72,7 +82,8 @@ public static class CompilationFactory
     }
 
     private static (List<MetadataReference> References, int FailedCount) LoadReferences(
-        IReadOnlyList<string> paths)
+        IReadOnlyList<string> paths,
+        IAnalysisLogSink log)
     {
         var references = new List<MetadataReference>();
         var failedCount = 0;
@@ -85,7 +96,7 @@ public static class CompilationFactory
             catch (Exception ex)
             {
                 failedCount++;
-                Console.Error.WriteLine($"Warning: Skipped {Path.GetFileName(path)}: {ex.Message}");
+                log.Warning($"Warning: Skipped {Path.GetFileName(path)}: {ex.Message}");
             }
         }
         return (references, failedCount);
