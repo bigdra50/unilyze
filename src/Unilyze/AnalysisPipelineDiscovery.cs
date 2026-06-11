@@ -19,23 +19,35 @@ internal static class AnalysisPipelineDiscovery
 {
     public static PipelineDiscoverState Discover(AnalysisBuildOptions options)
     {
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(options.Path);
+        var projectKind = ProgramHelpers.ResolveProjectKind(projectRoot);
         var assetsDir = ProgramHelpers.ResolveAssetsDir(options.Path);
         var asmdefs = AsmdefInfo.Discover(
             assetsDir, options.ExcludeDirectories, options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes);
 
         IReadOnlyList<AsmdefInfo> targets;
-        if (asmdefs.Count == 0)
-        {
-            targets = [new AsmdefInfo("Assembly-CSharp", assetsDir, [])];
-        }
-        else
+        if (asmdefs.Count > 0)
         {
             var prefix = options.Prefix ?? ProgramHelpers.DetectCommonPrefix(asmdefs);
             targets = ProgramHelpers.FilterAssemblies(asmdefs, prefix, options.AssemblyFilter);
         }
-
-        var projectRoot = ProgramHelpers.ResolveProjectRoot(options.Path);
-        var projectKind = ProgramHelpers.ResolveProjectKind(projectRoot);
+        else if (projectKind != "unity")
+        {
+            var csprojAssemblies = CsprojAssemblyDiscovery.Discover(projectRoot, options.ExcludeDirectories);
+            if (csprojAssemblies.Count > 0)
+            {
+                var prefix = options.Prefix ?? ProgramHelpers.DetectCommonPrefix(csprojAssemblies);
+                targets = ProgramHelpers.FilterAssemblies(csprojAssemblies, prefix, options.AssemblyFilter);
+            }
+            else
+            {
+                targets = [new AsmdefInfo("Assembly-CSharp", assetsDir, [])];
+            }
+        }
+        else
+        {
+            targets = [new AsmdefInfo("Assembly-CSharp", assetsDir, [])];
+        }
         var csprojInfo = ResolveCsprojInfo(projectRoot, options.ExcludeDirectories, options.EffectiveLog);
         var resolvedReferences = ResolveReferences(projectKind, projectRoot, options.EffectiveCap);
         var preprocessorSymbols = MergePreprocessorSymbols(projectRoot, csprojInfo);
@@ -135,6 +147,7 @@ internal static class AnalysisPipelineDiscovery
             return null;
 
         var allRefs = new List<string>();
+        var allProjectRefs = new List<string>();
         var allDefines = new List<string>();
         string? langVersion = null;
         foreach (var csproj in csprojFiles)
@@ -143,17 +156,18 @@ internal static class AnalysisPipelineDiscovery
             if (info is null)
                 continue;
             allRefs.AddRange(info.ReferencePaths);
+            allProjectRefs.AddRange(info.ProjectReferences);
             allDefines.AddRange(info.DefineConstants);
             langVersion ??= info.LangVersion;
         }
 
-        if (allRefs.Count == 0 && allDefines.Count == 0)
+        if (allRefs.Count == 0 && allDefines.Count == 0 && langVersion is null)
             return null;
 
         log.Info($"Found {csprojFiles.Count} .csproj file(s), {allRefs.Count} references, {allDefines.Count} defines");
         return new CsprojInfo(
             allRefs.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
-            [],
+            allProjectRefs.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
             allDefines.Distinct().ToList(),
             langVersion);
     }
