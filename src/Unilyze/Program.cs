@@ -28,6 +28,8 @@ if (args.Length >= 1 && args[0] == "query")
     return QueryRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "baseline")
     return BaselineRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "calibrate")
+    return CalibrateRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -210,6 +212,7 @@ Configuration:
 
 Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')
+  calibrate       Derive smell-threshold candidates from analysis snapshots
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds
