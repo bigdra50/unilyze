@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- WeakTemporization smell (UNI017): flags incremental `transform` mutations in Unity `Update`/`LateUpdate` without delta-time scaling ([#79](https://github.com/bigdra50/unilyze/issues/79))
+- **[metrics]** WeakTemporization (UNI017) reported as Warning on Unity `Update`/`LateUpdate` transform mutations lacking delta-time scaling; `metricsVersion` stays 3 (folds into the #70 release-window bump) ([#79](https://github.com/bigdra50/unilyze/issues/79))
 - Diff overlay now works in graph mode: changed types get bucket halos, the tap panel shows baseline sections, and `Changed only` filters graph nodes ([#73](https://github.com/bigdra50/unilyze/issues/73))
 - `diff --changed-only` filters JSON output to changed type buckets (added/removed/degraded/improved) plus the aggregate summary, omitting unchanged types ([#38](https://github.com/bigdra50/unilyze/issues/38))
 - `diff -f markdown` output for PR comments and GITHUB_STEP_SUMMARY ([#37](https://github.com/bigdra50/unilyze/issues/37))
@@ -21,6 +23,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - `SmellThresholds` registry as single source for code-smell detection thresholds ([#32](https://github.com/bigdra50/unilyze/issues/32)); drift-guard test keeps `docs/metrics.md` in sync
 - Default exclude directories (`Library/`, `Temp/`, `obj/`, `bin/`, `.git/`, `Logs/`, `UserSettings/`) for `.cs` enumeration and asmdef discovery, with `disableDefaultExcludes` and `disableGeneratedCodeExcludes` escape hatches in `.unilyze.json` ([#31](https://github.com/bigdra50/unilyze/issues/31))
 - **[metrics]** Two async anti-pattern smells: `AsyncVoidMethod` (async void methods, excluding Unity message methods and event-handler signatures) and `BlockingTaskWait` (`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on `Task`/`ValueTask`/`UniTask`; SyntaxOnly reports only the `GetAwaiter().GetResult()` chain) ([#80](https://github.com/bigdra50/unilyze/issues/80))
+- **[metrics]** UNI017–UNI020 Unity hot-path detectors: expensive Unity API (GetComponent, Find, Camera.main), LINQ, collection/array allocation, and string concatenation inside MonoBehaviour per-frame methods (`Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`, coroutines); default Warning severity ([#78](https://github.com/bigdra50/unilyze/issues/78))
+- `statusline --verbose` prints the previously-swallowed analysis exception to stderr, and `statusline --quiet` suppresses info lines while keeping warnings; `AnalysisPipeline` now shows per-phase progress on stderr when stderr is a TTY ([#76](https://github.com/bigdra50/unilyze/issues/76))
 
 ### Changed
 

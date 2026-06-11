@@ -191,7 +191,7 @@ public class SarifFormatterTests
         var doc = JsonNode.Parse(json)!;
         var rules = doc["runs"]![0]!["tool"]!["driver"]!["rules"]!.AsArray();
 
-        Assert.Equal(18, rules.Count);
+        Assert.Equal(23, rules.Count);
         var ruleIds = rules.Select(r => r!["id"]!.GetValue<string>()).ToList();
         Assert.Contains("UNI001", ruleIds);
         Assert.Contains("UNI002", ruleIds);
@@ -211,6 +211,11 @@ public class SarifFormatterTests
         Assert.Contains("UNI016", ruleIds);
         Assert.Contains("UNI022", ruleIds);
         Assert.Contains("UNI023", ruleIds);
+        Assert.Contains("UNI017", ruleIds);
+        Assert.Contains("UNI018", ruleIds);
+        Assert.Contains("UNI019", ruleIds);
+        Assert.Contains("UNI020", ruleIds);
+        Assert.Contains("UNI021", ruleIds);
     }
 
     [Fact]

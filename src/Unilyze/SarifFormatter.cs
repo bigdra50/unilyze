@@ -29,6 +29,11 @@ public static class SarifFormatter
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
         ("UNI022", CodeSmellKind.AsyncVoidMethod, "async void method"),
         ("UNI023", CodeSmellKind.BlockingTaskWait, "Blocking wait on Task"),
+        ("UNI017", CodeSmellKind.ExpensiveUnityApiInHotPath, "Expensive Unity API in hot path"),
+        ("UNI018", CodeSmellKind.LinqInHotPath, "LINQ in hot path"),
+        ("UNI019", CodeSmellKind.CollectionAllocationInHotPath, "Collection allocation in hot path"),
+        ("UNI020", CodeSmellKind.StringConcatenationInHotPath, "String concatenation in hot path"),
+        ("UNI021", CodeSmellKind.WeakTemporization, "Frame-rate dependent update"),
     ];
 
     public static string Generate(AnalysisResult result)
