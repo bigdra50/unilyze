@@ -336,6 +336,45 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Statusline_Help_MentionsVerboseAndQuiet()
+    {
+        var (exitCode, stdout, _) = Run("statusline", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--verbose", stdout);
+        Assert.Contains("--quiet", stdout);
+    }
+
+    [Fact]
+    public void Statusline_VerboseNonexistentPath_NoCache_ExitsOneWithExceptionDetail()
+    {
+        var missingPath = Path.Combine(_tempDir, "does-not-exist");
+        var (exitCode, stdout, stderr) = Run("statusline", "-p", missingPath, "--verbose");
+        Assert.Equal(1, exitCode);
+        Assert.True(string.IsNullOrEmpty(stdout) || !stdout.Contains("CH:"));
+        Assert.False(string.IsNullOrWhiteSpace(stderr));
+        Assert.Contains("Exception", stderr, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Statusline_TypoVerboseFlag_ExitsUsageErrorWithSuggestion()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("statusline", "-p", _tempDir, "--verbos", "--quiet");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--verbos'", stderr);
+        Assert.Contains("Did you mean '--verbose'?", stderr);
+    }
+
+    [Fact]
+    public void Statusline_RedirectedStderr_EmitsNoPhaseProgress()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, stderr) = Run("statusline", "-p", _tempDir, "--refresh", "0");
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain(" done ", stderr);
+    }
+
+    [Fact]
     public void DiffSubcommand_MismatchedLevels_WarnsOnStderr()
     {
         var before = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], null, "Complete");
