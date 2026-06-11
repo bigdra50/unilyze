@@ -40,7 +40,10 @@ public static class SarifFormatter
         ("UNI021", CodeSmellKind.WeakTemporization, "Frame-rate dependent update"),
     ];
 
-    public static string Generate(AnalysisResult result, EffectiveSmellThresholds? thresholds = null)
+    public static string Generate(
+        AnalysisResult result,
+        EffectiveSmellThresholds? thresholds = null,
+        string? automationId = null)
     {
         thresholds ??= EffectiveSmellThresholds.Default;
         var version = typeof(SarifFormatter).Assembly.GetName().Version?.ToString(3) ?? "0.1.0";
@@ -51,7 +54,7 @@ public static class SarifFormatter
             ["version"] = "2.1.0",
             ["runs"] = new JsonArray
             {
-                BuildRun(result, version, thresholds)
+                BuildRun(result, version, thresholds, automationId)
             }
         };
 
@@ -112,7 +115,11 @@ public static class SarifFormatter
         int occurrenceIndex)
         => SarifFormattingHelpers.ComputeFingerprint(ruleId, relativePath, typeName, methodName, occurrenceIndex);
 
-    static JsonObject BuildRun(AnalysisResult result, string version, EffectiveSmellThresholds thresholds)
+    static JsonObject BuildRun(
+        AnalysisResult result,
+        string version,
+        EffectiveSmellThresholds thresholds,
+        string? automationId = null)
     {
         var ruleIndexByKind = new Dictionary<CodeSmellKind, int>();
         var rulesArray = new JsonArray();
@@ -144,6 +151,14 @@ public static class SarifFormatter
             run["originalUriBaseIds"] = new JsonObject
             {
                 ["%SRCROOT%"] = new JsonObject { ["uri"] = projectUri }
+            };
+        }
+
+        if (!string.IsNullOrEmpty(automationId))
+        {
+            run["automationDetails"] = new JsonObject
+            {
+                ["id"] = automationId
             };
         }
 

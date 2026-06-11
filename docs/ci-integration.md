@@ -201,3 +201,73 @@ Other diff flags useful in CI: `--changed-only` (omit unchanged types from JSON 
 | `Complete` | + package assemblies | full semantic resolution | — |
 
 Pin with `--level <syntax|core|full|complete>` on `unilyze`, `badge`, `statusline`, and `baseline create`. The pin caps auto-resolved level; if the requested level cannot be reached, the command fails instead of silently degrading.
+
+## Monorepo
+
+Use `--projects <glob>` (repeatable) on `unilyze` and `unilyze badge` to analyze multiple UPM packages or .NET projects in one CI step instead of copy-pasting per-package commands. Each matched directory resolves its own `.unilyze.json`, profile, and baseline before gating. Projects are processed sequentially (one Roslyn compilation at a time) to avoid multiplying memory pressure from parallel compilations.
+
+```bash
+# Analyze: per-project AnalysisResult JSON + summary.json
+unilyze --projects 'packages/*' -o out/ -f json
+unilyze --projects 'src/*' --projects 'tests/*' -o out/ -f json
+
+# Badge gate: per-project badge files + stderr summary table
+unilyze badge --projects 'packages/*' --metric codehealth --fail-under 7.0 -o badges/
+```
+
+| Output | Path pattern |
+|--------|--------------|
+| Per-project snapshot | `<out>/<name>.json` (standard `AnalysisResult`; readable by `query`, `diff`, HTML viewer) |
+| Per-project SARIF | `<out>/<name>.sarif` (`runAutomationDetails.id` = project name) |
+| Per-project badge | `<out>/<name>-<metric>.json` or `.svg` |
+| Aggregate summary | `<out>/summary.json` |
+
+Project `name` is the glob-relative path with directory separators replaced by `-` (e.g. `packages/a/Runtime` → `a-Runtime`). Exit codes: `0` all gates pass, `1` usage error (zero glob matches, `--projects` with `-p`/`-i`, missing `-o <dir>` when multiple projects match, `-f html`), `2` any gate failure. All badge files are written before a gate failure exits `2`.
+
+`summary.json` shape (informal versioning via `toolVersion`):
+
+```json
+{
+  "toolVersion": "0.12.0",
+  "projects": [
+    {
+      "name": "a",
+      "path": "/repo/packages/a",
+      "analysisLevel": "Complete",
+      "metricsVersion": 3,
+      "codeHealthMin": 9.1,
+      "codeHealthAvg": 9.8,
+      "criticalCount": 0,
+      "warningCount": 0,
+      "gate": "pass"
+    }
+  ]
+}
+```
+
+### Monorepo vs matrix strategy
+
+| Approach | Pros | Cons |
+|----------|------|------|
+| Single job with `--projects` | One checkout, one tool install, aggregated stderr table and `summary.json` | Sequential analysis; longer wall time than parallel matrix |
+| Matrix job per package | Parallel Roslyn runs; per-package job isolation | Duplicate setup; aggregate pass/fail yourself |
+
+Choose `--projects` when a single failing package should fail the PR and you want one aggregated gate. Choose a matrix when packages are independent and wall time matters more than a unified summary.
+
+### SARIF upload per project
+
+`unilyze --projects 'packages/*' -f sarif -o sarif/` writes one SARIF file per project. On GitHub, set a distinct `category` per upload so multiple runs on one commit do not overwrite each other:
+
+```yaml
+- run: unilyze --projects 'packages/*' -f sarif -o sarif/
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: sarif/a.sarif
+    category: package-a
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: sarif/b.sarif
+    category: package-b
+```
+
+`upload-sarif`'s `category` input injects `runAutomationDetails.id` at upload time. The CLI also sets `runAutomationDetails.id` to the project name for non-GitHub upload paths.

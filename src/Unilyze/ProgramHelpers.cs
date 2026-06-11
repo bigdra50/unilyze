@@ -13,7 +13,7 @@ internal static class ProgramHelpers
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage", "--projects",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
@@ -105,7 +105,7 @@ internal static class ProgramHelpers
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-o", "--output", "--metric", "--format", "--level", "--fail-under", "--fail-over",
-        "--baseline",
+        "--baseline", "--projects",
     };
 
     static readonly HashSet<string> BadgeBooleanOptions = new(StringComparer.Ordinal)

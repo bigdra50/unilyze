@@ -58,6 +58,7 @@ if (ProgramHelpers.HasFlagWithoutValue(args, "--triage"))
     Console.Error.WriteLine("--triage requires a file path.");
     return 1;
 }
+var projectGlobs = ProgramHelpers.ParseMultiValueOption(args, "--projects");
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
@@ -84,6 +85,18 @@ if (levelStr != null)
 OutputFormat format;
 try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
 catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 1; }
+
+if (projectGlobs.Count > 0)
+{
+    return MultiProjectRunner.RunAnalyze(new AnalyzeRunContext(
+        new MultiProjectCliContext(opts, projectGlobs),
+        requestedLevel,
+        format,
+        cliExcludeDirs,
+        cliProfile,
+        prefix,
+        assembly));
+}
 
 try
 {
@@ -203,12 +216,14 @@ Usage:
   unilyze -p <path> -o graph.html          Save HTML viewer (+ JSON) to file
   unilyze -p <path> -f json                Output JSON to stdout
   unilyze -p <path> -f sarif -o report.sarif  Output SARIF for GitHub Code Scanning
+  unilyze --projects 'packages/*' -o out/    Analyze multiple projects (per-project JSON + summary.json)
   unilyze -i result.json -o graph.html     Generate HTML from existing JSON
   unilyze skills install --claude           Install skills for AI coding tools
   unilyze badge -p <path> -o badge.json    Output shields.io endpoint badge JSON
 
 Options:
   -p, --path         Unity project root or Assets directory (default: .)
+      --projects     Glob of project roots to analyze (repeatable; requires -o <dir> when multiple match)
   -i, --input        Use existing JSON instead of analyzing
   -o, --output       Output file path (format inferred from extension: .html, .json, .sarif)
   -f, --format       Output format: html, json, sarif (default: html)
