@@ -5,8 +5,11 @@ namespace Unilyze;
 
 internal readonly record struct ResolvedAnalysisConfig(
     EffectiveSmellThresholds Thresholds,
+    string Profile,
     IReadOnlySet<CodeSmellKind> DisabledRuleKinds,
-    bool DisableCycles);
+    bool DisableCycles,
+    IReadOnlySet<CodeSmellKind> InformationalSmellKinds,
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? SmellOverrides);
 
 internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("excludeDirs")]
@@ -19,6 +22,8 @@ internal sealed record UnilyzeConfig(
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? Smells = null,
     [property: JsonPropertyName("rules")]
     IReadOnlyDictionary<string, string>? Rules = null,
+    [property: JsonPropertyName("profile")]
+    string? Profile = null,
     [property: JsonPropertyName("baseline")]
     string? Baseline = null)
 {
@@ -36,7 +41,8 @@ internal sealed record UnilyzeConfig(
 
     public static UnilyzeConfig LoadMerged(
         string projectRoot,
-        IReadOnlyList<string>? cliExcludeDirs = null)
+        IReadOnlyList<string>? cliExcludeDirs = null,
+        string? cliProfile = null)
     {
         var global = LoadFile(GetGlobalConfigPath());
         var project = LoadFile(GetProjectConfigPath(projectRoot));
@@ -44,6 +50,9 @@ internal sealed record UnilyzeConfig(
 
         if (cliExcludeDirs is { Count: > 0 })
             merged = Merge(merged, new UnilyzeConfig(cliExcludeDirs));
+
+        if (cliProfile is not null)
+            merged = merged with { Profile = cliProfile };
 
         var resolved = BuildEffectiveExcludeDirs(merged, projectRoot);
         return merged with { ExcludeDirs = resolved };
@@ -102,6 +111,7 @@ internal sealed record UnilyzeConfig(
             lower.DisableGeneratedCodeExcludes || higher.DisableGeneratedCodeExcludes,
             MergeSmells(lower.Smells, higher.Smells),
             MergeRules(lower.Rules, higher.Rules),
+            higher.Profile ?? lower.Profile,
             higher.Baseline ?? lower.Baseline);
     }
 
@@ -121,10 +131,27 @@ internal sealed record UnilyzeConfig(
     }
 
     internal ResolvedAnalysisConfig ResolveAnalysisConfig()
-        => new(
-            EffectiveSmellThresholds.FromOverrides(Smells),
-            ResolveDisabledRuleKinds(Rules, out var disableCycles),
-            disableCycles);
+    {
+        var profile = SmellThresholdProfiles.NormalizeProfile(Profile);
+        if (!SmellThresholdProfiles.IsKnownProfile(profile))
+        {
+            Console.Error.WriteLine(
+                $"Warning: Unknown profile '{Profile}'; using '{SmellThresholdProfiles.DefaultProfileName}'.");
+            profile = SmellThresholdProfiles.DefaultProfileName;
+        }
+
+        var thresholds = SmellThresholdProfiles.ResolveEffectiveThresholds(
+            profile, TypeRole.PlainCSharp, Smells);
+        var disabledRuleKinds = ResolveDisabledRuleKinds(Rules, out var disableCycles);
+
+        return new ResolvedAnalysisConfig(
+            thresholds,
+            profile,
+            disabledRuleKinds,
+            disableCycles,
+            SmellThresholdProfiles.GetInformationalSmellKinds(profile),
+            Smells);
+    }
 
     static IReadOnlySet<CodeSmellKind> ResolveDisabledRuleKinds(
         IReadOnlyDictionary<string, string>? rules,

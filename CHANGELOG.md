@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))
+- Per-type `role` field and optional `informationalCount` on `typeMetrics` (unity profile records `LowCohesion` as informational instead of a warning smell, per Palomba ICSME 2014); root `profile` field when a non-default profile is active; `diff`/`trend` warn on profile mismatch ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - MinVer-based versioning: git tags are the single source of truth for package, assembly, and CLI version output; semver tag push now creates a GitHub Release with the matching `CHANGELOG.md` section as its body ([#93](https://github.com/bigdra50/unilyze/issues/93))
 - `statusline --background-refresh` returns cached output immediately and refreshes stale or missing caches in a detached background process, enabling a cross-platform one-line status line integration without shell-side cache logic ([#92](https://github.com/bigdra50/unilyze/issues/92))
 - `calibrate` subcommand: derive smell-threshold candidates from two or more unilyze JSON snapshots using Alves, Ypma & Visser (ICSM 2010) LOC-weighted pooling and 70/80/90 percentiles (80/90/95 for parameter count); outputs risk bands and a `.unilyze.json` smells fragment without changing built-in defaults ([#86](https://github.com/bigdra50/unilyze/issues/86))

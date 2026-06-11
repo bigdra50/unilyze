@@ -158,9 +158,7 @@ public sealed class ConfigThresholdsTests : IDisposable
             _tempDir, null, null, config.ExcludeDirs,
             excludeGeneratedCode: false,
             applyAnyDepthExcludes: false,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
 
         Assert.Null(result.CyclicDependencies);
     }
@@ -176,12 +174,12 @@ public sealed class ConfigThresholdsTests : IDisposable
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             _tempDir, null, null, config.ExcludeDirs,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
 
         Assert.Equal(AnalysisResult.CurrentMetricsVersion, result.MetricsVersion);
-        Assert.Same(EffectiveSmellThresholds.Default, resolved.Thresholds);
+        Assert.Equal(EffectiveSmellThresholds.Default, resolved.Thresholds);
+        Assert.Equal(SmellThresholdProfiles.DefaultProfileName, resolved.Profile);
+        Assert.Null(result.Profile);
         Assert.Empty(resolved.DisabledRuleKinds);
         Assert.False(resolved.DisableCycles);
     }

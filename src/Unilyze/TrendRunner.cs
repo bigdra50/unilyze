@@ -69,6 +69,17 @@ internal static class TrendRunner
                     $"Warning: metrics versions differ across snapshots ({formatted}). Trend deltas may be unreliable.");
             }
 
+            var distinctProfiles = results
+                .Select(r => r.Profile ?? SmellThresholdProfiles.DefaultProfileName)
+                .Distinct()
+                .ToList();
+            if (distinctProfiles.Count > 1)
+            {
+                Console.Error.WriteLine(
+                    $"Warning: profiles differ across snapshots ({string.Join(", ", distinctProfiles)}). "
+                    + "Trend smell deltas may be unreliable.");
+            }
+
             var trend = TrendAnalyzer.Analyze(results);
             var trendJson = JsonSerializer.Serialize(trend, AnalysisJsonContext.Default.TrendResult);
 

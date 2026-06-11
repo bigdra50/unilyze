@@ -15,6 +15,7 @@ public sealed record AnalysisResult(
     int MetricsVersion = 0,
     string? ToolVersion = null,
     string? ProjectKind = null,
+    string? Profile = null,
     int? SuppressedCount = null)
 {
     /// <summary>
@@ -39,6 +40,7 @@ public sealed record AssemblyInfo(
         typeof(JsonStringEnumConverter<DependencyKind>),
         typeof(JsonStringEnumConverter<CodeSmellKind>),
         typeof(JsonStringEnumConverter<SmellSeverity>),
+        typeof(JsonStringEnumConverter<TypeRole>),
         typeof(JsonStringEnumConverter<ChangeStatus>),
         typeof(JsonStringEnumConverter<CycleLevel>)])]
 [JsonSerializable(typeof(AnalysisResult))]

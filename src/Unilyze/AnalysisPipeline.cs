@@ -15,18 +15,17 @@ internal static class AnalysisPipeline
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
         IAnalysisLogSink? logSink = null,
-        EffectiveSmellThresholds? thresholds = null,
-        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
-        bool disableCycles = false)
+        ResolvedAnalysisConfig? analysisConfig = null)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
-            excludeGeneratedCode, applyAnyDepthExcludes, logSink, thresholds, disabledRuleKinds, disableCycles);
+            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig);
         return Build(options);
     }
 
     static AnalysisResult Build(AnalysisBuildOptions options)
     {
+        var config = options.EffectiveAnalysisConfig;
         var log = options.EffectiveLog;
         var sw = Stopwatch.StartNew();
 
@@ -53,8 +52,12 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("aggregate");
         var (finalMetrics, assemblyInfos, cycles) = AnalysisPipelineAggregation.Run(
-            discover, resolvedTypes, deps, typeMetrics, couplingMap, options.DisableCycles);
+            discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
+
+        var profileField = config.Profile == SmellThresholdProfiles.DefaultProfileName
+            ? null
+            : config.Profile;
 
         return new AnalysisResult(
             Path.GetFullPath(options.Path),
@@ -67,6 +70,7 @@ internal static class AnalysisPipeline
             cycles,
             AnalysisResult.CurrentMetricsVersion,
             ToolVersionInfo.Current,
-            ProjectKind: discover.ProjectKind);
+            ProjectKind: discover.ProjectKind,
+            Profile: profileField);
     }
 }

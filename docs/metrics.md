@@ -472,6 +472,51 @@ Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smell
 しきい値は下表に記載されている（**デフォルト値**）。プロジェクトの `.unilyze.json` で `smells` セクションを使い、スメル種別ごとに個別のしきい値を上書きできる。上書きは実行時の検出にのみ効き、下表の内容はデフォルトの単一情報源として維持される。
 計測値の互換性は [メトリクス互換性ポリシー](#メトリクス互換性ポリシー) を参照する。
 
+### しきい値プロファイル (`profile`)
+
+出典: Aniche, Treude, Zaidman et al., "SATT: Tailoring Code Metric Thresholds for Different Software Architectures" (SCAM 2016) — アーキテクチャ（ロール）ごとにメトリクス分布が異なり、単一しきい値は特定ロールを過検出する。
+
+`.unilyze.json` の `"profile"` キー、または CLI の `--profile` で組み込みプロファイルを選択する。CLI `--profile` はプロジェクト設定より優先し、プロジェクト設定はグローバル設定より優先する（`baseline` と同じ higher-scope-wins）。**しきい値の数値**については `profile` 基底値の上に `smells` セクションのユーザー上書きが最優先（`profile` < user thresholds）。
+
+| プロファイル | 説明 |
+|-------------|------|
+| `default`（省略時） | 全ロール共通の既定しきい値（従来どおり）。JSON ルートに `profile` は出力しない。`metricsVersion` も変わらない。 |
+| `unity` | Unity ロール別しきい値。JSON ルートに `"profile": "unity"` を記録。 |
+
+#### 型ロール (`role`)
+
+各型は JSON `types[]` に `role` を持つ（camelCase 列挙）:
+
+| `role` | 判定 |
+|--------|------|
+| `MonoBehaviour` | 基底型チェーンが `UnityEngine.MonoBehaviour` |
+| `ScriptableObject` | 基底型チェーンが `UnityEngine.ScriptableObject` |
+| `EditorExtension` | 基底が `UnityEditor.Editor` / `EditorWindow`、または `[CustomEditor]` 属性 |
+| `PlainCSharp` | 上記以外 |
+
+**SyntaxOnly 時の制限:** 構文フォールバックは `TypeNodeInfo.BaseType` の直接基底名のみ照合する。`Player : BaseView`（`BaseView : MonoBehaviour`）のような間接派生は Semantic 解析でないと `MonoBehaviour` と判定されない。
+
+#### `unity` プロファイルのロール別しきい値（暫定）
+
+文献（SATT SCAM 2016; Alves ICSM 2010）に基づく暫定値。最終値は `unilyze calibrate` のロール別分布から導出予定（#86）。
+
+| ロール | GodClass (Warning) | 備考 |
+|--------|-------------------|------|
+| `MonoBehaviour` | 行数 >= 800 or メソッド数 >= 30 | ライフサイクルメソッド過多による過検出を緩和（Nardone et al. TOSEM 2023） |
+| `ScriptableObject` | 行数 >= 650 or メソッド数 >= 25 | |
+| `EditorExtension` | 行数 >= 700 or メソッド数 >= 25 | |
+| `PlainCSharp` | 既定表と同じ | |
+
+その他のスメル（LongMethod, HighCoupling 等）は `PlainCSharp` 以外も当面は既定表と同じ。
+
+#### LowCohesion の informational 扱い（`unity` プロファイル）
+
+出典: Palomba, Bavota, Di Penta, Oliveto, De Lucia, "Do They Really Smell Bad?" (ICSME 2014) — 凝集度スメルは開発者の問題認識が低い。
+
+`unity` プロファイルでは `LowCohesion` (UNI006) を **warning スメルとしては出力せず**、閾値を満たした場合は `typeMetrics[].informationalCount` に加算する。`badge --fail-over` や `diff --fail-on-regression` の warning カウントには含まれない。`default` プロファイルでは従来どおり Warning。
+
+`unilyze metrics --profile unity` でアクティブプロファイルとロール別しきい値を表示する。
+
 <!-- smell-thresholds:start -->
 | スメル | 判定条件 (Warning) | 判定条件 (Critical) |
 |--------|-------------------|-------------------|

@@ -45,12 +45,14 @@ public sealed record EffectiveSmellThresholds(
         SmellThresholds.DeepInheritanceDitWarning);
 
     public static EffectiveSmellThresholds FromOverrides(
-        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? overrides)
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? overrides,
+        EffectiveSmellThresholds? baseline = null)
     {
+        baseline ??= Default;
         if (overrides is not { Count: > 0 })
-            return Default;
+            return baseline;
 
-        var result = Default;
+        var result = baseline;
         foreach (var (smellName, thresholdMap) in overrides)
         {
             if (!SmellKeyMap.TryGetValue(smellName, out var keyMap))

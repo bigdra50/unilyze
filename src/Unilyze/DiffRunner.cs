@@ -277,9 +277,7 @@ internal static class DiffRunner
             requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
     }
 
     static int RunComparison(DiffRunOptions options)
@@ -288,6 +286,7 @@ internal static class DiffRunner
         var (after, afterJson) = LoadAfterSnapshot(options);
 
         WarnIfAnalysisLevelsDiffer(before, after);
+        WarnIfProfilesDiffer(before, after);
 
         var versionExit = EvaluateVersionMismatch(before, after, options.FailOnVersionMismatch);
 
@@ -339,6 +338,18 @@ internal static class DiffRunner
         var after = JsonSerializer.Deserialize(afterJson, AnalysisJsonContext.Default.AnalysisResult)
                     ?? throw new InvalidOperationException($"Failed to parse: {options.AfterPath}");
         return (after, afterJson);
+    }
+
+    static void WarnIfProfilesDiffer(AnalysisResult before, AnalysisResult after)
+    {
+        var beforeProfile = before.Profile ?? SmellThresholdProfiles.DefaultProfileName;
+        var afterProfile = after.Profile ?? SmellThresholdProfiles.DefaultProfileName;
+        if (beforeProfile != afterProfile)
+        {
+            Console.Error.WriteLine(
+                $"Warning: profiles differ (before: {beforeProfile}, after: {afterProfile}). "
+                + "Smell counts and thresholds may not be comparable.");
+        }
     }
 
     static void WarnIfAnalysisLevelsDiffer(AnalysisResult before, AnalysisResult after)

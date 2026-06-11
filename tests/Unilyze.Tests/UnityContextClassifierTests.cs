@@ -34,6 +34,50 @@ public class UnityContextClassifierTests
     }
 
     [Fact]
+    public void ClassifyRole_ScriptableObject_DirectAndIndirect()
+    {
+        var (typeDecl, model) = Parse("""
+            namespace UnityEngine { public class ScriptableObject { } }
+            class ItemData : UnityEngine.ScriptableObject { }
+            """, typeName: "ItemData");
+
+        Assert.Equal(TypeRole.ScriptableObject, UnityContextClassifier.ClassifyRole(typeDecl, model));
+    }
+
+    [Fact]
+    public void ClassifyRole_EditorExtension_FromEditorBase()
+    {
+        var (typeDecl, model) = Parse("""
+            namespace UnityEditor { public class Editor { } }
+            class ItemEditor : UnityEditor.Editor { }
+            """, typeName: "ItemEditor");
+
+        Assert.Equal(TypeRole.EditorExtension, UnityContextClassifier.ClassifyRole(typeDecl, model));
+    }
+
+    [Fact]
+    public void ClassifyRole_EditorExtension_FromCustomEditorAttribute()
+    {
+        var (typeDecl, model) = Parse("""
+            namespace UnityEditor { public class Editor { } }
+            [CustomEditor(typeof(object))]
+            class FooEditor { }
+            """, typeName: "FooEditor", semantic: false);
+
+        Assert.Equal(TypeRole.EditorExtension, UnityContextClassifier.ClassifyRole(typeDecl, model));
+    }
+
+    [Fact]
+    public void ClassifyRole_PlainCSharp_WhenNoUnityBase()
+    {
+        var (typeDecl, model) = Parse("""
+            class PlainClass { }
+            """, typeName: "PlainClass");
+
+        Assert.Equal(TypeRole.PlainCSharp, UnityContextClassifier.ClassifyRole(typeDecl, model));
+    }
+
+    [Fact]
     public void Classify_DirectMonoBehaviourDerivation_IsMonoBehaviour()
     {
         var (typeDecl, model) = Parse("""

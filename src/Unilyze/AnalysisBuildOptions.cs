@@ -9,15 +9,17 @@ internal sealed record AnalysisBuildOptions(
     bool ExcludeGeneratedCode = true,
     bool ApplyAnyDepthExcludes = true,
     IAnalysisLogSink? LogSink = null,
-    EffectiveSmellThresholds? Thresholds = null,
-    IReadOnlySet<CodeSmellKind>? DisabledRuleKinds = null,
-    bool DisableCycles = false)
+    ResolvedAnalysisConfig? AnalysisConfig = null)
 {
-    static readonly HashSet<CodeSmellKind> EmptyDisabledRules = [];
+    static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(
+        EffectiveSmellThresholds.Default,
+        SmellThresholdProfiles.DefaultProfileName,
+        new HashSet<CodeSmellKind>(),
+        DisableCycles: false,
+        InformationalSmellKinds: new HashSet<CodeSmellKind>(),
+        SmellOverrides: null);
 
-    public EffectiveSmellThresholds EffectiveThresholds => Thresholds ?? EffectiveSmellThresholds.Default;
-
-    public IReadOnlySet<CodeSmellKind> EffectiveDisabledRules => DisabledRuleKinds ?? EmptyDisabledRules;
+    public ResolvedAnalysisConfig EffectiveAnalysisConfig => AnalysisConfig ?? DefaultAnalysisConfig;
 
     public IAnalysisLogSink EffectiveLog => LogSink ?? new ConsoleAnalysisLogSink(quiet: false);
 

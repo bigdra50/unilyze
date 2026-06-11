@@ -25,9 +25,12 @@ internal static class AnalysisPipelineSemanticPhase
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
         typeMetrics = EnrichWithCouplingMetrics(typeMetrics, couplingMap);
 
+        var config = options.EffectiveAnalysisConfig;
         typeMetrics = SemanticEnricher.Enrich(
             typeMetrics, allTypes, allSyntaxTrees, compilationResult,
-            options.EffectiveThresholds, options.EffectiveDisabledRules);
+            config.Profile, config.SmellOverrides, config.InformationalSmellKinds,
+            config.DisabledRuleKinds);
+        allTypes = TypeRoleStamper.ApplyRoles(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         return (allTypes, deps, typeMetrics.ToList(), couplingMap);
     }

@@ -362,9 +362,7 @@ internal static class StatuslineRunner
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             logSink: log,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
