@@ -4,6 +4,8 @@ internal static class SmellAggregation
 {
     internal static bool CountsForGate(CodeSmell smell, bool excludeBaselined)
     {
+        if (smell.Suppressed == true)
+            return false;
         if (excludeBaselined && smell.Baselined == true)
             return false;
         if (TriageVerdicts.ExcludesFromGates(smell.Triage))
@@ -12,10 +14,12 @@ internal static class SmellAggregation
     }
 
     internal static bool CountsForTrend(CodeSmell smell)
-        => !TriageVerdicts.ExcludesFromTrend(smell.Triage);
+        => smell.Suppressed != true && !TriageVerdicts.ExcludesFromTrend(smell.Triage);
 
     internal static bool CountsForDiff(CodeSmell smell)
     {
+        if (smell.Suppressed == true)
+            return false;
         if (smell.Id is null)
             return true;
         return !TriageVerdicts.ExcludesFromGates(smell.Triage);

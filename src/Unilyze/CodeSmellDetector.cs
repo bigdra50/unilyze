@@ -41,11 +41,10 @@ public sealed record CodeSmell(
     string Message,
     int? Line = null,
     bool? Baselined = null,
+    bool? Suppressed = null,
+    string? SuppressionJustification = null,
     string? Id = null,
     string? Triage = null);
-    bool? Baselined = null,
-    bool? Suppressed = null,
-    string? SuppressionJustification = null);
 
 public static class CodeSmellDetector
 {

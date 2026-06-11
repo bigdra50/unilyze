@@ -40,7 +40,6 @@ public static class TrendAnalyzer
         var minHealth = typeCount > 0 ? Math.Round(typeMetrics.Min(t => t.CodeHealth), 1) : 0.0;
         var smellCount = typeMetrics.Sum(t =>
             t.CodeSmells?.Count(s => SmellAggregation.CountsForTrend(s)) ?? 0);
-        var smellCount = typeMetrics.Sum(t => t.CodeSmells?.Count ?? 0);
         var warningCount = typeMetrics.Sum(t =>
             t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning) ?? 0);
         var criticalCount = typeMetrics.Sum(t =>

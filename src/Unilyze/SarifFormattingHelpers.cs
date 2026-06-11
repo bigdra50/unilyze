@@ -87,12 +87,8 @@ static class SarifFormattingHelpers
 
     static void AddSuppressions(JsonObject resultObj, CodeSmell smell)
     {
-        if (smell.Baselined != true && !TriageVerdicts.ExcludesFromGates(smell.Triage))
-            return;
-
         var suppressions = new JsonArray();
 
-        var suppressions = new JsonArray();
         if (smell.Suppressed == true)
         {
             suppressions.Add(new JsonObject
@@ -121,11 +117,8 @@ static class SarifFormattingHelpers
             });
         }
 
-        resultObj["suppressions"] = suppressions;
         if (suppressions.Count > 0)
             resultObj["suppressions"] = suppressions;
-
-        return resultObj;
     }
 
     public static string ComputeFingerprint(

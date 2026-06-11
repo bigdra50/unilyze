@@ -59,11 +59,10 @@ internal static class AnalysisPipeline
             ? null
             : config.Profile;
 
-        var result = new AnalysisResult(
         var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
         InlineSuppression.WriteSummary(inlineSuppressedCount);
 
-        return new AnalysisResult(
+        var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
             assemblyInfos,
@@ -75,10 +74,9 @@ internal static class AnalysisPipeline
             AnalysisResult.CurrentMetricsVersion,
             ToolVersionInfo.Current,
             ProjectKind: discover.ProjectKind,
-            Profile: profileField);
-
-        return FindingFingerprint.AssignIds(result);
             Profile: profileField,
             SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null);
+
+        return FindingFingerprint.AssignIds(result);
     }
 }
