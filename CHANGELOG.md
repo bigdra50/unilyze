@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- HTML viewer bundles Cytoscape.js, dagre, and cytoscape-dagre for full offline graph support; ELK layout remains CDN-only with dagre fallback ([#74](https://github.com/bigdra50/unilyze/issues/74))
+- `THIRD-PARTY-NOTICES.txt` at repo root documenting bundled MIT libraries and CDN-only dependencies ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - Per-smell threshold overrides (`smells`) and per-rule enable/disable toggles (`rules`) in `.unilyze.json` ([#71](https://github.com/bigdra50/unilyze/issues/71)); maps merge key-wise across global and project config
 - WeakTemporization smell (UNI017): flags incremental `transform` mutations in Unity `Update`/`LateUpdate` without delta-time scaling ([#79](https://github.com/bigdra50/unilyze/issues/79))
 - **[metrics]** WeakTemporization (UNI017) reported as Warning on Unity `Update`/`LateUpdate` transform mutations lacking delta-time scaling; `metricsVersion` stays 3 (folds into the #70 release-window bump) ([#79](https://github.com/bigdra50/unilyze/issues/79))

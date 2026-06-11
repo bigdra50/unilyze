@@ -16,6 +16,7 @@ public static class HtmlFormatter
         if (string.IsNullOrEmpty(title)) title = "Unity Project";
 
         return HtmlTemplate.Value
+            .Replace("__VENDOR_SCRIPTS__", HtmlTemplate.VendorScripts)
             .Replace("__DATA_PLACEHOLDER__", analysisJson)
             .Replace("__DIFF_DATA_PLACEHOLDER__", diffJson)
             .Replace("__TITLE__", WebUtility.HtmlEncode(title));
