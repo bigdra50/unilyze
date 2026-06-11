@@ -405,8 +405,20 @@ With `--fail-on-regression`, the markdown body is unchanged; only the exit code 
 ## Agent Workflow
 
 ```
-unilyze (measure) -> identify issues -> fix -> unilyze diff (verify)
+unilyze (measure) -> unilyze query (evidence) -> fix -> unilyze diff (verify)
 ```
+
+### Evidence packs (`query`)
+
+Token-efficient per-type packs for LLM grounding — metrics, smells with `file:line` anchors, dependencies, and top methods:
+
+```bash
+unilyze query --worst 5 -i snapshot.json          # worst types from snapshot
+unilyze query --type MyService -p . -f json       # single type via direct analysis
+unilyze query --help                              # all flags
+```
+
+Replaces fragile jq one-liners in agent skills. Markdown (default) or compact JSON (`-f json`).
 
 ### Install skills
 

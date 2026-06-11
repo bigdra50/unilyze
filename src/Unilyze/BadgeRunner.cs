@@ -23,6 +23,13 @@ internal static class BadgeRunner
         var levelStr = opts.GetValueOrDefault("--level");
         var failUnder = opts.GetValueOrDefault("--fail-under");
         var failOver = opts.GetValueOrDefault("--fail-over");
+        var baselinePath = opts.GetValueOrDefault("--baseline");
+
+        if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
+        {
+            Console.Error.WriteLine("--baseline requires a file path.");
+            return ExitUsageError;
+        }
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
@@ -73,7 +80,14 @@ internal static class BadgeRunner
                 thresholds: resolved.Thresholds,
                 disabledRuleKinds: resolved.DisabledRuleKinds,
                 disableCycles: resolved.DisableCycles);
-            var summary = StatuslineFormatter.ComputeSummary(result);
+
+            var effectiveBaseline = baselinePath ?? config.Baseline;
+            var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
+            if (baselineError is 1)
+                return ExitUsageError;
+
+            var excludeBaselined = effectiveBaseline is not null;
+            var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
             var badge = BadgeFormatter.Build(metric, summary);
             var content = format == BadgeFormat.Svg ? BadgeSvgRenderer.Render(badge) : BadgeFormatter.Serialize(badge);
 
@@ -137,6 +151,7 @@ internal static class BadgeRunner
                              (codehealth: min CodeHealth, mi: average MI)
               --fail-over    Quality gate for smells: fail if warning count above count
                              (any critical smell always fails)
+              --baseline     Suppress known smells from a baseline file before gating
               -h, --help     Show this help
 
             Exit codes:

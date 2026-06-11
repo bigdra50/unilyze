@@ -31,13 +31,7 @@ unilyze schema    # JSON 出力の全フィールドリファレンス
 
 ## Shell の注意事項
 
-zsh は `!` をヒストリ展開する。jq フィルタ内の `!=` が `\!=` に変換されてパースエラーになる。
-
-回避策:
-- `!=` を使わない。jq では `select(.field)` で null/false を除外できる (`null` は falsy)
-- `!= null` の代わりに `select(.field)` を使う
-- 否定が必要なら `| not` を使う (例: `select(.x == 0 | not)`)
-- どうしても `!=` が必要な場合は heredoc 経由: `cat <<'EOF' | jq -f /dev/stdin file.json`
+`query` は jq 不要で evidence pack を直接出力する。スナップショット解析だけ jq を使う場合、zsh の `!` ヒストリ展開に注意 (`!=` は `select(.field)` や `| not` で回避)。
 
 ## Workflow
 
@@ -68,30 +62,23 @@ unilyze -p <path> -a App.Domain -f json -o "$UNILYZE_DIR/quality-audit.json"
 サードパーティ (UniRx, MessagePack, Mirror 等) を含めると外部コードのワースト型がノイズになる。
 自前アセンブリのみを計測対象にすることを推奨する。
 
-JSON からワースト箇所を抽出:
+ワースト型とスメル・依存関係を evidence pack として取得:
 
 ```bash
-# CodeHealth ワースト N 件 (.codeHealth が null の型を除外)
-jq '[.typeMetrics[] | select(.codeHealth)] | sort_by(.codeHealth) | .[:5]' "$UNILYZE_DIR/quality-audit.json"
+# CodeHealth ワースト N 件 (Markdown, 既定)
+unilyze query --worst 5 -i "$UNILYZE_DIR/quality-audit.json"
 
-# Critical CodeSmell
-jq '[.typeMetrics[] | select(.codeSmells) | {typeName, namespace, codeSmells: [.codeSmells[] | select(.severity == "Critical")]}] | map(select(.codeSmells | length > 0))' "$UNILYZE_DIR/quality-audit.json"
+# 単一型 (JSON)
+unilyze query --type GodClassTarget -i "$UNILYZE_DIR/quality-audit.json" -f json
 
-# CBO 閾値超過 (.cbo > 14 は null を自動除外)
-jq '[.typeMetrics[] | select(.cbo > 14) | {typeName, namespace, cbo}] | sort_by(.cbo) | reverse' "$UNILYZE_DIR/quality-audit.json"
-
-# Boxing ホットスポット (GC 圧力)
-jq '[.typeMetrics[] | select(.boxingCount) | {typeName, boxingCount, closureCaptureCount, paramsAllocationCount}] | sort_by(-.boxingCount)' "$UNILYZE_DIR/quality-audit.json"
-
-# 例外フロー問題
-jq '[.typeMetrics[].codeSmells[]? | select(.kind == "CatchAllException" or .kind == "MissingInnerException" or .kind == "ThrowingSystemException")] | group_by(.kind) | .[] | {kind: .[0].kind, count: length}' "$UNILYZE_DIR/quality-audit.json"
-
-# DI 依存グラフ
-jq '[.dependencies[] | select(.kind == "DIRegistration")] | .[] | {service: .fromType, impl: .toType}' "$UNILYZE_DIR/quality-audit.json"
-
-# サマリー統計
-jq '{totalTypes: (.typeMetrics | length), belowThreshold: [.typeMetrics[] | select(.codeHealth) | select(.codeHealth < 7.0)] | length, criticalSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[] | select(.severity == "Critical")] | length, allSmells: [.typeMetrics[] | select(.codeSmells) | .codeSmells[]] | length, boxingTypes: [.typeMetrics[] | select(.boxingCount)] | length, closureTypes: [.typeMetrics[] | select(.closureCaptureCount)] | length, diRegistrations: [.dependencies[] | select(.kind == "DIRegistration")] | length}' "$UNILYZE_DIR/quality-audit.json"
+# 直接解析 (スナップショット不要)
+unilyze query --worst 5 -p <path>
 ```
+
+各 pack には型アンカー (`file:line`)、主要メトリクス、スメル (severity + line)、依存エッジ、CogCC 上位メソッドが含まれる。
+Critical スメルだけ見る場合は pack 内の `[Critical]` 行を参照する。
+CBO > 14、boxing ホットスポット、DI 登録、例外フロー問題も pack 内の metrics / smells / dependencies で確認できる。
+サマリー統計は `unilyze statusline -p <path> --verbose` または JSON ルートの assembly health を参照。
 
 ### Phase 2: AI コードレビュー (ワースト箇所)
 
