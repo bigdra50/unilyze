@@ -361,7 +361,7 @@ Endpoints that resolve to a type outside the analyzed set (e.g. a framework type
 |--------|----------|
 | `html` | Interactive dependency graph in browser (Cytoscape+dagre bundled; ELK layout via CDN) |
 | `json` | Agent integration, programmatic use |
-| `sarif` | GitHub Code Scanning, IDE integration |
+| `sarif` | GitHub Code Scanning (stable fingerprints, rule help links, region `endLine`), IDE integration |
 
 ## Diff Viewer
 
@@ -418,8 +418,20 @@ Use `-p` to override the project path (default: `projectPath` from the after sna
 ## Agent Workflow
 
 ```
-unilyze (measure) -> identify issues -> fix -> unilyze diff (verify)
+unilyze (measure) -> unilyze query (evidence) -> fix -> unilyze diff (verify)
 ```
+
+### Evidence packs (`query`)
+
+Token-efficient per-type packs for LLM grounding — metrics, smells with `file:line` anchors, dependencies, and top methods:
+
+```bash
+unilyze query --worst 5 -i snapshot.json          # worst types from snapshot
+unilyze query --type MyService -p . -f json       # single type via direct analysis
+unilyze query --help                              # all flags
+```
+
+Replaces fragile jq one-liners in agent skills. Markdown (default) or compact JSON (`-f json`).
 
 ### Install skills
 

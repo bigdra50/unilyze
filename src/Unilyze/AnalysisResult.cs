@@ -14,7 +14,8 @@ public sealed record AnalysisResult(
     IReadOnlyList<CyclicDependency>? CyclicDependencies = null,
     int MetricsVersion = 0,
     string? ToolVersion = null,
-    string? ProjectKind = null)
+    string? ProjectKind = null,
+    int? SuppressedCount = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.
@@ -44,6 +45,12 @@ public sealed record AssemblyInfo(
 [JsonSerializable(typeof(DiffResult))]
 [JsonSerializable(typeof(HotspotResult))]
 [JsonSerializable(typeof(TrendResult))]
+[JsonSerializable(typeof(QueryResult))]
+[JsonSerializable(typeof(TypeEvidencePack))]
+[JsonSerializable(typeof(TypeEvidenceMetrics))]
+[JsonSerializable(typeof(TypeEvidenceSmell))]
+[JsonSerializable(typeof(TypeEvidenceDependencyGroup))]
+[JsonSerializable(typeof(TypeEvidenceMethod))]
 [JsonSerializable(typeof(MetricDelta<int>))]
 [JsonSerializable(typeof(MetricDelta<double>))]
 internal partial class AnalysisJsonContext : JsonSerializerContext;

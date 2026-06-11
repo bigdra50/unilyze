@@ -1051,6 +1051,73 @@ public sealed class CliE2eTests : IDisposable
         }
     }
 
+    [Fact]
+    public void Query_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("query", "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Query_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("query", "bogus", "-i", "snap.json");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'bogus'", stderr);
+    }
+
+    [Fact]
+    public void Query_Help_ListsFlags()
+    {
+        var (exitCode, stdout, _) = Run("query", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--worst", stdout);
+        Assert.Contains("--type", stdout);
+        Assert.Contains("-f, --format", stdout);
+    }
+
+    [Fact]
+    public void Query_WorstFromSnapshot_IncludesAnchors()
+    {
+        var fixturePath = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "fixtures", "golden", "expected.json"));
+        var (exitCode, stdout, stderr) = Run("query", "--worst", "3", "-i", fixturePath);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Query evidence pack:", stderr);
+        Assert.Contains("CH ", stdout);
+        Assert.Contains("### Smells", stdout);
+        Assert.Contains("@ `", stdout);
+    }
+
+    [Fact]
+    public void Query_AmbiguousTypeName_ExitsUsageError()
+    {
+        var metrics = new[]
+        {
+            new TypeMetrics("Dup", "Alpha", "Test", 1, 0, 0, 0, 0, 0, 0, 0, 5.0, []),
+            new TypeMetrics("Dup", "Beta", "Test", 1, 0, 0, 0, 0, 0, 0, 0, 6.0, []),
+        };
+        var snapshot = new AnalysisResult("/tmp", DateTimeOffset.UtcNow, [], [], [], metrics);
+        var snapshotPath = Path.Combine(_tempDir, "dup-types.json");
+        File.WriteAllText(
+            snapshotPath,
+            JsonSerializer.Serialize(snapshot, AnalysisJsonContext.Default.AnalysisResult));
+
+        var (exitCode, _, stderr) = Run("query", "--type", "Dup", "-i", snapshotPath);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Ambiguous type name 'Dup'", stderr);
+        Assert.Contains("Alpha.Dup", stderr);
+    }
+
+    [Fact]
+    public void Help_ListsQuerySubcommand()
+    {
+        var (exitCode, stdout, _) = Run("--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unilyze query", stdout);
+    }
+
     private void InitGitRepo()
     {
         RunGit(_tempDir, "init");

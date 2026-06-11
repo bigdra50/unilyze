@@ -16,6 +16,8 @@ analyze (unilyze -f json):
   .projectKind                         string?  Detected project kind: "unity",
                                                 "dotnet", or "unknown"; null in
                                                 older snapshots.
+  .suppressedCount                     int?     Count of smells suppressed by --baseline;
+                                                present only when a baseline file was applied.
   .assemblies[]                        object   Assembly info
     .name                              string   Assembly name (from .asmdef)
     .metrics.abstractness              float    Abstractness (0.0-1.0)
@@ -71,6 +73,7 @@ typeMetrics[]:
     .message                           string   Human-readable description
     .methodName                        string?  Affected method (null for type-level)
     .line                              int?     Source line of the occurrence (optional; null for type-level smells)
+    .baselined                         bool?    true when suppressed by --baseline (optional; omitted when absent)
   .methods[]                           object   Per-method metrics
 
 methods[]:

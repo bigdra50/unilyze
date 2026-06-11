@@ -21,8 +21,27 @@ public sealed class SkillInstallerE2eTests : IDisposable
     public void Dispose()
     {
         _cwdScope.Dispose();
-        if (Directory.Exists(_tempDir))
-            Directory.Delete(_tempDir, recursive: true);
+        if (!Directory.Exists(_tempDir))
+            return;
+
+        // Windows briefly holds the directory lock after the cwd scope restores;
+        // retry instead of failing the test over temp-dir cleanup.
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                Directory.Delete(_tempDir, recursive: true);
+                return;
+            }
+            catch (IOException) when (attempt < 3)
+            {
+                Thread.Sleep(100 * (attempt + 1));
+            }
+            catch (IOException)
+            {
+                return; // temp dir; the OS cleans it up eventually
+            }
+        }
     }
 
     [Fact]

@@ -14,6 +14,9 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 ### Added
 
 - `diff --base-ref <git-ref> <after.json>` analyzes the base ref in a temporary git worktree and diffs against the after snapshot in one command; composes with `-f markdown`, `--fail-on-regression`, and `--changed-only` ([#82](https://github.com/bigdra50/unilyze/issues/82))
+- Baseline workflow for brownfield quality gates: `unilyze baseline create` snapshots current smells into `.unilyze/baseline.json`, and `--baseline <file>` suppresses matched fingerprints at analysis time so reports and gates see only newly introduced violations ([#81](https://github.com/bigdra50/unilyze/issues/81))
+- Per-smell `baselined` JSON field, root `suppressedCount`, SARIF `suppressions` for baselined results, and optional `"baseline"` path in `.unilyze.json` ([#81](https://github.com/bigdra50/unilyze/issues/81))
+- HTML viewer search UX: auto-expands collapsed namespaces for type hits, `/` and `Escape` keyboard shortcuts, and quick-filter chips (low health, smells, cycles) ([#75](https://github.com/bigdra50/unilyze/issues/75))
 - HTML viewer bundles Cytoscape.js, dagre, and cytoscape-dagre for full offline graph support; ELK layout remains CDN-only with dagre fallback ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - `THIRD-PARTY-NOTICES.txt` at repo root documenting bundled MIT libraries and CDN-only dependencies ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - Per-smell threshold overrides (`smells`) and per-rule enable/disable toggles (`rules`) in `.unilyze.json` ([#71](https://github.com/bigdra50/unilyze/issues/71)); maps merge key-wise across global and project config
@@ -28,8 +31,10 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - Default exclude directories (`Library/`, `Temp/`, `obj/`, `bin/`, `.git/`, `Logs/`, `UserSettings/`) for `.cs` enumeration and asmdef discovery, with `disableDefaultExcludes` and `disableGeneratedCodeExcludes` escape hatches in `.unilyze.json` ([#31](https://github.com/bigdra50/unilyze/issues/31))
 - **[metrics]** Two async anti-pattern smells: `AsyncVoidMethod` (async void methods, excluding Unity message methods and event-handler signatures) and `BlockingTaskWait` (`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on `Task`/`ValueTask`/`UniTask`; SyntaxOnly reports only the `GetAwaiter().GetResult()` chain) ([#80](https://github.com/bigdra50/unilyze/issues/80))
 - **[metrics]** UNI017–UNI020 Unity hot-path detectors: expensive Unity API (GetComponent, Find, Camera.main), LINQ, collection/array allocation, and string concatenation inside MonoBehaviour per-frame methods (`Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`, coroutines); default Warning severity ([#78](https://github.com/bigdra50/unilyze/issues/78))
+- SARIF enrichment for GitHub Code Scanning: rule `help`/`helpUri`/`properties.tags`, result `partialFingerprints` (`unilyzeFingerprint/v1`), and region `endLine`; CI uploads self-analysis SARIF via `upload-sarif` ([#83](https://github.com/bigdra50/unilyze/issues/83))
 - `statusline --verbose` prints the previously-swallowed analysis exception to stderr, and `statusline --quiet` suppresses info lines while keeping warnings; `AnalysisPipeline` now shows per-phase progress on stderr when stderr is a TTY ([#76](https://github.com/bigdra50/unilyze/issues/76))
 - `projectKind` field on JSON output root (`unity` | `dotnet` | `unknown`) and Unity-agnostic `analysisLevel` stage names (`Syntax`/`Core`/`Full`/`Complete`); `--level syntax|core|full|complete` CLI tokens unchanged ([#72](https://github.com/bigdra50/unilyze/issues/72))
+- `query` subcommand: per-type evidence packs (metrics, smells with `file:line` anchors, dependencies, top methods) as token-efficient Markdown or compact JSON; supports `-i` snapshot input or `-p` direct analysis ([#85](https://github.com/bigdra50/unilyze/issues/85))
 
 ### Changed
 
