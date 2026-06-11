@@ -79,6 +79,18 @@ static class SarifFormattingHelpers
             resultObj["locations"] = new JsonArray { location };
 
         resultObj["properties"] = BuildProperties(typeMetrics, smell);
+        if (smell.Baselined == true)
+        {
+            resultObj["suppressions"] = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["kind"] = "external",
+                    ["justification"] = "Baselined in .unilyze/baseline.json",
+                }
+            };
+        }
+
         return resultObj;
     }
 

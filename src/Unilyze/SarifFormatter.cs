@@ -173,39 +173,6 @@ public static class SarifFormatter
 
                 results.Add(SarifFormattingHelpers.BuildResultObject(
                     ruleId, ruleIndex, smell, typeMetrics, result.ProjectPath, occurrenceIndex));
-                var resultObj = new JsonObject
-                {
-                    ["ruleId"] = ruleId,
-                    ["ruleIndex"] = ruleIndex,
-                    ["level"] = level,
-                    ["message"] = new JsonObject { ["text"] = messageText },
-                };
-
-                var location = BuildLocation(typeMetrics, smell, result.ProjectPath);
-                if (location is not null)
-                {
-                    resultObj["locations"] = new JsonArray { location };
-                }
-
-                var properties = BuildProperties(typeMetrics, smell);
-                if (properties is not null)
-                {
-                    resultObj["properties"] = properties;
-                }
-
-                if (smell.Baselined == true)
-                {
-                    resultObj["suppressions"] = new JsonArray
-                    {
-                        new JsonObject
-                        {
-                            ["kind"] = "external",
-                            ["justification"] = "Baselined in .unilyze/baseline.json",
-                        }
-                    };
-                }
-
-                results.Add(resultObj);
             }
         }
 
