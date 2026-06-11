@@ -532,7 +532,7 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| WeakTemporization | UNI017 | ルール検出（構文解析、セマンティック補強） | SyntaxOnly 可 |
+| WeakTemporization | UNI021 | ルール検出（構文解析、セマンティック補強） | SyntaxOnly 可 |
 | ExpensiveUnityApiInHotPath | UNI017 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | LinqInHotPath | UNI018 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | CollectionAllocationInHotPath | UNI019 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |

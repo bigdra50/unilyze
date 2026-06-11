@@ -311,7 +311,7 @@ Detects hidden heap allocations that cause GC pressure in Unity (requires Semant
 
 | Kind | Detection |
 |------|-----------|
-| WeakTemporization (UNI017) | Incremental `transform` mutation in `Update`/`LateUpdate` without `Time.deltaTime` scaling |
+| WeakTemporization (UNI021) | Incremental `transform` mutation in `Update`/`LateUpdate` without `Time.deltaTime` scaling |
 
 ## DI Container Detection
 

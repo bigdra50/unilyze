@@ -18,8 +18,7 @@ public enum CodeSmellKind
     CatchAllException,
     MissingInnerException,
     ThrowingSystemException,
-    WeakTemporization
-    ThrowingSystemException,
+    WeakTemporization,
     ExpensiveUnityApiInHotPath,
     LinqInHotPath,
     CollectionAllocationInHotPath,

@@ -211,10 +211,10 @@ public class SarifFormatterTests
         Assert.Contains("UNI015", ruleIds);
         Assert.Contains("UNI016", ruleIds);
         Assert.Contains("UNI017", ruleIds);
-        Assert.Contains("UNI017", ruleIds);
         Assert.Contains("UNI018", ruleIds);
         Assert.Contains("UNI019", ruleIds);
         Assert.Contains("UNI020", ruleIds);
+        Assert.Contains("UNI021", ruleIds);
     }
 
     [Fact]
