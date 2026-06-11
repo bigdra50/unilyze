@@ -44,6 +44,12 @@ public sealed record AssemblyInfo(
 [JsonSerializable(typeof(DiffResult))]
 [JsonSerializable(typeof(HotspotResult))]
 [JsonSerializable(typeof(TrendResult))]
+[JsonSerializable(typeof(QueryResult))]
+[JsonSerializable(typeof(TypeEvidencePack))]
+[JsonSerializable(typeof(TypeEvidenceMetrics))]
+[JsonSerializable(typeof(TypeEvidenceSmell))]
+[JsonSerializable(typeof(TypeEvidenceDependencyGroup))]
+[JsonSerializable(typeof(TypeEvidenceMethod))]
 [JsonSerializable(typeof(MetricDelta<int>))]
 [JsonSerializable(typeof(MetricDelta<double>))]
 internal partial class AnalysisJsonContext : JsonSerializerContext;

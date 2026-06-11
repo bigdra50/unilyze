@@ -92,7 +92,8 @@ CodeHealth だけで順位付けすると、滅多に変更しないコードに
 ワースト型を抽出:
 
 ```bash
-jq --argjson t 8.0 '[.typeMetrics[] | select(.codeHealth != null and .codeHealth < $t)] | sort_by(.codeHealth) | .[0]' "$UNILYZE_DIR/refactor-before.json"
+unilyze query --worst 1 -i "$UNILYZE_DIR/refactor-before.json"
+# または閾値以下の先頭 1 件: unilyze query --worst 1 -i ... | head
 ```
 
 partial class や static 拡張メソッドクラスが GodClass 判定されている場合、
