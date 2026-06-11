@@ -27,9 +27,14 @@ internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("baseline")]
     string? Baseline = null,
     [property: JsonPropertyName("triage")]
-    string? Triage = null)
+    string? Triage = null,
+    [property: JsonPropertyName("maxParallelism")]
+    int? MaxParallelism = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
+
+    internal static int ResolveMaxParallelism(int? configValue) =>
+        configValue is > 0 ? configValue.Value : Environment.ProcessorCount;
 
     static readonly IReadOnlySet<CodeSmellKind> NoDisabledRules =
         new HashSet<CodeSmellKind>();
@@ -115,7 +120,8 @@ internal sealed record UnilyzeConfig(
             MergeRules(lower.Rules, higher.Rules),
             higher.Profile ?? lower.Profile,
             higher.Baseline ?? lower.Baseline,
-            higher.Triage ?? lower.Triage);
+            higher.Triage ?? lower.Triage,
+            higher.MaxParallelism ?? lower.MaxParallelism);
     }
 
     static IReadOnlyList<string>? MergeExcludeDirs(

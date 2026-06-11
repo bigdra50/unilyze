@@ -90,7 +90,8 @@ internal static class QueryRunner
                 path, null, null, config.ExcludeDirs,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                analysisConfig: resolved);
+                analysisConfig: resolved,
+                maxParallelism: config.MaxParallelism);
         }
 
         if (Directory.Exists(projectRoot))

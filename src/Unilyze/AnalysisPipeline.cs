@@ -15,11 +15,13 @@ internal static class AnalysisPipeline
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
         IAnalysisLogSink? logSink = null,
-        ResolvedAnalysisConfig? analysisConfig = null)
+        ResolvedAnalysisConfig? analysisConfig = null,
+        int? maxParallelism = null)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
-            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig);
+            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig,
+            maxParallelism);
         return Build(options);
     }
 

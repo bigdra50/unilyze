@@ -105,7 +105,8 @@ for project in "$@"; do
   wall_s="$(awk '/real/ {print $1}' "$time_log" | sed 's/m/ * 60 + /; s/s$//' | bc 2>/dev/null || echo "?")"
   peak_rss="?"
   if [[ "$(uname -s)" == "Darwin" ]]; then
-    peak_rss="$(awk -F': ' '/maximum resident set size/ {print $2}' "$time_log" | awk '{printf "%.1f MB", $1/1024/1024}')"
+    # macOS /usr/bin/time -l: "<bytes>  maximum resident set size" (no colon)
+    peak_rss="$(awk '/maximum resident set size/ {printf "%.1f MB", $1/1024/1024}' "$time_log")"
   else
     peak_rss="$(awk -F': ' '/Maximum resident set size/ {print $2}' "$time_log" | awk '{printf "%.1f MB", $1/1024}')"
   fi
