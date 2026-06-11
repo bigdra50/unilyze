@@ -33,6 +33,14 @@ cd ~/MyUnityProject
 unilyze
 ```
 
+## Tutorials
+
+Step-by-step walkthroughs for the highest-value workflows:
+
+- [CI quality gate](./docs/tutorials/ci-quality-gate.md) — badge gates, `diff --fail-on-regression`, PR markdown comments, `--base-ref` baselines
+- [Agent integration](./docs/tutorials/agent-integration.md) — `skills install`, evidence packs (`query`), refactor-loop and quality-audit workflows
+- [Continuous refactoring](./docs/tutorials/continuous-refactoring.md) — `hotspot` prioritization, snapshot history, `trend` interpretation
+
 ## Usage
 
 ```bash
@@ -51,8 +59,8 @@ unilyze config list                                # Show/manage configuration
 unilyze diff <before.json> <after.json>            # Compare snapshots (JSON)
 unilyze diff --base-ref origin/main after.json     # Diff against a git ref (temp worktree)
 unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (interactive HTML)
-unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
-unilyze trend <dir-of-jsons>                       # Quality trend
+unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity (see [tutorial](./docs/tutorials/continuous-refactoring.md))
+unilyze trend <dir-of-jsons>                       # Quality trend (see [tutorial](./docs/tutorials/continuous-refactoring.md))
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
 unilyze badge -p ~/MyUnityProject -o badge.json    # shields.io endpoint JSON (CI badges)
 unilyze metrics                                    # Metric definitions & thresholds
@@ -100,6 +108,8 @@ fi
 ```
 
 ### Badges
+
+See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) for an end-to-end PR gate walkthrough.
 
 `unilyze badge` outputs [shields.io endpoint JSON](https://shields.io/badges/endpoint-badge) so you can show code quality badges in your README:
 
@@ -416,6 +426,8 @@ unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
 Use `-p` to override the project path (default: `projectPath` from the after snapshot). Use `--level` to pin the base-side analysis level; if it differs from the after snapshot, the existing level-mismatch warning still applies. Unknown refs, non-repo directories, and a missing `git` binary exit `1` with a one-line stderr hint (fetch the branch or widen `fetch-depth` on shallow clones).
 
 ## Agent Workflow
+
+See the [agent integration tutorial](./docs/tutorials/agent-integration.md) for skills install, snapshot conventions, and the refactor-loop workflow.
 
 ```
 unilyze (measure) -> unilyze query (evidence) -> fix -> unilyze diff (verify)
