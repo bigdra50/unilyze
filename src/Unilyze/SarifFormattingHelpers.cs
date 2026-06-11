@@ -79,17 +79,29 @@ static class SarifFormattingHelpers
             resultObj["locations"] = new JsonArray { location };
 
         resultObj["properties"] = BuildProperties(typeMetrics, smell);
+
+        var suppressions = new JsonArray();
+        if (smell.Suppressed == true)
+        {
+            suppressions.Add(new JsonObject
+            {
+                ["kind"] = "inSource",
+                ["justification"] = smell.SuppressionJustification
+                    ?? "Suppressed via unilyze-disable comment",
+            });
+        }
+
         if (smell.Baselined == true)
         {
-            resultObj["suppressions"] = new JsonArray
+            suppressions.Add(new JsonObject
             {
-                new JsonObject
-                {
-                    ["kind"] = "external",
-                    ["justification"] = "Baselined in .unilyze/baseline.json",
-                }
-            };
+                ["kind"] = "external",
+                ["justification"] = "Baselined in .unilyze/baseline.json",
+            });
         }
+
+        if (suppressions.Count > 0)
+            resultObj["suppressions"] = suppressions;
 
         return resultObj;
     }

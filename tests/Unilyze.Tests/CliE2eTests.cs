@@ -1120,6 +1120,38 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Trend_HtmlOutput_WritesSelfContainedFile()
+    {
+        var snapshot = JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], []),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(Path.Combine(_tempDir, "snapshot.json"), snapshot);
+
+        var htmlPath = Path.Combine(_tempDir, "trend.html");
+        var (exitCode, _, stderr) = Run("trend", _tempDir, "-o", htmlPath, "--no-open");
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(htmlPath));
+        var html = File.ReadAllText(htmlPath);
+        Assert.Contains("<svg", html);
+        Assert.DoesNotContain("<script src=", html);
+        Assert.DoesNotContain("unpkg.com", html);
+        Assert.Contains("Written to", stderr);
+    }
+
+    [Fact]
+    public void Trend_UnsupportedFormat_ExitsUsageError()
+    {
+        var snapshot = JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], []),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(Path.Combine(_tempDir, "snapshot.json"), snapshot);
+
+        var (exitCode, _, stderr) = Run("trend", _tempDir, "-f", "sarif");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Trend does not support SARIF", stderr);
+    }
+
+    [Fact]
     public void Calibrate_Help_ExitsZero()
     {
         var (exitCode, stdout, _) = Run("calibrate", "--help");

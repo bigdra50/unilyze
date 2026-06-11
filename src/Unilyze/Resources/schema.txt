@@ -16,8 +16,8 @@ analyze (unilyze -f json):
   .projectKind                         string?  Detected project kind: "unity",
                                                 "dotnet", or "unknown"; null in
                                                 older snapshots.
-  .suppressedCount                     int?     Count of smells suppressed by --baseline;
-                                                present only when a baseline file was applied.
+  .suppressedCount                     int?     Count of smells suppressed by inline comments and/or --baseline;
+                                                present only when at least one smell was suppressed.
   .assemblies[]                        object   Assembly info
     .name                              string   Assembly name (from .asmdef)
     .metrics.abstractness              float    Abstractness (0.0-1.0)
@@ -74,6 +74,7 @@ typeMetrics[]:
     .methodName                        string?  Affected method (null for type-level)
     .line                              int?     Source line of the occurrence (optional; null for type-level smells)
     .baselined                         bool?    true when suppressed by --baseline (optional; omitted when absent)
+    .suppressed                        bool?    true when suppressed by an inline unilyze-disable comment (optional)
   .methods[]                           object   Per-method metrics
 
 methods[]:
@@ -147,11 +148,18 @@ calibrate (unilyze calibrate):
 trend (unilyze trend):
   .snapshots[]                         object   Per-snapshot data
     .analyzedAt                        string   Timestamp
+    .projectPath                       string   Analyzed project path
     .typeCount                         int      Number of types
     .averageCodeHealth                 float    Avg CodeHealth
+    .minCodeHealth                     float    Min CodeHealth across types
     .codeSmellCount                    int      Total code smells
-    .highComplexityTypeCount           int      Types with CycCC>=15 or CogCC>=15
+    .highComplexityTypeCount           int      Types with CodeHealth < 4.0
     .averageCognitiveComplexity        float    Project-wide avg CogCC
+    .sourceFile                        string   Snapshot JSON file name (when read from a directory)
+    .metricsVersion                    int      Metric definition version from snapshot
+    .profile                           string   Smell-threshold profile from snapshot
+    .warningSmellCount                 int      Warning-severity smell count
+    .criticalSmellCount                int      Critical-severity smell count
   .summary                             object
     .snapshotCount                     int      Number of snapshots
     .codeHealthDelta                   float    First-to-last health change

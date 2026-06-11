@@ -10,7 +10,12 @@ public sealed record TrendSnapshot(
     double MinCodeHealth,
     int CodeSmellCount,
     int HighComplexityTypeCount,
-    double AverageCognitiveComplexity);
+    double AverageCognitiveComplexity,
+    string? SourceFile = null,
+    int MetricsVersion = 0,
+    string? Profile = null,
+    int WarningSmellCount = 0,
+    int CriticalSmellCount = 0);
 
 public sealed record TrendSummary(
     int SnapshotCount,
@@ -23,7 +28,10 @@ public sealed record TrendResult(
 
 public static class TrendAnalyzer
 {
-    public static TrendSnapshot ToSnapshot(AnalysisResult result)
+    public static TrendSnapshot ToSnapshot(AnalysisResult result) =>
+        ToSnapshot(result, sourceFile: null);
+
+    public static TrendSnapshot ToSnapshot(AnalysisResult result, string? sourceFile)
     {
         var typeMetrics = result.TypeMetrics ?? [];
 
@@ -31,6 +39,10 @@ public static class TrendAnalyzer
         var avgHealth = typeCount > 0 ? Math.Round(typeMetrics.Average(t => t.CodeHealth), 1) : 0.0;
         var minHealth = typeCount > 0 ? Math.Round(typeMetrics.Min(t => t.CodeHealth), 1) : 0.0;
         var smellCount = typeMetrics.Sum(t => t.CodeSmells?.Count ?? 0);
+        var warningCount = typeMetrics.Sum(t =>
+            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning) ?? 0);
+        var criticalCount = typeMetrics.Sum(t =>
+            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Critical) ?? 0);
         var highComplexity = typeMetrics.Count(t => t.CodeHealth < 4.0);
         var avgCogCC = typeCount > 0
             ? Math.Round(typeMetrics.Average(t => t.AverageCognitiveComplexity), 1)
@@ -44,20 +56,28 @@ public static class TrendAnalyzer
             minHealth,
             smellCount,
             highComplexity,
-            avgCogCC);
+            avgCogCC,
+            sourceFile,
+            result.MetricsVersion,
+            result.Profile,
+            warningCount,
+            criticalCount);
     }
 
-    public static TrendResult Analyze(IReadOnlyList<AnalysisResult> results)
+    public static TrendResult Analyze(IReadOnlyList<AnalysisResult> results) =>
+        AnalyzeSnapshots(results.Select(r => ((string?)null, r)).ToList());
+
+    public static TrendResult AnalyzeSnapshots(IReadOnlyList<(string? SourceFile, AnalysisResult Result)> entries)
     {
-        if (results.Count == 0)
+        if (entries.Count == 0)
         {
             return new TrendResult(
                 [],
                 new TrendSummary(0, 0.0, 0));
         }
 
-        var snapshots = results
-            .Select(ToSnapshot)
+        var snapshots = entries
+            .Select(e => ToSnapshot(e.Result, e.SourceFile))
             .OrderBy(s => s.AnalyzedAt)
             .ToList();
 

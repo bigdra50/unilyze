@@ -212,6 +212,9 @@ Configuration:
     Project: <project-root>/.unilyze.json
   Example .unilyze.json:
     { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"], "profile": "unity" }
+  Inline suppression (see README "Suppressing findings"):
+    // unilyze-disable-next-line UNI014 -- reason
+    // unilyze-disable UNI002
 
 Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')

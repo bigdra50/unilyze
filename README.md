@@ -64,6 +64,7 @@ unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
 unilyze diff <before.json> <after.json> -o diff.html --changed-only
 unilyze hotspot -p ~/MyUnityProject                # Git churn × complexity
 unilyze trend <dir-of-jsons>                       # Quality trend across snapshots
+unilyze trend <dir-of-jsons> -o trend.html         # Self-contained HTML trend charts
 unilyze query --worst 5 -i snapshot.json           # Per-type evidence packs
 unilyze calibrate <dir-of-jsons> -o thresholds.json  # Derive threshold candidates
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
@@ -160,6 +161,33 @@ Settings merge additively from global config (`~/.config/unilyze/config.json`), 
 ```
 
 `UNI009` off disables cyclic-dependency detection entirely. Other rule IDs map to smell kinds and filter JSON, SARIF, badge, and statusline output. Threshold keys are case-insensitive; defaults are in [docs/metrics.md](./docs/metrics.md) (drift-tested) and `unilyze metrics`.
+
+### Suppressing findings
+
+Three suppression mechanisms compose without double-counting:
+
+| Mechanism | Scope | When to use |
+|-----------|-------|-------------|
+| Inline comment | Single occurrence | Justified one-off (intentional facade, measured-safe boxing site) |
+| `"rules": { "UNI011": "off" }` | Rule-wide | Rule is noisy for the whole project |
+| `--baseline` / `baseline create` | Project snapshot | Brownfield freeze; gate on new violations only |
+
+Inline directives (ESLint-style):
+
+```csharp
+// unilyze-disable-next-line UNI014 -- top-level guard, intentional
+catch { }
+
+// unilyze-disable UNI002
+void MeasuredLongMethod() { /* ... */ }
+```
+
+- `unilyze-disable-next-line` suppresses listed rules on the **following line** (detector smells with line numbers).
+- `unilyze-disable` in the **leading trivia** of a type or method declaration suppresses listed rules for that declaration's scope.
+- Omit rule IDs to suppress all rules in scope. Unknown rule IDs and `UNI009` print a stderr warning and are ignored.
+- Suppressed smells stay in JSON with `"suppressed": true`, increment root `suppressedCount`, and appear in SARIF with `suppressions` `{ "kind": "inSource" }`. They are excluded from statusline, badge gates, and diff regression counts.
+
+**Known constraints:** metric-based smells (UNI001–UNI008, UNI010) match directives by method or type name, so a directive on one overload suppresses the smell for all same-name overloads; detector smells (UNI011–UNI023) use line positions and distinguish overloads. For partial types, place type-scope directives on the declaration indexed by unilyze (see [docs/metrics.md](./docs/metrics.md)). `UNI009` (cyclic dependency) is config-only.
 
 ### Assembly mapping
 
