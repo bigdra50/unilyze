@@ -7,7 +7,7 @@ internal static class ProgramHelpers
     public static readonly string[] TopLevelCommands =
     [
         "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
-        "baseline", "calibrate", "triage", "skills", "help", "version",
+        "baseline", "calibrate", "triage", "mcp", "skills", "help", "version",
     ];
 
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
@@ -124,6 +124,11 @@ internal static class ProgramHelpers
     };
 
     static readonly HashSet<string> SchemaBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> McpBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help",
     };
@@ -351,6 +356,19 @@ internal static class ProgramHelpers
 
         var extra = args.FirstOrDefault(a => !a.StartsWith('-'));
         return extra is null ? 0 : ReportUnknown("subcommand", extra, ["schema"]);
+    }
+
+    public static int ValidateMcpArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, NoValueOptions, McpBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, McpBooleanOptions);
+
+        var extra = FindUnexpectedPositional(args, NoValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["mcp"]);
     }
 
     public static int ValidateBaselineArgs(string[] args)
