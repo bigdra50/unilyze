@@ -48,7 +48,7 @@ public sealed class AnalysisPipelineTests : IDisposable
         var resolved = BaseTypeResolver.ResolveTypeRelationships(
             analyzed.Types,
             analyzed.SyntaxTrees,
-            new CompilationResult(compilation, AnalysisLevel.CoreEngine));
+            new CompilationResult(compilation, AnalysisLevel.Core));
 
         var myBuilder = resolved.Single(t => t.Name == "MyBuilder");
         Assert.Equal("IBuilder", myBuilder.BaseType);

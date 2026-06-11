@@ -14,13 +14,13 @@ internal static class AnalysisLevelOption
         switch (value.Trim().ToLowerInvariant())
         {
             case "syntax":
-                level = AnalysisLevel.SyntaxOnly;
+                level = AnalysisLevel.Syntax;
                 return true;
             case "core":
-                level = AnalysisLevel.CoreEngine;
+                level = AnalysisLevel.Core;
                 return true;
             case "full":
-                level = AnalysisLevel.FullEngine;
+                level = AnalysisLevel.Full;
                 return true;
             case "complete":
                 level = AnalysisLevel.Complete;
@@ -30,13 +30,24 @@ internal static class AnalysisLevelOption
         }
     }
 
+    // External JSON/badge/statusline vocabulary (issue 16/72): keep legacy names stable.
+    public static string ToExternalName(AnalysisLevel level) =>
+        level switch
+        {
+            AnalysisLevel.Syntax => "SyntaxOnly",
+            AnalysisLevel.Core => "CoreEngine",
+            AnalysisLevel.Full => "FullEngine",
+            AnalysisLevel.Complete => "Complete",
+            _ => level.ToString()
+        };
+
     // Compact statusline marker shown when the level is below Complete (issue 16).
     public static string? StatuslineMarker(string? analysisLevel) =>
         analysisLevel switch
         {
-            nameof(AnalysisLevel.SyntaxOnly) => "[syntax]",
-            nameof(AnalysisLevel.CoreEngine) => "[core]",
-            nameof(AnalysisLevel.FullEngine) => "[full]",
+            "SyntaxOnly" => "[syntax]",
+            "CoreEngine" => "[core]",
+            "FullEngine" => "[full]",
             _ => null
         };
 }

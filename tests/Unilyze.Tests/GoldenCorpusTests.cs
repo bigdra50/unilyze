@@ -31,6 +31,7 @@ public sealed class GoldenCorpusTests
         var root = JsonNode.Parse(actual)?.AsObject()
             ?? throw new InvalidOperationException("Failed to parse normalized golden JSON.");
         Assert.Equal("CoreEngine", root["analysisLevel"]?.GetValue<string>());
+        Assert.Equal("unity", root["projectKind"]?.GetValue<string>());
 
         if (IsUpdateRequested())
         {

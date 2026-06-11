@@ -464,6 +464,20 @@ internal static class ProgramHelpers
         return Path.GetFullPath(path);
     }
 
+    public static string ResolveProjectKind(string projectRoot)
+    {
+        if (File.Exists(Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt")))
+            return "unity";
+
+        if (CsprojParser.DiscoverCsprojFiles(projectRoot).Count > 0)
+            return "dotnet";
+
+        if (Directory.EnumerateFiles(projectRoot, "*.sln", SearchOption.AllDirectories).Any())
+            return "dotnet";
+
+        return "unknown";
+    }
+
     public static int WriteOutput(string content, string? outputPath)
     {
         if (outputPath != null)

@@ -54,18 +54,17 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("compile");
         var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap, log);
-        var analysisLevel = compilationResult.Level.ToString();
+        var analysisLevel = AnalysisLevelOption.ToExternalName(compilationResult.Level);
 
         // The level is always reported on stderr (issue 16: previously only when != SyntaxOnly).
         log.Info($"Analysis level: {analysisLevel}");
 
-        var isUnityProject = File.Exists(
-            Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt"));
+        var projectKind = ProgramHelpers.ResolveProjectKind(projectRoot);
 
         // A Unity project that silently fell back to SyntaxOnly means DLL resolution
         // failed and semantic metrics (boxing/CBO/DIT/...) are understated (issue 16).
-        if (isUnityProject && compilationResult.Level == AnalysisLevel.SyntaxOnly
-            && requestedLevel is not AnalysisLevel.SyntaxOnly)
+        if (projectKind == "unity" && compilationResult.Level == AnalysisLevel.Syntax
+            && requestedLevel is not AnalysisLevel.Syntax)
         {
             log.Warning(
                 "Warning: Unity project detected but Unity DLLs could not be resolved; "
@@ -145,7 +144,8 @@ internal static class AnalysisPipeline
             analysisLevel,
             cycles.Count > 0 ? cycles : null,
             AnalysisResult.CurrentMetricsVersion,
-            ToolVersionInfo.Current);
+            ToolVersionInfo.Current,
+            ProjectKind: projectKind);
     }
 
     static CsprojInfo? ResolveCsprojInfo(

@@ -21,6 +21,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - `SmellThresholds` registry as single source for code-smell detection thresholds ([#32](https://github.com/bigdra50/unilyze/issues/32)); drift-guard test keeps `docs/metrics.md` in sync
 - Default exclude directories (`Library/`, `Temp/`, `obj/`, `bin/`, `.git/`, `Logs/`, `UserSettings/`) for `.cs` enumeration and asmdef discovery, with `disableDefaultExcludes` and `disableGeneratedCodeExcludes` escape hatches in `.unilyze.json` ([#31](https://github.com/bigdra50/unilyze/issues/31))
 - `statusline --verbose` prints the previously-swallowed analysis exception to stderr, and `statusline --quiet` suppresses info lines while keeping warnings; `AnalysisPipeline` now shows per-phase progress on stderr when stderr is a TTY ([#76](https://github.com/bigdra50/unilyze/issues/76))
+- `projectKind` field on JSON output root (`unity` | `dotnet` | `unknown`) and Unity-agnostic `analysisLevel` stage names (`Syntax`/`Core`/`Full`/`Complete`); `--level syntax|core|full|complete` CLI tokens unchanged ([#72](https://github.com/bigdra50/unilyze/issues/72))
 
 ### Changed
 

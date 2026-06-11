@@ -13,7 +13,8 @@ public sealed record AnalysisResult(
     string? AnalysisLevel = null,
     IReadOnlyList<CyclicDependency>? CyclicDependencies = null,
     int MetricsVersion = 0,
-    string? ToolVersion = null)
+    string? ToolVersion = null,
+    string? ProjectKind = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.
