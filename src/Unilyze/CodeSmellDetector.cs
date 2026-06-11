@@ -22,7 +22,9 @@ public enum CodeSmellKind
     ExpensiveUnityApiInHotPath,
     LinqInHotPath,
     CollectionAllocationInHotPath,
-    StringConcatenationInHotPath
+    StringConcatenationInHotPath,
+    AsyncVoidMethod,
+    BlockingTaskWait
 }
 
 public enum SmellSeverity
