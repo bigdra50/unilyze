@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `trend -f html` / `-o trend.html`: self-contained HTML output with inline-SVG charts for CodeHealth avg/min, warning/critical smell counts, and type metrics; snapshot `sourceFile` provenance, metricsVersion/profile crossing markers, and a two-click diff command builder ([#129](https://github.com/bigdra50/unilyze/issues/129))
 - Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - Per-type `role` field and optional `informationalCount` on `typeMetrics` (unity profile records `LowCohesion` as informational instead of a warning smell, per Palomba ICSME 2014); root `profile` field when a non-default profile is active; `diff`/`trend` warn on profile mismatch ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - MinVer-based versioning: git tags are the single source of truth for package, assembly, and CLI version output; semver tag push now creates a GitHub Release with the matching `CHANGELOG.md` section as its body ([#93](https://github.com/bigdra50/unilyze/issues/93))

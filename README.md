@@ -64,6 +64,7 @@ unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
 unilyze diff <before.json> <after.json> -o diff.html --changed-only
 unilyze hotspot -p ~/MyUnityProject                # Git churn × complexity
 unilyze trend <dir-of-jsons>                       # Quality trend across snapshots
+unilyze trend <dir-of-jsons> -o trend.html         # Self-contained HTML trend charts
 unilyze query --worst 5 -i snapshot.json           # Per-type evidence packs
 unilyze calibrate <dir-of-jsons> -o thresholds.json  # Derive threshold candidates
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
