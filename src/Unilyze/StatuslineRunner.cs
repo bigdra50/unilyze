@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace Unilyze;
 
@@ -9,6 +10,20 @@ internal static class StatuslineRunner
 {
     const string CachePrefix = "unilyze-sl-";
     const int DefaultRefreshSeconds = 60;
+
+    sealed record StatuslineRequest(
+        bool Verbose,
+        bool Quiet,
+        bool BackgroundRefresh,
+        string Path,
+        int RefreshSeconds,
+        string? BaselinePath,
+        AnalysisLevel? RequestedLevel)
+    {
+        public ConsoleAnalysisLogSink CreateLogSink() => new(quiet: Quiet);
+    }
+
+    sealed record StatuslineCachePaths(string TxtPath, string LockPath);
 
     public static int Run(string[] args)
     {
@@ -19,12 +34,26 @@ internal static class StatuslineRunner
         if (usageError != 0)
             return usageError;
 
+        if (!TryParseRequest(args, out var request))
+            return 1;
+
+        if (!TryResolveFullPath(request.Path, request.Verbose, out var fullPath))
+            return 1;
+
+        var paths = CreateCachePaths(fullPath);
+
+        return request.BackgroundRefresh
+            ? RunBackgroundRefresh(fullPath, request, paths.TxtPath)
+            : RunForeground(fullPath, request, paths);
+    }
+
+    static bool TryParseRequest(string[] args, out StatuslineRequest request)
+    {
         var opts = ProgramHelpers.ParseOptions(args);
 
         var verbose = opts.ContainsKey("--verbose");
         var quiet = opts.ContainsKey("--quiet");
         var backgroundRefresh = opts.ContainsKey("--background-refresh");
-        var log = new ConsoleAnalysisLogSink(quiet: quiet);
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
@@ -35,62 +64,97 @@ internal static class StatuslineRunner
         if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
         {
             Console.Error.WriteLine("--baseline requires a file path.");
-            return 1;
+            request = null!;
+            return false;
         }
 
         if (!TryParseRequestedLevel(opts.GetValueOrDefault("--level"), out var requestedLevel))
-            return 1;
+        {
+            request = null!;
+            return false;
+        }
 
-        string fullPath;
+        request = new StatuslineRequest(
+            verbose,
+            quiet,
+            backgroundRefresh,
+            path,
+            refreshSeconds,
+            baselinePath,
+            requestedLevel);
+        return true;
+    }
+
+    static bool TryResolveFullPath(string path, bool verbose, out string fullPath)
+    {
         try
         {
             fullPath = ProgramHelpers.ResolveProjectRoot(path);
+            return true;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException)
         {
             if (verbose)
                 PrintVerboseException(ex);
-            return 1;
+            fullPath = null!;
+            return false;
         }
+    }
 
+    static StatuslineCachePaths CreateCachePaths(string fullPath)
+    {
         var cacheHash = ComputePathHash(fullPath);
         var cacheDir = Path.GetTempPath();
-        var cacheTxtPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt");
-        var lockPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.lock");
+        return new StatuslineCachePaths(
+            Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt"),
+            Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.lock"));
+    }
 
-        if (backgroundRefresh)
-            return RunBackgroundRefresh(fullPath, requestedLevel, refreshSeconds, baselinePath, cacheTxtPath);
-
-        if (TryServeFreshCache(cacheTxtPath, refreshSeconds))
+    static int RunForeground(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
+    {
+        if (TryServeFreshCache(paths.TxtPath, request.RefreshSeconds))
             return 0;
 
         FileStream? lockStream;
         try
         {
-            lockStream = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            lockStream = new FileStream(paths.LockPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
         }
         catch (IOException)
         {
-            return ServeStaleCacheOr(1, cacheTxtPath);
+            return ServeStaleCacheOr(1, paths.TxtPath);
         }
 
+        var log = request.CreateLogSink();
         try
         {
-            return RunAnalysisAndServe(fullPath, requestedLevel, log, cacheTxtPath, baselinePath);
+            return RunAnalysisAndServe(fullPath, request, log, paths.TxtPath);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or DirectoryNotFoundException or JsonException)
         {
-            if (verbose)
+            if (request.Verbose)
                 PrintVerboseException(ex);
             return ServeStaleCacheOr(
                 1,
-                cacheTxtPath,
-                verboseNote: verbose ? "Serving stale cache after analysis failure." : null);
+                paths.TxtPath,
+                verboseNote: request.Verbose ? "Serving stale cache after analysis failure." : null);
         }
         finally
         {
             lockStream.Dispose();
-            try { File.Delete(lockPath); } catch { /* best-effort cleanup */ }
+            TryDeleteLockFile(paths.LockPath);
+        }
+    }
+
+    static void TryDeleteLockFile(string lockPath)
+    {
+        try
+        {
+            File.Delete(lockPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // best-effort cleanup
         }
     }
 
@@ -117,79 +181,94 @@ internal static class StatuslineRunner
             Console.Error.WriteLine(ex.StackTrace);
     }
 
-    static int RunBackgroundRefresh(
-        string fullPath,
-        AnalysisLevel? requestedLevel,
-        int refreshSeconds,
-        string? baselinePath,
-        string cacheTxtPath)
+    static int RunBackgroundRefresh(string fullPath, StatuslineRequest request, string cacheTxtPath)
     {
-        if (TryServeFreshCache(cacheTxtPath, refreshSeconds))
+        if (TryServeFreshCache(cacheTxtPath, request.RefreshSeconds))
             return 0;
 
         if (File.Exists(cacheTxtPath))
             Console.Write(File.ReadAllText(cacheTxtPath));
 
-        TrySpawnBackgroundRefresh(fullPath, refreshSeconds, requestedLevel, baselinePath);
+        TrySpawnBackgroundRefresh(fullPath, request);
         return 0;
     }
 
-    static void TrySpawnBackgroundRefresh(
-        string fullPath,
-        int refreshSeconds,
-        AnalysisLevel? requestedLevel,
-        string? baselinePath)
+    static void TrySpawnBackgroundRefresh(string fullPath, StatuslineRequest request)
     {
-        var childArgs = new List<string> { "statusline", "-p", fullPath, "--refresh", refreshSeconds.ToString() };
-        if (requestedLevel is { } level)
+        var childArgs = BuildBackgroundRefreshArgs(fullPath, request);
+        var (host, args) = ResolveSelfInvocation(childArgs);
+
+        try
+        {
+            var proc = StartDetachedProcess(host, args);
+            if (proc is null)
+                return;
+
+            DrainProcessInBackground(proc);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
+        {
+            // Best-effort background refresh; foreground caller must never block.
+        }
+    }
+
+    static List<string> BuildBackgroundRefreshArgs(string fullPath, StatuslineRequest request)
+    {
+        var childArgs = new List<string>
+        {
+            "statusline",
+            "-p",
+            fullPath,
+            "--refresh",
+            request.RefreshSeconds.ToString(),
+        };
+
+        if (request.RequestedLevel is { } level)
         {
             childArgs.Add("--level");
             childArgs.Add(LevelToCliToken(level));
         }
 
-        if (baselinePath is not null)
+        if (request.BaselinePath is not null)
         {
             childArgs.Add("--baseline");
-            childArgs.Add(baselinePath);
+            childArgs.Add(request.BaselinePath);
         }
 
-        var (host, args) = ResolveSelfInvocation(childArgs);
+        return childArgs;
+    }
 
-        try
+    static Process? StartDetachedProcess(string host, IReadOnlyList<string> args)
+    {
+        var psi = new ProcessStartInfo
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = host,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
-            foreach (var arg in args)
-                psi.ArgumentList.Add(arg);
+            FileName = host,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        foreach (var arg in args)
+            psi.ArgumentList.Add(arg);
 
-            var proc = Process.Start(psi);
-            if (proc is null)
-                return;
+        return Process.Start(psi);
+    }
 
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await proc.StandardOutput.ReadToEndAsync();
-                    await proc.StandardError.ReadToEndAsync();
-                    await proc.WaitForExitAsync();
-                }
-                finally
-                {
-                    proc.Dispose();
-                }
-            });
-        }
-        catch
+    static void DrainProcessInBackground(Process proc)
+    {
+        _ = Task.Run(async () =>
         {
-            // Best-effort background refresh; foreground caller must never block.
-        }
+            try
+            {
+                await proc.StandardOutput.ReadToEndAsync();
+                await proc.StandardError.ReadToEndAsync();
+                await proc.WaitForExitAsync();
+            }
+            finally
+            {
+                proc.Dispose();
+            }
+        });
     }
 
     static (string Host, IReadOnlyList<string> Args) ResolveSelfInvocation(IReadOnlyList<string> args)
@@ -198,6 +277,13 @@ internal static class StatuslineRunner
         if (!string.IsNullOrEmpty(processPath) && !IsDotnetHost(processPath))
             return (processPath, args);
 
+        return ResolveDotnetSelfInvocation(processPath, args);
+    }
+
+    static (string Host, IReadOnlyList<string> Args) ResolveDotnetSelfInvocation(
+        string? processPath,
+        IReadOnlyList<string> args)
+    {
         var entryAssembly = Assembly.GetEntryAssembly()?.Location;
         if (string.IsNullOrEmpty(entryAssembly))
             entryAssembly = typeof(StatuslineRunner).Assembly.Location;
@@ -250,15 +336,29 @@ internal static class StatuslineRunner
 
     static int RunAnalysisAndServe(
         string fullPath,
-        AnalysisLevel? requestedLevel,
+        StatuslineRequest request,
         ConsoleAnalysisLogSink log,
-        string cacheTxtPath,
-        string? baselinePath)
+        string cacheTxtPath)
+    {
+        var built = BuildAnalysisResult(fullPath, request, log);
+        if (built is null)
+            return 1;
+
+        var formatted = FormatStatusline(built.Value.Result, built.Value.ExcludeBaselined);
+        File.WriteAllText(cacheTxtPath, formatted);
+        Console.Write(formatted);
+        return 0;
+    }
+
+    static (AnalysisResult Result, bool ExcludeBaselined)? BuildAnalysisResult(
+        string fullPath,
+        StatuslineRequest request,
+        ConsoleAnalysisLogSink log)
     {
         var config = UnilyzeConfig.LoadMerged(fullPath);
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
-            fullPath, null, null, config.ExcludeDirs, requestedLevel,
+            fullPath, null, null, config.ExcludeDirs, request.RequestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             logSink: log,
@@ -266,18 +366,15 @@ internal static class StatuslineRunner
             disabledRuleKinds: resolved.DisabledRuleKinds,
             disableCycles: resolved.DisableCycles);
 
-        var effectiveBaseline = baselinePath ?? config.Baseline;
+        var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
-        if (baselineError is 1)
-            return 1;
+        return baselineError is 1 ? null : (result, effectiveBaseline is not null);
+    }
 
-        var excludeBaselined = effectiveBaseline is not null;
+    static string FormatStatusline(AnalysisResult result, bool excludeBaselined)
+    {
         var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
-        var formatted = StatuslineFormatter.Format(summary);
-
-        File.WriteAllText(cacheTxtPath, formatted);
-        Console.Write(formatted);
-        return 0;
+        return StatuslineFormatter.Format(summary);
     }
 
     static string ComputePathHash(string path)
@@ -292,54 +389,84 @@ internal static class StatuslineRunner
     {
         var tempDir = Path.GetTempPath();
         return $$"""
-            unilyze statusline - Output compact code health for status line display
+            {{BuildUsageHeader()}}
 
-            Usage:
-              unilyze statusline                         Analyze current directory
-              unilyze statusline -p <path>               Analyze specified project
-              unilyze statusline -p <path> --refresh 30  Custom cache interval (seconds)
+            {{BuildUsageOptionsSection()}}
 
-            Options:
-              -p, --path     Project root (default: .)
-              --refresh      Cache refresh interval in seconds (default: 60)
-              --level        Pin analysis level: syntax, core, full, complete
-              --baseline     Suppress known smells from a baseline file in smell counts
-              --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
-              --quiet        Suppress info lines on stderr (warnings still shown)
-              --background-refresh
-                             Never block on analysis: return cached output immediately and refresh
-                             stale or missing caches in a detached background process
-              -h, --help     Show this help
+            {{BuildUsageProgressSection()}}
 
-            Progress:
-              Per-phase progress is shown on stderr when stderr is a TTY.
+            {{BuildUsageOutputSection()}}
 
-            Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
-              CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown
-              MI:<n>         = Average Maintainability Index (integer), always shown
-              <n>smells      = Warning code smells count, always shown
-              🔴<n>          = Critical code smells count (hidden if 0)
-              📦<n>          = Boxing allocation count (hidden if 0)
-              ♻<n>           = Cyclic dependency count (hidden if 0)
-              [level]        = Analysis level marker, shown only below Complete
-                               ([syntax] / [core] / [full])
+            {{BuildUsageColorSection()}}
 
-            Color coding:
-              Code Health (avg and min): green (>=8.0), yellow (>=5.0), red (<5.0)
-              Maintainability Index: green (>=80), yellow (>=60), red (<60)
-              Warnings (smells): yellow
-              Criticals: red
-              Boxing: cyan
-              Cyclic dependencies: red
-              Level marker: yellow
-
-            Cache:
-              Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
-              Use --refresh to control cache lifetime (default: 60 seconds)
-              With --background-refresh, a missing cache prints nothing (one empty status line
-              render) and exits immediately while analysis runs in the background
+            {{BuildUsageCacheSection(tempDir)}}
             """;
     }
+
+    static string BuildUsageHeader() =>
+        """
+        unilyze statusline - Output compact code health for status line display
+
+        Usage:
+          unilyze statusline                         Analyze current directory
+          unilyze statusline -p <path>               Analyze specified project
+          unilyze statusline -p <path> --refresh 30  Custom cache interval (seconds)
+        """;
+
+    static string BuildUsageOptionsSection() =>
+        """
+        Options:
+          -p, --path     Project root (default: .)
+          --refresh      Cache refresh interval in seconds (default: 60)
+          --level        Pin analysis level: syntax, core, full, complete
+          --baseline     Suppress known smells from a baseline file in smell counts
+          --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
+          --quiet        Suppress info lines on stderr (warnings still shown)
+          --background-refresh
+                         Never block on analysis: return cached output immediately and refresh
+                         stale or missing caches in a detached background process
+          -h, --help     Show this help
+        """;
+
+    static string BuildUsageProgressSection() =>
+        """
+        Progress:
+          Per-phase progress is shown on stderr when stderr is a TTY.
+        """;
+
+    static string BuildUsageOutputSection() =>
+        """
+        Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
+          CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown
+          MI:<n>         = Average Maintainability Index (integer), always shown
+          <n>smells      = Warning code smells count, always shown
+          🔴<n>          = Critical code smells count (hidden if 0)
+          📦<n>          = Boxing allocation count (hidden if 0)
+          ♻<n>           = Cyclic dependency count (hidden if 0)
+          [level]        = Analysis level marker, shown only below Complete
+                           ([syntax] / [core] / [full])
+        """;
+
+    static string BuildUsageColorSection() =>
+        """
+        Color coding:
+          Code Health (avg and min): green (>=8.0), yellow (>=5.0), red (<5.0)
+          Maintainability Index: green (>=80), yellow (>=60), red (<60)
+          Warnings (smells): yellow
+          Criticals: red
+          Boxing: cyan
+          Cyclic dependencies: red
+          Level marker: yellow
+        """;
+
+    static string BuildUsageCacheSection(string tempDir) =>
+        $$"""
+        Cache:
+          Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
+          Use --refresh to control cache lifetime (default: 60 seconds)
+          With --background-refresh, a missing cache prints nothing (one empty status line
+          render) and exits immediately while analysis runs in the background
+        """;
 
     static int PrintUsage()
     {
