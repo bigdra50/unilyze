@@ -21,8 +21,7 @@ internal static class AnalysisPipeline
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
-            excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig);
-            excludeGeneratedCode, applyAnyDepthExcludes, logSink, analysisConfig,
+            excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig,
             maxParallelism);
         return Build(options);
     }

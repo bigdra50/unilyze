@@ -103,7 +103,6 @@ internal static class QueryRunner
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
                 includeApiSurface: includeApiSurface,
-                analysisConfig: resolved);
                 analysisConfig: resolved,
                 maxParallelism: config.MaxParallelism);
         }
