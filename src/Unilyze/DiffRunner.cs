@@ -280,10 +280,28 @@ internal static class DiffRunner
             analysisConfig: resolved);
     }
 
+    static AnalysisResult ApplyWorkingTreeTriage(AnalysisResult result, string projectPath)
+    {
+        if (!Directory.Exists(projectPath))
+            return result;
+
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(projectPath);
+
+        var config = UnilyzeConfig.LoadMerged(projectRoot);
+        var triagePath = TriageApplication.ResolvePath(new Dictionary<string, string>(), config, projectRoot);
+        if (triagePath is null)
+            return result;
+
+        var triageError = TriageApplication.TryApply(result, triagePath, out var updated);
+        return triageError is 1 ? result : updated;
+    }
+
     static int RunComparison(DiffRunOptions options)
     {
         var before = LoadBeforeSnapshot(options);
         var (after, afterJson) = LoadAfterSnapshot(options);
+        before = ApplyWorkingTreeTriage(before, after.ProjectPath);
+        after = ApplyWorkingTreeTriage(after, after.ProjectPath);
 
         WarnIfAnalysisLevelsDiffer(before, after);
         WarnIfProfilesDiffer(before, after);

@@ -25,7 +25,9 @@ internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("profile")]
     string? Profile = null,
     [property: JsonPropertyName("baseline")]
-    string? Baseline = null)
+    string? Baseline = null,
+    [property: JsonPropertyName("triage")]
+    string? Triage = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
 
@@ -112,7 +114,8 @@ internal sealed record UnilyzeConfig(
             MergeSmells(lower.Smells, higher.Smells),
             MergeRules(lower.Rules, higher.Rules),
             higher.Profile ?? lower.Profile,
-            higher.Baseline ?? lower.Baseline);
+            higher.Baseline ?? lower.Baseline,
+            higher.Triage ?? lower.Triage);
     }
 
     static IReadOnlyList<string>? MergeExcludeDirs(

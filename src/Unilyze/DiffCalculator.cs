@@ -156,8 +156,8 @@ public static class DiffCalculator
     {
         if (before is null && after is null) return null;
 
-        var beforeSmells = before ?? [];
-        var afterSmells = after ?? [];
+        var beforeSmells = (before ?? []).Where(SmellAggregation.CountsForDiff).ToList();
+        var afterSmells = (after ?? []).Where(SmellAggregation.CountsForDiff).ToList();
 
         var beforeKeys = new HashSet<string>(beforeSmells.Select(SmellKey));
         var afterKeys = new HashSet<string>(afterSmells.Select(SmellKey));

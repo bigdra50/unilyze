@@ -13,6 +13,9 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Finding `id` on every code smell in JSON output (byte-equal to SARIF `unilyzeFingerprint/v1`), `unilyze triage` subcommand (`set`/`list`/`prune`) persisting verdicts to `.unilyze/triage.json`, and per-smell `triage` field when verdicts apply ([#126](https://github.com/bigdra50/unilyze/issues/126))
+- `query` evidence packs include finding `id`; `--triage`/`--no-triage` CLI flags and optional `"triage"` config key ([#126](https://github.com/bigdra50/unilyze/issues/126))
+- **[metrics]** `false-positive` and `wontfix` triage verdicts are excluded from badge/statusline gates and diff smell regressions; `false-positive` is also excluded from trend `codeSmellCount`; `wontfix` remains visible in trend as accepted debt ([#126](https://github.com/bigdra50/unilyze/issues/126))
 - Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - Per-type `role` field and optional `informationalCount` on `typeMetrics` (unity profile records `LowCohesion` as informational instead of a warning smell, per Palomba ICSME 2014); root `profile` field when a non-default profile is active; `diff`/`trend` warn on profile mismatch ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - MinVer-based versioning: git tags are the single source of truth for package, assembly, and CLI version output; semver tag push now creates a GitHub Release with the matching `CHANGELOG.md` section as its body ([#93](https://github.com/bigdra50/unilyze/issues/93))

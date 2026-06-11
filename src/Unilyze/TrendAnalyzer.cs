@@ -30,7 +30,8 @@ public static class TrendAnalyzer
         var typeCount = typeMetrics.Count;
         var avgHealth = typeCount > 0 ? Math.Round(typeMetrics.Average(t => t.CodeHealth), 1) : 0.0;
         var minHealth = typeCount > 0 ? Math.Round(typeMetrics.Min(t => t.CodeHealth), 1) : 0.0;
-        var smellCount = typeMetrics.Sum(t => t.CodeSmells?.Count ?? 0);
+        var smellCount = typeMetrics.Sum(t =>
+            t.CodeSmells?.Count(s => SmellAggregation.CountsForTrend(s)) ?? 0);
         var highComplexity = typeMetrics.Count(t => t.CodeHealth < 4.0);
         var avgCogCC = typeCount > 0
             ? Math.Round(typeMetrics.Average(t => t.AverageCognitiveComplexity), 1)

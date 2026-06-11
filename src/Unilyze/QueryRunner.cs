@@ -69,21 +69,40 @@ internal static class QueryRunner
 
     static AnalysisResult LoadAnalysis(string? input, string path, IReadOnlyList<string> excludeDirs)
     {
+        AnalysisResult result;
+        string projectRoot;
+
         if (input != null)
         {
             var json = File.ReadAllText(input);
-            return JsonSerializer.Deserialize(json, AnalysisJsonContext.Default.AnalysisResult)
-                   ?? throw new InvalidOperationException($"Failed to parse: {input}");
+            result = JsonSerializer.Deserialize(json, AnalysisJsonContext.Default.AnalysisResult)
+                     ?? throw new InvalidOperationException($"Failed to parse: {input}");
+            projectRoot = Directory.Exists(result.ProjectPath)
+                ? ProgramHelpers.ResolveProjectRoot(result.ProjectPath)
+                : result.ProjectPath;
+        }
+        else
+        {
+            projectRoot = ProgramHelpers.ResolveProjectRoot(path);
+            var config = UnilyzeConfig.LoadMerged(projectRoot, excludeDirs);
+            var resolved = config.ResolveAnalysisConfig();
+            result = AnalysisPipeline.Build(
+                path, null, null, config.ExcludeDirs,
+                excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+                applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+                analysisConfig: resolved);
         }
 
-        var projectRoot = ProgramHelpers.ResolveProjectRoot(path);
-        var config = UnilyzeConfig.LoadMerged(projectRoot, excludeDirs);
-        var resolved = config.ResolveAnalysisConfig();
-        return AnalysisPipeline.Build(
-            path, null, null, config.ExcludeDirs,
-            excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
-            applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+        if (Directory.Exists(projectRoot))
+        {
+            var mergedConfig = UnilyzeConfig.LoadMerged(projectRoot, excludeDirs);
+            var triagePath = TriageApplication.ResolvePath(new Dictionary<string, string>(), mergedConfig, projectRoot);
+            var triageError = TriageApplication.TryApply(result, triagePath, out result);
+            if (triageError is 1)
+                throw new InvalidOperationException("Failed to apply triage verdicts.");
+        }
+
+        return result;
     }
 
     static void PrintSummary(QueryResult result, string mode, int worstCount)

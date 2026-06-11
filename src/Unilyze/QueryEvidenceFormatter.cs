@@ -80,7 +80,9 @@ internal static class QueryEvidenceFormatter
         {
             var anchor = smell.Anchor is null ? "" : $" `{smell.Anchor}`";
             var method = smell.MethodName is null ? "" : $" ({smell.MethodName})";
-            sb.AppendLine($"- [{smell.Severity}] {smell.Kind}{method}{anchor}: {smell.Message}");
+            var id = smell.Id is null ? "" : $" id=`{smell.Id}`";
+            var triage = smell.Triage is null ? "" : $" triage={smell.Triage}";
+            sb.AppendLine($"- [{smell.Severity}] {smell.Kind}{method}{anchor}{id}{triage}: {smell.Message}");
         }
     }
 

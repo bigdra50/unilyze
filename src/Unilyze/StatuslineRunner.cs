@@ -366,7 +366,12 @@ internal static class StatuslineRunner
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
-        return baselineError is 1 ? null : (result, effectiveBaseline is not null);
+        if (baselineError is 1)
+            return null;
+
+        var triagePath = TriageApplication.ResolvePath(new Dictionary<string, string>(), config, fullPath);
+        var triageError = TriageApplication.TryApply(result, triagePath, out result);
+        return triageError is 1 ? null : (result, effectiveBaseline is not null);
     }
 
     static string FormatStatusline(AnalysisResult result, bool excludeBaselined)

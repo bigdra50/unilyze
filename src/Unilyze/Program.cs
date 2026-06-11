@@ -30,6 +30,8 @@ if (args.Length >= 1 && args[0] == "baseline")
     return BaselineRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "calibrate")
     return CalibrateRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "triage")
+    return TriageRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -47,6 +49,11 @@ if (analyzeUsageError != 0)
 if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
 {
     Console.Error.WriteLine("--baseline requires a file path.");
+    return 1;
+}
+if (ProgramHelpers.HasFlagWithoutValue(args, "--triage"))
+{
+    Console.Error.WriteLine("--triage requires a file path.");
     return 1;
 }
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
@@ -107,6 +114,11 @@ try
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
         if (baselineError is 1)
+            return 1;
+
+        var triagePath = TriageApplication.ResolvePath(opts, config, projectRoot);
+        var triageError = TriageApplication.TryApply(result, triagePath, out result);
+        if (triageError is 1)
             return 1;
 
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
@@ -201,6 +213,8 @@ Options:
       --level        Pin analysis level: syntax, core, full, complete
                      (caps auto-resolved level; fails if the level cannot be reached)
       --baseline     Suppress known smells from a baseline file (see 'unilyze baseline create')
+      --triage       Override triage verdict file (default: auto-discover <project>/.unilyze/triage.json)
+      --no-triage    Disable triage verdict application
       --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version
@@ -216,6 +230,7 @@ Configuration:
 Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')
   calibrate       Derive smell-threshold candidates from analysis snapshots
+  triage          Persist per-finding verdicts (run 'unilyze triage --help')
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds

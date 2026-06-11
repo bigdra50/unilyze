@@ -6,20 +6,19 @@ internal static class ProgramHelpers
 {
     public static readonly string[] TopLevelCommands =
     [
-        "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
-        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "calibrate", "skills",
-        "help", "version",
+        "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
+        "baseline", "calibrate", "triage", "skills", "help", "version",
     ];
 
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "-v", "--version", "--no-open",
+        "-h", "--help", "-v", "--version", "--no-open", "--no-triage",
     };
 
     static readonly HashSet<string> NoValueOptions = new(StringComparer.Ordinal);
@@ -426,7 +425,7 @@ internal static class ProgramHelpers
         {
             if (args[i].StartsWith('-'))
             {
-                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open"
+                if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--no-triage"
                     or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
                     or "--verbose" or "--quiet" or "--background-refresh")
                     opts[args[i]] = "true";

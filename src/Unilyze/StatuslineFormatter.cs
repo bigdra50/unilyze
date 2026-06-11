@@ -42,7 +42,7 @@ internal static class StatuslineFormatter
     }
 
     static bool CountForSummary(CodeSmell smell, bool excludeBaselined)
-        => !excludeBaselined || smell.Baselined != true;
+        => SmellAggregation.CountsForGate(smell, excludeBaselined);
 
     internal static string Format(Summary s)
     {

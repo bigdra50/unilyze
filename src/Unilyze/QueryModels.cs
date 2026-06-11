@@ -35,7 +35,9 @@ public sealed record TypeEvidenceSmell(
     SmellSeverity Severity,
     string? MethodName,
     string Message,
-    string? Anchor);
+    string? Anchor,
+    string? Id = null,
+    string? Triage = null);
 
 public sealed record TypeEvidenceDependencyGroup(
     DependencyKind Kind,

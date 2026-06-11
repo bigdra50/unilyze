@@ -59,7 +59,7 @@ internal static class AnalysisPipeline
             ? null
             : config.Profile;
 
-        return new AnalysisResult(
+        var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
             assemblyInfos,
@@ -72,5 +72,7 @@ internal static class AnalysisPipeline
             ToolVersionInfo.Current,
             ProjectKind: discover.ProjectKind,
             Profile: profileField);
+
+        return FindingFingerprint.AssignIds(result);
     }
 }
