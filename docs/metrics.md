@@ -472,6 +472,31 @@ Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smell
 しきい値は下表に記載されている（**デフォルト値**）。プロジェクトの `.unilyze.json` で `smells` セクションを使い、スメル種別ごとに個別のしきい値を上書きできる。上書きは実行時の検出にのみ効き、下表の内容はデフォルトの単一情報源として維持される。
 計測値の互換性は [メトリクス互換性ポリシー](#メトリクス互換性ポリシー) を参照する。
 
+### インライン抑制 (`unilyze-disable`)
+
+単一発生を黙らせる ESLint 風コメント。baseline（プロジェクト凍結）や `rules`（ルール全体 off）と併用でき、root `suppressedCount` に合算される（同一 smell が両方にマッチしても 1 回だけカウント）。
+
+```csharp
+// unilyze-disable-next-line UNI014 -- intentional guard
+catch { }
+
+// unilyze-disable UNI002
+void LongButJustified() { /* ... */ }
+```
+
+| 形式 | 効く範囲 |
+|------|----------|
+| `unilyze-disable-next-line UNIxxx` | コメントの**次の行**（UNI011–UNI023 など行番号付き detector smell） |
+| `unilyze-disable UNIxxx`（型/メソッド宣言の leading trivia） | その宣言スコープ内 |
+
+ルール ID を省略するとスコープ内の全ルールを抑制する。未知 ID と `UNI009` は stderr 警告のうえ無視（解析 exit code 不変）。抑制された smell は JSON に `"suppressed": true` のまま残り、SARIF では `suppressions: [{ "kind": "inSource" }]` となる。statusline / badge / `diff --fail-on-regression` からは除外される。
+
+**既知制約**
+
+1. **同名オーバーロード非区別（メトリクス系）:** UNI001–UNI008, UNI010 はメソッド名/型名で directive と突き合わせるため、同一メソッド名のオーバーロードすべてが抑制対象になる。detector smell（UNI011–UNI023）は行位置で区別できる。
+2. **partial 型:** 抑制インデックスは `SyntaxLookups.BuildTypeDeclLookup` が索引する 1 つの宣言から構築される。型スコープ directive は索引される partial 宣言に置く（全 partial を走査する拡張は follow-up）。
+3. **UNI009:** 依存サイクル単位の報告のためインライン不可。`rules` のみ。
+
 ### しきい値プロファイル (`profile`)
 
 出典: Aniche, Treude, Zaidman et al., "SATT: Tailoring Code Metric Thresholds for Different Software Architectures" (SCAM 2016) — アーキテクチャ（ロール）ごとにメトリクス分布が異なり、単一しきい値は特定ロールを過検出する。

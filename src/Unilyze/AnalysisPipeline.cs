@@ -59,6 +59,9 @@ internal static class AnalysisPipeline
             ? null
             : config.Profile;
 
+        var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
+        InlineSuppression.WriteSummary(inlineSuppressedCount);
+
         return new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
@@ -71,6 +74,7 @@ internal static class AnalysisPipeline
             AnalysisResult.CurrentMetricsVersion,
             ToolVersionInfo.Current,
             ProjectKind: discover.ProjectKind,
-            Profile: profileField);
+            Profile: profileField,
+            SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null);
     }
 }

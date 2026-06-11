@@ -40,7 +40,9 @@ public sealed record CodeSmell(
     string? MethodName,
     string Message,
     int? Line = null,
-    bool? Baselined = null);
+    bool? Baselined = null,
+    bool? Suppressed = null,
+    string? SuppressionJustification = null);
 
 public static class CodeSmellDetector
 {
