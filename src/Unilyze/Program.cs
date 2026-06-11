@@ -109,7 +109,8 @@ try
             path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            maxParallelism: config.MaxParallelism);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);

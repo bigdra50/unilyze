@@ -52,7 +52,8 @@ internal static class BaselineRunner
                 projectRoot, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                analysisConfig: resolved);
+                analysisConfig: resolved,
+                maxParallelism: config.MaxParallelism);
 
             var baseline = BaselineFile.FromAnalysis(result);
             BaselineFile.Save(outputPath, baseline);

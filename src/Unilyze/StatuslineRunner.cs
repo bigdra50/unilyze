@@ -362,7 +362,8 @@ internal static class StatuslineRunner
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             logSink: log,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            maxParallelism: config.MaxParallelism);
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
