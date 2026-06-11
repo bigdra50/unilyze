@@ -90,7 +90,7 @@ unilyze badge -p . --metric codehealth --fail-under 7   # CI gate example
 unilyze badge -p . --format svg -o .github/badges/codehealth.svg
 ```
 
-See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) and [docs/ci-integration.md](./docs/ci-integration.md) for endpoint vs SVG badges, quality-gate semantics, GitHub Actions, and diff regression gates.
+See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) and [docs/ci-integration.md](./docs/ci-integration.md) for endpoint vs SVG badges, quality-gate semantics, GitHub Actions, diff regression gates, and [monorepo `--projects`](./docs/ci-integration.md#monorepo) batch analysis.
 
 #### Private repositories
 

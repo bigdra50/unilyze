@@ -49,7 +49,7 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("semantic");
         var (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
-            allTypes, allSyntaxTrees, compile.CompilationResult, options);
+            allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 

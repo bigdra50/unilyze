@@ -15,6 +15,9 @@ internal static class BadgeRunner
             return usageError;
 
         var opts = ProgramHelpers.ParseOptions(args);
+        var projectGlobs = ProgramHelpers.ParseMultiValueOption(args, "--projects");
+        if (projectGlobs.Count > 0)
+            return MultiProjectRunner.RunBadge(args, opts, projectGlobs);
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
@@ -146,9 +149,12 @@ internal static class BadgeRunner
               unilyze badge --metric mi --fail-under 70         Exit 2 if average MI < 70
               unilyze badge --metric smells --fail-over 5       Exit 2 if warnings > 5 (or any critical)
               unilyze badge --metric dup --fail-over 3          Exit 2 if duplication > 3%
+              unilyze badge --projects 'packages/*' --metric codehealth --fail-under 7 -o out/
+                                                           Per-project badges + summary table on stderr
 
             Options:
               -p, --path     Project root (default: .)
+              --projects     Glob of project roots (repeatable; requires -o <dir> when multiple match)
               -o, --output   Output file path (default: stdout)
               --metric       Badge metric: codehealth, mi, smells, dup (default: codehealth)
               --format       Output format: json, svg (default: json)
