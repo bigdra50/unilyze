@@ -1012,6 +1012,84 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Hotspot_BotFilter_DefaultExcludesDependabotCommits()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        File.AppendAllText(Path.Combine(_tempDir, "Sample.cs"), "\n// bot change\n");
+        GitCommitAs("dependabot[bot]", "dependabot@users.noreply.github.com", "bot bump");
+
+        var (filteredExit, filteredStdout, filteredStderr) = Run("hotspot", "-p", _tempDir);
+        Assert.Equal(0, filteredExit);
+        Assert.Contains("Bot commits excluded:", filteredStderr);
+        var filtered = JsonDocument.Parse(filteredStdout).RootElement;
+        Assert.True(filtered.GetProperty("botFilter").GetBoolean());
+        Assert.Equal(1, filtered.GetProperty("botCommitsExcluded").GetInt32());
+
+        var (rawExit, rawStdout, _) = Run("hotspot", "-p", _tempDir, "--no-bot-filter");
+        Assert.Equal(0, rawExit);
+        var raw = JsonDocument.Parse(rawStdout).RootElement;
+        Assert.False(raw.GetProperty("botFilter").GetBoolean());
+        Assert.Equal(0, raw.GetProperty("botCommitsExcluded").GetInt32());
+        Assert.True(
+            raw.GetProperty("hotspots")[0].GetProperty("changeCount").GetInt32()
+            >= filtered.GetProperty("hotspots")[0].GetProperty("changeCount").GetInt32());
+    }
+
+    [Fact]
+    public void Hotspot_InvalidBotPattern_ExitsOne()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        var (exitCode, _, stderr) = Run("hotspot", "-p", _tempDir, "--bot-pattern", "[");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Invalid bot pattern", stderr);
+    }
+
+    [Fact]
+    public void Hotspot_HalfLife_DeterministicAcrossRuns()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        File.AppendAllText(Path.Combine(_tempDir, "Sample.cs"), "\n// change 1\n");
+        GitCommitAll("change 1");
+        File.AppendAllText(Path.Combine(_tempDir, "Sample.cs"), "\n// change 2\n");
+        GitCommitAll("change 2");
+
+        var (exit1, stdout1, _) = Run("hotspot", "-p", _tempDir, "--half-life", "90.day");
+        var (exit2, stdout2, _) = Run("hotspot", "-p", _tempDir, "--half-life", "90.day");
+        Assert.Equal(0, exit1);
+        Assert.Equal(0, exit2);
+        Assert.Equal(stdout1, stdout2);
+    }
+
+    [Fact]
+    public void Hotspot_MethodsMode_EmitsMethodHotspots()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        File.AppendAllText(Path.Combine(_tempDir, "Sample.cs"), "\n// method churn\n");
+        GitCommitAll("method churn");
+
+        var (exitCode, stdout, stderr) = Run("hotspot", "-p", _tempDir, "--methods", "Sample.cs");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Method hotspots:", stderr);
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal(JsonValueKind.Array, root.GetProperty("methodHotspots").ValueKind);
+        Assert.True(root.GetProperty("methodHotspots").GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public void Hotspot_Help_MentionsNewFlags()
+    {
+        var (exitCode, stdout, _) = Run("hotspot", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--half-life", stdout);
+        Assert.Contains("--no-bot-filter", stdout);
+        Assert.Contains("--methods", stdout);
+    }
+
+    [Fact]
     public void Trend_UnknownSubcommand_ExitsUsageError()
     {
         var (exitCode, _, stderr) = Run("trendd");
@@ -1039,6 +1117,38 @@ public sealed class CliE2eTests : IDisposable
         var (exitCode, stdout, _) = Run("trend", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.Contains("snapshotCount", stdout);
+    }
+
+    [Fact]
+    public void Trend_HtmlOutput_WritesSelfContainedFile()
+    {
+        var snapshot = JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], []),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(Path.Combine(_tempDir, "snapshot.json"), snapshot);
+
+        var htmlPath = Path.Combine(_tempDir, "trend.html");
+        var (exitCode, _, stderr) = Run("trend", _tempDir, "-o", htmlPath, "--no-open");
+        Assert.Equal(0, exitCode);
+        Assert.True(File.Exists(htmlPath));
+        var html = File.ReadAllText(htmlPath);
+        Assert.Contains("<svg", html);
+        Assert.DoesNotContain("<script src=", html);
+        Assert.DoesNotContain("unpkg.com", html);
+        Assert.Contains("Written to", stderr);
+    }
+
+    [Fact]
+    public void Trend_UnsupportedFormat_ExitsUsageError()
+    {
+        var snapshot = JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], []),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        File.WriteAllText(Path.Combine(_tempDir, "snapshot.json"), snapshot);
+
+        var (exitCode, _, stderr) = Run("trend", _tempDir, "-f", "sarif");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Trend does not support SARIF", stderr);
     }
 
     [Fact]
@@ -1323,6 +1433,12 @@ public sealed class CliE2eTests : IDisposable
     {
         RunGit(_tempDir, "add", ".");
         RunGit(_tempDir, "-c", "user.email=test@test.com", "-c", "user.name=test", "commit", "-m", message);
+    }
+
+    private void GitCommitAs(string name, string email, string message)
+    {
+        RunGit(_tempDir, "add", ".");
+        RunGit(_tempDir, "-c", $"user.email={email}", "-c", $"user.name={name}", "commit", "-m", message);
     }
 
     private static string ListGitWorktrees()

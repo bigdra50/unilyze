@@ -60,6 +60,10 @@ internal static class AnalysisPipeline
             : config.Profile;
 
         var result = new AnalysisResult(
+        var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
+        InlineSuppression.WriteSummary(inlineSuppressedCount);
+
+        return new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
             assemblyInfos,
@@ -74,5 +78,7 @@ internal static class AnalysisPipeline
             Profile: profileField);
 
         return FindingFingerprint.AssignIds(result);
+            Profile: profileField,
+            SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null);
     }
 }

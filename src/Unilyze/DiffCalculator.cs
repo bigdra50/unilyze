@@ -158,6 +158,8 @@ public static class DiffCalculator
 
         var beforeSmells = (before ?? []).Where(SmellAggregation.CountsForDiff).ToList();
         var afterSmells = (after ?? []).Where(SmellAggregation.CountsForDiff).ToList();
+        var beforeSmells = FilterActiveSmells(before);
+        var afterSmells = FilterActiveSmells(after);
 
         var beforeKeys = new HashSet<string>(beforeSmells.Select(SmellKey));
         var afterKeys = new HashSet<string>(afterSmells.Select(SmellKey));
@@ -180,6 +182,9 @@ public static class DiffCalculator
     }
 
     static string SmellKey(CodeSmell s) => $"{s.Kind}:{s.MethodName ?? ""}";
+
+    static IReadOnlyList<CodeSmell> FilterActiveSmells(IReadOnlyList<CodeSmell>? smells)
+        => smells?.Where(s => s.Suppressed != true).ToList() ?? [];
 
     static readonly HashSet<string> HigherIsBetter = ["CodeHealth", "AverageMaintainabilityIndex", "MinMaintainabilityIndex"];
 

@@ -22,7 +22,12 @@ internal static class TrendRunner
 
         var opts = ProgramHelpers.ParseOptions(args);
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
+        var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
+        var noOpen = opts.ContainsKey("--no-open");
         var dir = positional[0];
+
+        if (TryResolveTrendFormat(formatStr, output, out var format) != 0)
+            return 1;
 
         if (!Directory.Exists(dir))
         {
@@ -42,7 +47,7 @@ internal static class TrendRunner
                 return 1;
             }
 
-            var results = new List<AnalysisResult>();
+            var entries = new List<(string? SourceFile, AnalysisResult Result)>();
             foreach (var file in jsonFiles)
             {
                 var json = File.ReadAllText(file);
@@ -52,14 +57,16 @@ internal static class TrendRunner
                     Console.Error.WriteLine($"Skipping invalid file: {file}");
                     continue;
                 }
-                results.Add(result);
+                entries.Add((Path.GetFileName(file), result));
             }
 
-            if (results.Count == 0)
+            if (entries.Count == 0)
             {
                 Console.Error.WriteLine("No valid analysis results found.");
                 return 1;
             }
+
+            var results = entries.Select(e => e.Result).ToList();
 
             var distinctMetricsVersions = results.Select(r => r.MetricsVersion).Distinct().ToList();
             if (distinctMetricsVersions.Count > 1)
@@ -80,10 +87,13 @@ internal static class TrendRunner
                     + "Trend smell deltas may be unreliable.");
             }
 
-            var trend = TrendAnalyzer.Analyze(results);
+            var trend = TrendAnalyzer.AnalyzeSnapshots(entries);
             var trendJson = JsonSerializer.Serialize(trend, AnalysisJsonContext.Default.TrendResult);
 
             PrintSummary(trend);
+
+            if (format == OutputFormat.Html)
+                return WriteHtmlOutput(trendJson, dir, output, noOpen);
 
             return ProgramHelpers.WriteOutput(trendJson, output);
         }
@@ -92,6 +102,47 @@ internal static class TrendRunner
             Console.Error.WriteLine(ex.Message);
             return 1;
         }
+    }
+
+    static int TryResolveTrendFormat(string? formatStr, string? output, out OutputFormat format)
+    {
+        format = OutputFormat.Json;
+        try
+        {
+            format = ProgramHelpers.ResolveFormat(formatStr, output);
+        }
+        catch (ArgumentException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+
+        if (format is OutputFormat.Sarif or OutputFormat.Markdown)
+        {
+            Console.Error.WriteLine("Trend does not support SARIF or Markdown output. Use json or html.");
+            return 1;
+        }
+
+        if (formatStr == null && output == null)
+            format = OutputFormat.Json;
+
+        return 0;
+    }
+
+    static int WriteHtmlOutput(string trendJson, string inputDir, string? output, bool noOpen)
+    {
+        var htmlPath = output ?? Path.Combine(
+            Path.GetTempPath(),
+            $"unilyze-trend-{Path.GetFileName(inputDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))}.html");
+
+        var html = TrendHtmlFormatter.Generate(trendJson, inputDir);
+        File.WriteAllText(htmlPath, html);
+        Console.Error.WriteLine($"Written to {htmlPath}");
+
+        if (output == null && !noOpen)
+            ProgramHelpers.TryOpenInBrowser(htmlPath);
+
+        return 0;
     }
 
     static void PrintSummary(TrendResult trend)
@@ -119,11 +170,15 @@ internal static class TrendRunner
             unilyze trend - Show quality trend across multiple snapshots
 
             Usage:
-              unilyze trend <dir-of-jsons>              Output trend JSON to stdout
-              unilyze trend <dir-of-jsons> -o out.json   Save trend to file
+              unilyze trend <dir-of-jsons>                    Output trend JSON to stdout
+              unilyze trend <dir-of-jsons> -o out.json        Save trend JSON to file
+              unilyze trend <dir-of-jsons> -o trend.html      Save self-contained HTML charts
+              unilyze trend <dir-of-jsons> -f html            HTML to temp file (opens browser)
 
             Options:
-              -o, --output    Output file path
+              -o, --output    Output file path (.json or .html extension selects format)
+              -f, --format    Output format: json (default) or html
+              --no-open       Do not open HTML in browser when writing to a temp file
               -h, --help      Show this help
             """);
         return 0;

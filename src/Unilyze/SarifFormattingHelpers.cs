@@ -91,6 +91,18 @@ static class SarifFormattingHelpers
             return;
 
         var suppressions = new JsonArray();
+
+        var suppressions = new JsonArray();
+        if (smell.Suppressed == true)
+        {
+            suppressions.Add(new JsonObject
+            {
+                ["kind"] = "inSource",
+                ["justification"] = smell.SuppressionJustification
+                    ?? "Suppressed via unilyze-disable comment",
+            });
+        }
+
         if (smell.Baselined == true)
         {
             suppressions.Add(new JsonObject
@@ -110,6 +122,10 @@ static class SarifFormattingHelpers
         }
 
         resultObj["suppressions"] = suppressions;
+        if (suppressions.Count > 0)
+            resultObj["suppressions"] = suppressions;
+
+        return resultObj;
     }
 
     public static string ComputeFingerprint(

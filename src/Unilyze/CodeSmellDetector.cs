@@ -43,6 +43,9 @@ public sealed record CodeSmell(
     bool? Baselined = null,
     string? Id = null,
     string? Triage = null);
+    bool? Baselined = null,
+    bool? Suppressed = null,
+    string? SuppressionJustification = null);
 
 public static class CodeSmellDetector
 {

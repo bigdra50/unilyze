@@ -130,7 +130,12 @@ internal static class SemanticEnricher
         smells = SmellFiltering.Apply(smells, context.DisabledRuleKinds);
         detected = SmellFiltering.Apply(detected, context.DisabledRuleKinds);
 
-        return StampEnrichedMetrics(current, smells, detected, wmc, informationalCount);
+        var suppressionIndex = typeDecl is not null
+            ? SuppressionIndex.Build(typeDecl)
+            : SuppressionIndex.Empty;
+        smells = ApplyInlineSuppressionToMetricSmells(smells, suppressionIndex);
+
+        return StampEnrichedMetrics(current, smells, detected, suppressionIndex, wmc, informationalCount);
     }
 
     static int ApplyInformationalSmells(
@@ -154,17 +159,38 @@ internal static class SemanticEnricher
         return count;
     }
 
+    static List<CodeSmell> ApplyInlineSuppressionToMetricSmells(
+        IReadOnlyList<CodeSmell> smells,
+        SuppressionIndex suppressionIndex)
+    {
+        if (smells.Count == 0)
+            return smells is List<CodeSmell> list ? list : smells.ToList();
+
+        var updated = new List<CodeSmell>(smells.Count);
+        foreach (var smell in smells)
+        {
+            if (suppressionIndex.IsMetricSmellSuppressed(smell, out var justification))
+                updated.Add(smell with { Suppressed = true, SuppressionJustification = justification });
+            else
+                updated.Add(smell);
+        }
+
+        return updated;
+    }
+
     static TypeMetrics StampEnrichedMetrics(
         TypeMetrics current,
         IReadOnlyList<CodeSmell> smells,
         IReadOnlyList<DetectedSmell> detected,
+        SuppressionIndex suppressionIndex,
         int wmc,
         int informationalCount)
     {
-        var allSmells = SmellMerging.Convert(smells, detected);
-        var boxingCount = SmellMerging.CountByKind(detected, CodeSmellKind.BoxingAllocation);
-        var closureCount = SmellMerging.CountByKind(detected, CodeSmellKind.ClosureCapture);
-        var paramsCount = SmellMerging.CountByKind(detected, CodeSmellKind.ParamsArrayAllocation);
+        var allSmells = SmellMerging.Convert(smells, detected, suppressionIndex);
+        var activeDetected = detected.Where(d => !suppressionIndex.IsDetectorSmellSuppressed(d, out _)).ToList();
+        var boxingCount = SmellMerging.CountByKind(activeDetected, CodeSmellKind.BoxingAllocation);
+        var closureCount = SmellMerging.CountByKind(activeDetected, CodeSmellKind.ClosureCapture);
+        var paramsCount = SmellMerging.CountByKind(activeDetected, CodeSmellKind.ParamsArrayAllocation);
 
         return current with
         {
@@ -401,14 +427,18 @@ internal static class SemanticEnricher
     {
         public static List<CodeSmell> Convert(
             IReadOnlyList<CodeSmell> baseSmells,
-            IReadOnlyList<DetectedSmell> detected)
+            IReadOnlyList<DetectedSmell> detected,
+            SuppressionIndex suppressionIndex)
         {
             var allSmells = new List<CodeSmell>(baseSmells.Count + detected.Count);
             allSmells.AddRange(baseSmells);
             foreach (var d in detected)
             {
+                var suppressed = suppressionIndex.IsDetectorSmellSuppressed(d, out var justification);
                 allSmells.Add(new CodeSmell(
-                    d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line));
+                    d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line,
+                    Suppressed: suppressed ? true : null,
+                    SuppressionJustification: justification));
             }
             return allSmells;
         }
