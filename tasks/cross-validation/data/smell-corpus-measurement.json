@@ -1,0 +1,195 @@
+{
+  "projects": [
+    {
+      "id": "vcontainer",
+      "name": "VContainer",
+      "commit": "d9f6dc6b68fc9ad36bce6b580f6405245c28f67d",
+      "projectPath": "/tmp/cross-validation-repos/VContainer/VContainer",
+      "outputFile": "unilyze-vcontainer-v2.json",
+      "requestedLevel": "complete",
+      "analysisLevel": "FullEngine",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 338,
+      "kindCounts": {
+        "BoxingAllocation": 3,
+        "CatchAllException": 2,
+        "ClosureCapture": 99,
+        "DeepInheritance": 10,
+        "DeepNesting": 5,
+        "GodClass": 5,
+        "HighComplexity": 4,
+        "HighCoupling": 30,
+        "LongMethod": 6,
+        "LowCohesion": 24,
+        "LowMaintainability": 148,
+        "ParamsArrayAllocation": 1,
+        "ThrowingSystemException": 1
+      },
+      "stderrTail": [
+        "Analysis level: FullEngine"
+      ]
+    },
+    {
+      "id": "unitask",
+      "name": "UniTask",
+      "commit": "a9e27c03d411d2fca01cc7410c24c97cd77cb539",
+      "projectPath": "/tmp/cross-validation-repos/UniTask/src/UniTask",
+      "outputFile": "unilyze-unitask-v2.json",
+      "requestedLevel": "complete",
+      "analysisLevel": "FullEngine",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 1977,
+      "kindCounts": {
+        "AsyncVoidMethod": 3,
+        "BlockingTaskWait": 2,
+        "CatchAllException": 735,
+        "ClosureCapture": 74,
+        "DeepInheritance": 81,
+        "DeepNesting": 14,
+        "ExcessiveParameters": 28,
+        "GodClass": 32,
+        "HighComplexity": 52,
+        "HighCoupling": 142,
+        "LongMethod": 20,
+        "LowCohesion": 91,
+        "LowMaintainability": 684,
+        "ParamsArrayAllocation": 1,
+        "StringConcatenationInHotPath": 13,
+        "ThrowingSystemException": 5
+      },
+      "stderrTail": [
+        "Analysis level: FullEngine"
+      ]
+    },
+    {
+      "id": "bossroom",
+      "name": "BossRoom",
+      "commit": "1299ba4fc97d83b634e7d32a86c438ba668d7f9c",
+      "projectPath": "/tmp/cross-validation-repos/BossRoom",
+      "outputFile": "unilyze-bossroom-v2.json",
+      "requestedLevel": "complete",
+      "analysisLevel": "FullEngine",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 511,
+      "kindCounts": {
+        "AsyncVoidMethod": 11,
+        "BlockingTaskWait": 2,
+        "BoxingAllocation": 67,
+        "CatchAllException": 11,
+        "ClosureCapture": 22,
+        "DeepInheritance": 2,
+        "DeepNesting": 11,
+        "ExcessiveParameters": 2,
+        "GodClass": 5,
+        "HighComplexity": 13,
+        "HighCoupling": 54,
+        "LongMethod": 2,
+        "LowCohesion": 84,
+        "LowMaintainability": 200,
+        "ParamsArrayAllocation": 5,
+        "StringConcatenationInHotPath": 1,
+        "ThrowingSystemException": 18,
+        "WeakTemporization": 1
+      },
+      "stderrTail": [
+        "Analysis level: FullEngine"
+      ]
+    },
+    {
+      "id": "hmf",
+      "name": "HelloMarioFramework",
+      "commit": "a0cb680379a83b11d7f67dc7ecc265364ad7b96f",
+      "projectPath": "/tmp/cross-validation-repos/HelloMarioFramework",
+      "outputFile": "unilyze-hmf-v2.json",
+      "requestedLevel": "complete",
+      "analysisLevel": "FullEngine",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 294,
+      "kindCounts": {
+        "DeepInheritance": 102,
+        "DeepNesting": 19,
+        "ExpensiveUnityApiInHotPath": 6,
+        "GodClass": 1,
+        "HighComplexity": 14,
+        "HighCoupling": 23,
+        "LinqInHotPath": 3,
+        "LongMethod": 7,
+        "LowCohesion": 26,
+        "LowMaintainability": 92,
+        "StringConcatenationInHotPath": 1
+      },
+      "stderrTail": [
+        "Analysis level: FullEngine"
+      ]
+    },
+    {
+      "id": "self",
+      "name": "UnilyzeSelf",
+      "commit": null,
+      "projectPath": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/src/Unilyze",
+      "outputFile": "unilyze-self-v2.json",
+      "requestedLevel": "syntax",
+      "analysisLevel": "SyntaxOnly",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 342,
+      "kindCounts": {
+        "CatchAllException": 12,
+        "ClosureCapture": 50,
+        "DeepNesting": 4,
+        "ExcessiveParameters": 7,
+        "GodClass": 4,
+        "HighComplexity": 13,
+        "HighCoupling": 5,
+        "LongMethod": 3,
+        "LowCohesion": 1,
+        "LowMaintainability": 243
+      },
+      "stderrTail": [
+        "Analysis level: SyntaxOnly"
+      ]
+    },
+    {
+      "id": "decommissioned",
+      "name": "UnityDecommissioned",
+      "commit": "fe7a65ebbc4a7c49cb8aeb1efc3305f3b6b98872",
+      "projectPath": "/tmp/cross-validation-repos/Unity-Decommissioned",
+      "outputFile": "unilyze-decommissioned-v2.json",
+      "requestedLevel": "complete",
+      "analysisLevel": "Complete",
+      "toolVersion": "0.3.0",
+      "metricsVersion": 3,
+      "totalSmells": 1080,
+      "kindCounts": {
+        "BlockingTaskWait": 7,
+        "BoxingAllocation": 123,
+        "CatchAllException": 1,
+        "ClosureCapture": 180,
+        "CollectionAllocationInHotPath": 3,
+        "DeepInheritance": 90,
+        "DeepNesting": 14,
+        "ExcessiveParameters": 1,
+        "ExpensiveUnityApiInHotPath": 5,
+        "GodClass": 18,
+        "HighComplexity": 27,
+        "HighCoupling": 90,
+        "LinqInHotPath": 23,
+        "LongMethod": 13,
+        "LowCohesion": 122,
+        "LowMaintainability": 349,
+        "ParamsArrayAllocation": 1,
+        "StringConcatenationInHotPath": 11,
+        "ThrowingSystemException": 1,
+        "WeakTemporization": 1
+      },
+      "optional": true,
+      "stderrTail": [
+        "Analysis level: Complete"
+      ]
+    }
+  ]
+}
