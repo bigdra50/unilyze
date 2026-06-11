@@ -187,7 +187,7 @@ public sealed class CliE2eTests : IDisposable
         var (unpinnedExit, unpinnedStdout, _) = Run("-p", _tempDir, "-f", "json");
         Assert.Equal(0, unpinnedExit);
         var unpinnedRoot = JsonDocument.Parse(unpinnedStdout).RootElement;
-        Assert.Equal("CoreEngine", unpinnedRoot.GetProperty("analysisLevel").GetString());
+        Assert.Equal("Complete", unpinnedRoot.GetProperty("analysisLevel").GetString());
 
         var (pinnedExit, pinnedStdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "syntax");
         Assert.Equal(0, pinnedExit);
@@ -196,13 +196,14 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
-    public void Level_Complete_OnNonUnityProject_ExitsNonZero()
+    public void Level_Complete_OnNonUnityProject_ExitsZero()
     {
-        // A bare directory of .cs files can only resolve to SyntaxOnly, so a Complete pin must fail.
         WriteSimpleProject();
-        var (exitCode, _, stderr) = Run("-p", _tempDir, "-f", "json", "--level", "complete");
-        Assert.Equal(1, exitCode);
-        Assert.Contains("Requested analysis level", stderr);
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json", "--level", "complete");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
@@ -222,7 +223,7 @@ public sealed class CliE2eTests : IDisposable
 
         var root = JsonDocument.Parse(stdout).RootElement;
         Assert.True(root.TryGetProperty("analysisLevel", out var level));
-        Assert.Equal("SyntaxOnly", level.GetString());
+        Assert.Equal("Complete", level.GetString());
     }
 
     [Fact]
@@ -306,16 +307,18 @@ public sealed class CliE2eTests : IDisposable
         Assert.Equal(0, exitCode);
 
         var root = JsonDocument.Parse(stdout).RootElement;
-        Assert.Equal("SyntaxOnly", root.GetProperty("analysisLevel").GetString());
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
-    public void Badge_LevelComplete_OnNonUnityProject_ExitsNonZero()
+    public void Badge_LevelComplete_OnNonUnityProject_ExitsZero()
     {
         WriteSimpleProject();
-        var (exitCode, _, stderr) = Run("badge", "-p", _tempDir, "--level", "complete");
-        Assert.Equal(1, exitCode);
-        Assert.Contains("Requested analysis level", stderr);
+        var (exitCode, stdout, _) = Run("badge", "-p", _tempDir, "--level", "complete");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal("Complete", root.GetProperty("analysisLevel").GetString());
     }
 
     [Fact]
@@ -327,10 +330,19 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
-    public void Statusline_SyntaxOnlyProject_ShowsLevelMarker()
+    public void Statusline_DotnetProject_ShowsNoSyntaxMarker()
     {
         WriteSimpleProject();
         var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("[syntax]", stdout);
+    }
+
+    [Fact]
+    public void Statusline_SyntaxPinnedProject_ShowsLevelMarker()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--level", "syntax");
         Assert.Equal(0, exitCode);
         Assert.Contains("[syntax]", stdout);
     }

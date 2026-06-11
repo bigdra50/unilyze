@@ -30,9 +30,22 @@ internal static class AnalysisLevelOption
         }
     }
 
-    // External JSON/badge/statusline vocabulary (issue 16/72): keep legacy names stable.
-    public static string ToExternalName(AnalysisLevel level) =>
-        level switch
+    // External JSON/badge/statusline vocabulary (issue 16/72/84): keep legacy names stable.
+    // Non-Unity projects must not be labeled Engine-flavored levels (issue 72/84).
+    public static string ToExternalName(AnalysisLevel level, string? projectKind = null)
+    {
+        if (projectKind is "dotnet" or "unknown")
+        {
+            return level switch
+            {
+                AnalysisLevel.Syntax => "SyntaxOnly",
+                // BCL-only semantic analysis is the maximum available depth for general C#.
+                AnalysisLevel.Core or AnalysisLevel.Full or AnalysisLevel.Complete => "Complete",
+                _ => level.ToString()
+            };
+        }
+
+        return level switch
         {
             AnalysisLevel.Syntax => "SyntaxOnly",
             AnalysisLevel.Core => "CoreEngine",
@@ -40,6 +53,7 @@ internal static class AnalysisLevelOption
             AnalysisLevel.Complete => "Complete",
             _ => level.ToString()
         };
+    }
 
     // Compact statusline marker shown when the level is below Complete (issue 16).
     public static string? StatuslineMarker(string? analysisLevel) =>
