@@ -48,6 +48,7 @@ public sealed class GoldenCorpusTests
 
     static void EnsureCsprojWithCoreEngineReference()
     {
+        // Unity golden still needs a resolvable reference when the editor is absent in CI.
         var dllPath = typeof(object).Assembly.Location;
         File.WriteAllText(CsprojPath, $"""
             <Project Sdk="Microsoft.NET.Sdk">

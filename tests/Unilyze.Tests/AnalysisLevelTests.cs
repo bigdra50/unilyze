@@ -56,6 +56,16 @@ public sealed class AnalysisLevelTests
         Assert.Equal(expected, AnalysisLevelOption.ToExternalName(level));
     }
 
+    [Theory]
+    [InlineData(AnalysisLevel.Syntax, "SyntaxOnly")]
+    [InlineData(AnalysisLevel.Core, "Complete")]
+    [InlineData(AnalysisLevel.Full, "Complete")]
+    [InlineData(AnalysisLevel.Complete, "Complete")]
+    public void ToExternalName_DotnetProject_NeverUsesEngineFlavoredLevels(AnalysisLevel level, string expected)
+    {
+        Assert.Equal(expected, AnalysisLevelOption.ToExternalName(level, "dotnet"));
+    }
+
     [Fact]
     public void AnalysisResult_RoundTrips_AnalysisLevel()
     {
