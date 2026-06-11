@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `--projects <glob>` on analyze and badge for monorepo batch analysis: expands repeatable globs to project roots, writes per-project `AnalysisResult` JSON (or SARIF/badge files) plus `summary.json`, prints a per-project gate table on stderr, and aggregates exit code `2` when any gate fails ([#137](https://github.com/bigdra50/unilyze/issues/137))
 - Finding `id` on every code smell in JSON output (byte-equal to SARIF `unilyzeFingerprint/v1`), `unilyze triage` subcommand (`set`/`list`/`prune`) persisting verdicts to `.unilyze/triage.json`, and per-smell `triage` field when verdicts apply ([#126](https://github.com/bigdra50/unilyze/issues/126))
 - `query` evidence packs include finding `id`; `--triage`/`--no-triage` CLI flags and optional `"triage"` config key ([#126](https://github.com/bigdra50/unilyze/issues/126))
 - **[metrics]** `false-positive` and `wontfix` triage verdicts are excluded from badge/statusline gates and diff smell regressions; `false-positive` is also excluded from trend `codeSmellCount`; `wontfix` remains visible in trend as accepted debt ([#126](https://github.com/bigdra50/unilyze/issues/126))
