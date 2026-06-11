@@ -22,7 +22,9 @@ internal static class QueryEvidenceAssembler
                 s.Severity,
                 s.MethodName,
                 s.Message,
-                ResolveSmellAnchor(type, s)))
+                ResolveSmellAnchor(type, s),
+                s.Id,
+                s.Triage))
             .ToList();
 
         var inbound = GroupDependencies(

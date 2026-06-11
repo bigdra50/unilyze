@@ -13,6 +13,9 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Finding `id` on every code smell in JSON output (byte-equal to SARIF `unilyzeFingerprint/v1`), `unilyze triage` subcommand (`set`/`list`/`prune`) persisting verdicts to `.unilyze/triage.json`, and per-smell `triage` field when verdicts apply ([#126](https://github.com/bigdra50/unilyze/issues/126))
+- `query` evidence packs include finding `id`; `--triage`/`--no-triage` CLI flags and optional `"triage"` config key ([#126](https://github.com/bigdra50/unilyze/issues/126))
+- **[metrics]** `false-positive` and `wontfix` triage verdicts are excluded from badge/statusline gates and diff smell regressions; `false-positive` is also excluded from trend `codeSmellCount`; `wontfix` remains visible in trend as accepted debt ([#126](https://github.com/bigdra50/unilyze/issues/126))
 - **[metrics]** Hotspot upgrades: bot-commit exclusion (default on, `--no-bot-filter` to disable), optional time-decay weighting (`--half-life <N.unit>`), and method-level X-Ray (`--methods <file>`); hotspot JSON has no `metricsVersion` field and `metricsVersion` stays 3, but default bot filtering changes hotspot rankings on repos with bot traffic ([#128](https://github.com/bigdra50/unilyze/issues/128))
 - `trend -f html` / `-o trend.html`: self-contained HTML output with inline-SVG charts for CodeHealth avg/min, warning/critical smell counts, and type metrics; snapshot `sourceFile` provenance, metricsVersion/profile crossing markers, and a two-click diff command builder ([#129](https://github.com/bigdra50/unilyze/issues/129))
 - Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))

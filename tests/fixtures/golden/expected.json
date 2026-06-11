@@ -3708,7 +3708,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "MethodBoxing",
           "message": "Boxing: Int32 -\u003E Object",
-          "line": 9
+          "line": 9,
+          "id": "2d8c5a3867138ff2440ebf18c656cccbd6e3c8d3840d22e3e919166a78a6b937"
         },
         {
           "kind": "BoxingAllocation",
@@ -3716,7 +3717,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyBoxing",
           "message": "Boxing: Int32 -\u003E Object",
-          "line": 17
+          "line": 17,
+          "id": "f76ae1cafc46261d282f51fdf3f4a3de526c88a2d54176ed71c3546f861094b2"
         },
         {
           "kind": "ClosureCapture",
@@ -3724,7 +3726,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "MethodClosure",
           "message": "captures: captured",
-          "line": 25
+          "line": 25,
+          "id": "cd4034be541cf0c72bd31a593c27934606e8d6f770323ca82a76b77974250750"
         },
         {
           "kind": "ClosureCapture",
@@ -3732,7 +3735,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyClosure",
           "message": "captures: captured",
-          "line": 33
+          "line": 33,
+          "id": "e857f20227f690ea3052494ba0db554c7c6e256ad64b2517d01a68b5ce16a912"
         },
         {
           "kind": "ParamsArrayAllocation",
@@ -3740,7 +3744,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "MethodParams",
           "message": "params call to LogParams (3 args)",
-          "line": 39
+          "line": 39,
+          "id": "f7065b8fef5ccd8bcf634a25f659eeeb06b2b79bf3287449ded77e20591c777e"
         },
         {
           "kind": "ParamsArrayAllocation",
@@ -3748,7 +3753,8 @@
           "typeName": "AllocationPatterns",
           "methodName": "get_PropertyParams",
           "message": "params call to SumParams (3 args)",
-          "line": 46
+          "line": 46,
+          "id": "091dbf6cee558bbe466bbbcae26bb4a08766d86f7c0ee447b56a8ec9fbd36d4b"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/AllocationPatterns.cs",
@@ -4248,7 +4254,8 @@
           "kind": "HighCoupling",
           "severity": "Warning",
           "typeName": "HighCouplingHub",
-          "message": "CBO 16 (threshold: 15)"
+          "message": "CBO 16 (threshold: 15)",
+          "id": "e795616ff48476cfb884fc8d13daf9bf25a1df228a674ecaa05c935523b94e7b"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
@@ -4580,7 +4587,8 @@
           "kind": "DeepInheritance",
           "severity": "Warning",
           "typeName": "InhBase5",
-          "message": "DIT 5 (threshold: 5)"
+          "message": "DIT 5 (threshold: 5)",
+          "id": "061cee5b9ca5f6efdebbf878a1bdea6d3574fdcb9a24866cd42586f479b39420"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
@@ -4616,7 +4624,8 @@
           "kind": "DeepInheritance",
           "severity": "Warning",
           "typeName": "DeepLeaf",
-          "message": "DIT 6 (threshold: 5)"
+          "message": "DIT 6 (threshold: 5)",
+          "id": "ac7d84e2a15d42ad8fc323a63ae4404473be2c8fcadaff514d4b62e9d5c25e43"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
@@ -4668,28 +4677,32 @@
           "severity": "Warning",
           "typeName": "DeepNestingTarget",
           "methodName": "DeeplyNested",
-          "message": "6 parameters (threshold: 5)"
+          "message": "6 parameters (threshold: 5)",
+          "id": "439392ffb108d975e6c073a2f663d2f24e82d07af633ac65b858e0e06ac8348a"
         },
         {
           "kind": "HighComplexity",
           "severity": "Warning",
           "typeName": "DeepNestingTarget",
           "methodName": "DeeplyNested",
-          "message": "cognitive CC 21"
+          "message": "cognitive CC 21",
+          "id": "7af551a0de986f964714bfb6cc9f3a9be3b7c124d69c3aa667dfd716e7281b78"
         },
         {
           "kind": "DeepNesting",
           "severity": "Critical",
           "typeName": "DeepNestingTarget",
           "methodName": "DeeplyNested",
-          "message": "nesting depth 6 (threshold: 4)"
+          "message": "nesting depth 6 (threshold: 4)",
+          "id": "40211dcb90f4cbecd72e3306b7b8ef27bbed26daa60a98245799bfe477d3c50e"
         },
         {
           "kind": "LowMaintainability",
           "severity": "Warning",
           "typeName": "DeepNestingTarget",
           "methodName": "DeeplyNested",
-          "message": "MI 58 (threshold: 60)"
+          "message": "MI 58 (threshold: 60)",
+          "id": "dda531a2b819d6e6111883aa845b45d8b8a33ef0a63970d81bbeff38a922279c"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/DeepNestingTarget.cs",
@@ -4741,7 +4754,8 @@
           "severity": "Warning",
           "typeName": "ExcessiveParametersTarget",
           "methodName": "TooMany",
-          "message": "7 parameters (threshold: 5)"
+          "message": "7 parameters (threshold: 5)",
+          "id": "b79873bde7006ceeb06ed834f8d64bba3d0579869ae57f8bab475cc126c51d6a"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/ExcessiveParametersTarget.cs",
@@ -5053,13 +5067,15 @@
           "kind": "GodClass",
           "severity": "Warning",
           "typeName": "GodClassTarget",
-          "message": "21 methods (threshold: 20)"
+          "message": "21 methods (threshold: 20)",
+          "id": "af5d464f3bd1f843695e007d2cc6abe111de365380b03cc6c45f72fc6abf7ba4"
         },
         {
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "GodClassTarget",
-          "message": "LCOM 0.84 (threshold: 0.8)"
+          "message": "LCOM 0.84 (threshold: 0.8)",
+          "id": "1a78b310a9e25fa7af04dd5212b05034cec5f4a8d1893423669ec1d6e39281c8"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/GodClassTarget.cs",
@@ -5111,14 +5127,16 @@
           "severity": "Warning",
           "typeName": "HighComplexityTarget",
           "methodName": "Branchy",
-          "message": "cyclomatic CC 17, cognitive CC 16"
+          "message": "cyclomatic CC 17, cognitive CC 16",
+          "id": "dc0d61a7801c386c0a9fe966bc26b3c2a8a9918bfe65424b6a2de36b52d8d438"
         },
         {
           "kind": "LowMaintainability",
           "severity": "Warning",
           "typeName": "HighComplexityTarget",
           "methodName": "Branchy",
-          "message": "MI 52 (threshold: 60)"
+          "message": "MI 52 (threshold: 60)",
+          "id": "ee6c6d7eab2f372f0bf2aef5c07637287f11a04c353f41c3cadf7c12f4c69880"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/HighComplexityTarget.cs",
@@ -5170,14 +5188,16 @@
           "severity": "Warning",
           "typeName": "LongMethodTarget",
           "methodName": "RunLongMethod",
-          "message": "90 lines"
+          "message": "90 lines",
+          "id": "70fadea984231cd93168adf4c626c773e3ffb228f9f7ceff84d9507ef5be9d18"
         },
         {
           "kind": "LowMaintainability",
           "severity": "Warning",
           "typeName": "LongMethodTarget",
           "methodName": "RunLongMethod",
-          "message": "MI 36 (threshold: 60)"
+          "message": "MI 36 (threshold: 60)",
+          "id": "ec7b84583e262890c6cdd0c33b7083a6b19a68e801737b6a484f83e73cf9c874"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/LongMethodTarget.cs",
@@ -5346,7 +5366,8 @@
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "LowCohesionTarget",
-          "message": "LCOM 1.00 (threshold: 0.8)"
+          "message": "LCOM 1.00 (threshold: 0.8)",
+          "id": "ad15e2337902399fc2a00998314cff62248906fc2b7eea38050f8fe95f5dc201"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/LowCohesionTarget.cs",
@@ -5398,21 +5419,24 @@
           "severity": "Warning",
           "typeName": "LowMaintainabilityTarget",
           "methodName": "Opaque",
-          "message": "10 parameters (threshold: 5)"
+          "message": "10 parameters (threshold: 5)",
+          "id": "123aff6b60948987d3ba08d4cedc3b297be0749d2859b703217a3e4cb5bf2e3b"
         },
         {
           "kind": "HighComplexity",
           "severity": "Warning",
           "typeName": "LowMaintainabilityTarget",
           "methodName": "Opaque",
-          "message": "cyclomatic CC 19"
+          "message": "cyclomatic CC 19",
+          "id": "052431eccfdb8165226d70a7d272cd0beb20c7bee90a6c1a0da526fb4d901a1d"
         },
         {
           "kind": "LowMaintainability",
           "severity": "Warning",
           "typeName": "LowMaintainabilityTarget",
           "methodName": "Opaque",
-          "message": "MI 46 (threshold: 60)"
+          "message": "MI 46 (threshold: 60)",
+          "id": "1e921894b7f766bc009e60bd48ce545f28ef12d82d059dd5ea8b6801ebfb9df7"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/LowMaintainabilityTarget.cs",
@@ -5725,13 +5749,15 @@
           "kind": "GodClass",
           "severity": "Warning",
           "typeName": "MonoBehaviourGodClassTarget",
-          "message": "21 methods (threshold: 20)"
+          "message": "21 methods (threshold: 20)",
+          "id": "2c8fb09ebf28ad6613ff9cb3549c87bf2dbfae5cdf6ca21b9fc0f4d8dda4a24f"
         },
         {
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "MonoBehaviourGodClassTarget",
-          "message": "LCOM 0.84 (threshold: 0.8)"
+          "message": "LCOM 0.84 (threshold: 0.8)",
+          "id": "c2c8897f25eb60090ff1497b1e33e0603aecd17c18db94eaac5dc2f104f7974f"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
@@ -5901,7 +5927,8 @@
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "MonoBehaviourLowCohesionTarget",
-          "message": "LCOM 1.00 (threshold: 0.8)"
+          "message": "LCOM 1.00 (threshold: 0.8)",
+          "id": "aaf9bc2900f589b640dba907b8c8fe2cd8eceae1c6eb9e400952576d00c2956e"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourLowCohesionTarget.cs",
@@ -6036,7 +6063,8 @@
           "kind": "LowCohesion",
           "severity": "Warning",
           "typeName": "Transform",
-          "message": "LCOM 1.50 (threshold: 0.8)"
+          "message": "LCOM 1.50 (threshold: 0.8)",
+          "id": "29867eb3edba3100c0be37bd1c0b75c657767a74bc95a71089ed776b119d9a01"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
@@ -6160,7 +6188,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "GetComponent call in hot-path method \u0027Update\u0027",
-          "line": 15
+          "line": 15,
+          "id": "eafd14593b83366d61fe800642e113a76a9d514fd760dd7bebfed4fd3c2073e4"
         },
         {
           "kind": "LinqInHotPath",
@@ -6168,7 +6197,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "LINQ \u0027ToList\u0027 in hot-path method \u0027Update\u0027",
-          "line": 16
+          "line": 16,
+          "id": "af729421b5a2305be4c3a4431bb8b7f01cc02455a2976621f745a8d507d55729"
         },
         {
           "kind": "LinqInHotPath",
@@ -6176,7 +6206,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "LINQ \u0027Where\u0027 in hot-path method \u0027Update\u0027",
-          "line": 16
+          "line": 16,
+          "id": "0baa3bddd0bffe6b8f5885551ba972e4e5953c6161bf9985d0919569e7d4abbc"
         },
         {
           "kind": "CollectionAllocationInHotPath",
@@ -6184,7 +6215,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "Array allocation in hot-path method \u0027Update\u0027",
-          "line": 16
+          "line": 16,
+          "id": "6e9ba13d3ebc65ee83bd579951dc0c24ebb4f6095ca190208334170c6d9555c4"
         },
         {
           "kind": "CollectionAllocationInHotPath",
@@ -6192,7 +6224,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "Collection allocation in hot-path method \u0027Update\u0027",
-          "line": 17
+          "line": 17,
+          "id": "08f9ce7d0a9127be7059422b47dbeffa062f2be59c5034e39fde8ac4c9633db8"
         },
         {
           "kind": "StringConcatenationInHotPath",
@@ -6200,7 +6233,8 @@
           "typeName": "UnityHotPathTarget",
           "methodName": "Update",
           "message": "String concatenation in hot-path method \u0027Update\u0027",
-          "line": 18
+          "line": 18,
+          "id": "ffda00a113ae50c4667f2a9cd8f0564498234eb6e5003dbce1410aaa848eefe9"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/UnityHotPathTarget.cs",
@@ -6353,7 +6387,8 @@
           "typeName": "WeakTemporizationTarget",
           "methodName": "Update",
           "message": "transform mutation without delta-time scaling",
-          "line": 11
+          "line": 11,
+          "id": "6145364ec2cda0aa456b2c0aca1281b137db573d5f5103de7aae709742686ee3"
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs",

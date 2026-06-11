@@ -499,7 +499,8 @@ public class SarifFormatterTests
             new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing 2", Line: 20),
         };
         var methods = new List<MethodMetrics> { new("Foo", 1, 1, 1, 1, 30, StartLine: 10) };
-        var result = MakeResult([MakeTypeMetrics(methods: methods, smells: smells)]);
+        var result = FindingFingerprint.AssignIds(
+            MakeResult([MakeTypeMetrics(methods: methods, smells: smells)]));
 
         var json = SarifFormatter.Generate(result);
         var doc = JsonNode.Parse(json)!;
@@ -507,11 +508,13 @@ public class SarifFormatterTests
 
         Assert.Equal(2, results.Count);
 
+        var jsonIds = result.TypeMetrics![0].CodeSmells!.Select(s => s.Id).ToList();
         var fingerprints = results
             .Select(r => r!["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>())
             .ToList();
 
         Assert.Equal(2, fingerprints.Distinct().Count());
+        Assert.Equal(jsonIds.OrderBy(id => id), fingerprints.OrderBy(fp => fp));
     }
 
     [Fact]

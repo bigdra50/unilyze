@@ -74,6 +74,8 @@ typeMetrics[]:
     .methodName                        string?  Affected method (null for type-level)
     .line                              int?     Source line of the occurrence (optional; null for type-level smells)
     .baselined                         bool?    true when suppressed by --baseline (optional; omitted when absent)
+    .id                                string?  Stable finding identity (unilyzeFingerprint/v1; optional on legacy snapshots)
+    .triage                            string?  Verdict from .unilyze/triage.json: confirmed, false-positive, wontfix
     .suppressed                        bool?    true when suppressed by an inline unilyze-disable comment (optional)
   .methods[]                           object   Per-method metrics
 

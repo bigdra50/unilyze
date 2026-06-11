@@ -50,7 +50,7 @@ static class SarifFormattingHelpers
         CodeSmell smell,
         TypeMetrics typeMetrics,
         string projectPath,
-        int occurrenceIndex)
+        int? occurrenceIndex = null)
     {
         var level = smell.Severity == SmellSeverity.Critical ? "error" : "warning";
         var messageText = smell.MethodName is not null
@@ -61,6 +61,9 @@ static class SarifFormattingHelpers
             ? ""
             : GetRelativePath(projectPath, typeMetrics.FilePath);
 
+        var fingerprint = smell.Id ?? ComputeFingerprint(
+            ruleId, relativePath, smell.TypeName, smell.MethodName, occurrenceIndex ?? 0);
+
         var resultObj = new JsonObject
         {
             ["ruleId"] = ruleId,
@@ -69,8 +72,7 @@ static class SarifFormattingHelpers
             ["message"] = new JsonObject { ["text"] = messageText },
             ["partialFingerprints"] = new JsonObject
             {
-                [SarifFormatter.FingerprintKey] = ComputeFingerprint(
-                    ruleId, relativePath, smell.TypeName, smell.MethodName, occurrenceIndex),
+                [SarifFormatter.FingerprintKey] = fingerprint,
             },
         };
 
@@ -79,8 +81,14 @@ static class SarifFormattingHelpers
             resultObj["locations"] = new JsonArray { location };
 
         resultObj["properties"] = BuildProperties(typeMetrics, smell);
+        AddSuppressions(resultObj, smell);
+        return resultObj;
+    }
 
+    static void AddSuppressions(JsonObject resultObj, CodeSmell smell)
+    {
         var suppressions = new JsonArray();
+
         if (smell.Suppressed == true)
         {
             suppressions.Add(new JsonObject
@@ -100,10 +108,17 @@ static class SarifFormattingHelpers
             });
         }
 
+        if (TriageVerdicts.ExcludesFromGates(smell.Triage))
+        {
+            suppressions.Add(new JsonObject
+            {
+                ["kind"] = "external",
+                ["justification"] = $"Triage verdict: {smell.Triage}",
+            });
+        }
+
         if (suppressions.Count > 0)
             resultObj["suppressions"] = suppressions;
-
-        return resultObj;
     }
 
     public static string ComputeFingerprint(

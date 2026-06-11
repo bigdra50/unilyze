@@ -149,8 +149,6 @@ public static class SarifFormatter
     static JsonArray BuildResults(AnalysisResult result, Dictionary<CodeSmellKind, int> ruleIndexByKind)
     {
         var results = new JsonArray();
-        var occurrenceCounts = new Dictionary<SarifFormattingHelpers.OccurrenceKey, int>();
-
         if (result.TypeMetrics is null) return results;
 
         foreach (var typeMetrics in result.TypeMetrics)
@@ -162,17 +160,8 @@ public static class SarifFormatter
                 if (!ruleIndexByKind.TryGetValue(smell.Kind, out var ruleIndex)) continue;
 
                 var ruleId = RuleDefinitions[ruleIndex].RuleId;
-                var relativePath = string.IsNullOrEmpty(typeMetrics.FilePath)
-                    ? ""
-                    : Path.GetRelativePath(result.ProjectPath, typeMetrics.FilePath).Replace('\\', '/');
-
-                var occurrenceKey = new SarifFormattingHelpers.OccurrenceKey(
-                    relativePath, smell.TypeName, smell.MethodName, ruleId);
-                occurrenceCounts.TryGetValue(occurrenceKey, out var occurrenceIndex);
-                occurrenceCounts[occurrenceKey] = occurrenceIndex + 1;
-
                 results.Add(SarifFormattingHelpers.BuildResultObject(
-                    ruleId, ruleIndex, smell, typeMetrics, result.ProjectPath, occurrenceIndex));
+                    ruleId, ruleIndex, smell, typeMetrics, result.ProjectPath));
             }
         }
 

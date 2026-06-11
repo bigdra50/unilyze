@@ -42,7 +42,9 @@ public sealed record CodeSmell(
     int? Line = null,
     bool? Baselined = null,
     bool? Suppressed = null,
-    string? SuppressionJustification = null);
+    string? SuppressionJustification = null,
+    string? Id = null,
+    string? Triage = null);
 
 public static class CodeSmellDetector
 {

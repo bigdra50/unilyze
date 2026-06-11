@@ -84,6 +84,11 @@ internal static class BadgeRunner
             if (baselineError is 1)
                 return ExitUsageError;
 
+            var triagePath = TriageApplication.ResolvePath(opts, config, fullPath);
+            var triageError = TriageApplication.TryApply(result, triagePath, out result);
+            if (triageError is 1)
+                return ExitUsageError;
+
             var excludeBaselined = effectiveBaseline is not null;
             var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
             var badge = BadgeFormatter.Build(metric, summary);
