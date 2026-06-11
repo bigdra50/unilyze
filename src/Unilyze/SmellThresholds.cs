@@ -86,6 +86,10 @@ public static class SmellThresholds
         AppendDocsRow(sb, "DeepInheritance", $"DIT >= {DeepInheritanceDitWarning}", "—");
         AppendDocsRow(sb, "CatchAllException",
             "`catch (Exception)` without rethrow (excluding `when` filtered catches)", "—");
+        AppendDocsRow(sb, "AsyncVoidMethod",
+            "`async void` method (excluding Unity message methods and event handlers)", "—");
+        AppendDocsRow(sb, "BlockingTaskWait",
+            "`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask", "—");
         return sb.ToString().TrimEnd();
     }
 
@@ -123,6 +127,10 @@ public static class SmellThresholds
             "throw new X() in catch block without inner exception.",
         CodeSmellKind.ThrowingSystemException =>
             "throw new Exception() directly (use a specific exception type).",
+        CodeSmellKind.AsyncVoidMethod =>
+            "async void method (excluding Unity message methods and event handlers). Exceptions are not observable by callers; in Unity they surface only in the log (silent failure).",
+        CodeSmellKind.BlockingTaskWait =>
+            ".Result / .Wait() / .GetAwaiter().GetResult() blocking wait on Task/ValueTask/UniTask (can deadlock or stall the frame on the main thread).",
         _ => null,
     };
 

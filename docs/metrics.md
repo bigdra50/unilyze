@@ -485,6 +485,8 @@ Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smell
 | LowMaintainability | MI < 60 | — |
 | DeepInheritance | DIT >= 5 | — |
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
+| AsyncVoidMethod | `async void` method (excluding Unity message methods and event handlers) | — |
+| BlockingTaskWait | `.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask | — |
 <!-- smell-thresholds:end -->
 
 ### Unity hot-path severity escalation
@@ -532,6 +534,8 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| AsyncVoidMethod | UNI022 | ルール検出（構文 + セマンティック解析） | async void の検出。Unity メッセージ・イベントハンドラは除外 |
+| BlockingTaskWait | UNI023 | ルール検出（構文 + セマンティック解析） | Task/ValueTask/UniTask へのブロッキング待機。SyntaxOnly では GetAwaiter().GetResult() のみ |
 | Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |

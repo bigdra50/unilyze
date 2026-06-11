@@ -27,6 +27,8 @@ public static class SarifFormatter
         ("UNI014", CodeSmellKind.CatchAllException, "Catch-all exception without rethrow"),
         ("UNI015", CodeSmellKind.MissingInnerException, "Missing inner exception in rethrow"),
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
+        ("UNI022", CodeSmellKind.AsyncVoidMethod, "async void method"),
+        ("UNI023", CodeSmellKind.BlockingTaskWait, "Blocking wait on Task"),
     ];
 
     public static string Generate(AnalysisResult result)

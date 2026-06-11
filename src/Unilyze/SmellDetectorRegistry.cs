@@ -8,5 +8,6 @@ public static class SmellDetectorRegistry
         new ClosureSmellDetector(),
         new ParamsSmellDetector(),
         new ExceptionFlowSmellDetector(),
+        new AsyncFlowSmellDetector(),
     ];
 }
