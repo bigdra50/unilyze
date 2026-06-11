@@ -22,7 +22,7 @@ public sealed class UnityDllResolverTests : IDisposable
         // No ProjectVersion.txt -> version cannot be detected -> SyntaxOnly regardless of cap.
         var resolved = UnityDllResolver.Resolve(_tempDir);
 
-        Assert.Equal(AnalysisLevel.SyntaxOnly, resolved.Level);
+        Assert.Equal(AnalysisLevel.Syntax, resolved.Level);
         Assert.Empty(resolved.Paths);
     }
 
@@ -35,9 +35,9 @@ public sealed class UnityDllResolverTests : IDisposable
             Path.Combine(_tempDir, "ProjectSettings", "ProjectVersion.txt"),
             "m_EditorVersion: 2022.3.45f1\n");
 
-        var resolved = UnityDllResolver.Resolve(_tempDir, AnalysisLevel.SyntaxOnly);
+        var resolved = UnityDllResolver.Resolve(_tempDir, AnalysisLevel.Syntax);
 
-        Assert.Equal(AnalysisLevel.SyntaxOnly, resolved.Level);
+        Assert.Equal(AnalysisLevel.Syntax, resolved.Level);
         Assert.Empty(resolved.Paths);
     }
 }

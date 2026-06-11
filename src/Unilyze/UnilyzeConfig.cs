@@ -3,15 +3,27 @@ using System.Text.Json.Serialization;
 
 namespace Unilyze;
 
+internal readonly record struct ResolvedAnalysisConfig(
+    EffectiveSmellThresholds Thresholds,
+    IReadOnlySet<CodeSmellKind> DisabledRuleKinds,
+    bool DisableCycles);
+
 internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("excludeDirs")]
     IReadOnlyList<string>? ExcludeDirs = null,
     [property: JsonPropertyName("disableDefaultExcludes")]
     bool DisableDefaultExcludes = false,
     [property: JsonPropertyName("disableGeneratedCodeExcludes")]
-    bool DisableGeneratedCodeExcludes = false)
+    bool DisableGeneratedCodeExcludes = false,
+    [property: JsonPropertyName("smells")]
+    IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? Smells = null,
+    [property: JsonPropertyName("rules")]
+    IReadOnlyDictionary<string, string>? Rules = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
+
+    static readonly IReadOnlySet<CodeSmellKind> NoDisabledRules =
+        new HashSet<CodeSmellKind>();
 
     static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -37,21 +49,30 @@ internal sealed record UnilyzeConfig(
 
     internal static IReadOnlyList<string>? BuildEffectiveExcludeDirs(UnilyzeConfig config, string projectRoot)
     {
-        var resolved = new List<string>();
-
-        if (!config.DisableDefaultExcludes)
-            resolved.AddRange(DefaultExcludes.ResolveProjectPaths(projectRoot));
-
-        if (config.ExcludeDirs is { Count: > 0 })
-        {
-            foreach (var dir in ResolveExcludePaths(config.ExcludeDirs, projectRoot))
-            {
-                if (!resolved.Any(existing => existing.Equals(dir, StringComparison.OrdinalIgnoreCase)))
-                    resolved.Add(dir);
-            }
-        }
-
+        var resolved = CollectDefaultExcludeDirs(config, projectRoot);
+        AppendUserExcludeDirs(resolved, config, projectRoot);
         return resolved.Count > 0 ? resolved : null;
+    }
+
+    static List<string> CollectDefaultExcludeDirs(UnilyzeConfig config, string projectRoot)
+    {
+        if (config.DisableDefaultExcludes)
+            return [];
+
+        return DefaultExcludes.ResolveProjectPaths(projectRoot).ToList();
+    }
+
+    static void AppendUserExcludeDirs(List<string> resolved, UnilyzeConfig config, string projectRoot)
+    {
+        if (config.ExcludeDirs is not { Count: > 0 })
+            return;
+
+        foreach (var dir in ResolveExcludePaths(config.ExcludeDirs, projectRoot))
+        {
+            if (resolved.Any(existing => existing.Equals(dir, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            resolved.Add(dir);
+        }
     }
 
     internal static UnilyzeConfig LoadFile(string path)
@@ -73,23 +94,124 @@ internal sealed record UnilyzeConfig(
 
     internal static UnilyzeConfig Merge(UnilyzeConfig lower, UnilyzeConfig higher)
     {
-        IReadOnlyList<string>? excludeDirs;
-        if (lower.ExcludeDirs is not { Count: > 0 })
-            excludeDirs = higher.ExcludeDirs;
-        else if (higher.ExcludeDirs is not { Count: > 0 })
-            excludeDirs = lower.ExcludeDirs;
-        else
+        return new UnilyzeConfig(
+            MergeExcludeDirs(lower.ExcludeDirs, higher.ExcludeDirs),
+            lower.DisableDefaultExcludes || higher.DisableDefaultExcludes,
+            lower.DisableGeneratedCodeExcludes || higher.DisableGeneratedCodeExcludes,
+            MergeSmells(lower.Smells, higher.Smells),
+            MergeRules(lower.Rules, higher.Rules));
+    }
+
+    static IReadOnlyList<string>? MergeExcludeDirs(
+        IReadOnlyList<string>? lower,
+        IReadOnlyList<string>? higher)
+    {
+        if (lower is not { Count: > 0 })
+            return higher;
+        if (higher is not { Count: > 0 })
+            return lower;
+
+        var merged = new HashSet<string>(lower, StringComparer.OrdinalIgnoreCase);
+        foreach (var dir in higher)
+            merged.Add(dir);
+        return merged.ToList();
+    }
+
+    internal ResolvedAnalysisConfig ResolveAnalysisConfig()
+        => new(
+            EffectiveSmellThresholds.FromOverrides(Smells),
+            ResolveDisabledRuleKinds(Rules, out var disableCycles),
+            disableCycles);
+
+    static IReadOnlySet<CodeSmellKind> ResolveDisabledRuleKinds(
+        IReadOnlyDictionary<string, string>? rules,
+        out bool disableCycles)
+    {
+        disableCycles = false;
+        if (rules is not { Count: > 0 })
+            return NoDisabledRules;
+
+        var disabled = new HashSet<CodeSmellKind>();
+        foreach (var (ruleId, state) in rules)
+            ApplyRuleState(ruleId, state, disabled, ref disableCycles);
+
+        return disabled.Count > 0 ? disabled : NoDisabledRules;
+    }
+
+    static void ApplyRuleState(
+        string ruleId,
+        string state,
+        HashSet<CodeSmellKind> disabled,
+        ref bool disableCycles)
+    {
+        if (!string.Equals(state, "off", StringComparison.OrdinalIgnoreCase))
         {
-            var merged = new HashSet<string>(lower.ExcludeDirs, StringComparer.OrdinalIgnoreCase);
-            foreach (var dir in higher.ExcludeDirs)
-                merged.Add(dir);
-            excludeDirs = merged.ToList();
+            if (!string.Equals(state, "on", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine(
+                    $"Warning: Unknown rule state '{state}' for '{ruleId}'; expected 'on' or 'off'. Ignoring.");
+            }
+            return;
         }
 
-        return new UnilyzeConfig(
-            excludeDirs,
-            lower.DisableDefaultExcludes || higher.DisableDefaultExcludes,
-            lower.DisableGeneratedCodeExcludes || higher.DisableGeneratedCodeExcludes);
+        if (string.Equals(ruleId, "UNI009", StringComparison.OrdinalIgnoreCase))
+        {
+            disableCycles = true;
+            return;
+        }
+
+        if (SarifFormatter.TryGetKind(ruleId, out var kind))
+            disabled.Add(kind);
+        else
+            Console.Error.WriteLine($"Warning: Unknown rule id '{ruleId}' in config; ignoring.");
+    }
+
+    static IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? MergeSmells(
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? lower,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? higher)
+    {
+        if (lower is not { Count: > 0 })
+            return higher;
+        if (higher is not { Count: > 0 })
+            return lower;
+
+        var merged = new Dictionary<string, IReadOnlyDictionary<string, JsonElement>>(
+            lower, StringComparer.OrdinalIgnoreCase);
+        foreach (var (smellName, higherInner) in higher)
+            merged[smellName] = MergeSmellOverrides(merged, smellName, higherInner);
+
+        return merged;
+    }
+
+    static IReadOnlyDictionary<string, JsonElement> MergeSmellOverrides(
+        Dictionary<string, IReadOnlyDictionary<string, JsonElement>> merged,
+        string smellName,
+        IReadOnlyDictionary<string, JsonElement> higherInner)
+    {
+        if (!merged.TryGetValue(smellName, out var lowerInner))
+            return higherInner;
+
+        var inner = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (key, value) in lowerInner)
+            inner[key] = value;
+        foreach (var (key, value) in higherInner)
+            inner[key] = value;
+        return inner;
+    }
+
+    static IReadOnlyDictionary<string, string>? MergeRules(
+        IReadOnlyDictionary<string, string>? lower,
+        IReadOnlyDictionary<string, string>? higher)
+    {
+        if (lower is not { Count: > 0 })
+            return higher;
+        if (higher is not { Count: > 0 })
+            return lower;
+
+        var merged = new Dictionary<string, string>(lower, StringComparer.OrdinalIgnoreCase);
+        foreach (var (ruleId, state) in higher)
+            merged[ruleId] = state;
+        return merged;
     }
 
     internal static IReadOnlyList<string> ResolveExcludePaths(
@@ -141,14 +263,29 @@ internal sealed record UnilyzeConfig(
         if (config.ExcludeDirs is not { Count: > 0 })
             return false;
 
-        var updated = config.ExcludeDirs
+        if (!TryRemoveExcludeDir(config.ExcludeDirs, dir, out var updated))
+            return false;
+
+        SaveFile(configPath, config with { ExcludeDirs = updated });
+        return true;
+    }
+
+    static bool TryRemoveExcludeDir(
+        IReadOnlyList<string> excludeDirs,
+        string dir,
+        out IReadOnlyList<string>? updated)
+    {
+        var filtered = excludeDirs
             .Where(e => !e.Equals(dir, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
-        if (updated.Count == config.ExcludeDirs.Count)
+        if (filtered.Count == excludeDirs.Count)
+        {
+            updated = null;
             return false;
+        }
 
-        SaveFile(configPath, config with { ExcludeDirs = updated.Count > 0 ? updated : null });
+        updated = filtered.Count > 0 ? filtered : null;
         return true;
     }
 

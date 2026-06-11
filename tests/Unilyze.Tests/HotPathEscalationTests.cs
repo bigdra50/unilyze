@@ -269,7 +269,7 @@ public sealed class HotPathEscalationTests : IDisposable
 
         if (syntaxOnly)
         {
-            compilationResult = new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+            compilationResult = new CompilationResult(null, AnalysisLevel.Syntax);
         }
         else
         {
@@ -279,7 +279,7 @@ public sealed class HotPathEscalationTests : IDisposable
                 [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                     .WithNullableContextOptions(NullableContextOptions.Enable));
-            compilationResult = new CompilationResult(compilation, AnalysisLevel.CoreEngine);
+            compilationResult = new CompilationResult(compilation, AnalysisLevel.Core);
         }
 
         var allTypes = BaseTypeResolver

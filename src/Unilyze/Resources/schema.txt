@@ -8,10 +8,14 @@ analyze (unilyze -f json):
   .toolVersion                         string?  unilyze assembly version that produced this snapshot;
                                                 null in older snapshots
   .analysisLevel                       string?  Resolved analysis depth:
-                                                "SyntaxOnly" (no Unity DLLs; semantic
-                                                metrics understated), "CoreEngine",
-                                                "FullEngine", or "Complete".
-                                                null in older JSON snapshots.
+                                                "SyntaxOnly" (no Unity DLLs;
+                                                semantic metrics understated),
+                                                "CoreEngine", "FullEngine", or
+                                                "Complete". null in older JSON
+                                                snapshots.
+  .projectKind                         string?  Detected project kind: "unity",
+                                                "dotnet", or "unknown"; null in
+                                                older snapshots.
   .assemblies[]                        object   Assembly info
     .name                              string   Assembly name (from .asmdef)
     .metrics.abstractness              float    Abstractness (0.0-1.0)

@@ -135,11 +135,15 @@ internal static class StatuslineRunner
         string cacheTxtPath)
     {
         var config = UnilyzeConfig.LoadMerged(fullPath);
+        var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             fullPath, null, null, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            logSink: log);
+            logSink: log,
+            thresholds: resolved.Thresholds,
+            disabledRuleKinds: resolved.DisabledRuleKinds,
+            disableCycles: resolved.DisableCycles);
         var summary = StatuslineFormatter.ComputeSummary(result);
         var formatted = StatuslineFormatter.Format(summary);
 

@@ -4,9 +4,9 @@ namespace Unilyze;
 
 public enum AnalysisLevel
 {
-    SyntaxOnly,
-    CoreEngine,
-    FullEngine,
+    Syntax,
+    Core,
+    Full,
     Complete
 }
 
@@ -20,34 +20,34 @@ public static class UnityDllResolver
     // SyntaxOnly cap short-circuits before any DLL discovery.
     public static ResolvedDlls Resolve(string projectRoot, AnalysisLevel maxLevel = AnalysisLevel.Complete)
     {
-        if (maxLevel == AnalysisLevel.SyntaxOnly)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+        if (maxLevel == AnalysisLevel.Syntax)
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         var version = DetectUnityVersion(projectRoot);
         if (version is null)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         var editorPath = FindEditorInstallPath(version);
         if (editorPath is null)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         var contentsRoot = ResolveContentsRoot(editorPath);
         if (contentsRoot is null)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         var managedRoot = ResolveManagedRoot(contentsRoot);
         if (managedRoot is null)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         var paths = new List<string>();
 
         var coreDlls = CollectCoreDlls(managedRoot, contentsRoot);
         paths.AddRange(coreDlls);
         if (paths.Count == 0)
-            return new ResolvedDlls(AnalysisLevel.SyntaxOnly, []);
+            return new ResolvedDlls(AnalysisLevel.Syntax, []);
 
         // FullEngine adds engine/editor module DLLs; skip them when capped to CoreEngine.
-        var moduleDlls = maxLevel >= AnalysisLevel.FullEngine ? CollectModuleDlls(managedRoot) : [];
+        var moduleDlls = maxLevel >= AnalysisLevel.Full ? CollectModuleDlls(managedRoot) : [];
         paths.AddRange(moduleDlls);
 
         // Complete adds compiled package assemblies; skip them below Complete.
@@ -55,8 +55,8 @@ public static class UnityDllResolver
         var packageDlls = maxLevel >= AnalysisLevel.Complete ? CollectPackageDlls(scriptAssembliesDir) : [];
 
         var level = packageDlls.Count > 0 ? AnalysisLevel.Complete :
-                    moduleDlls.Count > 0 ? AnalysisLevel.FullEngine :
-                    AnalysisLevel.CoreEngine;
+                    moduleDlls.Count > 0 ? AnalysisLevel.Full :
+                    AnalysisLevel.Core;
 
         paths.AddRange(packageDlls);
 

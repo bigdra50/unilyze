@@ -16,8 +16,13 @@ internal static class AnalysisPipeline
         AnalysisLevel? requestedLevel = null,
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
-        IAnalysisLogSink? logSink = null)
+        IAnalysisLogSink? logSink = null,
+        EffectiveSmellThresholds? thresholds = null,
+        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
+        bool disableCycles = false)
     {
+        thresholds ??= EffectiveSmellThresholds.Default;
+        disabledRuleKinds ??= new HashSet<CodeSmellKind>();
         var log = logSink ?? new ConsoleAnalysisLogSink(quiet: false);
         var sw = Stopwatch.StartNew();
 
@@ -54,18 +59,17 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("compile");
         var compilationResult = CompilationFactory.Create(resolved, allSyntaxTrees, csprojInfo, cap, log);
-        var analysisLevel = compilationResult.Level.ToString();
+        var analysisLevel = AnalysisLevelOption.ToExternalName(compilationResult.Level);
 
         // The level is always reported on stderr (issue 16: previously only when != SyntaxOnly).
         log.Info($"Analysis level: {analysisLevel}");
 
-        var isUnityProject = File.Exists(
-            Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt"));
+        var projectKind = ProgramHelpers.ResolveProjectKind(projectRoot);
 
         // A Unity project that silently fell back to SyntaxOnly means DLL resolution
         // failed and semantic metrics (boxing/CBO/DIT/...) are understated (issue 16).
-        if (isUnityProject && compilationResult.Level == AnalysisLevel.SyntaxOnly
-            && requestedLevel is not AnalysisLevel.SyntaxOnly)
+        if (projectKind == "unity" && compilationResult.Level == AnalysisLevel.Syntax
+            && requestedLevel is not AnalysisLevel.Syntax)
         {
             log.Warning(
                 "Warning: Unity project detected but Unity DLLs could not be resolved; "
@@ -107,7 +111,8 @@ internal static class AnalysisPipeline
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
         typeMetrics = EnrichWithCouplingMetrics(typeMetrics, couplingMap);
 
-        typeMetrics = SemanticEnricher.Enrich(typeMetrics, allTypes, allSyntaxTrees, compilationResult);
+        typeMetrics = SemanticEnricher.Enrich(
+            typeMetrics, allTypes, allSyntaxTrees, compilationResult, thresholds, disabledRuleKinds);
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 
@@ -132,7 +137,12 @@ internal static class AnalysisPipeline
             return new AssemblyInfo(a.Name, a.Directory, a.References, metrics, health);
         }).ToList();
 
-        var cycles = CycleDetector.DetectAll(deps, assemblyInfos);
+        IReadOnlyList<CyclicDependency>? cycles = null;
+        if (!disableCycles)
+        {
+            var detectedCycles = CycleDetector.DetectAll(deps, assemblyInfos);
+            cycles = detectedCycles.Count > 0 ? detectedCycles : null;
+        }
         log.PhaseCompleted("aggregate", sw.Elapsed);
 
         return new AnalysisResult(
@@ -143,9 +153,10 @@ internal static class AnalysisPipeline
             deps,
             typeMetrics,
             analysisLevel,
-            cycles.Count > 0 ? cycles : null,
+            cycles,
             AnalysisResult.CurrentMetricsVersion,
-            ToolVersionInfo.Current);
+            ToolVersionInfo.Current,
+            ProjectKind: projectKind);
     }
 
     static CsprojInfo? ResolveCsprojInfo(

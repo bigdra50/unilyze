@@ -118,7 +118,7 @@ public sealed class SemanticEnricherFallbackTests : IDisposable
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                 .WithNullableContextOptions(NullableContextOptions.Enable));
 
-        var compilationResult = new CompilationResult(compilation, AnalysisLevel.CoreEngine);
+        var compilationResult = new CompilationResult(compilation, AnalysisLevel.Core);
         var allTypes = BaseTypeResolver
             .ResolveTypeRelationships(analyzed.Types, analyzed.SyntaxTrees, compilationResult)
             .ToList();
