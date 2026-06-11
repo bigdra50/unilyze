@@ -33,6 +33,8 @@ jobs:
     needs: actionlint
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -47,7 +49,10 @@ jobs:
       - name: Read package version
         id: package
         shell: bash
-        run: echo "version=$(grep -oPm1 '(?<=<Version>)[^<]+' src/Unilyze/Unilyze.csproj)" >> "$GITHUB_OUTPUT"
+        run: |
+          nupkg=$(find ./artifacts/nupkg -maxdepth 1 -name 'Unilyze.*.nupkg' -print -quit)
+          version=$(basename "$nupkg" .nupkg | sed 's/^Unilyze\.//')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Run composite action (local path)
         id: action

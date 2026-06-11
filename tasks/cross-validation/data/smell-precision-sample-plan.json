@@ -1,0 +1,122 @@
+{
+  "seed": 42,
+  "sampleSize": 20,
+  "frequentThreshold": 20,
+  "totalCorpusSmells": 4542,
+  "totalLabelRows": 349,
+  "kinds": {
+    "AsyncVoidMethod": {
+      "corpusCount": 14,
+      "labelCount": 14,
+      "strategy": "exhaustive"
+    },
+    "BlockingTaskWait": {
+      "corpusCount": 11,
+      "labelCount": 11,
+      "strategy": "exhaustive"
+    },
+    "BoxingAllocation": {
+      "corpusCount": 193,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "CatchAllException": {
+      "corpusCount": 761,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "ClosureCapture": {
+      "corpusCount": 425,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "CollectionAllocationInHotPath": {
+      "corpusCount": 3,
+      "labelCount": 3,
+      "strategy": "exhaustive"
+    },
+    "DeepInheritance": {
+      "corpusCount": 285,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "DeepNesting": {
+      "corpusCount": 67,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "ExcessiveParameters": {
+      "corpusCount": 38,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "ExpensiveUnityApiInHotPath": {
+      "corpusCount": 11,
+      "labelCount": 11,
+      "strategy": "exhaustive"
+    },
+    "GodClass": {
+      "corpusCount": 65,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "HighComplexity": {
+      "corpusCount": 123,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "HighCoupling": {
+      "corpusCount": 344,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "LinqInHotPath": {
+      "corpusCount": 26,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "LongMethod": {
+      "corpusCount": 51,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "LowCohesion": {
+      "corpusCount": 348,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "LowMaintainability": {
+      "corpusCount": 1716,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "ParamsArrayAllocation": {
+      "corpusCount": 8,
+      "labelCount": 8,
+      "strategy": "exhaustive"
+    },
+    "StringConcatenationInHotPath": {
+      "corpusCount": 26,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "ThrowingSystemException": {
+      "corpusCount": 25,
+      "labelCount": 20,
+      "strategy": "sampled(20)"
+    },
+    "WeakTemporization": {
+      "corpusCount": 2,
+      "labelCount": 2,
+      "strategy": "exhaustive"
+    }
+  },
+  "snapshots": [
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-vcontainer-v2.json",
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-unitask-v2.json",
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-bossroom-v2.json",
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-hmf-v2.json",
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-self-v2.json",
+    "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-89/tasks/cross-validation/data/unilyze-decommissioned-v2.json"
+  ]
+}
