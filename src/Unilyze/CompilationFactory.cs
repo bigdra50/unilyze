@@ -28,18 +28,18 @@ public static class CompilationFactory
         // A SyntaxOnly pin must not build a semantic model at all: the csproj
         // merge below would otherwise re-elevate SyntaxOnly to CoreEngine and
         // silently exceed the requested cap (issue 17).
-        if (maxLevel == AnalysisLevel.SyntaxOnly)
-            return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+        if (maxLevel == AnalysisLevel.Syntax)
+            return new CompilationResult(null, AnalysisLevel.Syntax);
 
         resolved = MergeWithCsprojReferences(resolved, csprojInfo);
 
-        if (resolved.Level == AnalysisLevel.SyntaxOnly || resolved.Paths.Count == 0)
-            return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+        if (resolved.Level == AnalysisLevel.Syntax || resolved.Paths.Count == 0)
+            return new CompilationResult(null, AnalysisLevel.Syntax);
 
         var (references, failedCount) = LoadReferences(resolved.Paths, log);
 
         if (references.Count == 0)
-            return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+            return new CompilationResult(null, AnalysisLevel.Syntax);
 
         // Downgrade level if significant portion of references failed
         var level = resolved.Level;
@@ -48,8 +48,8 @@ public static class CompilationFactory
             var failRatio = (double)failedCount / resolved.Paths.Count;
             if (failRatio > 0.5)
             {
-                log.Warning($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load, downgrading to SyntaxOnly");
-                return new CompilationResult(null, AnalysisLevel.SyntaxOnly);
+                log.Warning($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load, downgrading to Syntax");
+                return new CompilationResult(null, AnalysisLevel.Syntax);
             }
             log.Warning($"Warning: {failedCount}/{resolved.Paths.Count} references failed to load");
         }
@@ -75,8 +75,8 @@ public static class CompilationFactory
 
         var merged = new List<string>(resolved.Paths);
         merged.AddRange(csprojInfo.ReferencePaths);
-        var mergedLevel = resolved.Level == AnalysisLevel.SyntaxOnly && merged.Count > 0
-            ? AnalysisLevel.CoreEngine
+        var mergedLevel = resolved.Level == AnalysisLevel.Syntax && merged.Count > 0
+            ? AnalysisLevel.Core
             : resolved.Level;
         return new ResolvedDlls(mergedLevel, merged.Distinct(StringComparer.OrdinalIgnoreCase).ToList());
     }

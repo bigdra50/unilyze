@@ -5060,5 +5060,6 @@
       "level": "Type"
     }
   ],
-  "metricsVersion": 3
+  "metricsVersion": 3,
+  "projectKind": "unity"
 }

@@ -5,12 +5,12 @@ namespace Unilyze.Tests;
 public sealed class AnalysisLevelTests
 {
     [Theory]
-    [InlineData("syntax", AnalysisLevel.SyntaxOnly)]
-    [InlineData("core", AnalysisLevel.CoreEngine)]
-    [InlineData("full", AnalysisLevel.FullEngine)]
+    [InlineData("syntax", AnalysisLevel.Syntax)]
+    [InlineData("core", AnalysisLevel.Core)]
+    [InlineData("full", AnalysisLevel.Full)]
     [InlineData("complete", AnalysisLevel.Complete)]
     [InlineData("COMPLETE", AnalysisLevel.Complete)]
-    [InlineData("  core  ", AnalysisLevel.CoreEngine)]
+    [InlineData("  core  ", AnalysisLevel.Core)]
     public void TryParse_KnownTokens_ReturnsLevel(string value, AnalysisLevel expected)
     {
         Assert.True(AnalysisLevelOption.TryParse(value, out var level));
@@ -44,6 +44,16 @@ public sealed class AnalysisLevelTests
     public void StatuslineMarker_CompleteOrUnknown_ReturnsNull(string? level)
     {
         Assert.Null(AnalysisLevelOption.StatuslineMarker(level));
+    }
+
+    [Theory]
+    [InlineData(AnalysisLevel.Syntax, "SyntaxOnly")]
+    [InlineData(AnalysisLevel.Core, "CoreEngine")]
+    [InlineData(AnalysisLevel.Full, "FullEngine")]
+    [InlineData(AnalysisLevel.Complete, "Complete")]
+    public void ToExternalName_MapsEnumToLegacyStrings(AnalysisLevel level, string expected)
+    {
+        Assert.Equal(expected, AnalysisLevelOption.ToExternalName(level));
     }
 
     [Fact]

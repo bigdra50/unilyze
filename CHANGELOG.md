@@ -26,6 +26,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - **[metrics]** Two async anti-pattern smells: `AsyncVoidMethod` (async void methods, excluding Unity message methods and event-handler signatures) and `BlockingTaskWait` (`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on `Task`/`ValueTask`/`UniTask`; SyntaxOnly reports only the `GetAwaiter().GetResult()` chain) ([#80](https://github.com/bigdra50/unilyze/issues/80))
 - **[metrics]** UNI017–UNI020 Unity hot-path detectors: expensive Unity API (GetComponent, Find, Camera.main), LINQ, collection/array allocation, and string concatenation inside MonoBehaviour per-frame methods (`Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`, coroutines); default Warning severity ([#78](https://github.com/bigdra50/unilyze/issues/78))
 - `statusline --verbose` prints the previously-swallowed analysis exception to stderr, and `statusline --quiet` suppresses info lines while keeping warnings; `AnalysisPipeline` now shows per-phase progress on stderr when stderr is a TTY ([#76](https://github.com/bigdra50/unilyze/issues/76))
+- `projectKind` field on JSON output root (`unity` | `dotnet` | `unknown`) and Unity-agnostic `analysisLevel` stage names (`Syntax`/`Core`/`Full`/`Complete`); `--level syntax|core|full|complete` CLI tokens unchanged ([#72](https://github.com/bigdra50/unilyze/issues/72))
 
 ### Changed
 

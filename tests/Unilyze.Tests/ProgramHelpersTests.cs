@@ -331,4 +331,36 @@ public sealed class ProgramHelpersTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ResolveProjectKind_UnityProject_ReturnsUnity()
+    {
+        var fixtureRoot = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "fixtures", "golden"));
+        Assert.Equal("unity", ProgramHelpers.ResolveProjectKind(fixtureRoot));
+    }
+
+    [Fact]
+    public void ResolveProjectKind_DotnetProject_ReturnsDotnet()
+    {
+        var repoRoot = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        Assert.Equal("dotnet", ProgramHelpers.ResolveProjectKind(repoRoot));
+    }
+
+    [Fact]
+    public void ResolveProjectKind_UnknownProject_ReturnsUnknown()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"unilyze-test-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(tempDir);
+            File.WriteAllText(Path.Combine(tempDir, "Only.cs"), "class C {}");
+            Assert.Equal("unknown", ProgramHelpers.ResolveProjectKind(tempDir));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }
