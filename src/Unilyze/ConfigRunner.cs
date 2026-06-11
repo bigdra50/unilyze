@@ -75,7 +75,7 @@ internal static class ConfigRunner
         PrintSection("global", globalPath, global, ref hasAny);
         PrintSection("project", projectPath, project, ref hasAny);
 
-        hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 };
+        hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 } || merged.Baseline is not null;
 
         if (hasAny)
         {
@@ -89,6 +89,8 @@ internal static class ConfigRunner
                 foreach (var dir in merged.ExcludeDirs)
                     Console.WriteLine($"    {dir}");
             }
+            if (merged.Baseline is not null)
+                Console.WriteLine($"  baseline: {merged.Baseline}");
 
             var effectiveThresholds = EffectiveSmellThresholds.FromOverrides(merged.Smells);
             PrintEffectiveThresholds(effectiveThresholds);

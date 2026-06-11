@@ -16,7 +16,7 @@ internal static class StatuslineFormatter
         int MiBearingCount = 0,
         string? AnalysisLevel = null);
 
-    internal static Summary ComputeSummary(AnalysisResult result)
+    internal static Summary ComputeSummary(AnalysisResult result, bool excludeBaselined = false)
     {
         var metrics = result.TypeMetrics ?? [];
         if (metrics.Count == 0)
@@ -25,9 +25,9 @@ internal static class StatuslineFormatter
         var avg = Math.Round(metrics.Average(t => t.CodeHealth), 1);
         var min = Math.Round(metrics.Min(t => t.CodeHealth), 1);
         var warnings = metrics.Sum(t =>
-            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning) ?? 0);
+            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning && CountForSummary(s, excludeBaselined)) ?? 0);
         var criticals = metrics.Sum(t =>
-            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Critical) ?? 0);
+            t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Critical && CountForSummary(s, excludeBaselined)) ?? 0);
         // MI is undefined for method-less types (records, markers) — exclude them
         // from the denominator instead of counting them as 0.
         var miValues = metrics
@@ -40,6 +40,9 @@ internal static class StatuslineFormatter
 
         return new Summary(avg, min, warnings, criticals, metrics.Count, avgMi, boxing, cyclicDeps, miValues.Count, result.AnalysisLevel);
     }
+
+    static bool CountForSummary(CodeSmell smell, bool excludeBaselined)
+        => !excludeBaselined || smell.Baselined != true;
 
     internal static string Format(Summary s)
     {

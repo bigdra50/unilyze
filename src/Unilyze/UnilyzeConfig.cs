@@ -18,7 +18,9 @@ internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("smells")]
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? Smells = null,
     [property: JsonPropertyName("rules")]
-    IReadOnlyDictionary<string, string>? Rules = null)
+    IReadOnlyDictionary<string, string>? Rules = null,
+    [property: JsonPropertyName("baseline")]
+    string? Baseline = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
 
@@ -99,7 +101,8 @@ internal sealed record UnilyzeConfig(
             lower.DisableDefaultExcludes || higher.DisableDefaultExcludes,
             lower.DisableGeneratedCodeExcludes || higher.DisableGeneratedCodeExcludes,
             MergeSmells(lower.Smells, higher.Smells),
-            MergeRules(lower.Rules, higher.Rules));
+            MergeRules(lower.Rules, higher.Rules),
+            higher.Baseline ?? lower.Baseline);
     }
 
     static IReadOnlyList<string>? MergeExcludeDirs(

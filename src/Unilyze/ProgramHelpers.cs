@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace Unilyze;
 
 internal static class ProgramHelpers
@@ -5,13 +7,14 @@ internal static class ProgramHelpers
     public static readonly string[] TopLevelCommands =
     [
         "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
+        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "skills",
         "help", "version",
     ];
 
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
@@ -79,7 +82,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> StatuslineValueOptions = new(StringComparer.Ordinal)
     {
-        "-p", "--path", "--refresh", "--level",
+        "-p", "--path", "--refresh", "--level", "--baseline",
     };
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
@@ -90,6 +93,7 @@ internal static class ProgramHelpers
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-o", "--output", "--metric", "--format", "--level", "--fail-under", "--fail-over",
+        "--baseline",
     };
 
     static readonly HashSet<string> BadgeBooleanOptions = new(StringComparer.Ordinal)
@@ -106,6 +110,18 @@ internal static class ProgramHelpers
     {
         "-h", "--help",
     };
+
+    static readonly HashSet<string> BaselineCreateValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-o", "--output", "--level",
+    };
+
+    static readonly HashSet<string> BaselineCreateBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    public static readonly string[] BaselineSubcommands = ["create"];
 
     public static bool IsHelpRequest(string[] args) =>
         args.Any(a => a is "-h" or "--help");
@@ -291,6 +307,22 @@ internal static class ProgramHelpers
         return extra is null ? 0 : ReportUnknown("subcommand", extra, ["schema"]);
     }
 
+    public static int ValidateBaselineArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        if (args.Length == 0)
+            return 0;
+
+        var subcommand = args[0];
+        if (!BaselineSubcommands.Contains(subcommand))
+            return ReportUnknown("subcommand", subcommand, BaselineSubcommands);
+
+        var unknown = FindUnknownOption(args[1..], BaselineCreateValueOptions, BaselineCreateBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, BaselineCreateValueOptions.Concat(BaselineCreateBooleanOptions));
+    }
+
     public static int ValidateTopLevelCommand(string command)
     {
         if (TopLevelCommands.Contains(command))
@@ -382,6 +414,43 @@ internal static class ProgramHelpers
         }
         return false;
     }
+
+    public static int? TryApplyBaseline(
+        AnalysisResult result,
+        string projectRoot,
+        string? baselinePath,
+        out AnalysisResult updated)
+    {
+        updated = result;
+        if (baselinePath is null)
+            return null;
+
+        var resolvedPath = BaselineFile.ResolvePath(projectRoot, baselinePath);
+        if (!File.Exists(resolvedPath))
+        {
+            Console.Error.WriteLine($"Baseline file not found: {resolvedPath}");
+            return 1;
+        }
+
+        try
+        {
+            var baseline = BaselineFile.Load(resolvedPath);
+            BaselineMatcher.WarnIfMetricsVersionMismatch(baseline);
+            updated = BaselineMatcher.Apply(result, baseline, out var stats);
+            BaselineMatcher.WriteSummary(stats);
+            return 0;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or JsonException)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+    }
+
+    public static string? ResolveBaselineOption(
+        IReadOnlyDictionary<string, string> opts,
+        UnilyzeConfig config)
+        => opts.GetValueOrDefault("--baseline") ?? config.Baseline;
 
     public static OutputFormat ResolveFormat(string? formatStr, string? output)
     {
