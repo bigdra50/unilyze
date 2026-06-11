@@ -9,21 +9,28 @@ namespace Unilyze;
 internal sealed record ShieldsBadge(
     int SchemaVersion, string Label, string Message, string Color, string? AnalysisLevel = null);
 
-internal enum BadgeMetric { CodeHealth, Mi, Smells }
+internal enum BadgeMetric { CodeHealth, Mi, Smells, Dup }
 
 internal enum BadgeFormat { Json, Svg }
 
 internal static class BadgeFormatter
 {
-    internal static ShieldsBadge Build(BadgeMetric metric, StatuslineFormatter.Summary s)
+    internal static ShieldsBadge Build(BadgeMetric metric, StatuslineFormatter.Summary s) =>
+        Build(metric, s, duplicationPercent: null);
+
+    internal static ShieldsBadge Build(BadgeMetric metric, StatuslineFormatter.Summary s, double? duplicationPercent)
     {
         var label = metric switch
         {
             BadgeMetric.CodeHealth => "code health",
             BadgeMetric.Mi => "maintainability",
             BadgeMetric.Smells => "smells",
+            BadgeMetric.Dup => "duplication",
             _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, null)
         };
+
+        if (metric == BadgeMetric.Dup)
+            return BuildDupBadge(label, duplicationPercent, s.AnalysisLevel);
 
         if (s.TypeCount == 0)
             return new ShieldsBadge(1, label, "n/a", "lightgrey", s.AnalysisLevel);
@@ -62,6 +69,21 @@ internal static class BadgeFormatter
         };
     }
 
+    static ShieldsBadge BuildDupBadge(string label, double? duplicationPercent, string? analysisLevel)
+    {
+        if (duplicationPercent is null)
+            return new ShieldsBadge(1, label, "n/a", "lightgrey", analysisLevel);
+
+        var message = string.Format(CultureInfo.InvariantCulture, "{0:F1}%", duplicationPercent.Value);
+        var color = duplicationPercent.Value switch
+        {
+            < 3.0 => "brightgreen",
+            < 10.0 => "yellow",
+            _ => "red"
+        };
+        return new ShieldsBadge(1, label, message, color, analysisLevel);
+    }
+
     internal static bool TryParseMetric(string? value, out BadgeMetric metric)
     {
         metric = BadgeMetric.CodeHealth;
@@ -84,6 +106,12 @@ internal static class BadgeFormatter
         if (value.Equals("smells", StringComparison.OrdinalIgnoreCase))
         {
             metric = BadgeMetric.Smells;
+            return true;
+        }
+
+        if (value.Equals("dup", StringComparison.OrdinalIgnoreCase))
+        {
+            metric = BadgeMetric.Dup;
             return true;
         }
 

@@ -33,7 +33,7 @@ internal static class BadgeRunner
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
-            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells");
+            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells, dup");
             return 1;
         }
 
@@ -72,27 +72,27 @@ internal static class BadgeRunner
         {
             var fullPath = ProgramHelpers.ResolveProjectRoot(path);
             var config = UnilyzeConfig.LoadMerged(fullPath);
-            var resolved = config.ResolveAnalysisConfig();
-            var result = AnalysisPipeline.Build(
-                fullPath, null, null, config.ExcludeDirs, requestedLevel,
-                excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
-                applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                analysisConfig: resolved,
-                maxParallelism: config.MaxParallelism);
+            ShieldsBadge badge;
+            double? duplicationPercent = null;
+            StatuslineFormatter.Summary summary;
 
-            var effectiveBaseline = baselinePath ?? config.Baseline;
-            var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
-            if (baselineError is 1)
-                return ExitUsageError;
+            if (metric == BadgeMetric.Dup)
+            {
+                var dup = BadgeDupRunner.Analyze(fullPath, config);
+                badge = dup.Badge;
+                summary = dup.Summary;
+                duplicationPercent = dup.DuplicationPercent;
+            }
+            else
+            {
+                var standard = BadgeStandardRunner.TryAnalyze(
+                    fullPath, config, opts, metric, requestedLevel, baselinePath, out var standardExit);
+                if (standard is null)
+                    return standardExit;
+                badge = standard.Badge;
+                summary = standard.Summary;
+            }
 
-            var triagePath = TriageApplication.ResolvePath(opts, config, fullPath);
-            var triageError = TriageApplication.TryApply(result, triagePath, out result);
-            if (triageError is 1)
-                return ExitUsageError;
-
-            var excludeBaselined = effectiveBaseline is not null;
-            var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
-            var badge = BadgeFormatter.Build(metric, summary);
             var content = format == BadgeFormat.Svg ? BadgeSvgRenderer.Render(badge) : BadgeFormatter.Serialize(badge);
 
             // Emit the badge unchanged (backward compatible) before evaluating the gate.
@@ -106,7 +106,7 @@ internal static class BadgeRunner
                 Console.Write(content);
             }
 
-            var gate = BadgeGate.Evaluate(metric, summary, failUnder, failOver);
+            var gate = BadgeGate.Evaluate(metric, summary, failUnder, failOver, duplicationPercent);
             return gate.Outcome switch
             {
                 GateOutcome.UsageError => Fail(gate.Message, ExitUsageError),
@@ -139,22 +139,25 @@ internal static class BadgeRunner
               unilyze badge -p <path> --metric codehealth      Code health badge (default)
               unilyze badge -p <path> --metric mi              Maintainability index badge
               unilyze badge -p <path> --metric smells          Code smells badge
+              unilyze badge -p <path> --metric dup             Duplication badge
               unilyze badge -p <path> -o badge.json            Write JSON to file
               unilyze badge -p <path> --format svg -o codehealth.svg   SVG badge (works in private repos via relative path)
               unilyze badge --metric codehealth --fail-under 7  Exit 2 if min CodeHealth < 7 (CI gate)
               unilyze badge --metric mi --fail-under 70         Exit 2 if average MI < 70
               unilyze badge --metric smells --fail-over 5       Exit 2 if warnings > 5 (or any critical)
+              unilyze badge --metric dup --fail-over 3          Exit 2 if duplication > 3%
 
             Options:
               -p, --path     Project root (default: .)
               -o, --output   Output file path (default: stdout)
-              --metric       Badge metric: codehealth, mi, smells (default: codehealth)
+              --metric       Badge metric: codehealth, mi, smells, dup (default: codehealth)
               --format       Output format: json, svg (default: json)
               --level        Pin analysis level: syntax, core, full, complete
               --fail-under   Quality gate for codehealth/mi: fail if value below threshold
                              (codehealth: min CodeHealth, mi: average MI)
               --fail-over    Quality gate for smells: fail if warning count above count
                              (any critical smell always fails)
+                             Quality gate for dup: fail if duplication percent above threshold
               --baseline     Suppress known smells from a baseline file before gating
               -h, --help     Show this help
 

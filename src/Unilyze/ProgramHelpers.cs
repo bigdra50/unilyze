@@ -6,7 +6,7 @@ internal static class ProgramHelpers
 {
     public static readonly string[] TopLevelCommands =
     [
-        "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
+        "diff", "hotspot", "dup", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
         "baseline", "calibrate", "triage", "skills", "help", "version",
     ];
 
@@ -58,6 +58,16 @@ internal static class ProgramHelpers
     static readonly HashSet<string> HotspotBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help", "--no-bot-filter",
+    };
+
+    static readonly HashSet<string> DupValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-o", "--output", "-f", "--format", "--min-tokens", "--exclude-dir", "--third-party-dir",
+    };
+
+    static readonly HashSet<string> DupBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help", "--include-third-party",
     };
 
     static readonly HashSet<string> QueryValueOptions = new(StringComparer.Ordinal)
@@ -270,6 +280,19 @@ internal static class ProgramHelpers
         return extra is null ? 0 : ReportUnknown("subcommand", extra, ["hotspot"]);
     }
 
+    public static int ValidateDupArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, DupValueOptions, DupBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, DupValueOptions.Concat(DupBooleanOptions));
+
+        var extra = FindUnexpectedPositional(args, DupValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["dup"]);
+    }
+
     public static int ValidateQueryArgs(string[] args)
     {
         if (IsHelpRequest(args))
@@ -431,7 +454,7 @@ internal static class ProgramHelpers
                 if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--no-triage"
                     or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
                     or "--verbose" or "--quiet" or "--background-refresh" or "--no-bot-filter"
-                    or "--include-api-surface")
+                    or "--include-api-surface" or "--include-third-party")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {

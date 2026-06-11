@@ -29,7 +29,9 @@ internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("triage")]
     string? Triage = null,
     [property: JsonPropertyName("maxParallelism")]
-    int? MaxParallelism = null)
+    int? MaxParallelism = null,
+    [property: JsonPropertyName("dup")]
+    DupConfigSection? Dup = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
 
@@ -121,7 +123,8 @@ internal sealed record UnilyzeConfig(
             higher.Profile ?? lower.Profile,
             higher.Baseline ?? lower.Baseline,
             higher.Triage ?? lower.Triage,
-            higher.MaxParallelism ?? lower.MaxParallelism);
+            higher.MaxParallelism ?? lower.MaxParallelism,
+            MergeDup(lower.Dup, higher.Dup));
     }
 
     static IReadOnlyList<string>? MergeExcludeDirs(
@@ -236,6 +239,33 @@ internal sealed record UnilyzeConfig(
         foreach (var (key, value) in higherInner)
             inner[key] = value;
         return inner;
+    }
+
+    static DupConfigSection? MergeDup(DupConfigSection? lower, DupConfigSection? higher)
+    {
+        if (lower is null)
+            return higher;
+        if (higher is null)
+            return lower;
+
+        return new DupConfigSection(
+            higher.MinTokens ?? lower.MinTokens,
+            MergeThirdPartyDirs(lower.ThirdPartyDirs, higher.ThirdPartyDirs));
+    }
+
+    static IReadOnlyList<string>? MergeThirdPartyDirs(
+        IReadOnlyList<string>? lower,
+        IReadOnlyList<string>? higher)
+    {
+        if (lower is not { Count: > 0 })
+            return higher;
+        if (higher is not { Count: > 0 })
+            return lower;
+
+        var merged = new HashSet<string>(lower, StringComparer.OrdinalIgnoreCase);
+        foreach (var dir in higher)
+            merged.Add(dir);
+        return merged.ToList();
     }
 
     static IReadOnlyDictionary<string, string>? MergeRules(
