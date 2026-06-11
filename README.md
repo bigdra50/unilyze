@@ -187,7 +187,7 @@ void MeasuredLongMethod() { /* ... */ }
 - Omit rule IDs to suppress all rules in scope. Unknown rule IDs and `UNI009` print a stderr warning and are ignored.
 - Suppressed smells stay in JSON with `"suppressed": true`, increment root `suppressedCount`, and appear in SARIF with `suppressions` `{ "kind": "inSource" }`. They are excluded from statusline, badge gates, and diff regression counts.
 
-**Known constraints:** metric-based smells (UNI001–UNI008, UNI010) match directives by method or type name, so a directive on one overload suppresses the smell for all same-name overloads; detector smells (UNI011–UNI023) use line positions and distinguish overloads. For partial types, place type-scope directives on the declaration indexed by unilyze (see [docs/metrics.md](./docs/metrics.md)). `UNI009` (cyclic dependency) is config-only.
+**Known constraints:** metric-based smells (UNI001–UNI008, UNI010) match directives by method or type name, so a directive on one overload suppresses the smell for all same-name overloads; detector smells (UNI011–UNI025) use line positions and distinguish overloads. For partial types, place type-scope directives on the declaration indexed by unilyze (see [docs/metrics.md](./docs/metrics.md)). `UNI009` (cyclic dependency) is config-only.
 
 ### Assembly mapping
 
@@ -219,12 +219,13 @@ unilyze baseline create -p . -o .unilyze/baseline.json
 | [TypeRank](./docs/metrics.md#typerank) | PageRank-based importance | Type |
 | [Code Health](./docs/metrics.md#code-health) | Composite score (1.0 worst – 10.0 best) | Type |
 | [Abstractness / DfMS / Relational Cohesion](./docs/metrics.md) | Assembly-level metrics | Assembly |
+| [Burst coverage / ECS type count](./docs/metrics.md#dots--ecs) | `[BurstCompile]` adoption on ECS systems/jobs | Assembly |
 
 Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs/metrics.md) for specifications and validation data.
 
 ## Detection capabilities
 
-Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), performance analysis (boxing, closures, params arrays), exception-flow patterns, Unity frame-rate rules (UNI017–UNI021: hot-path API/LINQ/allocation/string concat, weak temporization), async/blocking rules (UNI022–UNI023), and DI container edge detection (VContainer, Zenject) — all configurable via `.unilyze.json` and `--profile unity`. Thresholds are **not** duplicated here; see [docs/metrics.md](./docs/metrics.md#code-smell) and `unilyze metrics`.
+Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), performance analysis (boxing, closures, params arrays), exception-flow patterns, Unity frame-rate rules (UNI017–UNI021: hot-path API/LINQ/allocation/string concat, weak temporization), async/blocking rules (UNI022–UNI023), DOTS/ECS rules (UNI024–UNI025: missing `[BurstCompile]`, managed `IComponentData` fields) with per-assembly `burstCoverage`, and DI container edge detection (VContainer, Zenject) — all configurable via `.unilyze.json` and `--profile unity`. Does not duplicate `com.unity.entities` source-generator diagnostics that fail the Editor build; see [docs/metrics.md#dots--ecs](./docs/metrics.md#dots--ecs). Thresholds are **not** duplicated here; see [docs/metrics.md](./docs/metrics.md#code-smell) and `unilyze metrics`.
 
 ## Output Formats
 

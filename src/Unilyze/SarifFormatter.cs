@@ -31,6 +31,8 @@ public static class SarifFormatter
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
         ("UNI022", CodeSmellKind.AsyncVoidMethod, "async void method"),
         ("UNI023", CodeSmellKind.BlockingTaskWait, "Blocking wait on Task"),
+        ("UNI024", CodeSmellKind.MissingBurstCompile, "Missing BurstCompile on ECS type"),
+        ("UNI025", CodeSmellKind.ManagedReferenceInComponentData, "Managed reference in IComponentData"),
         ("UNI017", CodeSmellKind.ExpensiveUnityApiInHotPath, "Expensive Unity API in hot path"),
         ("UNI018", CodeSmellKind.LinqInHotPath, "LINQ in hot path"),
         ("UNI019", CodeSmellKind.CollectionAllocationInHotPath, "Collection allocation in hot path"),
@@ -84,6 +86,8 @@ public static class SarifFormatter
         ["UNI021"] = CodeSmellKind.WeakTemporization,
         ["UNI022"] = CodeSmellKind.AsyncVoidMethod,
         ["UNI023"] = CodeSmellKind.BlockingTaskWait,
+        ["UNI024"] = CodeSmellKind.MissingBurstCompile,
+        ["UNI025"] = CodeSmellKind.ManagedReferenceInComponentData,
     };
 
     public static bool TryGetKind(string ruleId, out CodeSmellKind kind)

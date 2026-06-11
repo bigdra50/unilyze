@@ -97,6 +97,59 @@ public sealed class QueryEvidenceTests
         Assert.Equal(JsonValueKind.Array, doc.RootElement.GetProperty("types").ValueKind);
     }
 
+    [Fact]
+    public void Assembler_WithApiSurface_IncludesSurfaceOnPack()
+    {
+        var analysis = LoadGoldenAnalysis() with
+        {
+            ApiSurface =
+            [
+                new TypeApiSurface(
+                    "Assembly-CSharp::GoldenFixture.GodClassTarget",
+                    "GoldenFixture.GodClassTarget",
+                    true,
+                    "A god class",
+                    ["public class GodClassTarget"],
+                    ["GodClassTarget", "M1"],
+                    0,
+                    1)
+            ]
+        };
+        var type = analysis.TypeMetrics!.First(t => t.TypeName == "GodClassTarget");
+        var queryResult = QueryEvidenceAssembler.Build(analysis, [type], includeApiSurface: true);
+        var pack = Assert.Single(queryResult.Types);
+
+        Assert.NotNull(pack.ApiSurface);
+        Assert.True(pack.ApiSurface!.HasDocComment);
+        Assert.Equal("A god class", pack.ApiSurface.DocSummary);
+    }
+
+    [Fact]
+    public void MarkdownFormatter_WithApiSurface_IncludesSection()
+    {
+        var analysis = LoadGoldenAnalysis() with
+        {
+            ApiSurface =
+            [
+                new TypeApiSurface(
+                    "Assembly-CSharp::GoldenFixture.DeepNestingTarget",
+                    "GoldenFixture.DeepNestingTarget",
+                    false,
+                    null,
+                    ["public class DeepNestingTarget"],
+                    ["DeepNestingTarget"],
+                    0,
+                    0)
+            ]
+        };
+        var type = analysis.TypeMetrics!.First(t => t.TypeName == "DeepNestingTarget");
+        var queryResult = QueryEvidenceAssembler.Build(analysis, [type], includeApiSurface: true);
+        var markdown = QueryEvidenceFormatter.ToMarkdown(queryResult);
+
+        Assert.Contains("### API Surface", markdown);
+        Assert.Contains("#### Identifiers", markdown);
+    }
+
     static AnalysisResult LoadGoldenAnalysis()
     {
         var json = File.ReadAllText(GoldenFixturePath);

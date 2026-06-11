@@ -64,7 +64,8 @@ internal static class HotspotRunner
                     path, null, null, hotspotConfig.ExcludeDirs,
                     excludeGeneratedCode: !hotspotConfig.DisableGeneratedCodeExcludes,
                     applyAnyDepthExcludes: !hotspotConfig.DisableDefaultExcludes,
-                    analysisConfig: resolved);
+                    analysisConfig: resolved,
+                    maxParallelism: hotspotConfig.MaxParallelism);
                 typeMetrics = result.TypeMetrics ?? [];
             }
 

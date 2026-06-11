@@ -1487,6 +1487,66 @@ public sealed class CliE2eTests : IDisposable
         Assert.Contains("--worst", stdout);
         Assert.Contains("--type", stdout);
         Assert.Contains("-f, --format", stdout);
+        Assert.Contains("--include-api-surface", stdout);
+    }
+
+    [Fact]
+    public void JsonOutput_WithoutApiSurfaceFlag_OmitsApiSurfaceKey()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json");
+        Assert.Equal(0, exitCode);
+        Assert.False(JsonDocument.Parse(stdout).RootElement.TryGetProperty("apiSurface", out _));
+    }
+
+    [Fact]
+    public void JsonOutput_WithIncludeApiSurface_EmitsApiSurface()
+    {
+        WriteDocCommentProject();
+        var (exitCode, stdout, _) = Run("-p", _tempDir, "-f", "json", "--include-api-surface");
+        Assert.Equal(0, exitCode);
+
+        var root = JsonDocument.Parse(stdout).RootElement;
+        Assert.Equal(JsonValueKind.Array, root.GetProperty("apiSurface").ValueKind);
+        Assert.True(root.GetProperty("apiSurface").GetArrayLength() > 0);
+    }
+
+    [Fact]
+    public void IncludeApiSurface_MisspelledFlag_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("--include-api-surfaces");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--include-api-surfaces'", stderr);
+        Assert.Contains("Did you mean '--include-api-surface'?", stderr);
+    }
+
+    [Fact]
+    public void Query_IncludeApiSurface_FromSnapshotWithoutSurface_ExitsUsageError()
+    {
+        var fixturePath = Path.GetFullPath(
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "fixtures", "golden", "expected.json"));
+        var (exitCode, _, stderr) = Run("query", "--worst", "3", "-i", fixturePath, "--include-api-surface");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Snapshot lacks apiSurface", stderr);
+    }
+
+    [Fact]
+    public void Query_IncludeApiSurface_FromProject_IncludesApiSurfaceSection()
+    {
+        WriteDocCommentProject();
+        var (exitCode, stdout, _) = Run("query", "--worst", "1", "-p", _tempDir, "--include-api-surface");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("### API Surface", stdout);
+        Assert.Contains("#### Public signatures", stdout);
+        Assert.Contains("#### Identifiers", stdout);
+    }
+
+    [Fact]
+    public void Help_ListsIncludeApiSurfaceFlag()
+    {
+        var (exitCode, stdout, _) = Run("--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--include-api-surface", stdout);
     }
 
     [Fact]
@@ -1647,6 +1707,21 @@ public sealed class CliE2eTests : IDisposable
             namespace Sample;
             public class Greeter
             {
+                public string Greet(string name) => $"Hello, {name}!";
+            }
+            """);
+    }
+
+    private void WriteDocCommentProject()
+    {
+        var csFile = Path.Combine(_tempDir, "Sample.cs");
+        File.WriteAllText(csFile, """
+            namespace Sample;
+
+            /// <summary>Greets callers.</summary>
+            public class Greeter
+            {
+                /// <summary>Says hello.</summary>
                 public string Greet(string name) => $"Hello, {name}!";
             }
             """);

@@ -18,7 +18,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "-v", "--version", "--no-open", "--no-triage",
+        "-h", "--help", "-v", "--version", "--no-open", "--no-triage", "--include-api-surface",
     };
 
     static readonly HashSet<string> NoValueOptions = new(StringComparer.Ordinal);
@@ -67,7 +67,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> QueryBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help",
+        "-h", "--help", "--include-api-surface",
     };
 
     static readonly HashSet<string> TrendValueOptions = new(StringComparer.Ordinal)
@@ -430,7 +430,8 @@ internal static class ProgramHelpers
             {
                 if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--no-triage"
                     or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
-                    or "--verbose" or "--quiet" or "--background-refresh" or "--no-bot-filter")
+                    or "--verbose" or "--quiet" or "--background-refresh" or "--no-bot-filter"
+                    or "--include-api-surface")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {

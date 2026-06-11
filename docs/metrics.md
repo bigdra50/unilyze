@@ -448,6 +448,38 @@ N = アセンブリ内の型数
 
 N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に連携している。1.5-4.0 が推奨範囲。
 
+## DOTS / ECS
+
+unilyze は `com.unity.entities` パッケージ内の Roslyn analyzer / source generator（SGJE 診断: SystemAPI 誤用、Entities.ForEach チェーン不正など）とは**重複しない**。
+それらは Editor ビルドで失敗するため、CI に到達しない問題を対象とする。unilyze が検出するのはコンパイル後も残る以下のみ:
+
+| ルール | 対象 | 意図 |
+|--------|------|------|
+| UNI024 MissingBurstCompile | `ISystem` / `IJobEntity` / `IJobChunk` struct | Burst 適用可能な ECS 型に `[BurstCompile]` がない |
+| UNI025 ManagedReferenceInComponentData | `struct IComponentData` | 参照型フィールドを持つコンポーネント struct（`class IComponentData` は意図的 managed として除外） |
+
+`SystemBase` 派生クラスは Burst 非対象のため UNI024 では報告しない。
+
+### Burst coverage (`burstCoverage`)
+
+アセンブリ単位の Burst 適用率。JSON `.assemblies[].metrics.burstCoverage`。
+
+```
+eligible = ISystem struct + IJobEntity/IJobChunk struct の数
+covered  = eligible のうち型または全ライフサイクルメソッドに [BurstCompile] がある型
+burstCoverage = covered / eligible
+```
+
+eligible が 0 のアセンブリでは `burstCoverage` は null（`RelationalCohesion` と同じ nullable-when-undefined パターン）。
+`ecsTypeCount` は ECS 分類型（`EcsSystem` / `EcsJob` / `EcsComponentData`）の総数。ECS 型が無いアセンブリでは null。
+
+### 解析レベル依存
+
+| レベル | ECS 分類 | UNI024/UNI025 |
+|--------|----------|---------------|
+| Complete（`Library/ScriptAssemblies` で `Unity.Entities` 解決可） | `Unity.Entities` 名前空間を検証 | セマンティック型判定（参照型フィールドは `IsReferenceType`） |
+| SyntaxOnly | 基底リストのインターフェース名一致 | 同名の非 Unity `ISystem` 等は誤検知しうる。UNI025 は string/object/配列/BCL コレクション等の保守的リスト |
+
 ## Code Health
 
 独自メトリクス。型単位のスコア (1.0 - 10.0)。
@@ -486,14 +518,14 @@ void LongButJustified() { /* ... */ }
 
 | 形式 | 効く範囲 |
 |------|----------|
-| `unilyze-disable-next-line UNIxxx` | コメントの**次の行**（UNI011–UNI023 など行番号付き detector smell） |
+| `unilyze-disable-next-line UNIxxx` | コメントの**次の行**（UNI011–UNI025 など行番号付き detector smell） |
 | `unilyze-disable UNIxxx`（型/メソッド宣言の leading trivia） | その宣言スコープ内 |
 
 ルール ID を省略するとスコープ内の全ルールを抑制する。未知 ID と `UNI009` は stderr 警告のうえ無視（解析 exit code 不変）。抑制された smell は JSON に `"suppressed": true` のまま残り、SARIF では `suppressions: [{ "kind": "inSource" }]` となる。statusline / badge / `diff --fail-on-regression` からは除外される。
 
 **既知制約**
 
-1. **同名オーバーロード非区別（メトリクス系）:** UNI001–UNI008, UNI010 はメソッド名/型名で directive と突き合わせるため、同一メソッド名のオーバーロードすべてが抑制対象になる。detector smell（UNI011–UNI023）は行位置で区別できる。
+1. **同名オーバーロード非区別（メトリクス系）:** UNI001–UNI008, UNI010 はメソッド名/型名で directive と突き合わせるため、同一メソッド名のオーバーロードすべてが抑制対象になる。detector smell（UNI011–UNI025）は行位置で区別できる。
 2. **partial 型:** 抑制インデックスは `SyntaxLookups.BuildTypeDeclLookup` が索引する 1 つの宣言から構築される。型スコープ directive は索引される partial 宣言に置く（全 partial を走査する拡張は follow-up）。
 3. **UNI009:** 依存サイクル単位の報告のためインライン不可。`rules` のみ。
 
@@ -557,6 +589,8 @@ void LongButJustified() { /* ... */ }
 | CatchAllException | `catch (Exception)` without rethrow (excluding `when` filtered catches) | — |
 | AsyncVoidMethod | `async void` method (excluding Unity message methods and event handlers) | — |
 | BlockingTaskWait | `.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask | — |
+| MissingBurstCompile | `ISystem` / `IJobEntity` / `IJobChunk` struct without `[BurstCompile]` | — |
+| ManagedReferenceInComponentData | `struct IComponentData` with reference-type field | — |
 <!-- smell-thresholds:end -->
 
 ### Unity hot-path severity escalation
@@ -606,15 +640,17 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | AsyncVoidMethod | UNI022 | ルール検出（構文 + セマンティック解析） | async void の検出。Unity メッセージ・イベントハンドラは除外 |
 | BlockingTaskWait | UNI023 | ルール検出（構文 + セマンティック解析） | Task/ValueTask/UniTask へのブロッキング待機。SyntaxOnly では GetAwaiter().GetResult() のみ |
+| MissingBurstCompile | UNI024 | ルール検出（構文 + セマンティック解析） | `ISystem`/`IJobEntity`/`IJobChunk` struct の `[BurstCompile]` 欠落。Complete では `Unity.Entities` 名前空間を検証。SyntaxOnly はインターフェース名一致で検出（同名の非 Unity インターフェースは誤検知しうる） |
+| ManagedReferenceInComponentData | UNI025 | ルール検出（構文 + セマンティック解析） | `struct IComponentData` の参照型フィールド。`class IComponentData` は対象外。SyntaxOnly は string/object/配列/BCL コレクション等の保守的リスト |
 | WeakTemporization | UNI021 | ルール検出（構文解析、セマンティック補強） | SyntaxOnly 可 |
 | ExpensiveUnityApiInHotPath | UNI017 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | LinqInHotPath | UNI018 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | CollectionAllocationInHotPath | UNI019 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | StringConcatenationInHotPath | UNI020 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
 | Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| コメントとコードの不整合 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| 命名品質 | — | LLM 委譲 (`--include-api-surface` の identifiers / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
+| 意図とコードの乖離 | — | LLM 委譲 (`--include-api-surface` の docSummary / identifiers を入力) | 意図・文脈判断が必要でしきい値化できない |
+| コメントとコードの不整合 | — | LLM 委譲 (`--include-api-surface` の docSummary / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
 | トップレベルステートメント | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | ランタイムリスク (Dispose 漏れ / デッドロック) | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 

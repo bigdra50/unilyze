@@ -2,17 +2,27 @@ namespace Unilyze;
 
 internal static class QueryEvidenceAssembler
 {
-    public static QueryResult Build(AnalysisResult analysis, IReadOnlyList<TypeMetrics> selectedTypes)
+    public static QueryResult Build(
+        AnalysisResult analysis,
+        IReadOnlyList<TypeMetrics> selectedTypes,
+        bool includeApiSurface = false)
     {
         var dependencies = analysis.Dependencies ?? [];
+        var surfaceByTypeId = includeApiSurface
+            ? (analysis.ApiSurface ?? []).ToDictionary(s => s.TypeId, StringComparer.Ordinal)
+            : null;
+
         var packs = selectedTypes
-            .Select(type => BuildPack(type, dependencies))
+            .Select(type => BuildPack(type, dependencies, surfaceByTypeId))
             .ToList();
 
         return new QueryResult(analysis.ProjectPath, analysis.AnalyzedAt, packs);
     }
 
-    static TypeEvidencePack BuildPack(TypeMetrics type, IReadOnlyList<TypeDependency> dependencies)
+    static TypeEvidencePack BuildPack(
+        TypeMetrics type,
+        IReadOnlyList<TypeDependency> dependencies,
+        Dictionary<string, TypeApiSurface>? surfaceByTypeId)
     {
         var typeId = TypeIdentity.GetTypeId(type);
         var anchor = FormatAnchor(type.FilePath, type.StartLine);
@@ -44,6 +54,19 @@ internal static class QueryEvidenceAssembler
                 FormatAnchor(type.FilePath, m.StartLine)))
             .ToList();
 
+        TypeEvidenceApiSurface? apiSurface = null;
+        if (surfaceByTypeId != null
+            && surfaceByTypeId.TryGetValue(typeId, out var surface))
+        {
+            apiSurface = new TypeEvidenceApiSurface(
+                surface.HasDocComment,
+                surface.DocSummary,
+                surface.PublicSignatures,
+                surface.Identifiers,
+                surface.DocumentedPublicMemberCount,
+                surface.PublicMemberCount);
+        }
+
         return new TypeEvidencePack(
             type.TypeName,
             string.IsNullOrEmpty(type.Namespace) ? null : type.Namespace,
@@ -65,7 +88,8 @@ internal static class QueryEvidenceAssembler
             smells,
             inbound,
             outbound,
-            topMethods);
+            topMethods,
+            apiSurface);
     }
 
     static IReadOnlyList<TypeEvidenceDependencyGroup> GroupDependencies(

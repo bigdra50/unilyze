@@ -93,6 +93,10 @@ public static class SmellThresholds
             "`async void` method (excluding Unity message methods and event handlers)", "—");
         AppendDocsRow(sb, "BlockingTaskWait",
             "`.Result` / `.Wait()` / `.GetAwaiter().GetResult()` on Task/ValueTask/UniTask", "—");
+        AppendDocsRow(sb, "MissingBurstCompile",
+            "`ISystem` / `IJobEntity` / `IJobChunk` struct without `[BurstCompile]`", "—");
+        AppendDocsRow(sb, "ManagedReferenceInComponentData",
+            "`struct IComponentData` with reference-type field", "—");
         return sb.ToString().TrimEnd();
     }
 
@@ -147,6 +151,10 @@ public static class SmellThresholds
             "Collection or array allocation inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Reuse buffers or pre-allocate outside hot paths.",
         CodeSmellKind.StringConcatenationInHotPath =>
             "String concatenation, interpolation, or string.Format/Join inside MonoBehaviour per-frame methods (Update, FixedUpdate, LateUpdate, OnGUI, coroutines). Prefer StringBuilder or cached strings.",
+        CodeSmellKind.MissingBurstCompile =>
+            "Burst-eligible ECS type (`ISystem`, `IJobEntity`, `IJobChunk` struct) without `[BurstCompile]` on the type or lifecycle methods.",
+        CodeSmellKind.ManagedReferenceInComponentData =>
+            "Unmanaged `IComponentData` struct declares a reference-type field; use `class IComponentData` for intentional managed components.",
         _ => null,
     };
 
@@ -204,6 +212,10 @@ public static class SmellThresholds
             "Reuse buffers or pre-allocate collections outside hot paths.",
         CodeSmellKind.StringConcatenationInHotPath =>
             "Use StringBuilder or cached strings instead of concatenation in hot paths.",
+        CodeSmellKind.MissingBurstCompile =>
+            "Add [BurstCompile] or disable UNI024 via rules when managed APIs are intentional.",
+        CodeSmellKind.ManagedReferenceInComponentData =>
+            "Replace reference fields with unmanaged types or convert to class IComponentData.",
         _ => null,
     };
 
@@ -290,6 +302,12 @@ public static class SmellThresholds
         CodeSmellKind.StringConcatenationInHotPath =>
             "String building in hot paths allocates temporary strings.\n\n" +
             "**How to fix:** use `StringBuilder`, cached strings, or numeric formatting buffers.",
+        CodeSmellKind.MissingBurstCompile =>
+            "Burst-eligible ECS types without `[BurstCompile]` may miss job-system performance.\n\n" +
+            "**How to fix:** add `[BurstCompile]` on the type or `OnCreate`/`OnUpdate`/`OnDestroy`; disable UNI024 via `rules` when managed calls are intentional.",
+        CodeSmellKind.ManagedReferenceInComponentData =>
+            "Reference fields in `struct IComponentData` force managed component storage.\n\n" +
+            "**How to fix:** use unmanaged field types, or declare `class IComponentData` for intentional managed components.",
         _ => null,
     };
 
@@ -311,6 +329,8 @@ public static class SmellThresholds
             ["performance", "unity"],
         CodeSmellKind.AsyncVoidMethod or CodeSmellKind.BlockingTaskWait =>
             ["reliability", "async"],
+        CodeSmellKind.MissingBurstCompile or CodeSmellKind.ManagedReferenceInComponentData =>
+            ["performance", "unity", "dots"],
         _ => ["maintainability"],
     };
 
