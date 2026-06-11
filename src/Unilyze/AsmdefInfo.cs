@@ -36,7 +36,7 @@ public sealed record AsmdefInfo(
             results.Add(new AsmdefInfo(name, dir, refs, unresolvedRefs.Count > 0 ? unresolvedRefs : null));
         }
 
-        results = ApplyNestedAsmdefExcludes(results);
+        results = AssemblyDirectoryExcludes.ApplyNested(results);
 
         if (results.Count > 0 && HasLooseFiles(assetsDir, results, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes))
         {
@@ -46,40 +46,6 @@ public sealed record AsmdefInfo(
         }
 
         return results;
-    }
-
-    static List<AsmdefInfo> ApplyNestedAsmdefExcludes(IReadOnlyList<AsmdefInfo> asmdefs)
-    {
-        var fullDirs = asmdefs
-            .Select(asm => (Asm: asm, FullDir: Path.GetFullPath(asm.Directory)))
-            .ToList();
-
-        var updated = new List<AsmdefInfo>(asmdefs.Count);
-        foreach (var (asm, fullDir) in fullDirs)
-        {
-            var nestedDirs = fullDirs
-                .Where(other => !other.FullDir.Equals(fullDir, StringComparison.OrdinalIgnoreCase)
-                    && DefaultExcludes.IsStrictSubdirectory(other.FullDir, fullDir))
-                .Select(other => other.FullDir)
-                .ToList();
-
-            if (nestedDirs.Count == 0 && asm.ExcludeDirectories is not { Count: > 0 })
-            {
-                updated.Add(asm);
-                continue;
-            }
-
-            var merged = asm.ExcludeDirectories?.ToList() ?? [];
-            foreach (var nestedDir in nestedDirs)
-            {
-                if (!merged.Any(existing => existing.Equals(nestedDir, StringComparison.OrdinalIgnoreCase)))
-                    merged.Add(nestedDir);
-            }
-
-            updated.Add(asm with { ExcludeDirectories = merged });
-        }
-
-        return updated;
     }
 
     static bool HasLooseFiles(

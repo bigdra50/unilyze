@@ -289,6 +289,16 @@ Exclude directories from analysis (e.g., Asset Store imports, third-party code):
 
 Paths are relative to the project root. Config files use JSONC (comments and trailing commas allowed).
 
+### Assembly mapping
+
+| Project kind | Discovery | One assembly per |
+|--------------|-----------|------------------|
+| Unity | `.asmdef` under `Assets/` | asmdef `name` |
+| .NET (no asmdef, non-Unity) | `.csproj` (solution-first, else recursive) | csproj file name (without extension) |
+| Unity without asmdef / no csproj | fallback | single `Assembly-CSharp` over the scan root |
+
+`ProjectReference` items become assembly dependency edges (same role as asmdef `references`). Nested csproj directories use `ExcludeDirectories` so each `.cs` file belongs to exactly one assembly. Sources outside every csproj directory are attributed to an `Assembly-CSharp` fallback that excludes all csproj directories. `AssemblyName` overrides in csproj are not resolved; unmatched references appear as `unresolvedReferences`. `--prefix` and `--assembly` filter csproj-derived assemblies the same way as asmdefs.
+
 CLI equivalent:
 
 ```bash
