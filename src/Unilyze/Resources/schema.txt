@@ -105,13 +105,30 @@ hotspot (unilyze hotspot):
   .projectPath                         string   Project path
   .since                               string   Git log period (e.g. "12.month")
   .topN                                int      Requested top N
+  .botFilter                           bool     Whether bot-authored commits were excluded (default true)
+  .botCommitsExcluded                  int      Bot commits removed from churn (when botFilter true)
+  .halfLife                            string?  Decay half-life when --half-life is set (e.g. "90.day")
   .hotspots[]                          object
     .typeName                          string   Type name
     .namespace                         string?  Namespace
+    .assembly                          string   Assembly name
     .filePath                          string?  File path
-    .changeCount                       int      Git commit count touching this type
+    .changeCount                       int      Raw git commit count touching this type
+    .weightedChurn                     float?   Decay-weighted churn when --half-life is set
     .codeHealth                        float    CodeHealth score
-    .hotspotScore                      float    changeCount * (10.0 - codeHealth)
+    .averageCognitiveComplexity        float    Average cognitive complexity across methods
+    .maxCognitiveComplexity            int      Max cognitive complexity across methods
+    .hotspotScore                      float    churn * (10.0 - codeHealth); churn is weightedChurn when decay enabled
+  .methodHotspots[]                    object?  Method-level X-Ray output when --methods <file> is set
+    .methodName                        string   Method name
+    .typeName                          string   Containing type name
+    .namespace                         string?  Containing type namespace
+    .startLine                         int      Method start line in file
+    .endLine                           int      Method end line in file
+    .changeCount                       int      Raw commit count touching method range
+    .weightedChurn                     float?   Decay-weighted churn when --half-life is set
+    .cognitiveComplexity                int      Method cognitive complexity
+    .hotspotScore                      float    churn * cognitiveComplexity
 
 calibrate (unilyze calibrate):
   .methodology                         string   Alves 2010 weighted-percentile procedure summary

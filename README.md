@@ -117,7 +117,7 @@ unilyze targets teams that want **commercial-grade metrics and agent workflows w
 |---|---|---|---|---|---|
 | **Price** | Free (MIT) | ~€399/seat/yr (Developer)[^ndepend] | ~$2,500/yr (Server Developer, 100K LOC)[^sonar] | from €18/active author/mo[^codescene] | €90/contributor/yr (Ultimate, 3-seat min)[^qodana] |
 | **Unity setup** | Zero setup: `.cs`/`.asmdef` alone, Unity DLLs resolved progressively | VS solution / compiled assemblies required[^ndepend-feat] | MSBuild project required (SonarScanner for .NET)[^sonar] | Git repo + service onboarding; no Unity-specific analysis[^codescene-hs] | `.sln`/`.csproj` pre-generated (Rider sync script)[^qodana-unity] |
-| **Churn × complexity hotspots** | `unilyze hotspot`, free | None (trend baselines only)[^ndepend-feat] | None ("Security Hotspot" is unrelated)[^sonar] | File-level; function-level in paid X-Ray[^codescene-hs] | None |
+| **Churn × complexity hotspots** | `unilyze hotspot`, free; method-level via `--methods` | None (trend baselines only)[^ndepend-feat] | None ("Security Hotspot" is unrelated)[^sonar] | File-level; function-level in paid X-Ray[^codescene-hs] | None |
 | **Agent integration** | Bundled skills (Claude/Codex/Cursor/Gemini/Windsurf), self-documenting CLI (`metrics`/`schema`/`query`), stable JSON; MCP on roadmap | [NDepend MCP][^ndepend-mcp] | [SonarQube MCP Server (GA)][^sonar-mcp] | [CodeScene MCP][^codescene-mcp] | None found in survey |
 
 [^ndepend]: [NDepend purchase](https://www.ndepend.com/purchase)
