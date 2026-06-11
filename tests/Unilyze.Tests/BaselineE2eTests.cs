@@ -205,6 +205,31 @@ internal static class CliE2eTestsHelper
         return (proc.ExitCode, stdout, stderr);
     }
 
+    internal static (int ExitCode, string StdOut, string StdErr) RunWithInput(string stdin, params string[] args)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = DotnetHostPath,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        psi.ArgumentList.Add(AppDllPath);
+        foreach (var arg in args)
+            psi.ArgumentList.Add(arg);
+
+        using var proc = Process.Start(psi)
+            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
+        proc.StandardInput.Write(stdin);
+        proc.StandardInput.Close();
+        var stdout = proc.StandardOutput.ReadToEnd();
+        var stderr = proc.StandardError.ReadToEnd();
+        proc.WaitForExit(120_000);
+        return (proc.ExitCode, stdout, stderr);
+    }
+
     static string ResolveCurrentTargetFramework()
     {
         var baseDir = AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
