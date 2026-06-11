@@ -897,6 +897,113 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Projects_Analyze_WritesPerProjectFilesAndSummary()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var outDir = Path.Combine(_tempDir, "snapshots");
+        var glob = Path.Combine(monoRoot, "packages", "*");
+
+        var (exitCode, _, stderr) = Run("--projects", glob, "-o", outDir, "-f", "json");
+        Assert.Equal(0, exitCode);
+
+        Assert.True(File.Exists(Path.Combine(outDir, "a.json")));
+        Assert.True(File.Exists(Path.Combine(outDir, "b.json")));
+        Assert.True(File.Exists(Path.Combine(outDir, "summary.json")));
+        Assert.Contains("Written to", stderr);
+
+        var summary = JsonDocument.Parse(File.ReadAllText(Path.Combine(outDir, "summary.json"))).RootElement;
+        Assert.Equal(2, summary.GetProperty("projects").GetArrayLength());
+        Assert.True(summary.GetProperty("toolVersion").GetString()?.StartsWith("0.", StringComparison.Ordinal) == true);
+
+        var aDoc = JsonDocument.Parse(File.ReadAllText(Path.Combine(outDir, "a.json"))).RootElement;
+        Assert.Equal(JsonValueKind.String, aDoc.GetProperty("projectPath").ValueKind);
+    }
+
+    [Fact]
+    public void Projects_Badge_AggregatesGateExitCode()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var outDir = Path.Combine(_tempDir, "badges");
+        var glob = Path.Combine(monoRoot, "packages", "*");
+
+        var (exitCode, _, stderr) = Run(
+            "badge", "--projects", glob, "--metric", "codehealth", "--fail-under", "7", "-o", outDir);
+        Assert.Equal(2, exitCode);
+
+        Assert.True(File.Exists(Path.Combine(outDir, "a-codehealth.json")));
+        Assert.True(File.Exists(Path.Combine(outDir, "b-codehealth.json")));
+        Assert.True(File.Exists(Path.Combine(outDir, "summary.json")));
+        Assert.Contains("| Project | Value | Gate |", stderr);
+
+        var summary = JsonDocument.Parse(File.ReadAllText(Path.Combine(outDir, "summary.json"))).RootElement;
+        var gates = summary.GetProperty("projects").EnumerateArray()
+            .Select(p => p.GetProperty("gate").GetString())
+            .ToList();
+        Assert.Contains("pass", gates);
+        Assert.Contains("fail", gates);
+    }
+
+    [Fact]
+    public void Projects_Badge_AllPass_ExitsZero()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var outDir = Path.Combine(_tempDir, "badges-pass");
+        var glob = Path.Combine(monoRoot, "packages", "*");
+
+        var (exitCode, _, stderr) = Run(
+            "badge", "--projects", glob, "--metric", "codehealth", "--fail-under", "1", "-o", outDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("| Project | Value | Gate |", stderr);
+    }
+
+    [Fact]
+    public void Projects_CombinedWithPath_ExitsUsageError()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var glob = Path.Combine(monoRoot, "packages", "*");
+        var (exitCode, _, stderr) = Run("-p", _tempDir, "--projects", glob, "-o", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("cannot be combined with -p", stderr);
+    }
+
+    [Fact]
+    public void Projects_ZeroMatches_ExitsUsageError()
+    {
+        var glob = Path.Combine(_tempDir, "nomatch", "*");
+        var (exitCode, _, stderr) = Run("badge", "--projects", glob, "--metric", "codehealth", "--fail-under", "7", "-o", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("No directories matched", stderr);
+    }
+
+    [Fact]
+    public void Projects_MissingOutputDir_ExitsUsageError()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var glob = Path.Combine(monoRoot, "packages", "*");
+        var (exitCode, _, stderr) = Run("badge", "--projects", glob, "--metric", "codehealth", "--fail-under", "7");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("requires -o <dir>", stderr);
+    }
+
+    [Fact]
+    public void Projects_HtmlFormat_ExitsUsageError()
+    {
+        var monoRoot = WriteMonorepoFixture();
+        var glob = Path.Combine(monoRoot, "packages", "*");
+        var (exitCode, _, stderr) = Run("--projects", glob, "-o", _tempDir, "-f", "html");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("HTML output is not supported with --projects", stderr);
+    }
+
+    [Fact]
+    public void Projects_UnknownOnDiff_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("diff", "a.json", "b.json", "--projects", "x/*");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--projects'", stderr);
+    }
+
+    [Fact]
     public void Analyze_UnknownOption_ExitsUsageError()
     {
         WriteSimpleProject();
@@ -1541,6 +1648,56 @@ public sealed class CliE2eTests : IDisposable
             var stderr = proc.StandardError.ReadToEnd();
             throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
         }
+    }
+
+    private string WriteMonorepoFixture()
+    {
+        var monoRoot = Path.Combine(_tempDir, "mono");
+        var packageA = Path.Combine(monoRoot, "packages", "a");
+        var packageB = Path.Combine(monoRoot, "packages", "b");
+        Directory.CreateDirectory(packageA);
+        Directory.CreateDirectory(packageB);
+
+        File.WriteAllText(Path.Combine(packageA, "Clean.cs"), """
+            namespace PackageA;
+            public class Clean
+            {
+                public string Greet(string name) => $"Hello, {name}!";
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(packageB, "Degraded.cs"), """
+            namespace PackageB;
+            public class Degraded
+            {
+                public int Run(int x)
+                {
+                    if (x == 1) return 1; if (x == 2) return 2; if (x == 3) return 3; if (x == 4) return 4; if (x == 5) return 5;
+                    if (x == 6) return 6; if (x == 7) return 7; if (x == 8) return 8; if (x == 9) return 9; if (x == 10) return 10;
+                    if (x == 11) return 11; if (x == 12) return 12; if (x == 13) return 13; if (x == 14) return 14; if (x == 15) return 15;
+                    if (x == 16) return 16; if (x == 17) return 17; if (x == 18) return 18; if (x == 19) return 19; if (x == 20) return 20;
+                    if (x == 21) return 21; if (x == 22) return 22; if (x == 23) return 23; if (x == 24) return 24; if (x == 25) return 25;
+                    if (x == 26) return 26; if (x == 27) return 27; if (x == 28) return 28; if (x == 29) return 29; if (x == 30) return 30;
+                    if (x == 31) return 31; if (x == 32) return 32; if (x == 33) return 33; if (x == 34) return 34; if (x == 35) return 35;
+                    if (x == 36) return 36; if (x == 37) return 37; if (x == 38) return 38; if (x == 39) return 39; if (x == 40) return 40;
+                    if (x == 41) return 41; if (x == 42) return 42; if (x == 43) return 43; if (x == 44) return 44; if (x == 45) return 45;
+                    if (x == 46) return 46; if (x == 47) return 47; if (x == 48) return 48; if (x == 49) return 49; if (x == 50) return 50;
+                    if (x == 51) return 51; if (x == 52) return 52; if (x == 53) return 53; if (x == 54) return 54; if (x == 55) return 55;
+                    if (x == 56) return 56; if (x == 57) return 57; if (x == 58) return 58; if (x == 59) return 59; if (x == 60) return 60;
+                    if (x == 61) return 61; if (x == 62) return 62; if (x == 63) return 63; if (x == 64) return 64; if (x == 65) return 65;
+                    if (x == 66) return 66; if (x == 67) return 67; if (x == 68) return 68; if (x == 69) return 69; if (x == 70) return 70;
+                    if (x == 71) return 71; if (x == 72) return 72; if (x == 73) return 73; if (x == 74) return 74; if (x == 75) return 75;
+                    if (x == 76) return 76; if (x == 77) return 77; if (x == 78) return 78; if (x == 79) return 79; if (x == 80) return 80;
+                    if (x == 81) return 81; if (x == 82) return 82; if (x == 83) return 83; if (x == 84) return 84; if (x == 85) return 85;
+                    if (x == 86) return 86; if (x == 87) return 87; if (x == 88) return 88; if (x == 89) return 89; if (x == 90) return 90;
+                    if (x == 91) return 91; if (x == 92) return 92; if (x == 93) return 93; if (x == 94) return 94; if (x == 95) return 95;
+                    if (x == 96) return 96; if (x == 97) return 97; if (x == 98) return 98; if (x == 99) return 99;
+                    return 0;
+                }
+            }
+            """);
+
+        return monoRoot;
     }
 
     private void WriteSimpleProject()
