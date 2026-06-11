@@ -102,41 +102,20 @@ internal sealed class GitWorktreeSession : IDisposable
 
     static string RunGit(string workingDirectory, params string[] args)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = "git",
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-
-        Process process;
         try
         {
-            process = Process.Start(psi)
-                      ?? throw new GitWorktreeException("Failed to start git process.");
+            return GitProcess.Run(workingDirectory, args).TrimEnd();
         }
-        catch (System.ComponentModel.Win32Exception)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("git executable not found", StringComparison.Ordinal))
         {
             throw new GitWorktreeException("git executable not found.");
         }
-
-        using (process)
+        catch (InvalidOperationException ex)
         {
-            var stderr = process.StandardError.ReadToEnd();
-            var stdout = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
-            if (process.ExitCode != 0)
-            {
-                var detail = string.IsNullOrWhiteSpace(stderr) ? $"exit {process.ExitCode}" : stderr.Trim();
-                throw new GitWorktreeException(detail);
-            }
-
-            return stdout.TrimEnd();
+            var detail = ex.Message.StartsWith("git failed: ", StringComparison.Ordinal)
+                ? ex.Message["git failed: ".Length..]
+                : ex.Message;
+            throw new GitWorktreeException(detail);
         }
     }
 }

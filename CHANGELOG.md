@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- **[metrics]** Hotspot upgrades: bot-commit exclusion (default on, `--no-bot-filter` to disable), optional time-decay weighting (`--half-life <N.unit>`), and method-level X-Ray (`--methods <file>`); hotspot JSON has no `metricsVersion` field and `metricsVersion` stays 3, but default bot filtering changes hotspot rankings on repos with bot traffic ([#128](https://github.com/bigdra50/unilyze/issues/128))
 - `trend -f html` / `-o trend.html`: self-contained HTML output with inline-SVG charts for CodeHealth avg/min, warning/critical smell counts, and type metrics; snapshot `sourceFile` provenance, metricsVersion/profile crossing markers, and a two-click diff command builder ([#129](https://github.com/bigdra50/unilyze/issues/129))
 - Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - Per-type `role` field and optional `informationalCount` on `typeMetrics` (unity profile records `LowCohesion` as informational instead of a warning smell, per Palomba ICSME 2014); root `profile` field when a non-default profile is active; `diff`/`trend` warn on profile mismatch ([#87](https://github.com/bigdra50/unilyze/issues/87))

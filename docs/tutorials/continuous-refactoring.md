@@ -33,6 +33,10 @@ unilyze hotspot --help
 | `--since` | Git log period | `12.month` |
 | `-n` | Top N results | `20` |
 | `--exclude-dir` | Exclude directory (repeatable) | — |
+| `--no-bot-filter` | Include bot-authored commits in churn | bots excluded |
+| `--bot-pattern` | Additional bot author regex (repeatable) | — |
+| `--half-life` | Exponential decay half-life (e.g. `90.day`, `6.month`) | off |
+| `--methods` | Method-level X-Ray for one `.cs` file | — |
 | `-o`, `--output` | Write JSON to file | stdout |
 
 ### Basic run
@@ -67,18 +71,50 @@ unilyze hotspot -p . \
 
 Reusing `-i` skips a second full analysis pass — useful when you already have a CI snapshot.
 
+### Bot commit exclusion
+
+By default, `hotspot` excludes commits from known automation accounts (GitHub `[bot]` suffix, dependabot, renovate, github-actions, and others). Research shows bot traffic can dominate hotspot churn counts. Stderr reports how many commits were excluded; JSON includes `botFilter` and `botCommitsExcluded`.
+
+```bash
+unilyze hotspot -p .                        # bots excluded (default)
+unilyze hotspot -p . --no-bot-filter        # raw counts, matches pre-upgrade behavior
+unilyze hotspot -p . --bot-pattern 'ci-.*'  # extend built-in matcher
+```
+
+### Time-decay weighting
+
+Opt in with `--half-life` so recent commits weigh more than old ones. Weight per commit is `2^(-age/halfLife)` where age is measured from the newest in-window commit (deterministic for a fixed history). `changeCount` stays the raw count; `weightedChurn` and scores use decay when enabled.
+
+```bash
+unilyze hotspot -p . --half-life 90.day
+unilyze hotspot -p . --half-life 6.month -n 10
+```
+
+### Method-level X-Ray
+
+`--methods <file>` ranks individual methods in one file by churn × cognitive complexity using `git log -L` over Roslyn-derived line ranges. Works at SyntaxOnly level (no Unity DLLs required).
+
+```bash
+unilyze hotspot -p . --methods src/Unilyze/AnalysisPipeline.cs -o method-hotspots.json
+```
+
+Bot filtering and decay both apply in method mode. JSON output includes `methodHotspots[]` alongside the usual type-level `hotspots[]`.
+
 ### Interpreting hotspot scores
 
 Each hotspot entry includes:
 
 | Field | Meaning |
 |-------|---------|
-| `changeCount` | Git commits touching the type's file(s) in `--since` |
+| `changeCount` | Raw git commits touching the type's file(s) in `--since` |
+| `weightedChurn` | Present when `--half-life` is set; decay-weighted commit sum |
 | `codeHealth` | Composite health (1.0 worst – 10.0 best) |
-| `hotspotScore` | Combined priority score (higher = refactor first) |
+| `hotspotScore` | `churn × (10.0 - codeHealth)`; churn is `weightedChurn` when decay is on |
 | `averageCognitiveComplexity` / `maxCognitiveComplexity` | Complexity context |
 
 **Prioritize hotspot order over raw CodeHealth order** when git history is available. A type with Code Health 7.5 that ships every sprint matters more than a 6.0 type untouched for years.
+
+Note: `--name-only` does not follow renames, so a renamed file's churn resets at the rename boundary.
 
 ### Fallback when git history is unavailable
 
