@@ -51,7 +51,8 @@ analyze (unilyze -f json):
     .fromTypeId, .toTypeId             string?  Stable type identifiers when available
     .kind                              string   "Inheritance","InterfaceImpl","FieldType",
                                                 "PropertyType","MethodParam","ReturnType",
-                                                "EventType","GenericConstraint","DIRegistration"
+                                                "EventType","GenericConstraint","DIRegistration",
+                                                "SerializedReference"
   .apiSurface[]                        object?  Opt-in per-type API surface (--include-api-surface)
     .typeId                             string   Stable type identifier
     .qualifiedName                      string   Namespace.TypeName
