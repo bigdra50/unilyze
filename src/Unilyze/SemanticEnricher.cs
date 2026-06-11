@@ -12,68 +12,107 @@ internal static class SemanticEnricher
 
     readonly record struct CohesionMetrics(double? Lcom, int? Cbo, int? Dit, int? Rfc);
 
-    public static IReadOnlyList<TypeMetrics> Enrich(
-        IReadOnlyList<TypeMetrics> typeMetrics,
-        IReadOnlyList<TypeNodeInfo> allTypes,
-        IReadOnlyList<SyntaxTree> syntaxTrees,
-        CompilationResult compilationResult)
+    static readonly IReadOnlySet<CodeSmellKind> NoDisabledRules = new HashSet<CodeSmellKind>();
+
+    private sealed record EnrichmentContext(
+        Dictionary<string, TypeDeclarationSyntax> TypeDeclLookup,
+        Dictionary<string, TypeNodeInfo> TypeInfoByKey,
+        CompilationResult CompilationResult,
+        ConcurrentDictionary<SyntaxTree, SemanticModel> ModelCache,
+        EffectiveSmellThresholds Thresholds,
+        IReadOnlySet<CodeSmellKind> DisabledRuleKinds)
     {
-        var treeByPath = SyntaxLookups.BuildTreeLookup(compilationResult, syntaxTrees);
-
-        var typeInfoByKey = new Dictionary<string, TypeNodeInfo>();
-        foreach (var t in allTypes)
-            typeInfoByKey.TryAdd(TypeIdentity.GetTypeId(t), t);
-
-        var typeDeclLookup = SyntaxLookups.BuildTypeDeclLookup(allTypes, treeByPath);
-        var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
-
-        // Pre-warm SemanticModel cache: distribute initial GetSemanticModel cost across threads
-        if (compilationResult.Compilation is not null)
+        public static EnrichmentContext Create(
+            IReadOnlyList<TypeNodeInfo> allTypes,
+            IReadOnlyList<SyntaxTree> syntaxTrees,
+            CompilationResult compilationResult,
+            EffectiveSmellThresholds? thresholds,
+            IReadOnlySet<CodeSmellKind>? disabledRuleKinds)
         {
+            thresholds ??= EffectiveSmellThresholds.Default;
+            disabledRuleKinds ??= NoDisabledRules;
+            var treeByPath = SyntaxLookups.BuildTreeLookup(compilationResult, syntaxTrees);
+
+            var typeInfoByKey = new Dictionary<string, TypeNodeInfo>();
+            foreach (var t in allTypes)
+                typeInfoByKey.TryAdd(TypeIdentity.GetTypeId(t), t);
+
+            var typeDeclLookup = SyntaxLookups.BuildTypeDeclLookup(allTypes, treeByPath);
+            var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
+            PrewarmModelCache(compilationResult, typeDeclLookup, modelCache);
+
+            return new EnrichmentContext(
+                typeDeclLookup, typeInfoByKey, compilationResult, modelCache,
+                thresholds, disabledRuleKinds);
+        }
+
+        static void PrewarmModelCache(
+            CompilationResult compilationResult,
+            Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
+            ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
+        {
+            if (compilationResult.Compilation is null)
+                return;
+
             var uniqueTrees = typeDeclLookup.Values.Select(td => td.SyntaxTree).Distinct().ToList();
             Parallel.ForEach(uniqueTrees, tree =>
             {
                 modelCache.GetOrAdd(tree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
             });
         }
+    }
+
+    public static IReadOnlyList<TypeMetrics> Enrich(
+        IReadOnlyList<TypeMetrics> typeMetrics,
+        IReadOnlyList<TypeNodeInfo> allTypes,
+        IReadOnlyList<SyntaxTree> syntaxTrees,
+        CompilationResult compilationResult,
+        EffectiveSmellThresholds? thresholds = null,
+        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null)
+    {
+        var context = EnrichmentContext.Create(
+            allTypes, syntaxTrees, compilationResult, thresholds, disabledRuleKinds);
 
         var result = new TypeMetrics[typeMetrics.Count];
         Parallel.For(0, typeMetrics.Count, i =>
         {
-            result[i] = EnrichSingleType(
-                typeMetrics[i], typeDeclLookup, typeInfoByKey, compilationResult, modelCache);
+            result[i] = EnrichSingleType(typeMetrics[i], context);
         });
 
         return result;
     }
 
-    static TypeMetrics EnrichSingleType(
-        TypeMetrics metrics,
-        Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
-        Dictionary<string, TypeNodeInfo> typeInfoByKey,
-        CompilationResult compilationResult,
-        ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
+    static TypeMetrics EnrichSingleType(TypeMetrics metrics, EnrichmentContext context)
     {
         var key = TypeIdentity.GetTypeId(metrics);
+        context.TypeInfoByKey.TryGetValue(key, out var typeInfo);
 
-        typeInfoByKey.TryGetValue(key, out var typeInfo);
-
-        var current = typeDeclLookup.TryGetValue(key, out var typeDecl)
-            ? ApplyCohesionMetrics(metrics, typeDecl, typeInfo, compilationResult, modelCache)
+        var current = context.TypeDeclLookup.TryGetValue(key, out var typeDecl)
+            ? CohesionEnrichment.Apply(metrics, typeDecl, typeInfo, context)
             : metrics;
 
         var smells = typeInfo is not null
-            ? CodeSmellDetector.Detect(current, typeInfo, current.Lcom, current.Cbo, current.Dit)
+            ? CodeSmellDetector.Detect(current, typeInfo, current.Lcom, current.Cbo, current.Dit, context.Thresholds)
             : new List<CodeSmell>();
 
         var wmc = WmcCalculator.Calculate(typeInfo?.Members ?? []);
+        var detected = FeatureDetection.Run(metrics, context);
+        smells = SmellFiltering.Apply(smells, context.DisabledRuleKinds);
+        detected = SmellFiltering.Apply(detected, context.DisabledRuleKinds);
 
-        var detected = RunFeatureDetectors(metrics, typeDeclLookup, compilationResult, modelCache);
-        var allSmells = ConvertDetectedSmells(smells, detected);
+        return StampEnrichedMetrics(current, smells, detected, wmc);
+    }
 
-        var boxingCount = CountByKind(detected, CodeSmellKind.BoxingAllocation);
-        var closureCount = CountByKind(detected, CodeSmellKind.ClosureCapture);
-        var paramsCount = CountByKind(detected, CodeSmellKind.ParamsArrayAllocation);
+    static TypeMetrics StampEnrichedMetrics(
+        TypeMetrics current,
+        IReadOnlyList<CodeSmell> smells,
+        IReadOnlyList<DetectedSmell> detected,
+        int wmc)
+    {
+        var allSmells = SmellMerging.Convert(smells, detected);
+        var boxingCount = SmellMerging.CountByKind(detected, CodeSmellKind.BoxingAllocation);
+        var closureCount = SmellMerging.CountByKind(detected, CodeSmellKind.ClosureCapture);
+        var paramsCount = SmellMerging.CountByKind(detected, CodeSmellKind.ParamsArrayAllocation);
 
         return current with
         {
@@ -85,214 +124,243 @@ internal static class SemanticEnricher
         };
     }
 
-    // Recalculates semantic CycCC and stamps LCOM/CBO/DIT/RFC onto the metrics record.
-    static TypeMetrics ApplyCohesionMetrics(
-        TypeMetrics metrics,
-        TypeDeclarationSyntax typeDecl,
-        TypeNodeInfo? typeInfo,
-        CompilationResult compilationResult,
-        ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
+    static class CohesionEnrichment
     {
-        var cohesion = CalculateCohesionMetrics(
-            typeDecl, typeInfo, compilationResult, modelCache, out var cohesionModel);
-
-        var current = cohesionModel is not null
-            ? RecalculateCycCC(metrics, typeDecl, cohesionModel)
-            : metrics;
-
-        return current with
+        public static TypeMetrics Apply(
+            TypeMetrics metrics,
+            TypeDeclarationSyntax typeDecl,
+            TypeNodeInfo? typeInfo,
+            EnrichmentContext context)
         {
-            Lcom = cohesion.Lcom,
-            Cbo = cohesion.Cbo,
-            Dit = cohesion.Dit,
-            Rfc = cohesion.Rfc,
-        };
-    }
+            var cohesion = Calculate(typeDecl, typeInfo, context, out var cohesionModel);
 
-    static CohesionMetrics CalculateCohesionMetrics(
-        TypeDeclarationSyntax typeDecl,
-        TypeNodeInfo? typeInfo,
-        CompilationResult compilationResult,
-        ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache,
-        out SemanticModel? model)
-    {
-        model = null;
-        double? lcom = null;
-        int? cbo = null;
-        int? dit = null;
-        int? rfc = null;
+            var current = cohesionModel is not null
+                ? RecalculateCycCC(metrics, typeDecl, cohesionModel)
+                : metrics;
 
-        if (compilationResult.Compilation is not null)
-        {
-            var tree = typeDecl.SyntaxTree;
-            model = modelCache.GetOrAdd(tree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
+            return current with
+            {
+                Lcom = cohesion.Lcom,
+                Cbo = cohesion.Cbo,
+                Dit = cohesion.Dit,
+                Rfc = cohesion.Rfc,
+            };
         }
 
-        try
+        static CohesionMetrics Calculate(
+            TypeDeclarationSyntax typeDecl,
+            TypeNodeInfo? typeInfo,
+            EnrichmentContext context,
+            out SemanticModel? model)
         {
-            if (TestSimulateRoslynFailureInCohesion?.Invoke(typeDecl) == true)
-                throw new NullReferenceException("Simulated Roslyn internal error");
+            model = null;
+            double? lcom = null;
+            int? cbo = null;
+            int? dit = null;
+            int? rfc = null;
 
-            lcom = LcomCalculator.Calculate(typeDecl, model);
-            cbo = CboCalculator.Calculate(typeDecl, model);
-            rfc = RfcCalculator.Calculate(typeDecl, model);
-
-            if (model is not null)
+            if (context.CompilationResult.Compilation is not null)
             {
-                dit = DitCalculator.Calculate(typeDecl, model);
+                var tree = typeDecl.SyntaxTree;
+                model = context.ModelCache.GetOrAdd(
+                    tree, static (t, c) => c.GetSemanticModel(t), context.CompilationResult.Compilation);
+            }
+
+            try
+            {
+                if (TestSimulateRoslynFailureInCohesion?.Invoke(typeDecl) == true)
+                    throw new NullReferenceException("Simulated Roslyn internal error");
+
+                lcom = LcomCalculator.Calculate(typeDecl, model);
+                cbo = CboCalculator.Calculate(typeDecl, model);
+                rfc = RfcCalculator.Calculate(typeDecl, model);
+
+                if (model is not null)
+                    dit = DitCalculator.Calculate(typeDecl, model);
+            }
+            catch (Exception)
+            {
+                lcom = LcomCalculator.Calculate(typeDecl, model: null);
+                cbo = CboCalculator.Calculate(typeDecl, model: null);
+                rfc = RfcCalculator.Calculate(typeDecl, model: null);
+                model = null;
+            }
+
+            dit ??= ResolveDitFallback(typeInfo, typeDecl);
+            return new CohesionMetrics(lcom, cbo, dit, rfc);
+        }
+
+        static int ResolveDitFallback(TypeNodeInfo? typeInfo, TypeDeclarationSyntax typeDecl)
+        {
+            if (typeInfo is null)
+                return DitCalculator.Calculate(typeDecl, model: null);
+            if (typeInfo.Kind is "interface" or "struct" or "record struct")
+                return 0;
+            return typeInfo.BaseType != null ? 1 : 0;
+        }
+
+        static TypeMetrics RecalculateCycCC(
+            TypeMetrics metrics,
+            TypeDeclarationSyntax typeDecl,
+            SemanticModel model)
+        {
+            var methodDeclsByName = BuildMethodDeclLookup(typeDecl);
+            var anyChanged = false;
+            var updatedMethods = new List<MethodMetrics>(metrics.Methods.Count);
+            foreach (var mm in metrics.Methods)
+            {
+                var updated = RecalculateMethodCycCC(mm, methodDeclsByName, model);
+                anyChanged |= !ReferenceEquals(updated, mm);
+                updatedMethods.Add(updated);
+            }
+
+            if (!anyChanged) return metrics;
+
+            var avgCycCC = updatedMethods.Count > 0
+                ? Math.Round(updatedMethods.Average(m => (double)m.CyclomaticComplexity), 1)
+                : 0.0;
+            var maxCycCC = updatedMethods.Count > 0
+                ? updatedMethods.Max(m => m.CyclomaticComplexity)
+                : 0;
+
+            return metrics with
+            {
+                Methods = updatedMethods,
+                AverageCyclomaticComplexity = avgCycCC,
+                MaxCyclomaticComplexity = maxCycCC
+            };
+        }
+
+        static Dictionary<string, MethodDeclarationSyntax> BuildMethodDeclLookup(TypeDeclarationSyntax typeDecl)
+        {
+            var methodDeclsByName = new Dictionary<string, MethodDeclarationSyntax>();
+            foreach (var member in typeDecl.Members)
+            {
+                if (member is MethodDeclarationSyntax method)
+                    methodDeclsByName.TryAdd(method.Identifier.Text, method);
+            }
+            return methodDeclsByName;
+        }
+
+        static MethodMetrics RecalculateMethodCycCC(
+            MethodMetrics mm,
+            Dictionary<string, MethodDeclarationSyntax> methodDeclsByName,
+            SemanticModel model)
+        {
+            if (!methodDeclsByName.TryGetValue(mm.MethodName, out var methodDecl))
+                return mm;
+
+            var body = (SyntaxNode?)methodDecl.Body ?? methodDecl.ExpressionBody;
+            var newCycCC = CyclomaticComplexity.Calculate(body, model);
+            return newCycCC == mm.CyclomaticComplexity ? mm : mm with { CyclomaticComplexity = newCycCC };
+        }
+    }
+
+    static class FeatureDetection
+    {
+        public static IReadOnlyList<DetectedSmell> Run(TypeMetrics metrics, EnrichmentContext context)
+        {
+            if (!context.TypeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
+                return [];
+
+            SemanticModel? mdl = null;
+            if (context.CompilationResult.Compilation is not null)
+            {
+                mdl = context.ModelCache.GetOrAdd(
+                    td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), context.CompilationResult.Compilation);
+            }
+
+            try
+            {
+                if (TestSimulateRoslynFailureInFeatureDetect?.Invoke(td) == true)
+                    throw new NullReferenceException("Simulated Roslyn internal error");
+
+                var detected = RunAllDetectors(td, mdl);
+                var unityContext = UnityContextClassifier.Classify(td, mdl);
+                return ApplyHotPathEscalation(detected, unityContext);
+            }
+            catch (Exception)
+            {
+                return [];
             }
         }
-        catch (Exception)
+
+        static List<DetectedSmell> RunAllDetectors(TypeDeclarationSyntax td, SemanticModel? mdl)
         {
-            // Roslyn internal errors (e.g. NullableWalker NRE) — fall back to syntactic analysis
-            lcom = LcomCalculator.Calculate(typeDecl, model: null);
-            cbo = CboCalculator.Calculate(typeDecl, model: null);
-            rfc = RfcCalculator.Calculate(typeDecl, model: null);
-            model = null;
-        }
-
-        dit ??= ResolveDitFallback(typeInfo, typeDecl);
-
-        return new CohesionMetrics(lcom, cbo, dit, rfc);
-    }
-
-    // Syntactic DIT when the semantic calculation is unavailable.
-    static int ResolveDitFallback(TypeNodeInfo? typeInfo, TypeDeclarationSyntax typeDecl)
-    {
-        if (typeInfo is null)
-            return DitCalculator.Calculate(typeDecl, model: null);
-        if (typeInfo.Kind is "interface" or "struct" or "record struct")
-            return 0;
-        return typeInfo.BaseType != null ? 1 : 0;
-    }
-
-    static IReadOnlyList<DetectedSmell> RunFeatureDetectors(
-        TypeMetrics metrics,
-        Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
-        CompilationResult compilationResult,
-        ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
-    {
-        if (!typeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
-            return [];
-
-        SemanticModel? mdl = null;
-        if (compilationResult.Compilation is not null)
-            mdl = modelCache.GetOrAdd(td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
-
-        try
-        {
-            if (TestSimulateRoslynFailureInFeatureDetect?.Invoke(td) == true)
-                throw new NullReferenceException("Simulated Roslyn internal error");
-
             var detected = new List<DetectedSmell>();
             foreach (var detector in SmellDetectorRegistry.All)
                 detected.AddRange(detector.Detect(td, mdl));
-
-            var unityContext = UnityContextClassifier.Classify(td, mdl);
-            return ApplyHotPathEscalation(detected, unityContext);
-        }
-        catch (Exception)
-        {
-            // Roslyn internal errors — graceful degradation
-            return [];
-        }
-    }
-
-    static IReadOnlyList<DetectedSmell> ApplyHotPathEscalation(
-        List<DetectedSmell> detected,
-        UnityTypeContext context)
-    {
-        if (!context.IsMonoBehaviour)
             return detected;
-
-        for (var i = 0; i < detected.Count; i++)
-        {
-            var smell = detected[i];
-            if (!ShouldEscalateHotPathSmell(context, smell))
-                continue;
-
-            detected[i] = smell with { Severity = SmellSeverity.Critical };
         }
 
-        return detected;
-    }
-
-    static bool ShouldEscalateHotPathSmell(UnityTypeContext context, DetectedSmell smell)
-    {
-        if (smell.MethodName is null || !context.HotPathMethodNames.Contains(smell.MethodName))
-            return false;
-
-        return smell.Kind is CodeSmellKind.BoxingAllocation
-            or CodeSmellKind.ClosureCapture
-            or CodeSmellKind.ParamsArrayAllocation;
-    }
-
-    static List<CodeSmell> ConvertDetectedSmells(
-        IReadOnlyList<CodeSmell> baseSmells,
-        IReadOnlyList<DetectedSmell> detected)
-    {
-        var allSmells = new List<CodeSmell>(baseSmells.Count + detected.Count);
-        allSmells.AddRange(baseSmells);
-        foreach (var d in detected)
+        static IReadOnlyList<DetectedSmell> ApplyHotPathEscalation(
+            List<DetectedSmell> detected,
+            UnityTypeContext context)
         {
-            allSmells.Add(new CodeSmell(
-                d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line));
-        }
-        return allSmells;
-    }
+            if (!context.IsMonoBehaviour)
+                return detected;
 
-    static int CountByKind(IReadOnlyList<DetectedSmell> detected, CodeSmellKind kind)
-        => detected.Count(d => d.Kind == kind);
+            for (var i = 0; i < detected.Count; i++)
+            {
+                var smell = detected[i];
+                if (!ShouldEscalateHotPathSmell(context, smell))
+                    continue;
 
-    static TypeMetrics RecalculateCycCC(
-        TypeMetrics metrics,
-        TypeDeclarationSyntax typeDecl,
-        SemanticModel model)
-    {
-        var methodDeclsByName = new Dictionary<string, MethodDeclarationSyntax>();
-        foreach (var member in typeDecl.Members)
-        {
-            if (member is MethodDeclarationSyntax method)
-                methodDeclsByName.TryAdd(method.Identifier.Text, method);
+                detected[i] = smell with { Severity = SmellSeverity.Critical };
+            }
+
+            return detected;
         }
 
-        var anyChanged = false;
-        var updatedMethods = new List<MethodMetrics>(metrics.Methods.Count);
-        foreach (var mm in metrics.Methods)
+        static bool ShouldEscalateHotPathSmell(UnityTypeContext context, DetectedSmell smell)
         {
-            var updated = RecalculateMethodCycCC(mm, methodDeclsByName, model);
-            anyChanged |= !ReferenceEquals(updated, mm);
-            updatedMethods.Add(updated);
+            if (smell.MethodName is null || !context.HotPathMethodNames.Contains(smell.MethodName))
+                return false;
+
+            return smell.Kind is CodeSmellKind.BoxingAllocation
+                or CodeSmellKind.ClosureCapture
+                or CodeSmellKind.ParamsArrayAllocation;
         }
-
-        if (!anyChanged) return metrics;
-
-        var avgCycCC = updatedMethods.Count > 0
-            ? Math.Round(updatedMethods.Average(m => (double)m.CyclomaticComplexity), 1)
-            : 0.0;
-        var maxCycCC = updatedMethods.Count > 0
-            ? updatedMethods.Max(m => m.CyclomaticComplexity)
-            : 0;
-
-        return metrics with
-        {
-            Methods = updatedMethods,
-            AverageCyclomaticComplexity = avgCycCC,
-            MaxCyclomaticComplexity = maxCycCC
-        };
     }
 
-    // Returns the original instance when the semantic CycCC matches the syntactic one.
-    static MethodMetrics RecalculateMethodCycCC(
-        MethodMetrics mm,
-        Dictionary<string, MethodDeclarationSyntax> methodDeclsByName,
-        SemanticModel model)
+    static class SmellFiltering
     {
-        if (!methodDeclsByName.TryGetValue(mm.MethodName, out var methodDecl))
-            return mm;
+        public static List<CodeSmell> Apply(
+            IReadOnlyList<CodeSmell> smells, IReadOnlySet<CodeSmellKind> disabledRuleKinds)
+        {
+            if (disabledRuleKinds.Count == 0)
+                return smells is List<CodeSmell> list ? list : smells.ToList();
 
-        var body = (SyntaxNode?)methodDecl.Body ?? methodDecl.ExpressionBody;
-        var newCycCC = CyclomaticComplexity.Calculate(body, model);
-        return newCycCC == mm.CyclomaticComplexity ? mm : mm with { CyclomaticComplexity = newCycCC };
+            return smells.Where(s => !disabledRuleKinds.Contains(s.Kind)).ToList();
+        }
+
+        public static List<DetectedSmell> Apply(
+            IReadOnlyList<DetectedSmell> detected, IReadOnlySet<CodeSmellKind> disabledRuleKinds)
+        {
+            if (disabledRuleKinds.Count == 0)
+                return detected is List<DetectedSmell> list ? list : detected.ToList();
+
+            return detected.Where(d => !disabledRuleKinds.Contains(d.Kind)).ToList();
+        }
+    }
+
+    static class SmellMerging
+    {
+        public static List<CodeSmell> Convert(
+            IReadOnlyList<CodeSmell> baseSmells,
+            IReadOnlyList<DetectedSmell> detected)
+        {
+            var allSmells = new List<CodeSmell>(baseSmells.Count + detected.Count);
+            allSmells.AddRange(baseSmells);
+            foreach (var d in detected)
+            {
+                allSmells.Add(new CodeSmell(
+                    d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line));
+            }
+            return allSmells;
+        }
+
+        public static int CountByKind(IReadOnlyList<DetectedSmell> detected, CodeSmellKind kind)
+            => detected.Count(d => d.Kind == kind);
     }
 }

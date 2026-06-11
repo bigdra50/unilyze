@@ -67,6 +67,10 @@ try
 {
     string json;
     AnalysisResult result;
+    var resolved = new ResolvedAnalysisConfig(
+        EffectiveSmellThresholds.Default,
+        new HashSet<CodeSmellKind>(),
+        DisableCycles: false);
 
     if (input != null)
     {
@@ -78,10 +82,14 @@ try
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
         var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
+        resolved = config.ResolveAnalysisConfig();
         result = AnalysisPipeline.Build(
             path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
-            applyAnyDepthExcludes: !config.DisableDefaultExcludes);
+            applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+            thresholds: resolved.Thresholds,
+            disabledRuleKinds: resolved.DisabledRuleKinds,
+            disableCycles: resolved.DisableCycles);
         json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
     }
 
@@ -108,7 +116,7 @@ try
 
     if (format == OutputFormat.Sarif)
     {
-        var sarif = SarifFormatter.Generate(result);
+        var sarif = SarifFormatter.Generate(result, resolved.Thresholds);
         return ProgramHelpers.WriteOutput(sarif, output);
     }
 

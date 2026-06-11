@@ -39,10 +39,14 @@ internal static class HotspotRunner
             {
                 var hotspotRoot = ProgramHelpers.ResolveProjectRoot(path);
                 var hotspotConfig = UnilyzeConfig.LoadMerged(hotspotRoot, hotspotExcludeDirs);
+                var resolved = hotspotConfig.ResolveAnalysisConfig();
                 var result = AnalysisPipeline.Build(
                     path, null, null, hotspotConfig.ExcludeDirs,
                     excludeGeneratedCode: !hotspotConfig.DisableGeneratedCodeExcludes,
-                    applyAnyDepthExcludes: !hotspotConfig.DisableDefaultExcludes);
+                    applyAnyDepthExcludes: !hotspotConfig.DisableDefaultExcludes,
+                    thresholds: resolved.Thresholds,
+                    disabledRuleKinds: resolved.DisabledRuleKinds,
+                    disableCycles: resolved.DisableCycles);
                 typeMetrics = result.TypeMetrics ?? [];
             }
 

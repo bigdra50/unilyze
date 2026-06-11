@@ -48,66 +48,69 @@ public static class CodeSmellDetector
         TypeNodeInfo typeInfo,
         double? lcom,
         int? cbo = null,
-        int? dit = null)
+        int? dit = null,
+        EffectiveSmellThresholds? thresholds = null)
     {
+        thresholds ??= EffectiveSmellThresholds.Default;
         var smells = new List<CodeSmell>();
 
-        DetectGodClass(typeMetrics, smells);
-        DetectMethodSmells(typeMetrics, smells);
-        DetectLowCohesion(typeMetrics, lcom, smells);
-        DetectHighCoupling(typeMetrics, cbo, smells);
-        DetectDeepInheritance(typeMetrics, dit, smells);
+        DetectGodClass(typeMetrics, smells, thresholds);
+        DetectMethodSmells(typeMetrics, smells, thresholds);
+        DetectLowCohesion(typeMetrics, lcom, smells, thresholds);
+        DetectHighCoupling(typeMetrics, cbo, smells, thresholds);
+        DetectDeepInheritance(typeMetrics, dit, smells, thresholds);
 
         return smells;
     }
 
-    static void DetectGodClass(TypeMetrics metrics, List<CodeSmell> smells)
+    static void DetectGodClass(TypeMetrics metrics, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        var byLines = metrics.LineCount >= SmellThresholds.GodClassLinesWarning;
-        var byMethods = metrics.MethodCount >= SmellThresholds.GodClassMethodsWarning;
+        var byLines = metrics.LineCount >= thresholds.GodClassLinesWarning;
+        var byMethods = metrics.MethodCount >= thresholds.GodClassMethodsWarning;
         if (!byLines && !byMethods) return;
 
-        var severity = byLines && metrics.LineCount >= SmellThresholds.GodClassLinesCritical
+        var severity = byLines && metrics.LineCount >= thresholds.GodClassLinesCritical
             ? SmellSeverity.Critical
             : SmellSeverity.Warning;
 
         var message = (byLines, byMethods) switch
         {
             (true, true) => $"{metrics.LineCount} lines, {metrics.MethodCount} methods",
-            (true, false) => $"{metrics.LineCount} lines (threshold: {SmellThresholds.GodClassLinesWarning})",
-            _ => $"{metrics.MethodCount} methods (threshold: {SmellThresholds.GodClassMethodsWarning})"
+            (true, false) => $"{metrics.LineCount} lines (threshold: {thresholds.GodClassLinesWarning})",
+            _ => $"{metrics.MethodCount} methods (threshold: {thresholds.GodClassMethodsWarning})"
         };
 
         smells.Add(new CodeSmell(CodeSmellKind.GodClass, severity, metrics.TypeName, null, message));
     }
 
-    static void DetectMethodSmells(TypeMetrics metrics, List<CodeSmell> smells)
+    static void DetectMethodSmells(TypeMetrics metrics, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
         foreach (var method in metrics.Methods)
         {
-            DetectLongMethod(metrics.TypeName, method, smells);
-            DetectExcessiveParameters(metrics.TypeName, method, smells);
-            DetectHighComplexity(metrics.TypeName, method, smells);
-            DetectDeepNesting(metrics.TypeName, method, smells);
-            DetectLowMaintainability(metrics.TypeName, method, smells);
+            DetectLongMethod(metrics.TypeName, method, smells, thresholds);
+            DetectExcessiveParameters(metrics.TypeName, method, smells, thresholds);
+            DetectHighComplexity(metrics.TypeName, method, smells, thresholds);
+            DetectDeepNesting(metrics.TypeName, method, smells, thresholds);
+            DetectLowMaintainability(metrics.TypeName, method, smells, thresholds);
         }
     }
 
-    static void DetectLongMethod(string typeName, MethodMetrics method, List<CodeSmell> smells)
+    static void DetectLongMethod(
+        string typeName, MethodMetrics method, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (method.LineCount < SmellThresholds.LongMethodLinesWarning
-            && method.CognitiveComplexity < SmellThresholds.LongMethodCogCcWarning)
+        if (method.LineCount < thresholds.LongMethodLinesWarning
+            && method.CognitiveComplexity < thresholds.LongMethodCogCcWarning)
             return;
 
-        var severity = method.LineCount >= SmellThresholds.LongMethodLinesCritical
-            || method.CognitiveComplexity >= SmellThresholds.LongMethodCogCcCritical
+        var severity = method.LineCount >= thresholds.LongMethodLinesCritical
+            || method.CognitiveComplexity >= thresholds.LongMethodCogCcCritical
             ? SmellSeverity.Critical
             : SmellSeverity.Warning;
 
         var parts = new List<string>();
-        if (method.LineCount >= SmellThresholds.LongMethodLinesWarning)
+        if (method.LineCount >= thresholds.LongMethodLinesWarning)
             parts.Add($"{method.LineCount} lines");
-        if (method.CognitiveComplexity >= SmellThresholds.LongMethodCogCcWarning)
+        if (method.CognitiveComplexity >= thresholds.LongMethodCogCcWarning)
             parts.Add($"cognitive CC {method.CognitiveComplexity}");
 
         smells.Add(new CodeSmell(
@@ -115,24 +118,26 @@ public static class CodeSmellDetector
             string.Join(", ", parts)));
     }
 
-    static void DetectExcessiveParameters(string typeName, MethodMetrics method, List<CodeSmell> smells)
+    static void DetectExcessiveParameters(
+        string typeName, MethodMetrics method, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (method.ParameterCount <= SmellThresholds.ExcessiveParametersMax)
+        if (method.ParameterCount <= thresholds.ExcessiveParametersMax)
             return;
 
         smells.Add(new CodeSmell(
             CodeSmellKind.ExcessiveParameters, SmellSeverity.Warning,
             typeName, method.MethodName,
-            $"{method.ParameterCount} parameters (threshold: {SmellThresholds.ExcessiveParametersMax})"));
+            $"{method.ParameterCount} parameters (threshold: {thresholds.ExcessiveParametersMax})"));
     }
 
-    static void DetectHighComplexity(string typeName, MethodMetrics method, List<CodeSmell> smells)
+    static void DetectHighComplexity(
+        string typeName, MethodMetrics method, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
         var parts = new List<string>();
-        if (method.CyclomaticComplexity >= SmellThresholds.HighComplexityCycCcWarning)
+        if (method.CyclomaticComplexity >= thresholds.HighComplexityCycCcWarning)
             parts.Add($"cyclomatic CC {method.CyclomaticComplexity}");
-        if (method.CognitiveComplexity >= SmellThresholds.HighComplexityCogCcWarning
-            && method.CognitiveComplexity < SmellThresholds.LongMethodCogCcWarning)
+        if (method.CognitiveComplexity >= thresholds.HighComplexityCogCcWarning
+            && method.CognitiveComplexity < thresholds.LongMethodCogCcWarning)
             parts.Add($"cognitive CC {method.CognitiveComplexity}");
 
         if (parts.Count > 0)
@@ -144,63 +149,68 @@ public static class CodeSmellDetector
         }
     }
 
-    static void DetectDeepNesting(string typeName, MethodMetrics method, List<CodeSmell> smells)
+    static void DetectDeepNesting(
+        string typeName, MethodMetrics method, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (method.MaxNestingDepth < SmellThresholds.DeepNestingDepthWarning)
+        if (method.MaxNestingDepth < thresholds.DeepNestingDepthWarning)
             return;
 
-        var severity = method.MaxNestingDepth >= SmellThresholds.DeepNestingDepthCritical
+        var severity = method.MaxNestingDepth >= thresholds.DeepNestingDepthCritical
             ? SmellSeverity.Critical
             : SmellSeverity.Warning;
         smells.Add(new CodeSmell(
             CodeSmellKind.DeepNesting, severity, typeName, method.MethodName,
-            $"nesting depth {method.MaxNestingDepth} (threshold: {SmellThresholds.DeepNestingDepthWarning})"));
+            $"nesting depth {method.MaxNestingDepth} (threshold: {thresholds.DeepNestingDepthWarning})"));
     }
 
-    static void DetectLowMaintainability(string typeName, MethodMetrics method, List<CodeSmell> smells)
+    static void DetectLowMaintainability(
+        string typeName, MethodMetrics method, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (method.MaintainabilityIndex is not < SmellThresholds.LowMaintainabilityMiWarning)
+        if (method.MaintainabilityIndex is not { } mi || mi >= thresholds.LowMaintainabilityMiWarning)
             return;
 
         smells.Add(new CodeSmell(
             CodeSmellKind.LowMaintainability, SmellSeverity.Warning,
             typeName, method.MethodName,
-            $"MI {method.MaintainabilityIndex:F0} (threshold: {SmellThresholds.LowMaintainabilityMiWarning:0})"));
+            $"MI {method.MaintainabilityIndex:F0} (threshold: {thresholds.LowMaintainabilityMiWarning:0})"));
     }
 
-    static void DetectLowCohesion(TypeMetrics metrics, double? lcom, List<CodeSmell> smells)
+    static void DetectLowCohesion(
+        TypeMetrics metrics, double? lcom, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (lcom is >= SmellThresholds.LowCohesionLcomWarning)
+        if (lcom is { } l && l >= thresholds.LowCohesionLcomWarning)
         {
             smells.Add(new CodeSmell(
                 CodeSmellKind.LowCohesion, SmellSeverity.Warning,
                 metrics.TypeName, null,
-                $"LCOM {lcom:F2} (threshold: {SmellThresholds.LowCohesionLcomWarning:0.0})"));
+                $"LCOM {lcom:F2} (threshold: {thresholds.LowCohesionLcomWarning:0.0})"));
         }
     }
 
-    static void DetectHighCoupling(TypeMetrics metrics, int? cbo, List<CodeSmell> smells)
+    static void DetectHighCoupling(
+        TypeMetrics metrics, int? cbo, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (cbo is >= SmellThresholds.HighCouplingCboWarning)
+        if (cbo is { } c && c >= thresholds.HighCouplingCboWarning)
         {
-            var severity = cbo >= SmellThresholds.HighCouplingCboCritical
+            var severity = c >= thresholds.HighCouplingCboCritical
                 ? SmellSeverity.Critical
                 : SmellSeverity.Warning;
             smells.Add(new CodeSmell(
                 CodeSmellKind.HighCoupling, severity,
                 metrics.TypeName, null,
-                $"CBO {cbo} (threshold: {SmellThresholds.HighCouplingCboWarning})"));
+                $"CBO {cbo} (threshold: {thresholds.HighCouplingCboWarning})"));
         }
     }
 
-    static void DetectDeepInheritance(TypeMetrics metrics, int? dit, List<CodeSmell> smells)
+    static void DetectDeepInheritance(
+        TypeMetrics metrics, int? dit, List<CodeSmell> smells, EffectiveSmellThresholds thresholds)
     {
-        if (dit is >= SmellThresholds.DeepInheritanceDitWarning)
+        if (dit is { } d && d >= thresholds.DeepInheritanceDitWarning)
         {
             smells.Add(new CodeSmell(
                 CodeSmellKind.DeepInheritance, SmellSeverity.Warning,
                 metrics.TypeName, null,
-                $"DIT {dit} (threshold: {SmellThresholds.DeepInheritanceDitWarning})"));
+                $"DIT {dit} (threshold: {thresholds.DeepInheritanceDitWarning})"));
         }
     }
 }
