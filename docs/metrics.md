@@ -613,6 +613,42 @@ CycCC の乖離の構造（全 339 メソッドの突合で実証済み・issue 
 実際の乖離要因は switch expression arm（本コードベースで支配的）、catch、goto、default、メンバー base 差である。
 この調査の副産物として、分解 foreach（`foreach (var (a, b) in ...)`）が CycCC / CogCC / ネスト深度の全 walker でカウント漏れしていたバグを発見・修正した。
 
+## しきい値較正 (`unilyze calibrate`)
+
+出典: Alves, Ypma & Visser, "Deriving Metric Thresholds from Benchmark Data", ICSM 2010。
+
+### 同一ツール原則（Alves Section VII-D）
+
+しきい値は、適用時と同じツール・同じスコープで導出しなければならない。unilyze の CycCC は switch expression arm や `catch` を分岐として数える拡張解釈を採用しており（上記「Cyclomatic Complexity」の注意参照）、CA1502 の既定 25 や他ツールのベンチマーク値をそのまま流用できない。`calibrate` は unilyze 自身が出力した JSON スナップショットのみを入力とし、導出と解析を同一ツール内で完結させる。
+
+### 手順
+
+1. 複数システム（各 1 本の `unilyze -f json` スナップショット）を用意する。入力はすべて同一 `metricsVersion` であること（不一致時はエラー終了）。
+2. 各システム内で、メソッドごとに LOC 比率で重み付けする（重み = メソッド LOC / 当該システムのメソッド LOC 合計）。
+3. システム間では各システムの寄与が等しくなるよう、上記重みをシステム数で割ってプールする（大規模リポジトリが分布を支配しない）。
+4. プールした加重分布からパーセンタイルを読み、4 段階のリスク帯（low / moderate / high / veryHigh）の境界を得る。
+   - 通常メトリクス: 70 / 80 / 90 パーセンタイル
+   - パラメータ数: 80 / 90 / 95 パーセンタイル（論文どおり）
+
+対象メトリクス:
+
+| 区分 | メトリクス | 用途 |
+|------|-----------|------|
+| メソッド | LOC, CycCC, CogCC, 最大ネスト深度, パラメータ数 | LongMethod / HighComplexity / DeepNesting / ExcessiveParameters |
+| 型 | メソッド数, 型 LOC | GodClass |
+
+### CLI
+
+```bash
+unilyze calibrate <dir-of-jsons> [-o thresholds.json]
+```
+
+出力 JSON には `metrics`（各メトリクスのパーセンタイルとリスク帯）、`sources`（入力ファイル名・メソッド数などの由来）、`unilyzeConfigFragment`（`.unilyze.json` の `smells` に貼れる候補）を含む。組み込み既定値（`SmellThresholds`）は変更しない。較正結果の適用はプロジェクト設定または将来のリリース判断に委ねる。
+
+### 限界
+
+Alves 原論文は約 100 システムのベンチマークを使用する。unilyze の検証用 Unity OSS コーパス（HelloMarioFramework、Boss Room、UniTask、VContainer 等）は規模が小さく、導出値は暫定的な候補として扱う。コーパス拡大時は同一手順で再実行すること。
+
 ## メトリクス互換性ポリシー
 
 計測値を変える bugfix が patch リリースで複数回入った経緯がある（分解 foreach のカウント漏れ修正、MI 平均の分母から無メソッド型を除外、DIT の `I[A-Z]` ヒューリスティック廃止など）。
