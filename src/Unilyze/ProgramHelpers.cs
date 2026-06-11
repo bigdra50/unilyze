@@ -7,7 +7,7 @@ internal static class ProgramHelpers
     public static readonly string[] TopLevelCommands =
     [
         "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
-        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "skills",
+        "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "calibrate", "skills",
         "help", "version",
     ];
 
@@ -76,6 +76,16 @@ internal static class ProgramHelpers
     };
 
     static readonly HashSet<string> TrendBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> CalibrateValueOptions = new(StringComparer.Ordinal)
+    {
+        "-o", "--output",
+    };
+
+    static readonly HashSet<string> CalibrateBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help",
     };
@@ -273,6 +283,15 @@ internal static class ProgramHelpers
 
         var unknown = FindUnknownOption(args, TrendValueOptions, TrendBooleanOptions);
         return unknown is null ? 0 : ReportUnknown("option", unknown, TrendValueOptions.Concat(TrendBooleanOptions));
+    }
+
+    public static int ValidateCalibrateArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, CalibrateValueOptions, CalibrateBooleanOptions);
+        return unknown is null ? 0 : ReportUnknown("option", unknown, CalibrateValueOptions.Concat(CalibrateBooleanOptions));
     }
 
     public static int ValidateStatuslineArgs(string[] args)

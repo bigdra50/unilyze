@@ -140,6 +140,62 @@ Exit codes: `0` success / gate passed, `1` usage error, `2` quality gate failed.
 
 In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are approximately stable across analysis levels (averages match in validation; min values can shift where `#if UNITY_EDITOR` code is excluded at SyntaxOnly). Smell counts are level-dependent: at SyntaxOnly only the syntax-level subset is reported (semantic smells such as boxing are not included), so smell badges are not comparable across levels. See [docs/metrics.md](./docs/metrics.md) for validation data.
 
+### GitHub Action
+
+Use the official composite action instead of copy-pasting workflow YAML:
+
+```yaml
+# .github/workflows/unilyze.yml
+name: Unilyze
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  # Required only when uploading SARIF in a follow-up step:
+  # security-events: write
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # required when base-ref is set
+
+      - uses: bigdra50/unilyze@v1
+        id: unilyze
+        with:
+          project-path: .
+          metric: codehealth
+          fail-under: "7.0"
+          base-ref: origin/main          # optional diff regression gate
+          fail-on-regression: "true"
+          baseline: .unilyze/baseline.json  # optional brownfield baseline
+          sarif: "false"                   # set true and upload sarif-path in a later step
+
+      # Optional: upload SARIF when sarif: true
+      # - uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: ${{ steps.unilyze.outputs.sarif-path }}
+      #     category: unilyze
+```
+
+| Input | Default | Description |
+|-------|---------|-------------|
+| `project-path` | `.` | Project directory to analyze |
+| `metric` | `codehealth` | Gate metric: `codehealth`, `mi`, or `smells` |
+| `fail-under` | *(empty)* | Fail when min CodeHealth or avg MI is below this value |
+| `fail-over` | *(empty)* | Fail when smell warnings exceed this count |
+| `base-ref` | *(empty)* | Git ref for diff gate; writes markdown to `$GITHUB_STEP_SUMMARY` |
+| `baseline` | *(empty)* | Baseline JSON path to suppress known smells |
+| `sarif` | `false` | Emit SARIF; upload with `upload-sarif` using the `sarif-path` output |
+| `pr-comment` | `false` | Upsert one sticky PR comment with diff markdown |
+
+Outputs: `codehealth`, `mi`, `smells`, `gate-result` (`passed` / `failed` / `skipped`), and `sarif-path` when SARIF is generated.
+
 To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
 
 ```yaml
