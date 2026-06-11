@@ -469,7 +469,7 @@ N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に�
 
 スメル検出はしきい値依存のヒューリスティックであり、ground truth ではない。
 Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smells and detection tools" (JSERD) によると、ツール間一致率は 67-100%、recall は 0-58%、precision は 0-100% であり、しきい値の差だけで結果が割れる。
-しきい値は下表に記載されている。
+しきい値は下表に記載されている（**デフォルト値**）。プロジェクトの `.unilyze.json` で `smells` セクションを使い、スメル種別ごとに個別のしきい値を上書きできる。上書きは実行時の検出にのみ効き、下表の内容はデフォルトの単一情報源として維持される。
 計測値の互換性は [メトリクス互換性ポリシー](#メトリクス互換性ポリシー) を参照する。
 
 <!-- smell-thresholds:start -->

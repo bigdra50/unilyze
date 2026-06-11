@@ -14,8 +14,13 @@ internal static class AnalysisPipeline
         IReadOnlyList<string>? excludeDirectories = null,
         AnalysisLevel? requestedLevel = null,
         bool excludeGeneratedCode = true,
-        bool applyAnyDepthExcludes = true)
+        bool applyAnyDepthExcludes = true,
+        EffectiveSmellThresholds? thresholds = null,
+        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
+        bool disableCycles = false)
     {
+        thresholds ??= EffectiveSmellThresholds.Default;
+        disabledRuleKinds ??= new HashSet<CodeSmellKind>();
         var assetsDir = ProgramHelpers.ResolveAssetsDir(path);
         var asmdefs = AsmdefInfo.Discover(assetsDir, excludeDirectories, excludeGeneratedCode, applyAnyDepthExcludes);
 
@@ -91,7 +96,8 @@ internal static class AnalysisPipeline
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
         typeMetrics = EnrichWithCouplingMetrics(typeMetrics, couplingMap);
 
-        typeMetrics = SemanticEnricher.Enrich(typeMetrics, allTypes, allSyntaxTrees, compilationResult);
+        typeMetrics = SemanticEnricher.Enrich(
+            typeMetrics, allTypes, allSyntaxTrees, compilationResult, thresholds, disabledRuleKinds);
 
         // Phase 1/2: WMC, NOC, TypeRank
         var nocMap = NocCalculator.Calculate(deps);
@@ -113,7 +119,12 @@ internal static class AnalysisPipeline
             return new AssemblyInfo(a.Name, a.Directory, a.References, metrics, health);
         }).ToList();
 
-        var cycles = CycleDetector.DetectAll(deps, assemblyInfos);
+        IReadOnlyList<CyclicDependency>? cycles = null;
+        if (!disableCycles)
+        {
+            var detectedCycles = CycleDetector.DetectAll(deps, assemblyInfos);
+            cycles = detectedCycles.Count > 0 ? detectedCycles : null;
+        }
 
         return new AnalysisResult(
             Path.GetFullPath(path),
@@ -123,7 +134,7 @@ internal static class AnalysisPipeline
             deps,
             typeMetrics,
             analysisLevel,
-            cycles.Count > 0 ? cycles : null,
+            cycles,
             AnalysisResult.CurrentMetricsVersion,
             ToolVersionInfo.Current);
     }

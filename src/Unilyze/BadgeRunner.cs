@@ -65,10 +65,14 @@ internal static class BadgeRunner
         {
             var fullPath = ProgramHelpers.ResolveProjectRoot(path);
             var config = UnilyzeConfig.LoadMerged(fullPath);
+            var resolved = config.ResolveAnalysisConfig();
             var result = AnalysisPipeline.Build(
                 fullPath, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
-                applyAnyDepthExcludes: !config.DisableDefaultExcludes);
+                applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+                thresholds: resolved.Thresholds,
+                disabledRuleKinds: resolved.DisabledRuleKinds,
+                disableCycles: resolved.DisableCycles);
             var summary = StatuslineFormatter.ComputeSummary(result);
             var badge = BadgeFormatter.Build(metric, summary);
             var content = format == BadgeFormat.Svg ? BadgeSvgRenderer.Render(badge) : BadgeFormatter.Serialize(badge);
