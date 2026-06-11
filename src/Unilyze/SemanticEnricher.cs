@@ -32,7 +32,8 @@ internal static class SemanticEnricher
             string profile,
             IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? smellOverrides,
             IReadOnlySet<CodeSmellKind>? informationalSmellKinds,
-            IReadOnlySet<CodeSmellKind>? disabledRuleKinds)
+            IReadOnlySet<CodeSmellKind>? disabledRuleKinds,
+            int? maxParallelism = null)
         {
             profile = SmellThresholdProfiles.NormalizeProfile(profile);
             smellOverrides ??= null;
@@ -46,7 +47,7 @@ internal static class SemanticEnricher
 
             var typeDeclLookup = SyntaxLookups.BuildTypeDeclLookup(allTypes, treeByPath);
             var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
-            PrewarmModelCache(compilationResult, typeDeclLookup, modelCache);
+            PrewarmModelCache(compilationResult, typeDeclLookup, modelCache, maxParallelism);
 
             return new EnrichmentContext(
                 typeDeclLookup, typeInfoByKey, compilationResult, modelCache,
@@ -56,13 +57,18 @@ internal static class SemanticEnricher
         static void PrewarmModelCache(
             CompilationResult compilationResult,
             Dictionary<string, TypeDeclarationSyntax> typeDeclLookup,
-            ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache)
+            ConcurrentDictionary<SyntaxTree, SemanticModel> modelCache,
+            int? maxParallelism)
         {
             if (compilationResult.Compilation is null)
                 return;
 
             var uniqueTrees = typeDeclLookup.Values.Select(td => td.SyntaxTree).Distinct().ToList();
-            Parallel.ForEach(uniqueTrees, tree =>
+            var parallelOptions = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = UnilyzeConfig.ResolveMaxParallelism(maxParallelism)
+            };
+            Parallel.ForEach(uniqueTrees, parallelOptions, tree =>
             {
                 modelCache.GetOrAdd(tree, static (t, c) => c.GetSemanticModel(t), compilationResult.Compilation);
             });
@@ -77,11 +83,12 @@ internal static class SemanticEnricher
         string profile = SmellThresholdProfiles.DefaultProfileName,
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? smellOverrides = null,
         IReadOnlySet<CodeSmellKind>? informationalSmellKinds = null,
-        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null)
+        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
+        int? maxParallelism = null)
     {
         var context = EnrichmentContext.Create(
             allTypes, syntaxTrees, compilationResult, profile, smellOverrides,
-            informationalSmellKinds, disabledRuleKinds);
+            informationalSmellKinds, disabledRuleKinds, maxParallelism);
 
         var result = new TypeMetrics[typeMetrics.Count];
         Parallel.For(0, typeMetrics.Count, i =>

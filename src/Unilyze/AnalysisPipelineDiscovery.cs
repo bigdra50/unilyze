@@ -66,7 +66,8 @@ internal static class AnalysisPipelineDiscovery
             var merged = MergeExcludeDirectories(asm.ExcludeDirectories, options.ExcludeDirectories);
             var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
                 asm.Directory, asm.Name, discover.PreprocessorSymbols, merged,
-                options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes);
+                options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes,
+                options.EffectiveMaxParallelism);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }

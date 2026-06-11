@@ -35,6 +35,8 @@ unilyze が計測できない / 精度が低い領域。AI レビューで補完
 
 ## 設計レベルの問題 (メトリクスに現れにくい)
 
+命名品質・意図とコードの乖離・コメントとコードの不整合は `--include-api-surface` で抽出した `docSummary` / `publicSignatures` / `identifiers` を `query` evidence pack または JSON スナップショットから参照する（[SKILL.md Phase 3](../SKILL.md#phase-3-盲点補完)）。
+
 - メトリクス名のハードコード (higher-is-better 判定等)
 - 重複した型定義 (TypeKey 等の同一 record が複数ファイルに存在)
 - 拡張時の変更箇所が散在 (新メトリクス追加時に複数ファイル変更必要)

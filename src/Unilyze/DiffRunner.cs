@@ -277,7 +277,8 @@ internal static class DiffRunner
             requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            maxParallelism: config.MaxParallelism);
     }
 
     static AnalysisResult ApplyWorkingTreeTriage(AnalysisResult result, string projectPath)

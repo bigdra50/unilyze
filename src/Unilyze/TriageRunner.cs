@@ -160,7 +160,8 @@ internal static class TriageRunner
             projectRoot, null, null, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            maxParallelism: config.MaxParallelism);
         return TriageMatcher.CollectCurrentIds(result);
     }
 
