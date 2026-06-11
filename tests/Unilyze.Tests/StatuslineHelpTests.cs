@@ -18,5 +18,6 @@ public sealed class StatuslineHelpTests
         Assert.Contains("[full]", help);
         Assert.Contains("--verbose", help);
         Assert.Contains("--quiet", help);
+        Assert.Contains("--background-refresh", help);
     }
 }
