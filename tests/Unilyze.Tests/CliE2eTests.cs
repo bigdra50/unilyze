@@ -414,6 +414,137 @@ public sealed class CliE2eTests : IDisposable
         var (exitCode, stdout, _) = Run("diff", "--help");
         Assert.Equal(0, exitCode);
         Assert.Contains("diff", stdout);
+        Assert.Contains("--base-ref", stdout);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_HappyPath_MatchesManualBeforeSnapshot()
+    {
+        WriteSimpleProject();
+        RunGit(_tempDir, "init");
+        GitCommitAll("base");
+
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", beforeFile).ExitCode);
+
+        var worseClass = Path.Combine(_tempDir, "Worse.cs");
+        File.WriteAllText(worseClass, """
+            namespace Sample;
+            public class Worse
+            {
+                public void M1() {}
+                public void M2() {}
+                public void M3() {}
+                public void M4() {}
+                public void M5() {}
+                public void M6() {}
+                public void M7() {}
+                public void M8() {}
+                public void M9() {}
+                public void M10() {}
+                public void M11() {}
+            }
+            """);
+        GitCommitAll("after");
+
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        var manual = Run("diff", beforeFile, afterFile);
+        var baseRef = Run("diff", "--base-ref", "HEAD~1", afterFile);
+        Assert.Equal(0, manual.ExitCode);
+        Assert.Equal(0, baseRef.ExitCode);
+        AssertDiffEquivalent(manual.StdOut, baseRef.StdOut);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_MarkdownWithFailOnRegression_NoRegression_ExitsZero()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        var (exitCode, stdout, stderr) = Run(
+            "diff", "--base-ref", "HEAD", afterFile, "-f", "markdown", "--fail-on-regression");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Avg CH", stdout);
+        Assert.DoesNotContain("regression:", stderr);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_UnknownRef_ExitsOneWithFetchHint()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        var (exitCode, _, stderr) = Run("diff", "--base-ref", "does-not-exist-ref", afterFile);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown git ref", stderr);
+        Assert.Contains("git fetch", stderr);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_NotGitRepo_ExitsOne()
+    {
+        WriteSimpleProject();
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        var (exitCode, _, stderr) = Run("diff", "--base-ref", "HEAD", afterFile);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Not a git repository", stderr);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_MissingPositional_ExitsOne()
+    {
+        var (exitCode, _, stderr) = Run("diff", "--base-ref", "HEAD");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Usage:", stderr);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_WithoutValue_ExitsOne()
+    {
+        var (exitCode, _, stderr) = Run("diff", "--base-ref");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("--base-ref requires a value", stderr);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_SubdirectoryProject_ResolvesInsideWorktree()
+    {
+        var projectDir = Path.Combine(_tempDir, "src", "app");
+        Directory.CreateDirectory(projectDir);
+        File.WriteAllText(Path.Combine(projectDir, "Sample.cs"), """
+            namespace Sample;
+            public class Nested { public string Hi() => "hi"; }
+            """);
+        InitGitRepo();
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", projectDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        var (exitCode, stdout, _) = Run("diff", "--base-ref", "HEAD", afterFile);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("summary", stdout);
+    }
+
+    [Fact]
+    public void Diff_BaseRef_CleansUpWorktreeOnSuccessAndFailure()
+    {
+        WriteSimpleProject();
+        InitGitRepo();
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        Assert.Equal(0, Run("-p", _tempDir, "-f", "json", "-o", afterFile).ExitCode);
+
+        Assert.Equal(0, Run("diff", "--base-ref", "HEAD", afterFile).ExitCode);
+        Assert.DoesNotContain("unilyze-worktree", ListGitWorktrees());
+
+        Assert.Equal(1, Run("diff", "--base-ref", "missing-ref", afterFile).ExitCode);
+        Assert.DoesNotContain("unilyze-worktree", ListGitWorktrees());
     }
 
     [Fact]
@@ -897,6 +1028,29 @@ public sealed class CliE2eTests : IDisposable
         Assert.Contains("unilyze schema", stdout);
     }
 
+    private static void AssertDiffEquivalent(string manualJson, string baseRefJson)
+    {
+        var manual = JsonDocument.Parse(manualJson).RootElement;
+        var baseRef = JsonDocument.Parse(baseRefJson).RootElement;
+
+        Assert.Equal(
+            manual.GetProperty("summary").GetRawText(),
+            baseRef.GetProperty("summary").GetRawText());
+
+        foreach (var bucket in new[] { "improved", "degraded", "unchanged", "added", "removed" })
+        {
+            var manualKeys = manual.GetProperty(bucket).EnumerateArray()
+                .Select(e => e.GetProperty("typeKey").GetString())
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .ToArray();
+            var baseRefKeys = baseRef.GetProperty(bucket).EnumerateArray()
+                .Select(e => e.GetProperty("typeKey").GetString())
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .ToArray();
+            Assert.Equal(manualKeys, baseRefKeys);
+        }
+    }
+
     [Fact]
     public void Query_UnknownOption_ExitsUsageError()
     {
@@ -966,33 +1120,56 @@ public sealed class CliE2eTests : IDisposable
 
     private void InitGitRepo()
     {
-        static void RunGit(string workingDirectory, params string[] args)
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "git",
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            foreach (var arg in args)
-                psi.ArgumentList.Add(arg);
-
-            using var proc = Process.Start(psi)
-                ?? throw new InvalidOperationException("Failed to start git");
-            proc.WaitForExit(30_000);
-            if (proc.ExitCode != 0)
-            {
-                var stderr = proc.StandardError.ReadToEnd();
-                throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
-            }
-        }
-
         RunGit(_tempDir, "init");
+        GitCommitAll("init");
+    }
+
+    private void GitCommitAll(string message)
+    {
         RunGit(_tempDir, "add", ".");
-        RunGit(_tempDir, "-c", "user.email=test@test.com", "-c", "user.name=test", "commit", "-m", "init");
+        RunGit(_tempDir, "-c", "user.email=test@test.com", "-c", "user.name=test", "commit", "-m", message);
+    }
+
+    private static string ListGitWorktrees()
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "git",
+            Arguments = "worktree list",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        using var proc = Process.Start(psi)
+            ?? throw new InvalidOperationException("Failed to start git");
+        var stdout = proc.StandardOutput.ReadToEnd();
+        proc.WaitForExit(30_000);
+        return stdout;
+    }
+
+    private static void RunGit(string workingDirectory, params string[] args)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "git",
+            WorkingDirectory = workingDirectory,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var arg in args)
+            psi.ArgumentList.Add(arg);
+
+        using var proc = Process.Start(psi)
+            ?? throw new InvalidOperationException("Failed to start git");
+        proc.WaitForExit(30_000);
+        if (proc.ExitCode != 0)
+        {
+            var stderr = proc.StandardError.ReadToEnd();
+            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+        }
     }
 
     private void WriteSimpleProject()
