@@ -87,7 +87,7 @@ internal static class ProgramHelpers
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--verbose", "--quiet",
+        "-h", "--help", "--verbose", "--quiet", "--background-refresh",
     };
 
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
@@ -404,7 +404,7 @@ internal static class ProgramHelpers
             {
                 if (args[i] is "-h" or "--help" or "-v" or "--version" or "--no-open"
                     or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
-                    or "--verbose" or "--quiet")
+                    or "--verbose" or "--quiet" or "--background-refresh")
                     opts[args[i]] = "true";
                 else if (i + 1 < args.Length)
                 {

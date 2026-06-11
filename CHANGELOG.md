@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `statusline --background-refresh` returns cached output immediately and refreshes stale or missing caches in a detached background process, enabling a cross-platform one-line status line integration without shell-side cache logic ([#92](https://github.com/bigdra50/unilyze/issues/92))
 - `diff --base-ref <git-ref> <after.json>` analyzes the base ref in a temporary git worktree and diffs against the after snapshot in one command; composes with `-f markdown`, `--fail-on-regression`, and `--changed-only` ([#82](https://github.com/bigdra50/unilyze/issues/82))
 - Baseline workflow for brownfield quality gates: `unilyze baseline create` snapshots current smells into `.unilyze/baseline.json`, and `--baseline <file>` suppresses matched fingerprints at analysis time so reports and gates see only newly introduced violations ([#81](https://github.com/bigdra50/unilyze/issues/81))
 - Per-smell `baselined` JSON field, root `suppressedCount`, SARIF `suppressions` for baselined results, and optional `"baseline"` path in `.unilyze.json` ([#81](https://github.com/bigdra50/unilyze/issues/81))

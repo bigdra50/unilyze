@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -21,6 +23,7 @@ internal static class StatuslineRunner
 
         var verbose = opts.ContainsKey("--verbose");
         var quiet = opts.ContainsKey("--quiet");
+        var backgroundRefresh = opts.ContainsKey("--background-refresh");
         var log = new ConsoleAnalysisLogSink(quiet: quiet);
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
@@ -54,6 +57,9 @@ internal static class StatuslineRunner
         var cacheDir = Path.GetTempPath();
         var cacheTxtPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt");
         var lockPath = Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.lock");
+
+        if (backgroundRefresh)
+            return RunBackgroundRefresh(fullPath, requestedLevel, refreshSeconds, baselinePath, cacheTxtPath);
 
         if (TryServeFreshCache(cacheTxtPath, refreshSeconds))
             return 0;
@@ -110,6 +116,113 @@ internal static class StatuslineRunner
         if (ex.StackTrace is not null)
             Console.Error.WriteLine(ex.StackTrace);
     }
+
+    static int RunBackgroundRefresh(
+        string fullPath,
+        AnalysisLevel? requestedLevel,
+        int refreshSeconds,
+        string? baselinePath,
+        string cacheTxtPath)
+    {
+        if (TryServeFreshCache(cacheTxtPath, refreshSeconds))
+            return 0;
+
+        if (File.Exists(cacheTxtPath))
+            Console.Write(File.ReadAllText(cacheTxtPath));
+
+        TrySpawnBackgroundRefresh(fullPath, refreshSeconds, requestedLevel, baselinePath);
+        return 0;
+    }
+
+    static void TrySpawnBackgroundRefresh(
+        string fullPath,
+        int refreshSeconds,
+        AnalysisLevel? requestedLevel,
+        string? baselinePath)
+    {
+        var childArgs = new List<string> { "statusline", "-p", fullPath, "--refresh", refreshSeconds.ToString() };
+        if (requestedLevel is { } level)
+        {
+            childArgs.Add("--level");
+            childArgs.Add(LevelToCliToken(level));
+        }
+
+        if (baselinePath is not null)
+        {
+            childArgs.Add("--baseline");
+            childArgs.Add(baselinePath);
+        }
+
+        var (host, args) = ResolveSelfInvocation(childArgs);
+
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = host,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+            foreach (var arg in args)
+                psi.ArgumentList.Add(arg);
+
+            var proc = Process.Start(psi);
+            if (proc is null)
+                return;
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await proc.StandardOutput.ReadToEndAsync();
+                    await proc.StandardError.ReadToEndAsync();
+                    await proc.WaitForExitAsync();
+                }
+                finally
+                {
+                    proc.Dispose();
+                }
+            });
+        }
+        catch
+        {
+            // Best-effort background refresh; foreground caller must never block.
+        }
+    }
+
+    static (string Host, IReadOnlyList<string> Args) ResolveSelfInvocation(IReadOnlyList<string> args)
+    {
+        var processPath = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(processPath) && !IsDotnetHost(processPath))
+            return (processPath, args);
+
+        var entryAssembly = Assembly.GetEntryAssembly()?.Location;
+        if (string.IsNullOrEmpty(entryAssembly))
+            entryAssembly = typeof(StatuslineRunner).Assembly.Location;
+
+        var dotnetHost = string.IsNullOrEmpty(processPath) || IsDotnetHost(processPath)
+            ? "dotnet"
+            : processPath;
+
+        var dotnetArgs = new List<string> { entryAssembly };
+        dotnetArgs.AddRange(args);
+        return (dotnetHost, dotnetArgs);
+    }
+
+    static bool IsDotnetHost(string path) =>
+        Path.GetFileNameWithoutExtension(path).Equals("dotnet", StringComparison.OrdinalIgnoreCase);
+
+    static string LevelToCliToken(AnalysisLevel level) =>
+        level switch
+        {
+            AnalysisLevel.Syntax => "syntax",
+            AnalysisLevel.Core => "core",
+            AnalysisLevel.Full => "full",
+            AnalysisLevel.Complete => "complete",
+            _ => "complete",
+        };
 
     static bool TryServeFreshCache(string cacheTxtPath, int refreshSeconds)
     {
@@ -193,6 +306,9 @@ internal static class StatuslineRunner
               --baseline     Suppress known smells from a baseline file in smell counts
               --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
               --quiet        Suppress info lines on stderr (warnings still shown)
+              --background-refresh
+                             Never block on analysis: return cached output immediately and refresh
+                             stale or missing caches in a detached background process
               -h, --help     Show this help
 
             Progress:
@@ -220,6 +336,8 @@ internal static class StatuslineRunner
             Cache:
               Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
               Use --refresh to control cache lifetime (default: 60 seconds)
+              With --background-refresh, a missing cache prints nothing (one empty status line
+              render) and exits immediately while analysis runs in the background
             """;
     }
 

@@ -81,21 +81,12 @@ CH:9.8/5.9 MI:52 111smells 🔴1 📦66
 | `♻N` | Cyclic dependencies (hidden if 0) |
 | `[level]` | Analysis level marker, shown only below `Complete` (`[syntax]` / `[core]` / `[full]`) |
 
-Results are cached per project (default 60s). Add to `~/.claude/statusline.sh`:
+Results are cached per project (default 60s). Run `unilyze statusline --help` for the platform cache directory. Add to `~/.claude/statusline.sh`:
 
 ```bash
 # Unilyze Code Health (Unity projects only)
 if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; then
-    UNILYZE_HASH=$(md5 -qs "$PROJECT_DIR")
-    UNILYZE_CACHE="${TMPDIR:-/tmp/}unilyze-sl-${UNILYZE_HASH}.txt"
-    if [[ -f "$UNILYZE_CACHE" ]]; then
-        UNILYZE_STATUS=$(cat "$UNILYZE_CACHE" 2>/dev/null)
-        CACHE_AGE=$(( $(date +%s) - $(stat -f %m "$UNILYZE_CACHE" 2>/dev/null || echo 0) ))
-        [[ $CACHE_AGE -gt 60 ]] && (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
-    elif command -v unilyze &>/dev/null; then
-        (unilyze statusline -p "$PROJECT_DIR" > /dev/null 2>&1 &)
-    fi
-    [[ -n "${UNILYZE_STATUS:-}" ]] && echo "$UNILYZE_STATUS"
+    unilyze statusline -p "$PROJECT_DIR" --background-refresh
 fi
 ```
 

@@ -345,6 +345,82 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Statusline_Help_MentionsBackgroundRefresh()
+    {
+        var (exitCode, stdout, _) = Run("statusline", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("--background-refresh", stdout);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefreshFlag_IsAccepted()
+    {
+        WriteSimpleProject();
+        var (exitCode, _, _) = Run("statusline", "-p", _tempDir, "--background-refresh");
+        Assert.Equal(0, exitCode);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_ColdStart_ExitsQuicklyAndCreatesCache()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--background-refresh");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.True(string.IsNullOrEmpty(stdout));
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.Exists(cachePath) && File.ReadAllText(cachePath).Contains("CH:"))
+                return;
+            Thread.Sleep(250);
+        }
+
+        Assert.True(File.Exists(cachePath), $"Expected cache file at {cachePath}");
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_StaleCache_PrintsStaleAndRefreshesInBackground()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        const string staleContent = "CH:STALE/1.0 MI:0 0smells";
+        File.WriteAllText(cachePath, staleContent);
+        File.SetLastWriteTimeUtc(cachePath, DateTime.UtcNow.AddHours(-2));
+
+        var beforeMtime = File.GetLastWriteTimeUtc(cachePath);
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(staleContent, stdout);
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.GetLastWriteTimeUtc(cachePath) > beforeMtime
+                && File.ReadAllText(cachePath) != staleContent)
+                return;
+            Thread.Sleep(250);
+        }
+
+        Assert.True(File.GetLastWriteTimeUtc(cachePath) > beforeMtime, "Expected background refresh to update cache mtime");
+        Assert.NotEqual(staleContent, File.ReadAllText(cachePath));
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
+    }
+
+    [Fact]
     public void Statusline_VerboseNonexistentPath_NoCache_ExitsOneWithExceptionDetail()
     {
         var missingPath = Path.Combine(_tempDir, "does-not-exist");
@@ -1182,6 +1258,32 @@ public sealed class CliE2eTests : IDisposable
                 public string Greet(string name) => $"Hello, {name}!";
             }
             """);
+    }
+
+    private static string ResolveStatuslineCachePath(string projectPath)
+    {
+        var fullPath = ProgramHelpers.ResolveProjectRoot(projectPath);
+        var hash = ComputeStatuslineCacheHash(fullPath);
+        return Path.Combine(Path.GetTempPath(), $"unilyze-sl-{hash}.txt");
+    }
+
+    private static string ComputeStatuslineCacheHash(string path)
+    {
+        var bytes = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(path));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static void TryDeleteStatuslineCache(string cachePath)
+    {
+        try
+        {
+            if (File.Exists(cachePath))
+                File.Delete(cachePath);
+        }
+        catch
+        {
+            // Best-effort cleanup for isolated E2E runs.
+        }
     }
 
     private void WriteCsprojWithValidReference()
