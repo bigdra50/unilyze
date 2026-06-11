@@ -154,6 +154,18 @@ Save structured output:
 unilyze trend .unilyze/history -o trend.json
 ```
 
+### HTML output
+
+Generate a single self-contained HTML file with inline-SVG charts (no CDN or external scripts):
+
+```bash
+unilyze trend .unilyze/history -o trend.html
+```
+
+Charts show CodeHealth average and minimum (0–10 scale), warning/critical smell counts, and type counts over time. Hover a point to see the source snapshot file name and full metrics. Click two points to copy a ready-to-run `unilyze diff` command. When consecutive snapshots differ in `metricsVersion` or profile, vertical dashed markers and a warning banner mirror the CLI stderr messages.
+
+Use `--no-open` with `-f html` (no `-o`) to write a temp file without launching a browser.
+
 ### metricsVersion warning
 
 When snapshots were produced under different metric definition versions, stderr warns:

@@ -73,11 +73,13 @@ internal static class ProgramHelpers
     static readonly HashSet<string> TrendValueOptions = new(StringComparer.Ordinal)
     {
         "-o", "--output",
+        "-f", "--format",
     };
 
     static readonly HashSet<string> TrendBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help",
+        "--no-open",
     };
 
     static readonly HashSet<string> CalibrateValueOptions = new(StringComparer.Ordinal)

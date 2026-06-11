@@ -75,6 +75,44 @@ public class TrendAnalyzerTests
         var snapshot = TrendAnalyzer.ToSnapshot(result);
 
         Assert.Equal(2, snapshot.CodeSmellCount);
+        Assert.Equal(1, snapshot.WarningSmellCount);
+        Assert.Equal(1, snapshot.CriticalSmellCount);
+    }
+
+    [Fact]
+    public void ToSnapshot_WithSourceFile_PopulatesProvenanceFields()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.GodClass, SmellSeverity.Warning, "TestClass", null, "big"),
+        };
+        var result = new AnalysisResult(
+            "/project",
+            DateTimeOffset.UtcNow,
+            [], [], [],
+            [MakeTypeMetrics(smells: smells)],
+            MetricsVersion: 3,
+            Profile: "unity");
+
+        var snapshot = TrendAnalyzer.ToSnapshot(result, "2026-06-01.json");
+
+        Assert.Equal("2026-06-01.json", snapshot.SourceFile);
+        Assert.Equal(3, snapshot.MetricsVersion);
+        Assert.Equal("unity", snapshot.Profile);
+        Assert.Equal(1, snapshot.WarningSmellCount);
+        Assert.Equal(0, snapshot.CriticalSmellCount);
+    }
+
+    [Fact]
+    public void ToSnapshot_WithoutSourceFile_LeavesProvenanceDefaults()
+    {
+        var result = MakeResult(DateTimeOffset.UtcNow, typeMetrics: [MakeTypeMetrics()]);
+
+        var snapshot = TrendAnalyzer.ToSnapshot(result);
+
+        Assert.Null(snapshot.SourceFile);
+        Assert.Equal(0, snapshot.MetricsVersion);
+        Assert.Null(snapshot.Profile);
     }
 
     [Fact]
@@ -111,6 +149,25 @@ public class TrendAnalyzerTests
     }
 
     // --- Analyze ---
+
+    [Fact]
+    public void AnalyzeSnapshots_PopulatesSourceFileOnSnapshots()
+    {
+        var results = new[]
+        {
+            (SourceFile: (string?)"a.json", Result: MakeResult(
+                new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
+                typeMetrics: [MakeTypeMetrics(codeHealth: 7.0)])),
+            (SourceFile: (string?)"b.json", Result: MakeResult(
+                new DateTimeOffset(2025, 2, 1, 0, 0, 0, TimeSpan.Zero),
+                typeMetrics: [MakeTypeMetrics(codeHealth: 8.0)])),
+        };
+
+        var trend = TrendAnalyzer.AnalyzeSnapshots(results);
+
+        Assert.Equal("a.json", trend.Snapshots[0].SourceFile);
+        Assert.Equal("b.json", trend.Snapshots[1].SourceFile);
+    }
 
     [Fact]
     public void Analyze_EmptyList_ReturnsZeroDelta()
