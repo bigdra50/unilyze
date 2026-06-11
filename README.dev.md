@@ -37,6 +37,33 @@ Supported runtimes are the **current LTS** and the **previous LTS** (until its E
 - [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit tests
 - [docs/metrics.md](docs/metrics.md): Metric definitions
 - [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke / CodeHealth gate
+- [action.yml](action.yml): Official composite GitHub Action (Marketplace candidate)
+
+## GitHub Action
+
+The composite action lives at the repository root ([action.yml](action.yml)) so the CLI and action ship from one repo. Consumers reference `bigdra50/unilyze@v1` after the first action release.
+
+### Tag scheme (NuGet vs Marketplace)
+
+NuGet publish ([`.github/workflows/publish.yml`](.github/workflows/publish.yml)) triggers only on semver tags matching `v[0-9]+.[0-9]+.[0-9]+` (for example `v0.3.0`). This avoids accidental NuGet releases when pushing action-only tags.
+
+| Tag kind | Example | Purpose |
+|----------|---------|---------|
+| NuGet release | `v0.3.0` | Immutable; must match `<Version>` in the csproj |
+| Action release (immutable) | `action-v1.0.0` | Pin a specific action revision for Marketplace |
+| Action major (floating) | `v1` | Consumer default (`uses: bigdra50/unilyze@v1`); moved on each action release |
+
+**Release flow (action, not yet on Marketplace):**
+
+1. Merge action changes to `main`.
+2. Tag `action-v1.0.0` (or the next patch) pointing at the release commit.
+3. Force-move the floating `v1` tag to the same commit: `git tag -f v1 && git push -f origin v1`.
+4. Confirm `publish.yml` did **not** run for the `v1` push (`gh run list --workflow publish.yml --limit 3`).
+5. When ready for Marketplace: create a GitHub Release from `action-v1.x.y` and check "Publish this Action to the GitHub Marketplace".
+
+Self-test workflow: [`.github/workflows/action-selftest.yml`](.github/workflows/action-selftest.yml) runs `actionlint` and dogfoods `uses: ./` with a locally packed NuGet tool.
+
+Third-party `uses:` in the action are limited to `actions/setup-dotnet@v4` (SARIF upload stays in the consumer workflow). Sticky PR comments use `gh api`, not a third-party comment action.
 
 ## CI CodeHealth Gate
 
