@@ -422,4 +422,170 @@ public class SarifFormatterTests
         Assert.Equal(100, props["lineCount"]!.GetValue<int>());
         Assert.Equal(5, props["methodCount"]!.GetValue<int>());
     }
+
+    [Fact]
+    public void AllRules_HaveHelpHelpUriAndTags()
+    {
+        var result = MakeResult();
+        var json = SarifFormatter.Generate(result);
+        var doc = JsonNode.Parse(json)!;
+        var rules = doc["runs"]![0]!["tool"]!["driver"]!["rules"]!.AsArray();
+
+        Assert.Equal(23, rules.Count);
+
+        foreach (var rule in rules)
+        {
+            var ruleId = rule!["id"]!.GetValue<string>();
+            Assert.NotNull(rule["help"]?["text"]);
+            Assert.NotNull(rule["help"]?["markdown"]);
+            Assert.Equal(SmellThresholds.SarifHelpUri, rule["helpUri"]!.GetValue<string>());
+
+            var tags = rule["properties"]!["tags"]!.AsArray();
+            Assert.NotEmpty(tags);
+        }
+    }
+
+    [Fact]
+    public void Fingerprints_AreDeterministicAcrossRuns()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing", Line: 10),
+        };
+        var methods = new List<MethodMetrics> { new("Foo", 1, 1, 1, 1, 10, StartLine: 10) };
+        var typeMetrics = MakeTypeMetrics(methods: methods, smells: smells);
+        var result = MakeResult([typeMetrics]);
+
+        var json1 = SarifFormatter.Generate(result);
+        var json2 = SarifFormatter.Generate(result);
+
+        var fp1 = JsonNode.Parse(json1)!["runs"]![0]!["results"]![0]!
+            ["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>();
+        var fp2 = JsonNode.Parse(json2)!["runs"]![0]!["results"]![0]!
+            ["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>();
+
+        Assert.Equal(fp1, fp2);
+    }
+
+    [Fact]
+    public void Fingerprints_AreInvariantWhenLineShifts()
+    {
+        var smellsLow = new List<CodeSmell>
+        {
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing", Line: 10),
+        };
+        var smellsHigh = new List<CodeSmell>
+        {
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing", Line: 99),
+        };
+        var methods = new List<MethodMetrics> { new("Foo", 1, 1, 1, 1, 10, StartLine: 10) };
+        var resultLow = MakeResult([MakeTypeMetrics(methods: methods, smells: smellsLow)]);
+        var resultHigh = MakeResult([MakeTypeMetrics(methods: methods, smells: smellsHigh)]);
+
+        var fpLow = JsonNode.Parse(SarifFormatter.Generate(resultLow))!["runs"]![0]!["results"]![0]!
+            ["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>();
+        var fpHigh = JsonNode.Parse(SarifFormatter.Generate(resultHigh))!["runs"]![0]!["results"]![0]!
+            ["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>();
+
+        Assert.Equal(fpLow, fpHigh);
+    }
+
+    [Fact]
+    public void DuplicateSameKindSmellsInMethod_GetDistinctFingerprints()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing 1", Line: 10),
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing 2", Line: 20),
+        };
+        var methods = new List<MethodMetrics> { new("Foo", 1, 1, 1, 1, 30, StartLine: 10) };
+        var result = MakeResult([MakeTypeMetrics(methods: methods, smells: smells)]);
+
+        var json = SarifFormatter.Generate(result);
+        var doc = JsonNode.Parse(json)!;
+        var results = doc["runs"]![0]!["results"]!.AsArray();
+
+        Assert.Equal(2, results.Count);
+
+        var fingerprints = results
+            .Select(r => r!["partialFingerprints"]![SarifFormatter.FingerprintKey]!.GetValue<string>())
+            .ToList();
+
+        Assert.Equal(2, fingerprints.Distinct().Count());
+    }
+
+    [Fact]
+    public void MethodScopedSmell_EmitsEndLineFromLineCount()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.LongMethod, SmellSeverity.Warning, "TestClass", "BigMethod", "120 lines"),
+        };
+        var methods = new List<MethodMetrics>
+        {
+            new("BigMethod", 10, 8, 3, 2, 50, StartLine: 77),
+        };
+        var result = MakeResult([MakeTypeMetrics(methods: methods, smells: smells)]);
+
+        var region = JsonNode.Parse(SarifFormatter.Generate(result))!["runs"]![0]!["results"]![0]!
+            ["locations"]![0]!["physicalLocation"]!["region"]!;
+
+        Assert.Equal(77, region["startLine"]!.GetValue<int>());
+        Assert.Equal(126, region["endLine"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void TypeScopedSmell_EmitsEndLineFromLineCount()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.GodClass, SmellSeverity.Warning, "TestClass", null, "600 lines"),
+        };
+        var result = MakeResult([MakeTypeMetrics(lineCount: 600, startLine: 15, smells: smells)]);
+
+        var region = JsonNode.Parse(SarifFormatter.Generate(result))!["runs"]![0]!["results"]![0]!
+            ["locations"]![0]!["physicalLocation"]!["region"]!;
+
+        Assert.Equal(15, region["startLine"]!.GetValue<int>());
+        Assert.Equal(614, region["endLine"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void OccurrenceSmell_EmitsSingleLineEndLine()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "Foo", "boxing", Line: 42),
+        };
+        var methods = new List<MethodMetrics> { new("Foo", 1, 1, 1, 1, 10, StartLine: 30) };
+        var result = MakeResult([MakeTypeMetrics(methods: methods, smells: smells)]);
+
+        var region = JsonNode.Parse(SarifFormatter.Generate(result))!["runs"]![0]!["results"]![0]!
+            ["locations"]![0]!["physicalLocation"]!["region"]!;
+
+        Assert.Equal(42, region["startLine"]!.GetValue<int>());
+        Assert.Equal(42, region["endLine"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void NoInvertedRegions()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.LongMethod, SmellSeverity.Warning, "TestClass", "M", "long"),
+            new(CodeSmellKind.GodClass, SmellSeverity.Warning, "TestClass", null, "big"),
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Warning, "TestClass", "M", "box", Line: 5),
+        };
+        var methods = new List<MethodMetrics> { new("M", 1, 1, 1, 1, 20, StartLine: 10) };
+        var result = MakeResult([MakeTypeMetrics(lineCount: 100, startLine: 1, methods: methods, smells: smells)]);
+
+        var doc = JsonNode.Parse(SarifFormatter.Generate(result))!;
+        foreach (var r in doc["runs"]![0]!["results"]!.AsArray())
+        {
+            var region = r!["locations"]![0]!["physicalLocation"]!["region"]!;
+            if (region["endLine"] is null) continue;
+
+            Assert.True(region["endLine"]!.GetValue<int>() >= region["startLine"]!.GetValue<int>());
+        }
+    }
 }
