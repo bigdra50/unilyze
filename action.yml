@@ -1,0 +1,248 @@
+name: Unilyze
+description: Static analysis and code quality gates for Unity and .NET projects
+author: bigdra50
+
+branding:
+  icon: activity
+  color: blue
+
+inputs:
+  project-path:
+    description: Path to the project directory to analyze
+    required: false
+    default: .
+  unilyze-version:
+    description: NuGet version of Unilyze to install (omit for latest)
+    required: false
+    default: ""
+  dotnet-version:
+    description: .NET SDK version passed to actions/setup-dotnet
+    required: false
+    default: 10.0.x
+  nuget-source:
+    description: Additional NuGet source (path or URL) for dotnet tool install; useful for local pack smoke tests
+    required: false
+    default: ""
+  metric:
+    description: Badge metric for the quality gate (codehealth, mi, smells)
+    required: false
+    default: codehealth
+  fail-under:
+    description: Fail the gate when codehealth min or mi average is strictly below this value
+    required: false
+    default: ""
+  fail-over:
+    description: Fail the gate when smell warning count is strictly above this value (or any critical smell exists)
+    required: false
+    default: ""
+  baseline:
+    description: Baseline JSON file path; suppresses known smells during analysis and badge gating
+    required: false
+    default: ""
+  base-ref:
+    description: Git ref for the diff regression gate (empty skips diff)
+    required: false
+    default: ""
+  fail-on-regression:
+    description: When base-ref is set, exit 2 on aggregate regression (avg/min CodeHealth drop or smell increase)
+    required: false
+    default: "true"
+  sarif:
+    description: When true, emit a SARIF file (upload with github/codeql-action/upload-sarif in a later step)
+    required: false
+    default: "false"
+  step-summary:
+    description: When base-ref is set, append diff markdown to GITHUB_STEP_SUMMARY
+    required: false
+    default: "true"
+  pr-comment:
+    description: When base-ref is set on a pull_request event, upsert one sticky PR comment with the diff markdown
+    required: false
+    default: "false"
+  token:
+    description: GitHub token for PR comments (needs pull-requests write when pr-comment is true)
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  codehealth:
+    description: Minimum CodeHealth score across analyzed types (1.0-10.0)
+    value: ${{ steps.metrics.outputs.codehealth }}
+  mi:
+    description: Average Maintainability Index across method-bearing types
+    value: ${{ steps.metrics.outputs.mi }}
+  smells:
+    description: Warning-level code smell count (critical smells are not included in this number)
+    value: ${{ steps.metrics.outputs.smells }}
+  gate-result:
+    description: Badge gate outcome (passed, failed, or skipped when no gate thresholds are set)
+    value: ${{ steps.badge-gate.outputs.gate-result }}
+  sarif-path:
+    description: Relative path to the generated SARIF file when sarif input is true; empty otherwise
+    value: ${{ steps.sarif.outputs.sarif-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Install Unilyze
+      id: install
+      shell: bash
+      env:
+        UNILYZE_VERSION: ${{ inputs.unilyze-version }}
+        NUGET_SOURCE: ${{ inputs.nuget-source }}
+      run: |
+        set -euo pipefail
+        install_args=(--global Unilyze)
+        if [[ -n "$UNILYZE_VERSION" ]]; then
+          install_args+=(--version "$UNILYZE_VERSION")
+        fi
+        if [[ -n "$NUGET_SOURCE" ]]; then
+          dotnet tool install "${install_args[@]}" --add-source "$NUGET_SOURCE"
+        else
+          dotnet tool install "${install_args[@]}"
+        fi
+        echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+    - name: Analyze
+      id: analyze
+      shell: bash
+      env:
+        PROJECT_PATH: ${{ inputs.project-path }}
+        BASELINE: ${{ inputs.baseline }}
+      run: |
+        set -euo pipefail
+        baseline_args=()
+        if [[ -n "$BASELINE" ]]; then
+          baseline_args=(--baseline "$BASELINE")
+        fi
+        unilyze -p "$PROJECT_PATH" -f json -o unilyze.json "${baseline_args[@]}"
+
+    - name: Extract metrics
+      id: metrics
+      shell: bash
+      run: |
+        set -euo pipefail
+        codehealth=$(jq -r '
+          [.typeMetrics[].codeHealth]
+          | if length == 0 then "0" else (min | tostring) end
+        ' unilyze.json)
+        mi=$(jq -r '
+          [.typeMetrics[] | select(.averageMaintainabilityIndex != null) | .averageMaintainabilityIndex]
+          | if length == 0 then "0" else ((add / length) | . * 10 | round / 10 | tostring) end
+        ' unilyze.json)
+        smells=$(jq -r '
+          [.typeMetrics[].codeSmells[]? | select(.severity == "Warning")]
+          | length
+          | tostring
+        ' unilyze.json)
+        {
+          echo "codehealth=$codehealth"
+          echo "mi=$mi"
+          echo "smells=$smells"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Badge quality gate
+      id: badge-gate
+      shell: bash
+      env:
+        PROJECT_PATH: ${{ inputs.project-path }}
+        METRIC: ${{ inputs.metric }}
+        FAIL_UNDER: ${{ inputs.fail-under }}
+        FAIL_OVER: ${{ inputs.fail-over }}
+        BASELINE: ${{ inputs.baseline }}
+      run: |
+        set -euo pipefail
+        if [[ -z "$FAIL_UNDER" && -z "$FAIL_OVER" ]]; then
+          echo "gate-result=skipped" >> "$GITHUB_OUTPUT"
+          echo "No --fail-under or --fail-over set; badge gate skipped."
+          exit 0
+        fi
+        badge_args=(badge -p "$PROJECT_PATH" --metric "$METRIC")
+        if [[ -n "$FAIL_UNDER" ]]; then
+          badge_args+=(--fail-under "$FAIL_UNDER")
+        fi
+        if [[ -n "$FAIL_OVER" ]]; then
+          badge_args+=(--fail-over "$FAIL_OVER")
+        fi
+        if [[ -n "$BASELINE" ]]; then
+          badge_args+=(--baseline "$BASELINE")
+        fi
+        set +e
+        unilyze "${badge_args[@]}"
+        exit_code=$?
+        set -e
+        if [[ $exit_code -eq 0 ]]; then
+          echo "gate-result=passed" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        echo "gate-result=failed" >> "$GITHUB_OUTPUT"
+        exit "$exit_code"
+
+    - name: Diff regression gate
+      if: inputs.base-ref != ''
+      id: diff-gate
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base-ref }}
+        FAIL_ON_REGRESSION: ${{ inputs.fail-on-regression }}
+        STEP_SUMMARY: ${{ inputs.step-summary }}
+        PR_COMMENT: ${{ inputs.pr-comment }}
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        diff_args=(diff --base-ref "$BASE_REF" unilyze.json -f markdown)
+        if [[ "$FAIL_ON_REGRESSION" == "true" ]]; then
+          diff_args+=(--fail-on-regression)
+        fi
+        set +e
+        markdown=$(unilyze "${diff_args[@]}" 2>/dev/stderr)
+        exit_code=$?
+        set -e
+        if [[ "$STEP_SUMMARY" == "true" && -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+          {
+            echo "## Unilyze diff ($BASE_REF → HEAD)"
+            echo
+            echo "$markdown"
+          } >> "$GITHUB_STEP_SUMMARY"
+        fi
+        if [[ "$PR_COMMENT" == "true" && -n "${{ github.event.pull_request.number }}" ]]; then
+          marker='<!-- unilyze-diff -->'
+          body_file=$(mktemp)
+          jq -n \
+            --arg marker "$marker" \
+            --arg title "Unilyze diff (${BASE_REF} → HEAD)" \
+            --arg markdown "$markdown" \
+            '{body: ($marker + "\n\n## " + $title + "\n\n" + $markdown)}' > "$body_file"
+          pr="${{ github.event.pull_request.number }}"
+          repo="${{ github.repository }}"
+          existing_id=$(gh api "repos/${repo}/issues/${pr}/comments" --paginate \
+            -q ".[] | select(.body | startswith(\"${marker}\")) | .id" | head -n1)
+          if [[ -n "$existing_id" ]]; then
+            gh api -X PATCH "repos/${repo}/issues/comments/${existing_id}" --input "$body_file" >/dev/null
+          else
+            gh api -X POST "repos/${repo}/issues/${pr}/comments" --input "$body_file" >/dev/null
+          fi
+          rm -f "$body_file"
+        fi
+        exit "$exit_code"
+
+    - name: Generate SARIF
+      if: inputs.sarif == 'true'
+      id: sarif
+      shell: bash
+      env:
+        PROJECT_PATH: ${{ inputs.project-path }}
+        BASELINE: ${{ inputs.baseline }}
+      run: |
+        set -euo pipefail
+        baseline_args=()
+        if [[ -n "$BASELINE" ]]; then
+          baseline_args=(--baseline "$BASELINE")
+        fi
+        unilyze -p "$PROJECT_PATH" -f sarif -o unilyze.sarif "${baseline_args[@]}"
+        echo "sarif-path=unilyze.sarif" >> "$GITHUB_OUTPUT"

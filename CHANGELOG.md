@@ -36,6 +36,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 - `statusline --verbose` prints the previously-swallowed analysis exception to stderr, and `statusline --quiet` suppresses info lines while keeping warnings; `AnalysisPipeline` now shows per-phase progress on stderr when stderr is a TTY ([#76](https://github.com/bigdra50/unilyze/issues/76))
 - `projectKind` field on JSON output root (`unity` | `dotnet` | `unknown`) and Unity-agnostic `analysisLevel` stage names (`Syntax`/`Core`/`Full`/`Complete`); `--level syntax|core|full|complete` CLI tokens unchanged ([#72](https://github.com/bigdra50/unilyze/issues/72))
 - `query` subcommand: per-type evidence packs (metrics, smells with `file:line` anchors, dependencies, top methods) as token-efficient Markdown or compact JSON; supports `-i` snapshot input or `-p` direct analysis ([#85](https://github.com/bigdra50/unilyze/issues/85))
+- Official composite GitHub Action ([action.yml](action.yml)): installs Unilyze, runs analysis, badge gates, optional `base-ref` diff summary, and optional SARIF generation with outputs for downstream upload ([#88](https://github.com/bigdra50/unilyze/issues/88))
 
 ### Changed
 
