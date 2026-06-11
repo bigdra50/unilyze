@@ -24,6 +24,8 @@ if (args.Length >= 1 && args[0] == "badge")
     return BadgeRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "config")
     return ConfigRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "query")
+    return QueryRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "baseline")
     return BaselineRunner.Run(args[1..]);
 
@@ -173,6 +175,7 @@ Usage:
   unilyze                                  Analyze current directory and open in browser
   unilyze diff <before.json> <after.json>  Compare two analysis snapshots
   unilyze hotspot                          Identify refactoring hotspots (git churn x complexity)
+  unilyze query --worst 5 -i snapshot.json Per-type evidence packs for agent grounding
   unilyze trend <dir-of-jsons>             Show quality trend across multiple snapshots
   unilyze -p <path>                        Analyze project and open in browser
   unilyze -p <path> --no-open              Analyze project and write HTML/JSON without opening a browser
@@ -210,6 +213,7 @@ Subcommands:
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds
+  query           Per-type evidence packs for agent grounding (run 'unilyze query --help')
   schema          Show JSON output field reference
   skills          Manage skills for AI coding tools (run 'unilyze skills' for details)
   statusline      Output compact code health for status line display

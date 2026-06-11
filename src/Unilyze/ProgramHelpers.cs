@@ -6,6 +6,7 @@ internal static class ProgramHelpers
 {
     public static readonly string[] TopLevelCommands =
     [
+        "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config", "skills",
         "diff", "hotspot", "trend", "metrics", "schema", "statusline", "badge", "config", "baseline", "skills",
         "help", "version",
     ];
@@ -55,6 +56,16 @@ internal static class ProgramHelpers
     };
 
     static readonly HashSet<string> HotspotBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help",
+    };
+
+    static readonly HashSet<string> QueryValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "-i", "--input", "-o", "--output", "-f", "--format", "--worst", "--type", "--exclude-dir",
+    };
+
+    static readonly HashSet<string> QueryBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help",
     };
@@ -220,6 +231,19 @@ internal static class ProgramHelpers
 
         var extra = FindUnexpectedPositional(args, HotspotValueOptions);
         return extra is null ? 0 : ReportUnknown("subcommand", extra, ["hotspot"]);
+    }
+
+    public static int ValidateQueryArgs(string[] args)
+    {
+        if (IsHelpRequest(args))
+            return 0;
+
+        var unknown = FindUnknownOption(args, QueryValueOptions, QueryBooleanOptions);
+        if (unknown is not null)
+            return ReportUnknown("option", unknown, QueryValueOptions.Concat(QueryBooleanOptions));
+
+        var extra = FindUnexpectedPositional(args, QueryValueOptions);
+        return extra is null ? 0 : ReportUnknown("subcommand", extra, ["query"]);
     }
 
     public static int ValidateTrendArgs(string[] args)
