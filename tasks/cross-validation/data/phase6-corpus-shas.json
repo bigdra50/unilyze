@@ -1,0 +1,22 @@
+{
+  "bossroom": {
+    "repo": "Unity-Technologies/com.unity.multiplayer.samples.coop",
+    "sha": "1299ba4fc97d83b634e7d32a86c438ba668d7f9c"
+  },
+  "hmf": {
+    "repo": "HelloFangaming/HelloMarioFramework",
+    "sha": "a0cb680379a83b11d7f67dc7ecc265364ad7b96f"
+  },
+  "unitask": {
+    "repo": "Cysharp/UniTask",
+    "sha": "a9e27c03d411d2fca01cc7410c24c97cd77cb539"
+  },
+  "vcontainer": {
+    "repo": "hadashiA/VContainer",
+    "sha": "d9f6dc6b68fc9ad36bce6b580f6405245c28f67d"
+  },
+  "self": {
+    "repo": "bigdra50/unilyze",
+    "sha": "21f5d31b0575eba278595ac4c00e7387ceb1ddad"
+  }
+}

@@ -58,6 +58,35 @@ VContainer の 20件の差異は `goto` ネスト増分とローカル関数帰�
 
 2件の近似は丸め境界と大型クラスの推定値。実質的な計算エラーはゼロ。
 
+### Phase 6: CodeHealth validity — collinearity + bug-fix density (Issue #90)
+
+CodeHealth は Phase 1–5 まで個別メトリクス（CycCC/CogCC/OOP/smell）のみ検証され、合成スコア自体の根拠データがなかった。Phase 6 で v2 重み再設計のための定量エビデンスを収集した（SonarQube 出力は ground truth に不使用）。
+
+**Corpus**: BossRoom / HelloMarioFramework / UniTask / VContainer / Unilyze 自身を現行 unilyze (`metricsVersion: 3`, SyntaxOnly) で再計測 (`data/unilyze-*-mv2.json`)。clone は `/tmp/cross-validation-repos/`。
+
+#### 6a. CogCC × LOC 共線性 (re-measured, pooled)
+
+| Scope | Pearson r | Spearman ρ | n |
+|-------|-----------|------------|---|
+| method CogCC × method lineCount | 0.859 | 0.775 | 6157 |
+| type avgCogCC × type lineCount | 0.284 | 0.644 | 1456 |
+
+メソッド粒度では CogCC と LOC が強く共線。型粒度でも Spearman ρ ≈ 0.64 が残り、CodeHealth の CogCC 45% + lineCount 15% は実効的に size 軸を二重計上している可能性が高い。6×6 入力行列では avgCogCC ↔ maxCogCC (ρ=0.98)、avgCogCC ↔ maxNesting (ρ=0.94) も確認。
+
+#### 6b. 外的妥当性 — bug-fix commit density vs CodeHealth (SZZ-lite)
+
+git log から fix/bug キーワードで bug-fix コミットを分類（heuristic precision 90–96%）、型別 bugfixDensityPerKLoc と Spearman 相関:
+
+| Metric | ρ (pooled, n=994) | 解釈 |
+|--------|-------------------|------|
+| CodeHealth (composite) | **+0.547** (p≈10⁻⁷⁸) | 低 CH 型ほど fix 密度が高い方向と整合するが、正規化の confound あり |
+| lineCount (baseline) | −0.910 | 単一入力の方が |ρ| が大きい — composite の優位は未確認 |
+| avgCogCC (baseline) | −0.516 | CogCC 単独 baseline |
+
+**結論 (Phase 3 向け)**: 共線性データは CogCC 重み削減・非補償的集約の根拠になる。外的妥当性は「composite > 最強単一入力」を示さず、絶対 ρ も控えめ — v2 設計は相対比較と構造的重複の解消を主目的とすべき。
+
+詳細: [Phase 6: CodeHealth validity](cross-validation/phase6-codehealth-validity.md)
+
 ### Phase 5: Code Smell — Unilyze vs jb inspectcode (質的比較)
 
 両ツールのルールカテゴリは完全に非重複 (overlap ~0%)。
@@ -83,6 +112,7 @@ Unilyze はこの空白を埋めるツールとして独自の価値を持つ。
 | DIT | ○ | 15型で全件一致。syntactic モードで interface-only = DIT 0 を正しく処理 |
 | CBO | ○ | 15型で全件一致。syntactic 収集位置の制約を理解した上で正確 |
 | Code Smell | ○ | 構造的メトリクスベースの検出。jb inspectcode とは問題空間が非重複で補完的 |
+| CodeHealth | △ | Phase 6: CogCC×LOC 共線性 (method ρ≈0.78) と bug-fix 密度相関 (ρ≈0.55) を初記録。composite > lineCount baseline は未確認 |
 | MI | — | 今回の比較対象外 (macOS で使える無料の MI 計測ツールがない) |
 
 ## 既知の定義差異一覧
@@ -156,17 +186,86 @@ HelloMarioFramework に対して similarity-csharp (threshold=0.7) を実行し�
 - [Phase 2: CogCC SonarAnalyzer 比較](cross-validation/phase2-cogcc-sonar.md)
 - [Phase 4: OOP メトリクス手計算](cross-validation/phase4-manual-oop-metrics.md)
 - [Phase 5: Code Smell 質的比較](cross-validation/phase5-codesmell-qualitative.md)
+- [Phase 6: CodeHealth validity](cross-validation/phase6-codehealth-validity.md)
 - [Extra: similarity-csharp 相関分析](cross-validation/phase-extra-similarity-correlation.md)
+
+## Phase 6: Code Smell precision corpus（基盤整備）
+
+v0.1.2 / SyntaxOnly 時代のスナップショット (`unilyze-*.json`) は metricsVersion 未記録かつ semantic Kind が欠落するため、現行版 (toolVersion / metricsVersion / analysisLevel 付き) で再計測し、人手ラベリング用 CSV を生成する基盤を整備した。本 Issue ではラベリング自体は行わない。
+
+### 再計測コーパス
+
+| Project | 出力 | 解析レベル目標 | 備考 |
+|---------|------|----------------|------|
+| VContainer | `unilyze-vcontainer-v2.json` | Complete | `/tmp/cross-validation-repos` に clone、commit は `corpus-projects.json` 参照 |
+| UniTask | `unilyze-unitask-v2.json` | Complete | 同上 |
+| Boss Room | `unilyze-bossroom-v2.json` | Complete | 同上 |
+| HelloMarioFramework | `unilyze-hmf-v2.json` | Complete | 同上 |
+| unilyze self | `unilyze-self-v2.json` | SyntaxOnly | 非 Unity プロジェクトの上限 |
+| Unity-Decommissioned (任意) | `unilyze-decommissioned-v2.json` | Complete | semantic Kind 補完用。`Library/ScriptAssemblies` が必要 |
+
+再計測:
+
+```bash
+python3 tasks/cross-validation/scripts/measure_smell_corpus.py --include-optional
+python3 tasks/cross-validation/scripts/sample_smells.py --seed 42
+```
+
+Unity プロジェクトは `UNILYZE_EDITORS_ROOT` と `corpus-projects.json` の editorVersionAliases でパッチ版エディタを解決する。`Library/ScriptAssemblies` が無い clone では Complete に到達せず FullEngine / CoreEngine に縮退する（stderr に警告）。
+
+### TP / FP 判定基準（ラベル列は未記入）
+
+**定義:** 1 件の smell occurrence を **TP** とするのは、当該コードが smell が示すリファクタリングを適用した場合に **意味のある改善** が見込めるとき。閾値を超えたから正しい、という算術的正しさだけでは TP にしない（その読み方では FP は自明に 0% になる）。
+
+**FP 候補の例:**
+
+| Kind | FP になりやすい例 |
+|------|-------------------|
+| LowCohesion | ステートレスなユーティリティ holder、DTO |
+| GodClass | 生成コード、テストフィクスチャ、Unity Inspector 都合の MonoBehaviour |
+| DeepNesting | パーサ / 状態機械の意図的ネスト |
+| HighCoupling | ファサード、Composition Root、DI コンテナ |
+| BoxingAllocation | 意図的な `object` ボックス（Interop 等）で hot path 外 |
+| LongMethod | 宣言的に読みやすい linear 手続きで分割メリットが小さい |
+
+**uncertain:** 文脈不足で判断不能な場合。precision 計算の分子・分母からは除外し、件数のみ別報告する。
+
+### 判定者運用（提案）
+
+1. **Primary（人手）:** リポジトリ maintainer が rubric に沿って `label` / `rationale` を記入。
+2. **Secondary（LLM）:** 同一 occurrence に独立プロンプトで TP/FP/uncertain を付与し、Primary との不一致をレビューキューに回す。
+3. **Tertiary（外部ツール合意）:** SonarAnalyzer S110/S138/S107 等、対応 rule がある Kind ではツール一致を参考信号として記録（`match_smell_sonar.py` 拡張予定）。
+4. **信頼性:** 50 件以上を二重ラベルし Cohen's κ を報告してから per-Kind precision（Wilson 95% CI）を公表する。
+
+### サンプリング
+
+`sample_smells.py` は Kind ごとに可変サイズ:
+
+- コーパス全体で **20 件未満** の Kind → **全数** を CSV に出力
+- **20 件以上** の Kind → **20 件** をプロジェクト横断の層化ランダムサンプル（seed=42、可能なら 2 プロジェクト以上）
+
+出力: `cross-validation/data/smell-precision-labels.csv`（`label` / `judge` / `rationale` は空欄）
+
+**コーパス未出現 Kind:** `CyclicDependency`, `MissingInnerException`（v2 再計測 6 プロジェクト合計 4542 smells 中 0 件）。precision 測定対象外として別表記する。
 
 ## データ
 
-- `cross-validation/data/unilyze-*.json` — Unilyze 出力 (全4プロジェクト)
+- `cross-validation/data/unilyze-*-v2.json` — 現行版 smell コーパス再計測
+- `cross-validation/data/smell-precision-labels.csv` — ラベリング対象（未ラベル）
+- `cross-validation/data/smell-corpus-measurement.json` — 再計測メタデータ
+- `cross-validation/data/smell-precision-sample-plan.json` — サンプリング計画
+- `cross-validation/corpus-projects.json` — clone URL / pin commit / 解析レベル
+- `cross-validation/data/unilyze-*.json` — Unilyze 出力 (v0.1.2 比較用・旧)
 - `cross-validation/data/lizard-*.csv` — lizard 出力
 - `cross-validation/data/matched-cyccc-*.csv` — CycCC マッチング結果
 - `cross-validation/data/matched-cogcc-sonar-*.csv` — CogCC マッチング結果
 - `cross-validation/data/sonar-cogcc-*.json` — SonarAnalyzer 出力
 - `cross-validation/data/manual-oop-metrics.csv` — 手計算結果
 - `cross-validation/data/jb-inspect-unilyze.sarif` — jb inspectcode SARIF
+- `cross-validation/data/unilyze-*-mv2.json` — Phase 6 再計測 corpus (metricsVersion 3)
+- `cross-validation/data/phase6-collinearity.json` — 共線性分析結果
+- `cross-validation/data/phase6-bugfix-validity.json` — bug-fix 密度相関結果
+- `cross-validation/data/phase6-corpus-shas.json` — corpus 固定 SHA
 
 ## 環境
 

@@ -1,0 +1,2244 @@
+{
+  "legacy": [
+    {
+      "label": "BossRoom",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-bossroom.json",
+      "metrics_version": null,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 228,
+      "method_count": 1183,
+      "method_cogcc_x_line": {
+        "n": 1183,
+        "pearson_r": 0.8233895992573266,
+        "pearson_p": 7.284227598151136e-293,
+        "spearman_rho": 0.809751310228915,
+        "spearman_p": 1.048547335917513e-275
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 228,
+        "pearson_r": 0.5079637811941915,
+        "pearson_p": 2.328620341582349e-16,
+        "spearman_rho": 0.7207723796562305,
+        "spearman_p": 7.85066620614047e-38
+      },
+      "type_max_cogcc_x_line": {
+        "n": 228,
+        "pearson_r": 0.7550007370851504,
+        "pearson_p": 2.654532084413519e-43,
+        "spearman_rho": 0.833828282298261,
+        "spearman_p": 3.054784080196164e-60
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8239790673948255,
+            "spearman_rho": 0.9436454798715649
+          },
+          "lineCount": {
+            "pearson_r": 0.5079637811941915,
+            "spearman_rho": 0.7207723796562305
+          },
+          "methodCount": {
+            "pearson_r": 0.31863940766301035,
+            "spearman_rho": 0.5531629418762603
+          },
+          "maxNesting": {
+            "pearson_r": 0.7701456442138784,
+            "spearman_rho": 0.9042771422025089
+          },
+          "excessiveParams": {
+            "pearson_r": 0.12027909028716723,
+            "spearman_rho": 0.023559281833073
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.8239790673948255,
+            "spearman_rho": 0.9436454798715649
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "lineCount": {
+            "pearson_r": 0.7550007370851504,
+            "spearman_rho": 0.833828282298261
+          },
+          "methodCount": {
+            "pearson_r": 0.5959089728487241,
+            "spearman_rho": 0.7135134578332925
+          },
+          "maxNesting": {
+            "pearson_r": 0.86764375532726,
+            "spearman_rho": 0.9612104148743857
+          },
+          "excessiveParams": {
+            "pearson_r": 0.10958528942474725,
+            "spearman_rho": 0.06863455302281286
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.5079637811941915,
+            "spearman_rho": 0.7207723796562305
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7550007370851504,
+            "spearman_rho": 0.833828282298261
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.8608549427873378,
+            "spearman_rho": 0.8896846534169991
+          },
+          "maxNesting": {
+            "pearson_r": 0.7129296424705059,
+            "spearman_rho": 0.8024210081236033
+          },
+          "excessiveParams": {
+            "pearson_r": 0.13074453565462582,
+            "spearman_rho": 0.13985640301304825
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.31863940766301035,
+            "spearman_rho": 0.5531629418762603
+          },
+          "maxCogCC": {
+            "pearson_r": 0.5959089728487241,
+            "spearman_rho": 0.7135134578332925
+          },
+          "lineCount": {
+            "pearson_r": 0.8608549427873378,
+            "spearman_rho": 0.8896846534169991
+          },
+          "methodCount": {
+            "pearson_r": 0.9999999999999997,
+            "spearman_rho": 0.9999999999999998
+          },
+          "maxNesting": {
+            "pearson_r": 0.622019644083567,
+            "spearman_rho": 0.7090444047731461
+          },
+          "excessiveParams": {
+            "pearson_r": 0.08468217496175359,
+            "spearman_rho": 0.1512980950147942
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7701456442138784,
+            "spearman_rho": 0.9042771422025089
+          },
+          "maxCogCC": {
+            "pearson_r": 0.86764375532726,
+            "spearman_rho": 0.9612104148743857
+          },
+          "lineCount": {
+            "pearson_r": 0.7129296424705059,
+            "spearman_rho": 0.8024210081236033
+          },
+          "methodCount": {
+            "pearson_r": 0.622019644083567,
+            "spearman_rho": 0.7090444047731461
+          },
+          "maxNesting": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": 0.0335396874565345,
+            "spearman_rho": 0.04198300588845658
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.12027909028716723,
+            "spearman_rho": 0.023559281833073
+          },
+          "maxCogCC": {
+            "pearson_r": 0.10958528942474725,
+            "spearman_rho": 0.06863455302281286
+          },
+          "lineCount": {
+            "pearson_r": 0.13074453565462582,
+            "spearman_rho": 0.13985640301304825
+          },
+          "methodCount": {
+            "pearson_r": 0.08468217496175359,
+            "spearman_rho": 0.15129809501479421
+          },
+          "maxNesting": {
+            "pearson_r": 0.0335396874565345,
+            "spearman_rho": 0.04198300588845658
+          },
+          "excessiveParams": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    },
+    {
+      "label": "HelloMarioFramework",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-hmf.json",
+      "metrics_version": null,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 109,
+      "method_count": 418,
+      "method_cogcc_x_line": {
+        "n": 418,
+        "pearson_r": 0.9290472068815303,
+        "pearson_p": 9.481985103402992e-182,
+        "spearman_rho": 0.7558996473200124,
+        "spearman_p": 1.5242521487739505e-78
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 109,
+        "pearson_r": 0.43062408768727456,
+        "pearson_p": 2.9550423414764046e-06,
+        "spearman_rho": 0.6352936240778821,
+        "spearman_p": 1.171916819245462e-13
+      },
+      "type_max_cogcc_x_line": {
+        "n": 109,
+        "pearson_r": 0.9317423917048231,
+        "pearson_p": 6.945433398665538e-49,
+        "spearman_rho": 0.8357322303142544,
+        "spearman_p": 1.2832553215606456e-29
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.6018995020044569,
+            "spearman_rho": 0.9069096380454013
+          },
+          "lineCount": {
+            "pearson_r": 0.43062408768727456,
+            "spearman_rho": 0.6352936240778823
+          },
+          "methodCount": {
+            "pearson_r": 0.18909986059480183,
+            "spearman_rho": 0.34116416848852427
+          },
+          "maxNesting": {
+            "pearson_r": 0.8114154722467678,
+            "spearman_rho": 0.8810149686934932
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.6018995020044569,
+            "spearman_rho": 0.9069096380454013
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999999
+          },
+          "lineCount": {
+            "pearson_r": 0.9317423917048231,
+            "spearman_rho": 0.8357322303142544
+          },
+          "methodCount": {
+            "pearson_r": 0.7908364141425522,
+            "spearman_rho": 0.6276219777051456
+          },
+          "maxNesting": {
+            "pearson_r": 0.741206505493022,
+            "spearman_rho": 0.9671930719483057
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.43062408768727456,
+            "spearman_rho": 0.6352936240778821
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9317423917048231,
+            "spearman_rho": 0.8357322303142544
+          },
+          "lineCount": {
+            "pearson_r": 0.9999999999999996,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.9224095479469511,
+            "spearman_rho": 0.8743445172647506
+          },
+          "maxNesting": {
+            "pearson_r": 0.6437065986408889,
+            "spearman_rho": 0.8278493523013941
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.18909986059480183,
+            "spearman_rho": 0.3411641684885243
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7908364141425522,
+            "spearman_rho": 0.6276219777051456
+          },
+          "lineCount": {
+            "pearson_r": 0.9224095479469511,
+            "spearman_rho": 0.8743445172647506
+          },
+          "methodCount": {
+            "pearson_r": 0.9999999999999993,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.48894493177717535,
+            "spearman_rho": 0.6208872449149994
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.8114154722467678,
+            "spearman_rho": 0.8810149686934932
+          },
+          "maxCogCC": {
+            "pearson_r": 0.741206505493022,
+            "spearman_rho": 0.9671930719483057
+          },
+          "lineCount": {
+            "pearson_r": 0.6437065986408889,
+            "spearman_rho": 0.8278493523013941
+          },
+          "methodCount": {
+            "pearson_r": 0.48894493177717535,
+            "spearman_rho": 0.6208872449149995
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "maxCogCC": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "lineCount": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "methodCount": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "maxNesting": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        }
+      }
+    },
+    {
+      "label": "UniTask",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-unitask.json",
+      "metrics_version": null,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 942,
+      "method_count": 4958,
+      "method_cogcc_x_line": {
+        "n": 4958,
+        "pearson_r": 0.9549570096305178,
+        "pearson_p": 0.0,
+        "spearman_rho": 0.8572342985172595,
+        "spearman_p": 0.0
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 942,
+        "pearson_r": 0.396867294362573,
+        "pearson_p": 6.778858000992699e-37,
+        "spearman_rho": 0.44989859866515736,
+        "spearman_p": 3.9548235363933834e-48
+      },
+      "type_max_cogcc_x_line": {
+        "n": 942,
+        "pearson_r": 0.49167201667426225,
+        "pearson_p": 1.7230996468774882e-58,
+        "spearman_rho": 0.46893668268702215,
+        "spearman_p": 1.1291060063545619e-52
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9999999999999999,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8995307001744164,
+            "spearman_rho": 0.9845070979763014
+          },
+          "lineCount": {
+            "pearson_r": 0.396867294362573,
+            "spearman_rho": 0.44989859866515736
+          },
+          "methodCount": {
+            "pearson_r": 0.044333945570001934,
+            "spearman_rho": 0.56230875502782
+          },
+          "maxNesting": {
+            "pearson_r": 0.7414781762402002,
+            "spearman_rho": 0.9601497517712911
+          },
+          "excessiveParams": {
+            "pearson_r": -0.010559168685179945,
+            "spearman_rho": 0.152963317883423
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.8995307001744164,
+            "spearman_rho": 0.9845070979763014
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "lineCount": {
+            "pearson_r": 0.49167201667426225,
+            "spearman_rho": 0.46893668268702215
+          },
+          "methodCount": {
+            "pearson_r": 0.07255274395635428,
+            "spearman_rho": 0.6179711874816263
+          },
+          "maxNesting": {
+            "pearson_r": 0.6680382308957831,
+            "spearman_rho": 0.9740789446861366
+          },
+          "excessiveParams": {
+            "pearson_r": 0.00016370180599306638,
+            "spearman_rho": 0.18325813697098317
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.396867294362573,
+            "spearman_rho": 0.44989859866515736
+          },
+          "maxCogCC": {
+            "pearson_r": 0.49167201667426225,
+            "spearman_rho": 0.46893668268702215
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.09534110966576095,
+            "spearman_rho": 0.4391221229488808
+          },
+          "maxNesting": {
+            "pearson_r": 0.18154807697461584,
+            "spearman_rho": 0.4422383629861278
+          },
+          "excessiveParams": {
+            "pearson_r": 0.05787651406203541,
+            "spearman_rho": 0.16451425151881183
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.044333945570001934,
+            "spearman_rho": 0.56230875502782
+          },
+          "maxCogCC": {
+            "pearson_r": 0.07255274395635428,
+            "spearman_rho": 0.6179711874816263
+          },
+          "lineCount": {
+            "pearson_r": 0.09534110966576095,
+            "spearman_rho": 0.4391221229488808
+          },
+          "methodCount": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.09825764263748007,
+            "spearman_rho": 0.5826347921568912
+          },
+          "excessiveParams": {
+            "pearson_r": 0.8707216397662272,
+            "spearman_rho": 0.2578352323473696
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7414781762402002,
+            "spearman_rho": 0.9601497517712912
+          },
+          "maxCogCC": {
+            "pearson_r": 0.6680382308957831,
+            "spearman_rho": 0.9740789446861365
+          },
+          "lineCount": {
+            "pearson_r": 0.18154807697461584,
+            "spearman_rho": 0.44223836298612773
+          },
+          "methodCount": {
+            "pearson_r": 0.09825764263748007,
+            "spearman_rho": 0.5826347921568912
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": 0.05342529570273552,
+            "spearman_rho": 0.16425511616048377
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": -0.010559168685179945,
+            "spearman_rho": 0.152963317883423
+          },
+          "maxCogCC": {
+            "pearson_r": 0.00016370180599306638,
+            "spearman_rho": 0.18325813697098317
+          },
+          "lineCount": {
+            "pearson_r": 0.05787651406203541,
+            "spearman_rho": 0.16451425151881183
+          },
+          "methodCount": {
+            "pearson_r": 0.8707216397662272,
+            "spearman_rho": 0.2578352323473696
+          },
+          "maxNesting": {
+            "pearson_r": 0.05342529570273552,
+            "spearman_rho": 0.16425511616048377
+          },
+          "excessiveParams": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    },
+    {
+      "label": "VContainer",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-vcontainer.json",
+      "metrics_version": null,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 234,
+      "method_count": 575,
+      "method_cogcc_x_line": {
+        "n": 575,
+        "pearson_r": 0.5757762952953385,
+        "pearson_p": 4.457075320977164e-52,
+        "spearman_rho": 0.44593814108298907,
+        "spearman_p": 1.9175211109356218e-29
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 234,
+        "pearson_r": 0.25485369192364693,
+        "pearson_p": 8.048902647836198e-05,
+        "spearman_rho": 0.6529359785973482,
+        "spearman_p": 8.065056674159062e-30
+      },
+      "type_max_cogcc_x_line": {
+        "n": 234,
+        "pearson_r": 0.31919255445853995,
+        "pearson_p": 6.112033962474444e-07,
+        "spearman_rho": 0.6645491298851177,
+        "spearman_p": 3.4454638589009666e-31
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9999999999999994,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9420798503304771,
+            "spearman_rho": 0.9936565687942669
+          },
+          "lineCount": {
+            "pearson_r": 0.25485369192364693,
+            "spearman_rho": 0.6529359785973482
+          },
+          "methodCount": {
+            "pearson_r": 0.08998621904469035,
+            "spearman_rho": 0.5422503811214759
+          },
+          "maxNesting": {
+            "pearson_r": 0.7221309286943074,
+            "spearman_rho": 0.9164235511174985
+          },
+          "excessiveParams": {
+            "pearson_r": 0.07291355771014078,
+            "spearman_rho": 0.1802183072091276
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9420798503304771,
+            "spearman_rho": 0.9936565687942669
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9999999999999999,
+            "spearman_rho": 0.9999999999999999
+          },
+          "lineCount": {
+            "pearson_r": 0.31919255445853995,
+            "spearman_rho": 0.6645491298851178
+          },
+          "methodCount": {
+            "pearson_r": 0.19070338630253453,
+            "spearman_rho": 0.5704004363648388
+          },
+          "maxNesting": {
+            "pearson_r": 0.7127092339384262,
+            "spearman_rho": 0.9247808811808712
+          },
+          "excessiveParams": {
+            "pearson_r": 0.09959763181171817,
+            "spearman_rho": 0.1984877090075759
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.25485369192364693,
+            "spearman_rho": 0.6529359785973482
+          },
+          "maxCogCC": {
+            "pearson_r": 0.31919255445853995,
+            "spearman_rho": 0.6645491298851177
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.868195067781743,
+            "spearman_rho": 0.7995862129611387
+          },
+          "maxNesting": {
+            "pearson_r": 0.4861273031605089,
+            "spearman_rho": 0.7433565800087514
+          },
+          "excessiveParams": {
+            "pearson_r": 0.19798680338149638,
+            "spearman_rho": 0.16405521493015332
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.08998621904469035,
+            "spearman_rho": 0.5422503811214759
+          },
+          "maxCogCC": {
+            "pearson_r": 0.19070338630253453,
+            "spearman_rho": 0.5704004363648387
+          },
+          "lineCount": {
+            "pearson_r": 0.868195067781743,
+            "spearman_rho": 0.7995862129611389
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.3696584293796485,
+            "spearman_rho": 0.6565579789400425
+          },
+          "excessiveParams": {
+            "pearson_r": 0.14690514781177128,
+            "spearman_rho": 0.1709034839616393
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7221309286943074,
+            "spearman_rho": 0.9164235511174985
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7127092339384262,
+            "spearman_rho": 0.9247808811808712
+          },
+          "lineCount": {
+            "pearson_r": 0.4861273031605089,
+            "spearman_rho": 0.7433565800087514
+          },
+          "methodCount": {
+            "pearson_r": 0.3696584293796485,
+            "spearman_rho": 0.6565579789400425
+          },
+          "maxNesting": {
+            "pearson_r": 0.9999999999999997,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": 0.1404863828408864,
+            "spearman_rho": 0.1755996199033168
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.07291355771014078,
+            "spearman_rho": 0.18021830720912763
+          },
+          "maxCogCC": {
+            "pearson_r": 0.09959763181171817,
+            "spearman_rho": 0.1984877090075759
+          },
+          "lineCount": {
+            "pearson_r": 0.19798680338149638,
+            "spearman_rho": 0.16405521493015335
+          },
+          "methodCount": {
+            "pearson_r": 0.14690514781177128,
+            "spearman_rho": 0.1709034839616393
+          },
+          "maxNesting": {
+            "pearson_r": 0.1404863828408864,
+            "spearman_rho": 0.1755996199033168
+          },
+          "excessiveParams": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    },
+    {
+      "label": "Unilyze (self)",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-self.json",
+      "metrics_version": null,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 66,
+      "method_count": 234,
+      "method_cogcc_x_line": {
+        "n": 234,
+        "pearson_r": 0.6864314222230502,
+        "pearson_p": 6.0675572280726285e-34,
+        "spearman_rho": 0.7197796349531583,
+        "spearman_p": 1.2151457377244922e-38
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 66,
+        "pearson_r": 0.13938042756597468,
+        "pearson_p": 0.26435557755227923,
+        "spearman_rho": 0.7852373554228123,
+        "spearman_p": 5.9580064018081865e-15
+      },
+      "type_max_cogcc_x_line": {
+        "n": 66,
+        "pearson_r": 0.17382817248116716,
+        "pearson_p": 0.16275760558522012,
+        "spearman_rho": 0.8085057371692533,
+        "spearman_p": 2.2349641258543456e-16
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9156632111412066,
+            "spearman_rho": 0.9814076749100886
+          },
+          "lineCount": {
+            "pearson_r": 0.13938042756597468,
+            "spearman_rho": 0.7852373554228121
+          },
+          "methodCount": {
+            "pearson_r": 0.45990680826262736,
+            "spearman_rho": 0.8694713585835071
+          },
+          "maxNesting": {
+            "pearson_r": 0.8661928173418348,
+            "spearman_rho": 0.9575558108569792
+          },
+          "excessiveParams": {
+            "pearson_r": 0.28639408239822955,
+            "spearman_rho": 0.327186385647949
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9156632111412066,
+            "spearman_rho": 0.9814076749100887
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "lineCount": {
+            "pearson_r": 0.17382817248116716,
+            "spearman_rho": 0.8085057371692534
+          },
+          "methodCount": {
+            "pearson_r": 0.5856348181198162,
+            "spearman_rho": 0.9055207042434447
+          },
+          "maxNesting": {
+            "pearson_r": 0.8805930891518406,
+            "spearman_rho": 0.9622233646904127
+          },
+          "excessiveParams": {
+            "pearson_r": 0.31088312083275577,
+            "spearman_rho": 0.3179153271389548
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.13938042756597468,
+            "spearman_rho": 0.7852373554228123
+          },
+          "maxCogCC": {
+            "pearson_r": 0.17382817248116716,
+            "spearman_rho": 0.8085057371692533
+          },
+          "lineCount": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.23684309074993287,
+            "spearman_rho": 0.8539541999399582
+          },
+          "maxNesting": {
+            "pearson_r": 0.19889438856471228,
+            "spearman_rho": 0.8302890463794713
+          },
+          "excessiveParams": {
+            "pearson_r": 0.0833445999234166,
+            "spearman_rho": 0.34678334191259375
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.45990680826262736,
+            "spearman_rho": 0.8694713585835071
+          },
+          "maxCogCC": {
+            "pearson_r": 0.5856348181198162,
+            "spearman_rho": 0.9055207042434447
+          },
+          "lineCount": {
+            "pearson_r": 0.23684309074993287,
+            "spearman_rho": 0.8539541999399582
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999998
+          },
+          "maxNesting": {
+            "pearson_r": 0.6845245963056851,
+            "spearman_rho": 0.9318325879871026
+          },
+          "excessiveParams": {
+            "pearson_r": 0.18762213485682577,
+            "spearman_rho": 0.324707101782695
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.8661928173418348,
+            "spearman_rho": 0.9575558108569792
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8805930891518406,
+            "spearman_rho": 0.9622233646904126
+          },
+          "lineCount": {
+            "pearson_r": 0.19889438856471228,
+            "spearman_rho": 0.8302890463794713
+          },
+          "methodCount": {
+            "pearson_r": 0.6845245963056851,
+            "spearman_rho": 0.9318325879871026
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999998
+          },
+          "excessiveParams": {
+            "pearson_r": 0.24934399735030552,
+            "spearman_rho": 0.2813536659904621
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.28639408239822955,
+            "spearman_rho": 0.327186385647949
+          },
+          "maxCogCC": {
+            "pearson_r": 0.31088312083275577,
+            "spearman_rho": 0.3179153271389548
+          },
+          "lineCount": {
+            "pearson_r": 0.0833445999234166,
+            "spearman_rho": 0.34678334191259375
+          },
+          "methodCount": {
+            "pearson_r": 0.18762213485682577,
+            "spearman_rho": 0.32470710178269496
+          },
+          "maxNesting": {
+            "pearson_r": 0.24934399735030552,
+            "spearman_rho": 0.281353665990462
+          },
+          "excessiveParams": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    }
+  ],
+  "mv2": [
+    {
+      "label": "BossRoom",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-bossroom-mv2.json",
+      "metrics_version": 3,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 226,
+      "method_count": 1161,
+      "method_cogcc_x_line": {
+        "n": 1161,
+        "pearson_r": 0.8230034529072017,
+        "pearson_p": 5.972750028178482e-287,
+        "spearman_rho": 0.8069934502314572,
+        "spearman_p": 2.2807259900212724e-267
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 226,
+        "pearson_r": 0.5367073104293258,
+        "pearson_p": 2.9240596643063246e-18,
+        "spearman_rho": 0.7261220765395068,
+        "spearman_p": 2.6424760014948704e-38
+      },
+      "type_max_cogcc_x_line": {
+        "n": 226,
+        "pearson_r": 0.7812407942763996,
+        "pearson_p": 9.760965010790233e-48,
+        "spearman_rho": 0.8349940315520716,
+        "spearman_p": 4.9074968817309723e-60
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8252649437469219,
+            "spearman_rho": 0.9455876439670795
+          },
+          "lineCount": {
+            "pearson_r": 0.5367073104293258,
+            "spearman_rho": 0.7261220765395068
+          },
+          "methodCount": {
+            "pearson_r": 0.32618951845838506,
+            "spearman_rho": 0.5454905300711275
+          },
+          "maxNesting": {
+            "pearson_r": 0.8161505394768235,
+            "spearman_rho": 0.918172888997807
+          },
+          "excessiveParams": {
+            "pearson_r": 0.12024246699907316,
+            "spearman_rho": 0.024743643747377173
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.8252649437469219,
+            "spearman_rho": 0.9455876439670795
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "lineCount": {
+            "pearson_r": 0.7812407942763996,
+            "spearman_rho": 0.8349940315520716
+          },
+          "methodCount": {
+            "pearson_r": 0.6009611626798219,
+            "spearman_rho": 0.7021760950285413
+          },
+          "maxNesting": {
+            "pearson_r": 0.8661527448837123,
+            "spearman_rho": 0.9531994004888199
+          },
+          "excessiveParams": {
+            "pearson_r": 0.11002728364390085,
+            "spearman_rho": 0.06958610918908632
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.5367073104293258,
+            "spearman_rho": 0.7261220765395068
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7812407942763996,
+            "spearman_rho": 0.8349940315520716
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.8818993688238461,
+            "spearman_rho": 0.8938025235749173
+          },
+          "maxNesting": {
+            "pearson_r": 0.7041753565468885,
+            "spearman_rho": 0.7899373189014522
+          },
+          "excessiveParams": {
+            "pearson_r": 0.14992456461144932,
+            "spearman_rho": 0.15242588794414685
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.32618951845838506,
+            "spearman_rho": 0.5454905300711275
+          },
+          "maxCogCC": {
+            "pearson_r": 0.6009611626798219,
+            "spearman_rho": 0.7021760950285413
+          },
+          "lineCount": {
+            "pearson_r": 0.8818993688238461,
+            "spearman_rho": 0.8938025235749173
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.6008375999680948,
+            "spearman_rho": 0.6788482146204566
+          },
+          "excessiveParams": {
+            "pearson_r": 0.08965950996103988,
+            "spearman_rho": 0.15268020242159133
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.8161505394768235,
+            "spearman_rho": 0.918172888997807
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8661527448837123,
+            "spearman_rho": 0.9531994004888198
+          },
+          "lineCount": {
+            "pearson_r": 0.7041753565468885,
+            "spearman_rho": 0.7899373189014522
+          },
+          "methodCount": {
+            "pearson_r": 0.6008375999680948,
+            "spearman_rho": 0.6788482146204566
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999999
+          },
+          "excessiveParams": {
+            "pearson_r": 0.061992707128304195,
+            "spearman_rho": 0.043834930265402645
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.12024246699907316,
+            "spearman_rho": 0.024743643747377173
+          },
+          "maxCogCC": {
+            "pearson_r": 0.11002728364390085,
+            "spearman_rho": 0.06958610918908632
+          },
+          "lineCount": {
+            "pearson_r": 0.14992456461144932,
+            "spearman_rho": 0.15242588794414685
+          },
+          "methodCount": {
+            "pearson_r": 0.08965950996103988,
+            "spearman_rho": 0.15268020242159133
+          },
+          "maxNesting": {
+            "pearson_r": 0.061992707128304195,
+            "spearman_rho": 0.043834930265402645
+          },
+          "excessiveParams": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    },
+    {
+      "label": "HelloMarioFramework",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-hmf-mv2.json",
+      "metrics_version": 3,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 109,
+      "method_count": 418,
+      "method_cogcc_x_line": {
+        "n": 418,
+        "pearson_r": 0.9290472068815316,
+        "pearson_p": 9.481985103367236e-182,
+        "spearman_rho": 0.7558996473200124,
+        "spearman_p": 1.5242521487739505e-78
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 109,
+        "pearson_r": 0.4306240876872748,
+        "pearson_p": 2.9550423414764046e-06,
+        "spearman_rho": 0.6352936240778821,
+        "spearman_p": 1.171916819245462e-13
+      },
+      "type_max_cogcc_x_line": {
+        "n": 109,
+        "pearson_r": 0.9317423917048231,
+        "pearson_p": 6.945433398665538e-49,
+        "spearman_rho": 0.8357322303142544,
+        "spearman_p": 1.2832553215606456e-29
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.6018995020044569,
+            "spearman_rho": 0.9069096380454013
+          },
+          "lineCount": {
+            "pearson_r": 0.4306240876872748,
+            "spearman_rho": 0.6352936240778823
+          },
+          "methodCount": {
+            "pearson_r": 0.1890998605948019,
+            "spearman_rho": 0.34116416848852427
+          },
+          "maxNesting": {
+            "pearson_r": 0.7767305651108692,
+            "spearman_rho": 0.8699507962526668
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.6018995020044569,
+            "spearman_rho": 0.9069096380454013
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9999999999999999,
+            "spearman_rho": 0.9999999999999999
+          },
+          "lineCount": {
+            "pearson_r": 0.9317423917048231,
+            "spearman_rho": 0.8357322303142544
+          },
+          "methodCount": {
+            "pearson_r": 0.7908364141425526,
+            "spearman_rho": 0.6276219777051456
+          },
+          "maxNesting": {
+            "pearson_r": 0.5976689981495545,
+            "spearman_rho": 0.9642165786570133
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.4306240876872748,
+            "spearman_rho": 0.6352936240778821
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9317423917048231,
+            "spearman_rho": 0.8357322303142544
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.9224095479469514,
+            "spearman_rho": 0.8743445172647506
+          },
+          "maxNesting": {
+            "pearson_r": 0.5036748024004191,
+            "spearman_rho": 0.8051594907120384
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.1890998605948019,
+            "spearman_rho": 0.3411641684885243
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7908364141425526,
+            "spearman_rho": 0.6276219777051456
+          },
+          "lineCount": {
+            "pearson_r": 0.9224095479469514,
+            "spearman_rho": 0.8743445172647506
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.3920546273476454,
+            "spearman_rho": 0.631398922945411
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7767305651108692,
+            "spearman_rho": 0.8699507962526669
+          },
+          "maxCogCC": {
+            "pearson_r": 0.5976689981495545,
+            "spearman_rho": 0.9642165786570133
+          },
+          "lineCount": {
+            "pearson_r": 0.5036748024004191,
+            "spearman_rho": 0.8051594907120384
+          },
+          "methodCount": {
+            "pearson_r": 0.3920546273476454,
+            "spearman_rho": 0.6313989229454111
+          },
+          "maxNesting": {
+            "pearson_r": 0.9999999999999996,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "maxCogCC": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "lineCount": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "methodCount": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "maxNesting": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          },
+          "excessiveParams": {
+            "pearson_r": NaN,
+            "spearman_rho": NaN
+          }
+        }
+      }
+    },
+    {
+      "label": "UniTask",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-unitask-mv2.json",
+      "metrics_version": 3,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 685,
+      "method_count": 3281,
+      "method_cogcc_x_line": {
+        "n": 3281,
+        "pearson_r": 0.9427975031556334,
+        "pearson_p": 0.0,
+        "spearman_rho": 0.8111007584826747,
+        "spearman_p": 0.0
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 685,
+        "pearson_r": 0.2766094901406518,
+        "pearson_p": 1.698264865832188e-13,
+        "spearman_rho": 0.533775743475037,
+        "spearman_p": 1.043417997524638e-51
+      },
+      "type_max_cogcc_x_line": {
+        "n": 685,
+        "pearson_r": 0.3300546100363698,
+        "pearson_p": 7.158565149278514e-19,
+        "spearman_rho": 0.5704963340201279,
+        "spearman_p": 2.1469011491737144e-60
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9999999999999994,
+            "spearman_rho": 0.9999999999999999
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8932282265812337,
+            "spearman_rho": 0.9855610459533856
+          },
+          "lineCount": {
+            "pearson_r": 0.2766094901406518,
+            "spearman_rho": 0.533775743475037
+          },
+          "methodCount": {
+            "pearson_r": 0.04845226126399285,
+            "spearman_rho": 0.5194420928378021
+          },
+          "maxNesting": {
+            "pearson_r": 0.7251060653867147,
+            "spearman_rho": 0.9552083270121295
+          },
+          "excessiveParams": {
+            "pearson_r": 0.003207478573884915,
+            "spearman_rho": 0.19575050851611311
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.8932282265812337,
+            "spearman_rho": 0.9855610459533856
+          },
+          "maxCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999999
+          },
+          "lineCount": {
+            "pearson_r": 0.3300546100363698,
+            "spearman_rho": 0.5704963340201279
+          },
+          "methodCount": {
+            "pearson_r": 0.0856860839811808,
+            "spearman_rho": 0.58186618844739
+          },
+          "maxNesting": {
+            "pearson_r": 0.674396553037307,
+            "spearman_rho": 0.9721398208240222
+          },
+          "excessiveParams": {
+            "pearson_r": 0.011696266695137729,
+            "spearman_rho": 0.22815315511977358
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.2766094901406518,
+            "spearman_rho": 0.533775743475037
+          },
+          "maxCogCC": {
+            "pearson_r": 0.3300546100363698,
+            "spearman_rho": 0.5704963340201279
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.696733812684526,
+            "spearman_rho": 0.5247095078554758
+          },
+          "maxNesting": {
+            "pearson_r": 0.1799356843171187,
+            "spearman_rho": 0.5638064051101691
+          },
+          "excessiveParams": {
+            "pearson_r": 0.6094052551902098,
+            "spearman_rho": 0.2360026018387558
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.04845226126399285,
+            "spearman_rho": 0.5194420928378021
+          },
+          "maxCogCC": {
+            "pearson_r": 0.0856860839811808,
+            "spearman_rho": 0.58186618844739
+          },
+          "lineCount": {
+            "pearson_r": 0.696733812684526,
+            "spearman_rho": 0.5247095078554758
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.1127183485955601,
+            "spearman_rho": 0.5697196175544166
+          },
+          "excessiveParams": {
+            "pearson_r": 0.8883460003107513,
+            "spearman_rho": 0.2861138958610741
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7251060653867147,
+            "spearman_rho": 0.9552083270121295
+          },
+          "maxCogCC": {
+            "pearson_r": 0.674396553037307,
+            "spearman_rho": 0.9721398208240222
+          },
+          "lineCount": {
+            "pearson_r": 0.1799356843171187,
+            "spearman_rho": 0.5638064051101691
+          },
+          "methodCount": {
+            "pearson_r": 0.1127183485955601,
+            "spearman_rho": 0.5697196175544166
+          },
+          "maxNesting": {
+            "pearson_r": 0.9999999999999993,
+            "spearman_rho": 0.9999999999999999
+          },
+          "excessiveParams": {
+            "pearson_r": 0.04174434479026849,
+            "spearman_rho": 0.22267940582624943
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.003207478573884915,
+            "spearman_rho": 0.19575050851611311
+          },
+          "maxCogCC": {
+            "pearson_r": 0.011696266695137729,
+            "spearman_rho": 0.22815315511977358
+          },
+          "lineCount": {
+            "pearson_r": 0.6094052551902098,
+            "spearman_rho": 0.23600260183875577
+          },
+          "methodCount": {
+            "pearson_r": 0.8883460003107513,
+            "spearman_rho": 0.2861138958610741
+          },
+          "maxNesting": {
+            "pearson_r": 0.04174434479026849,
+            "spearman_rho": 0.2226794058262494
+          },
+          "excessiveParams": {
+            "pearson_r": 1.0,
+            "spearman_rho": 0.9999999999999999
+          }
+        }
+      }
+    },
+    {
+      "label": "VContainer",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-vcontainer-mv2.json",
+      "metrics_version": 3,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 234,
+      "method_count": 575,
+      "method_cogcc_x_line": {
+        "n": 575,
+        "pearson_r": 0.5757529329866751,
+        "pearson_p": 4.5089424107254386e-52,
+        "spearman_rho": 0.44604758943105227,
+        "spearman_p": 1.8512797453951447e-29
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 234,
+        "pearson_r": 0.25283773523343867,
+        "pearson_p": 9.203227118259712e-05,
+        "spearman_rho": 0.6530027321650943,
+        "spearman_p": 7.923331059964129e-30
+      },
+      "type_max_cogcc_x_line": {
+        "n": 234,
+        "pearson_r": 0.32175196858162014,
+        "pearson_p": 4.907516508869119e-07,
+        "spearman_rho": 0.6646356047742131,
+        "spearman_p": 3.363727984815318e-31
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9420798503304773,
+            "spearman_rho": 0.9936565687942669
+          },
+          "lineCount": {
+            "pearson_r": 0.25283773523343867,
+            "spearman_rho": 0.6530027321650943
+          },
+          "methodCount": {
+            "pearson_r": 0.08998621904469037,
+            "spearman_rho": 0.5422503811214759
+          },
+          "maxNesting": {
+            "pearson_r": 0.7217471375710092,
+            "spearman_rho": 0.9138195075713036
+          },
+          "excessiveParams": {
+            "pearson_r": 0.0729135577101408,
+            "spearman_rho": 0.1802183072091276
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.9420798503304773,
+            "spearman_rho": 0.9936565687942669
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9999999999999999,
+            "spearman_rho": 0.9999999999999999
+          },
+          "lineCount": {
+            "pearson_r": 0.32175196858162014,
+            "spearman_rho": 0.6646356047742131
+          },
+          "methodCount": {
+            "pearson_r": 0.19070338630253453,
+            "spearman_rho": 0.5704004363648388
+          },
+          "maxNesting": {
+            "pearson_r": 0.7192475315188004,
+            "spearman_rho": 0.9221849087080156
+          },
+          "excessiveParams": {
+            "pearson_r": 0.09959763181171814,
+            "spearman_rho": 0.1984877090075759
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.25283773523343867,
+            "spearman_rho": 0.6530027321650943
+          },
+          "maxCogCC": {
+            "pearson_r": 0.32175196858162014,
+            "spearman_rho": 0.6646356047742131
+          },
+          "lineCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.8787798120194859,
+            "spearman_rho": 0.7995884604660181
+          },
+          "maxNesting": {
+            "pearson_r": 0.5099498200541057,
+            "spearman_rho": 0.7409614303702945
+          },
+          "excessiveParams": {
+            "pearson_r": 0.19494571148401602,
+            "spearman_rho": 0.16405517639525619
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.08998621904469037,
+            "spearman_rho": 0.5422503811214759
+          },
+          "maxCogCC": {
+            "pearson_r": 0.19070338630253453,
+            "spearman_rho": 0.5704004363648387
+          },
+          "lineCount": {
+            "pearson_r": 0.8787798120194859,
+            "spearman_rho": 0.7995884604660181
+          },
+          "methodCount": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.41418514001170414,
+            "spearman_rho": 0.6576265284685107
+          },
+          "excessiveParams": {
+            "pearson_r": 0.1469051478117713,
+            "spearman_rho": 0.1709034839616393
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.7217471375710092,
+            "spearman_rho": 0.9138195075713036
+          },
+          "maxCogCC": {
+            "pearson_r": 0.7192475315188004,
+            "spearman_rho": 0.9221849087080156
+          },
+          "lineCount": {
+            "pearson_r": 0.5099498200541057,
+            "spearman_rho": 0.7409614303702945
+          },
+          "methodCount": {
+            "pearson_r": 0.41418514001170414,
+            "spearman_rho": 0.6576265284685108
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": 0.17890394740864987,
+            "spearman_rho": 0.18493168569218238
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.0729135577101408,
+            "spearman_rho": 0.18021830720912763
+          },
+          "maxCogCC": {
+            "pearson_r": 0.09959763181171814,
+            "spearman_rho": 0.1984877090075759
+          },
+          "lineCount": {
+            "pearson_r": 0.19494571148401602,
+            "spearman_rho": 0.16405517639525619
+          },
+          "methodCount": {
+            "pearson_r": 0.1469051478117713,
+            "spearman_rho": 0.1709034839616393
+          },
+          "maxNesting": {
+            "pearson_r": 0.17890394740864987,
+            "spearman_rho": 0.18493168569218238
+          },
+          "excessiveParams": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    },
+    {
+      "label": "Unilyze (self)",
+      "json_path": "/Volumes/CrucialX9/dev/worktrees/unilyze/p2c-90/tasks/cross-validation/data/unilyze-self-mv2.json",
+      "metrics_version": 3,
+      "analysis_level": "SyntaxOnly",
+      "type_count": 202,
+      "method_count": 722,
+      "method_cogcc_x_line": {
+        "n": 722,
+        "pearson_r": 0.6448757089874283,
+        "pearson_p": 4.0518578500090115e-86,
+        "spearman_rho": 0.6602829686370622,
+        "spearman_p": 1.3195143854045766e-91
+      },
+      "type_avg_cogcc_x_line": {
+        "n": 202,
+        "pearson_r": 0.557003320243707,
+        "pearson_p": 7.402342426232105e-18,
+        "spearman_rho": 0.829245158702051,
+        "spearman_p": 1.9757047322881282e-52
+      },
+      "type_max_cogcc_x_line": {
+        "n": 202,
+        "pearson_r": 0.6463414504805187,
+        "pearson_p": 2.804662206073006e-25,
+        "spearman_rho": 0.8649436309416539,
+        "spearman_p": 8.535941673152215e-62
+      },
+      "input_matrix": {
+        "avgCogCC": {
+          "avgCogCC": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8738464430952038,
+            "spearman_rho": 0.9615055759125213
+          },
+          "lineCount": {
+            "pearson_r": 0.557003320243707,
+            "spearman_rho": 0.829245158702051
+          },
+          "methodCount": {
+            "pearson_r": 0.42913009479522335,
+            "spearman_rho": 0.8107088797556867
+          },
+          "maxNesting": {
+            "pearson_r": 0.8308116747969004,
+            "spearman_rho": 0.932153229471519
+          },
+          "excessiveParams": {
+            "pearson_r": 0.32926747565966297,
+            "spearman_rho": 0.3574976551002173
+          }
+        },
+        "maxCogCC": {
+          "avgCogCC": {
+            "pearson_r": 0.8738464430952038,
+            "spearman_rho": 0.9615055759125213
+          },
+          "maxCogCC": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "lineCount": {
+            "pearson_r": 0.6463414504805187,
+            "spearman_rho": 0.8649436309416539
+          },
+          "methodCount": {
+            "pearson_r": 0.5815502902338099,
+            "spearman_rho": 0.8688849737578702
+          },
+          "maxNesting": {
+            "pearson_r": 0.8451905205872613,
+            "spearman_rho": 0.9402517734549214
+          },
+          "excessiveParams": {
+            "pearson_r": 0.3284532225111459,
+            "spearman_rho": 0.3367304355625065
+          }
+        },
+        "lineCount": {
+          "avgCogCC": {
+            "pearson_r": 0.557003320243707,
+            "spearman_rho": 0.829245158702051
+          },
+          "maxCogCC": {
+            "pearson_r": 0.6463414504805187,
+            "spearman_rho": 0.8649436309416539
+          },
+          "lineCount": {
+            "pearson_r": 0.9999999999999998,
+            "spearman_rho": 1.0
+          },
+          "methodCount": {
+            "pearson_r": 0.8801964536422499,
+            "spearman_rho": 0.9060331502359745
+          },
+          "maxNesting": {
+            "pearson_r": 0.6742149830399863,
+            "spearman_rho": 0.8585494028630498
+          },
+          "excessiveParams": {
+            "pearson_r": 0.3505912250449586,
+            "spearman_rho": 0.3760077721631907
+          }
+        },
+        "methodCount": {
+          "avgCogCC": {
+            "pearson_r": 0.42913009479522335,
+            "spearman_rho": 0.8107088797556867
+          },
+          "maxCogCC": {
+            "pearson_r": 0.5815502902338099,
+            "spearman_rho": 0.8688849737578702
+          },
+          "lineCount": {
+            "pearson_r": 0.8801964536422499,
+            "spearman_rho": 0.9060331502359744
+          },
+          "methodCount": {
+            "pearson_r": 0.9999999999999999,
+            "spearman_rho": 1.0
+          },
+          "maxNesting": {
+            "pearson_r": 0.6475929087651133,
+            "spearman_rho": 0.8724087955094648
+          },
+          "excessiveParams": {
+            "pearson_r": 0.19293607856528672,
+            "spearman_rho": 0.3256775736452306
+          }
+        },
+        "maxNesting": {
+          "avgCogCC": {
+            "pearson_r": 0.8308116747969004,
+            "spearman_rho": 0.932153229471519
+          },
+          "maxCogCC": {
+            "pearson_r": 0.8451905205872613,
+            "spearman_rho": 0.9402517734549213
+          },
+          "lineCount": {
+            "pearson_r": 0.6742149830399863,
+            "spearman_rho": 0.8585494028630498
+          },
+          "methodCount": {
+            "pearson_r": 0.6475929087651133,
+            "spearman_rho": 0.8724087955094648
+          },
+          "maxNesting": {
+            "pearson_r": 1.0,
+            "spearman_rho": 1.0
+          },
+          "excessiveParams": {
+            "pearson_r": 0.28830320080077426,
+            "spearman_rho": 0.30997552264081873
+          }
+        },
+        "excessiveParams": {
+          "avgCogCC": {
+            "pearson_r": 0.32926747565966297,
+            "spearman_rho": 0.35749765510021736
+          },
+          "maxCogCC": {
+            "pearson_r": 0.3284532225111459,
+            "spearman_rho": 0.3367304355625065
+          },
+          "lineCount": {
+            "pearson_r": 0.3505912250449586,
+            "spearman_rho": 0.3760077721631907
+          },
+          "methodCount": {
+            "pearson_r": 0.19293607856528672,
+            "spearman_rho": 0.32567757364523064
+          },
+          "maxNesting": {
+            "pearson_r": 0.28830320080077426,
+            "spearman_rho": 0.30997552264081873
+          },
+          "excessiveParams": {
+            "pearson_r": 0.9999999999999996,
+            "spearman_rho": 1.0
+          }
+        }
+      }
+    }
+  ],
+  "legacy_pooled": {
+    "label": "legacy pooled",
+    "type_count": 1579,
+    "method_count": 7368,
+    "method_cogcc_x_line": {
+      "n": 7368,
+      "pearson_r": 0.9035541383939083,
+      "pearson_p": 0.0,
+      "spearman_rho": 0.8156402270041483,
+      "spearman_p": 0.0
+    },
+    "type_avg_cogcc_x_line": {
+      "n": 1579,
+      "pearson_r": 0.3749892722972931,
+      "pearson_p": 6.816300095696934e-54,
+      "spearman_rho": 0.5491858625084912,
+      "spearman_p": 4.3279378562581187e-125
+    },
+    "type_max_cogcc_x_line": {
+      "n": 1579,
+      "pearson_r": 0.4714809203747786,
+      "pearson_p": 3.4387650172834553e-88,
+      "spearman_rho": 0.5850305553293557,
+      "spearman_p": 1.1766255835186823e-145
+    },
+    "input_matrix": {
+      "avgCogCC": {
+        "avgCogCC": {
+          "pearson_r": 1.0,
+          "spearman_rho": 0.9999999999999999
+        },
+        "maxCogCC": {
+          "pearson_r": 0.8441021559388422,
+          "spearman_rho": 0.9790937661468136
+        },
+        "lineCount": {
+          "pearson_r": 0.3749892722972931,
+          "spearman_rho": 0.5491858625084912
+        },
+        "methodCount": {
+          "pearson_r": 0.05949358262939125,
+          "spearman_rho": 0.5766537239102019
+        },
+        "maxNesting": {
+          "pearson_r": 0.7205608673207314,
+          "spearman_rho": 0.9497387169137143
+        },
+        "excessiveParams": {
+          "pearson_r": -0.0014681588481571346,
+          "spearman_rho": 0.1410532197482132
+        }
+      },
+      "maxCogCC": {
+        "avgCogCC": {
+          "pearson_r": 0.8441021559388422,
+          "spearman_rho": 0.9790937661468136
+        },
+        "maxCogCC": {
+          "pearson_r": 1.0,
+          "spearman_rho": 1.0
+        },
+        "lineCount": {
+          "pearson_r": 0.4714809203747786,
+          "spearman_rho": 0.5850305553293557
+        },
+        "methodCount": {
+          "pearson_r": 0.1085768212675201,
+          "spearman_rho": 0.6477281010126551
+        },
+        "maxNesting": {
+          "pearson_r": 0.7009349720689069,
+          "spearman_rho": 0.969698158791813
+        },
+        "excessiveParams": {
+          "pearson_r": 0.005056041132995874,
+          "spearman_rho": 0.16208740904227845
+        }
+      },
+      "lineCount": {
+        "avgCogCC": {
+          "pearson_r": 0.3749892722972931,
+          "spearman_rho": 0.5491858625084912
+        },
+        "maxCogCC": {
+          "pearson_r": 0.4714809203747786,
+          "spearman_rho": 0.5850305553293557
+        },
+        "lineCount": {
+          "pearson_r": 1.0,
+          "spearman_rho": 1.0
+        },
+        "methodCount": {
+          "pearson_r": 0.14029449261814597,
+          "spearman_rho": 0.6382725577418827
+        },
+        "maxNesting": {
+          "pearson_r": 0.23983828814567784,
+          "spearman_rho": 0.5692881899359341
+        },
+        "excessiveParams": {
+          "pearson_r": 0.06254164913762833,
+          "spearman_rho": 0.17242170540024723
+        }
+      },
+      "methodCount": {
+        "avgCogCC": {
+          "pearson_r": 0.05949358262939125,
+          "spearman_rho": 0.5766537239102019
+        },
+        "maxCogCC": {
+          "pearson_r": 0.1085768212675201,
+          "spearman_rho": 0.6477281010126552
+        },
+        "lineCount": {
+          "pearson_r": 0.14029449261814597,
+          "spearman_rho": 0.6382725577418829
+        },
+        "methodCount": {
+          "pearson_r": 0.9999999999999999,
+          "spearman_rho": 1.0
+        },
+        "maxNesting": {
+          "pearson_r": 0.12926220670824168,
+          "spearman_rho": 0.6336769246885611
+        },
+        "excessiveParams": {
+          "pearson_r": 0.8552008638564206,
+          "spearman_rho": 0.2243877994353715
+        }
+      },
+      "maxNesting": {
+        "avgCogCC": {
+          "pearson_r": 0.7205608673207314,
+          "spearman_rho": 0.9497387169137143
+        },
+        "maxCogCC": {
+          "pearson_r": 0.7009349720689069,
+          "spearman_rho": 0.969698158791813
+        },
+        "lineCount": {
+          "pearson_r": 0.23983828814567784,
+          "spearman_rho": 0.5692881899359341
+        },
+        "methodCount": {
+          "pearson_r": 0.12926220670824168,
+          "spearman_rho": 0.6336769246885612
+        },
+        "maxNesting": {
+          "pearson_r": 1.0,
+          "spearman_rho": 1.0
+        },
+        "excessiveParams": {
+          "pearson_r": 0.04005600336711459,
+          "spearman_rho": 0.13824476550910855
+        }
+      },
+      "excessiveParams": {
+        "avgCogCC": {
+          "pearson_r": -0.0014681588481571346,
+          "spearman_rho": 0.14105321974821322
+        },
+        "maxCogCC": {
+          "pearson_r": 0.005056041132995874,
+          "spearman_rho": 0.16208740904227845
+        },
+        "lineCount": {
+          "pearson_r": 0.06254164913762833,
+          "spearman_rho": 0.17242170540024723
+        },
+        "methodCount": {
+          "pearson_r": 0.8552008638564206,
+          "spearman_rho": 0.2243877994353715
+        },
+        "maxNesting": {
+          "pearson_r": 0.04005600336711459,
+          "spearman_rho": 0.13824476550910855
+        },
+        "excessiveParams": {
+          "pearson_r": 0.9999999999999993,
+          "spearman_rho": 0.9999999999999998
+        }
+      }
+    }
+  },
+  "mv2_pooled": {
+    "label": "mv2 pooled",
+    "type_count": 1456,
+    "method_count": 6157,
+    "method_cogcc_x_line": {
+      "n": 6157,
+      "pearson_r": 0.8586338790879474,
+      "pearson_p": 0.0,
+      "spearman_rho": 0.7749420900994873,
+      "spearman_p": 0.0
+    },
+    "type_avg_cogcc_x_line": {
+      "n": 1456,
+      "pearson_r": 0.28359935023020166,
+      "pearson_p": 2.4612808767306255e-28,
+      "spearman_rho": 0.6438075174751309,
+      "spearman_p": 3.2349618438861725e-171
+    },
+    "type_max_cogcc_x_line": {
+      "n": 1456,
+      "pearson_r": 0.3544863022825466,
+      "pearson_p": 2.346121662008396e-44,
+      "spearman_rho": 0.6899223418122362,
+      "spearman_p": 2.75179706649045e-206
+    },
+    "input_matrix": {
+      "avgCogCC": {
+        "avgCogCC": {
+          "pearson_r": 1.0,
+          "spearman_rho": 0.9999999999999999
+        },
+        "maxCogCC": {
+          "pearson_r": 0.8190595574169603,
+          "spearman_rho": 0.9791461698932235
+        },
+        "lineCount": {
+          "pearson_r": 0.28359935023020166,
+          "spearman_rho": 0.6438075174751309
+        },
+        "methodCount": {
+          "pearson_r": 0.07609088629667227,
+          "spearman_rho": 0.5811218718855868
+        },
+        "maxNesting": {
+          "pearson_r": 0.7271555842628918,
+          "spearman_rho": 0.944223663966574
+        },
+        "excessiveParams": {
+          "pearson_r": 0.020626037998569314,
+          "spearman_rho": 0.18938128286604503
+        }
+      },
+      "maxCogCC": {
+        "avgCogCC": {
+          "pearson_r": 0.8190595574169603,
+          "spearman_rho": 0.9791461698932235
+        },
+        "maxCogCC": {
+          "pearson_r": 1.0,
+          "spearman_rho": 0.9999999999999999
+        },
+        "lineCount": {
+          "pearson_r": 0.3544863022825466,
+          "spearman_rho": 0.6899223418122361
+        },
+        "methodCount": {
+          "pearson_r": 0.14511190676319075,
+          "spearman_rho": 0.6554712711231143
+        },
+        "maxNesting": {
+          "pearson_r": 0.6865420488467946,
+          "spearman_rho": 0.9630869427359464
+        },
+        "excessiveParams": {
+          "pearson_r": 0.02129717556446882,
+          "spearman_rho": 0.20463334039164421
+        }
+      },
+      "lineCount": {
+        "avgCogCC": {
+          "pearson_r": 0.28359935023020166,
+          "spearman_rho": 0.6438075174751309
+        },
+        "maxCogCC": {
+          "pearson_r": 0.3544863022825466,
+          "spearman_rho": 0.6899223418122362
+        },
+        "lineCount": {
+          "pearson_r": 0.9999999999999998,
+          "spearman_rho": 1.0
+        },
+        "methodCount": {
+          "pearson_r": 0.7099717359038189,
+          "spearman_rho": 0.746510280587012
+        },
+        "maxNesting": {
+          "pearson_r": 0.23727224011903061,
+          "spearman_rho": 0.6784062667472658
+        },
+        "excessiveParams": {
+          "pearson_r": 0.5792794376288997,
+          "spearman_rho": 0.23412929820401995
+        }
+      },
+      "methodCount": {
+        "avgCogCC": {
+          "pearson_r": 0.07609088629667227,
+          "spearman_rho": 0.5811218718855868
+        },
+        "maxCogCC": {
+          "pearson_r": 0.14511190676319075,
+          "spearman_rho": 0.6554712711231143
+        },
+        "lineCount": {
+          "pearson_r": 0.7099717359038189,
+          "spearman_rho": 0.746510280587012
+        },
+        "methodCount": {
+          "pearson_r": 1.0,
+          "spearman_rho": 1.0
+        },
+        "maxNesting": {
+          "pearson_r": 0.16630990067380785,
+          "spearman_rho": 0.6508409342679128
+        },
+        "excessiveParams": {
+          "pearson_r": 0.8505050714671188,
+          "spearman_rho": 0.24014486743466992
+        }
+      },
+      "maxNesting": {
+        "avgCogCC": {
+          "pearson_r": 0.7271555842628918,
+          "spearman_rho": 0.944223663966574
+        },
+        "maxCogCC": {
+          "pearson_r": 0.6865420488467946,
+          "spearman_rho": 0.9630869427359465
+        },
+        "lineCount": {
+          "pearson_r": 0.23727224011903061,
+          "spearman_rho": 0.6784062667472659
+        },
+        "methodCount": {
+          "pearson_r": 0.16630990067380785,
+          "spearman_rho": 0.6508409342679129
+        },
+        "maxNesting": {
+          "pearson_r": 0.9999999999999997,
+          "spearman_rho": 1.0
+        },
+        "excessiveParams": {
+          "pearson_r": 0.039669221607193966,
+          "spearman_rho": 0.18696239696126649
+        }
+      },
+      "excessiveParams": {
+        "avgCogCC": {
+          "pearson_r": 0.020626037998569314,
+          "spearman_rho": 0.18938128286604503
+        },
+        "maxCogCC": {
+          "pearson_r": 0.02129717556446882,
+          "spearman_rho": 0.20463334039164421
+        },
+        "lineCount": {
+          "pearson_r": 0.5792794376288997,
+          "spearman_rho": 0.23412929820401995
+        },
+        "methodCount": {
+          "pearson_r": 0.8505050714671188,
+          "spearman_rho": 0.24014486743466992
+        },
+        "maxNesting": {
+          "pearson_r": 0.039669221607193966,
+          "spearman_rho": 0.18696239696126649
+        },
+        "excessiveParams": {
+          "pearson_r": 0.9999999999999993,
+          "spearman_rho": 1.0
+        }
+      }
+    }
+  }
+}

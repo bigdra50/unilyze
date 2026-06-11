@@ -49,7 +49,7 @@ NuGet publish ([`.github/workflows/publish.yml`](.github/workflows/publish.yml))
 
 | Tag kind | Example | Purpose |
 |----------|---------|---------|
-| NuGet release | `v0.3.0` | Immutable; must match `<Version>` in the csproj |
+| NuGet release | `v0.3.0` | Immutable semver tag; package version is derived from the tag via MinVer |
 | Action release (immutable) | `action-v1.0.0` | Pin a specific action revision for Marketplace |
 | Action major (floating) | `v1` | Consumer default (`uses: bigdra50/unilyze@v1`); moved on each action release |
 
@@ -193,19 +193,22 @@ Related files:
 5. Confirm HTML fallback and `--no-open` are not broken
 6. Apply the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
 7. If you changed a metric-calculation file, verify the `metricsVersion` bump (`AnalysisResult.CurrentMetricsVersion`) and CHANGELOG `[metrics]` entry
-8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into the new version section, set the release date, and prefix `[metrics]` entries per the tag convention)
+8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into a new `## [X.Y.Z]` section and set the release date). The publish workflow fails if this section is missing for the tagged version.
 
 ## NuGet Publish
 
-Publishing is done via GitHub Actions. Local API key storage is not assumed.
+Publishing is automated on semver tag push. Local API key storage is not assumed.
 
 Set the repository secret `NUGET_API_KEY` beforehand.
 
 Publish procedure:
 
 1. Ensure the `CI` workflow is green on the target commit
-2. Manually trigger the `Publish NuGet` workflow from Actions
-3. The workflow runs `net10.0` test, pack, release smoke, and `dotnet nuget push` in sequence
+2. Update `CHANGELOG.md` (Release Checklist step 8)
+3. Create and push a semver tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
+4. The `Publish NuGet` workflow runs `net10.0` test, pack, release smoke, `dotnet nuget push`, and creates a GitHub Release whose body is the matching `CHANGELOG.md` section
+
+Dry-run (no NuGet push, no GitHub Release): manually trigger the `Publish NuGet` workflow from Actions (`workflow_dispatch`).
 
 Publish workflow:
 

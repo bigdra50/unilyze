@@ -694,6 +694,20 @@ unilyze calibrate <dir-of-jsons> [-o thresholds.json]
 
 Alves 原論文は約 100 システムのベンチマークを使用する。unilyze の検証用 Unity OSS コーパス（HelloMarioFramework、Boss Room、UniTask、VContainer 等）は規模が小さく、導出値は暫定的な候補として扱う。コーパス拡大時は同一手順で再実行すること。
 
+## アセンブリマッピング
+
+アセンブリ粒度メトリクス（Abstractness、Instability、Distance from Main Sequence、Relational Cohesion、アセンブリ循環）は、解析対象をアセンブリ単位に分割したうえで集計する。
+
+| プロジェクト種別 | 分割単位 | 依存エッジ |
+|------------------|----------|------------|
+| Unity | `.asmdef` の `name`（`Assets/` 配下） | asmdef `references`（GUID 解決） |
+| 一般 .NET（asmdef なし、Unity 以外） | 発見した各 `.csproj` のファイル名（拡張子なし） | `ProjectReference` |
+| Unity で asmdef なし / csproj もなし | 単一の `Assembly-CSharp` | なし |
+
+入れ子 csproj ディレクトリは、親アセンブリの `ExcludeDirectories` に子 csproj ディレクトリを追加し、各 `.cs` ファイルが 1 アセンブリにのみ属するようにする（asmdef の入れ子と同じ方式）。すべての csproj ディレクトリ外に loose な `.cs` がある場合は、`Assembly-CSharp` フォールバックを追加する。
+
+`typeId` は `{assembly}::{namespace.path}` 形式のため、一般 .NET リポジトリでは csproj マッピング導入後に assembly プレフィックスが変わる（例: `Assembly-CSharp::Foo.Bar` → `MyApp::Foo.Bar`）。Unity（asmdef あり）と csproj/asmdef 皆無のパスでは従来どおり。
+
 ## メトリクス互換性ポリシー
 
 計測値を変える bugfix が patch リリースで複数回入った経緯がある（分解 foreach のカウント漏れ修正、MI 平均の分母から無メソッド型を除外、DIT の `I[A-Z]` ヒューリスティック廃止など）。
