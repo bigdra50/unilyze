@@ -21,10 +21,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\THIRD-PARTY-NOTICES.txt" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Skills\**\*" LogicalName="Skills/%(RecursiveDir)%(Filename)%(Extension)" />
     <EmbeddedResource Include="Templates\viewer.html" LogicalName="Unilyze.Templates.viewer.html" />
+    <!-- Bundled vendor JS (offline graph): cytoscape.min.js v3.30.4 SHA256 1bb5340e549511e111b31e5684872c949ad33d40ea5dba0ad8e7d90c62c7b3b9 MIT -->
+    <EmbeddedResource Include="Templates\vendor\cytoscape.min.js" LogicalName="Unilyze.Templates.vendor.cytoscape.min.js" />
+    <!-- dagre.min.js v0.8.5 SHA256 62eb9787ccfdbdf4148d4d99d31dbf9ee4770eafee81e637d759b52aac22cd51 MIT -->
+    <EmbeddedResource Include="Templates\vendor\dagre.min.js" LogicalName="Unilyze.Templates.vendor.dagre.min.js" />
+    <!-- cytoscape-dagre.js v2.5.0 SHA256 bf70fe402991dcbff33e05a7e4a5271c78020bb75e85d1c80ab7538e4157112e MIT -->
+    <EmbeddedResource Include="Templates\vendor\cytoscape-dagre.js" LogicalName="Unilyze.Templates.vendor.cytoscape-dagre.js" />
     <EmbeddedResource Include="Resources\*.txt" LogicalName="Unilyze.Resources.%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>

@@ -30,6 +30,26 @@ public sealed class HtmlFormatterTests
     }
 
     [Fact]
+    public void Generate_BundlesVendorScriptsOffline()
+    {
+        var result = MakeEmptyResult();
+        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath);
+
+        Assert.DoesNotContain("__VENDOR_SCRIPTS__", html);
+        Assert.Contains("The Cytoscape Consortium", html);
+        Assert.Contains("<!-- Cytoscape.js 3.30.4", html);
+        Assert.Contains("<!-- dagre 0.8.5", html);
+        Assert.Contains("<!-- cytoscape-dagre 2.5.0", html);
+        Assert.DoesNotContain("unpkg.com/cytoscape@", html);
+        Assert.DoesNotContain("unpkg.com/dagre@", html);
+        Assert.DoesNotContain("unpkg.com/cytoscape-dagre@", html);
+        Assert.Contains("unpkg.com/elkjs@", html);
+        Assert.Contains("unpkg.com/cytoscape-elk@", html);
+    }
+
+    [Fact]
     public void GenerateWithDiff_EmbedsDiffData()
     {
         var before = MakeResultWithType(codeHealth: 8.0, maxCogCC: 5);

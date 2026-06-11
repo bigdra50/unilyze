@@ -322,7 +322,7 @@ Endpoints that resolve to a type outside the analyzed set (e.g. a framework type
 
 | Format | Use Case |
 |--------|----------|
-| `html` | Interactive dependency graph in browser (offline fallback included) |
+| `html` | Interactive dependency graph in browser (Cytoscape+dagre bundled; ELK layout via CDN) |
 | `json` | Agent integration, programmatic use |
 | `sarif` | GitHub Code Scanning, IDE integration |
 
@@ -393,7 +393,7 @@ unilyze schema    # JSON field reference
 
 ## Known Limitations
 
-- HTML graph loads Cytoscape from CDN. Falls back to offline report when unavailable.
+- HTML graph works offline (Cytoscape and dagre are bundled). ELK layout requires CDN and falls back to dagre when unavailable.
 - Windows is covered by CI (windows-latest, net10.0).
 
 ## License

@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- HTML viewer bundles Cytoscape.js, dagre, and cytoscape-dagre for full offline graph support; ELK layout remains CDN-only with dagre fallback ([#74](https://github.com/bigdra50/unilyze/issues/74))
+- `THIRD-PARTY-NOTICES.txt` at repo root documenting bundled MIT libraries and CDN-only dependencies ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - Diff overlay now works in graph mode: changed types get bucket halos, the tap panel shows baseline sections, and `Changed only` filters graph nodes ([#73](https://github.com/bigdra50/unilyze/issues/73))
 - `diff --changed-only` filters JSON output to changed type buckets (added/removed/degraded/improved) plus the aggregate summary, omitting unchanged types ([#38](https://github.com/bigdra50/unilyze/issues/38))
 - `diff -f markdown` output for PR comments and GITHUB_STEP_SUMMARY ([#37](https://github.com/bigdra50/unilyze/issues/37))
