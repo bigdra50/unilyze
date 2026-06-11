@@ -113,6 +113,20 @@ hotspot (unilyze hotspot):
     .codeHealth                        float    CodeHealth score
     .hotspotScore                      float    changeCount * (10.0 - codeHealth)
 
+calibrate (unilyze calibrate):
+  .methodology                         string   Alves 2010 weighted-percentile procedure summary
+  .metricsVersion                      int      metricsVersion shared by input snapshots
+  .toolVersion                         string   unilyze version that produced this report
+  .sources[]                           object   Input snapshot provenance
+    .fileName                          string   Snapshot file name
+    .projectPath                       string   Original analyzed project path
+    .methodCount                       int      Method count in snapshot
+    .typeCount                         int      Type count in snapshot
+    .totalMethodLoc                    int      Sum of method LOC in snapshot
+  .riskCategories                      object   low / moderate / high / veryHigh labels
+  .metrics                             object   Per-metric percentile thresholds and risk bands
+  .unilyzeConfigFragment               object   Ready-to-apply smells overrides for .unilyze.json
+
 trend (unilyze trend):
   .snapshots[]                         object   Per-snapshot data
     .analyzedAt                        string   Timestamp

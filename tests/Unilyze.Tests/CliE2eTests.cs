@@ -954,6 +954,113 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Calibrate_Help_ExitsZero()
+    {
+        var (exitCode, stdout, _) = Run("calibrate", "--help");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("unilyze calibrate", stdout);
+        Assert.Contains("dir-of-jsons", stdout);
+    }
+
+    [Fact]
+    public void Calibrate_UnknownSubcommand_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("calibrated");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown subcommand: 'calibrated'", stderr);
+        Assert.Contains("Did you mean 'calibrate'?", stderr);
+    }
+
+    [Fact]
+    public void Calibrate_UnknownOption_ExitsUsageError()
+    {
+        var (exitCode, _, stderr) = Run("calibrate", _tempDir, "--bogus");
+        Assert.Equal(1, exitCode);
+        Assert.Contains("Unknown option: '--bogus'", stderr);
+    }
+
+    [Fact]
+    public void Calibrate_HappyPath_ExitsZero()
+    {
+        WriteCalibrateSnapshot("a.json", "system-a", 10, 4, 2);
+        WriteCalibrateSnapshot("b.json", "system-b", 20, 8, 3);
+
+        var (exitCode, stdout, stderr) = Run("calibrate", _tempDir);
+        Assert.Equal(0, exitCode);
+        Assert.Contains("methodology", stdout);
+        Assert.Contains("riskCategories", stdout);
+        Assert.Contains("unilyzeConfigFragment", stdout);
+        Assert.Contains("Calibration:", stderr);
+        Assert.Contains("LongMethod (LOC)", stderr);
+    }
+
+    [Fact]
+    public void Calibrate_MetricsVersionMismatch_ExitsUsageError()
+    {
+        WriteCalibrateSnapshot("current.json", "current", 10, 4, 2);
+        WriteCalibrateSnapshot("older.json", "older", 20, 8, 3, metricsVersion: 2);
+
+        var (exitCode, _, stderr) = Run("calibrate", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("metricsVersion mismatch", stderr);
+    }
+
+    [Fact]
+    public void Calibrate_TooFewSnapshots_ExitsUsageError()
+    {
+        WriteCalibrateSnapshot("only.json", "only", 10, 4, 2);
+
+        var (exitCode, _, stderr) = Run("calibrate", _tempDir);
+        Assert.Equal(1, exitCode);
+        Assert.Contains("At least two JSON snapshots are required", stderr);
+    }
+
+    void WriteCalibrateSnapshot(
+        string fileName,
+        string projectPath,
+        int methodLoc,
+        int cycCc,
+        int cogCc,
+        int metricsVersion = AnalysisResult.CurrentMetricsVersion)
+    {
+        var typeMetrics = new[]
+        {
+            new TypeMetrics(
+                "SampleType",
+                "Sample",
+                "SampleAsm",
+                methodLoc * 2,
+                1,
+                1,
+                cogCc,
+                cogCc,
+                cycCc,
+                cycCc,
+                0,
+                8.0,
+                [
+                    new MethodMetrics("Run", cogCc, cycCc, 1, 2, methodLoc),
+                ]),
+        };
+
+        var snapshot = new AnalysisResult(
+            projectPath,
+            DateTimeOffset.UtcNow,
+            [],
+            [],
+            [],
+            typeMetrics,
+            MetricsVersion: metricsVersion,
+            ToolVersion: "test");
+
+        var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        });
+        File.WriteAllText(Path.Combine(_tempDir, fileName), json);
+    }
+
+    [Fact]
     public void Statusline_UnknownSubcommand_ExitsUsageError()
     {
         var (exitCode, _, stderr) = Run("statuslin", "-p", ".");
