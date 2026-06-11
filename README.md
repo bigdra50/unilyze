@@ -4,7 +4,7 @@
 [![Code Health](https://raw.githubusercontent.com/bigdra50/unilyze/badges/codehealth.svg)](./docs/metrics.md)
 [![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
 
-A CLI tool for static analysis and visualization of type dependencies and code quality in Unity projects.
+**Free, zero-setup static analysis for Unity — agent-first by design.** unilyze runs on `.cs` files and `.asmdef` alone (no MSBuild/sln required), computes churn × complexity hotspots from git history, and ships skills plus a self-documenting CLI (`metrics`, `schema`, `query`) for AI coding workflows. General C# projects are supported via `.csproj` discovery and semantic analysis when a solution is present.
 
 For build, test, and release information, see [README.dev.md](README.dev.md).
 
@@ -18,7 +18,7 @@ Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyz
 
 - .NET 8.0 or later
 
-**.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+**.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
 
 ## Quick Start
 
@@ -48,302 +48,132 @@ unilyze                                          # Analyze and open in browser
 unilyze -p ~/MyUnityProject                      # Specify project path
 unilyze -p ~/MyUnityProject -o graph.html        # Save HTML + JSON
 unilyze -p ~/MyUnityProject -f json -o result.json  # JSON output
-unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (GitHub Code Scanning)
-unilyze -p ~/MyUnityProject --level core         # Pin analysis level (see Analysis Levels)
+unilyze -p ~/MyUnityProject -f sarif -o report.sarif # SARIF (stable fingerprints)
+unilyze -p ~/MyUnityProject --profile unity      # Unity role-aware smell thresholds
+unilyze -p ~/MyUnityProject --baseline .unilyze/baseline.json  # Suppress known smells
+unilyze -p ~/MyUnityProject --level core         # Pin analysis level
 ```
 
 ### Subcommands
 
 ```bash
 unilyze config list                                # Show/manage configuration
+unilyze baseline create -p .                       # Snapshot smells for zero-new-violations
 unilyze diff <before.json> <after.json>            # Compare snapshots (JSON)
-unilyze diff --base-ref origin/main after.json     # Diff against a git ref (temp worktree)
-unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (interactive HTML)
-unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity (see [tutorial](./docs/tutorials/continuous-refactoring.md))
-unilyze trend <dir-of-jsons>                       # Quality trend (see [tutorial](./docs/tutorials/continuous-refactoring.md))
+unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
+unilyze diff <before.json> <after.json> -o diff.html --changed-only
+unilyze hotspot -p ~/MyUnityProject                # Git churn × complexity
+unilyze trend <dir-of-jsons>                       # Quality trend across snapshots
+unilyze query --worst 5 -i snapshot.json           # Per-type evidence packs
+unilyze calibrate <dir-of-jsons> -o thresholds.json  # Derive threshold candidates
 unilyze statusline -p ~/MyUnityProject             # Compact summary for status line
-unilyze badge -p ~/MyUnityProject -o badge.json    # shields.io endpoint JSON (CI badges)
+unilyze badge -p ~/MyUnityProject -o badge.json    # shields.io endpoint JSON
 unilyze metrics                                    # Metric definitions & thresholds
 unilyze schema                                     # JSON field reference
+unilyze skills install --claude --cursor           # Install agent skills
 ```
 
-Run `unilyze --help` for all options.
+Run `unilyze --help` for all options. JSON output includes `projectKind` (`unity` | `dotnet`) and `profile`.
 
-**Exit codes** (all commands): `0` success / gate passed, `1` usage error (unknown subcommand or option, invalid argument, missing file, etc.), `2` quality gate failed (`badge` with `--fail-under` / `--fail-over`, or `diff` with `--fail-on-regression`). Unknown subcommands and options print a one-line error to stderr; a close match may suggest `Did you mean '…'?`.
+**Exit codes** (all commands): `0` success / gate passed, `1` usage error, `2` quality gate failed (`badge` with `--fail-under` / `--fail-over`, or `diff` with `--fail-on-regression`).
 
 ### Status Line Integration
 
-`unilyze statusline` outputs a compact one-line code health summary for use with [Claude Code's status line](https://docs.anthropic.com/en/docs/claude-code/statusline):
-
-```
-CH:9.8/5.9 MI:52 111smells 🔴1 📦66
-```
-
-| Item | Description |
-|------|-------------|
-| `CH:avg/min` | Average and minimum Code Health (1.0-10.0) |
-| `MI:n` | Average Maintainability Index over method-bearing types (green >=80, yellow >=60, red <60) |
-| `Nsmells` | Warning-level code smells |
-| `🔴N` | Critical-level code smells (hidden if 0) |
-| `📦N` | Boxing allocations (hidden if 0) |
-| `♻N` | Cyclic dependencies (hidden if 0) |
-| `[level]` | Analysis level marker, shown only below `Complete` (`[syntax]` / `[core]` / `[full]`) |
-
-Results are cached per project (default 60s). Run `unilyze statusline --help` for the platform cache directory. Add to `~/.claude/statusline.sh`:
-
-```bash
-# Unilyze Code Health (Unity projects only)
-if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; then
-    unilyze statusline -p "$PROJECT_DIR" --background-refresh
-fi
-```
+`unilyze statusline` outputs a one-line code health summary (e.g. `CH:9.8/5.9 MI:52 111smells 🔴1 📦66`). Use `--background-refresh` for non-blocking updates in Claude Code's status bar. Details: [docs/statusline.md](./docs/statusline.md).
 
 ### Badges
 
-See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) for an end-to-end PR gate walkthrough.
-
-`unilyze badge` outputs [shields.io endpoint JSON](https://shields.io/badges/endpoint-badge) so you can show code quality badges in your README:
-
 ```bash
-unilyze badge -p ~/MyUnityProject                  # code health (default)
-unilyze badge -p ~/MyUnityProject --metric mi      # maintainability index
-unilyze badge -p ~/MyUnityProject --metric smells  # code smell count
-unilyze badge -p ~/MyUnityProject --format svg -o .github/badges/codehealth.svg
+unilyze badge -p . --metric codehealth --fail-under 7   # CI gate example
+unilyze badge -p . --format svg -o .github/badges/codehealth.svg
 ```
 
-Use `--format svg` to emit a shields.io-style flat SVG badge instead of endpoint JSON. Commit the generated file and reference it from your README with a relative path.
+See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) and [docs/ci-integration.md](./docs/ci-integration.md) for endpoint vs SVG badges, quality-gate semantics, GitHub Actions, and diff regression gates.
 
 #### Private repositories
 
-The shields.io endpoint approach does not work in private repositories: GitHub's camo proxy and shields.io cannot fetch the raw JSON URL from an authenticated-only repo. Instead, generate the SVG with `unilyze badge --format svg`, commit it into the repository (for example under `.github/badges/`), and reference it from your README via a relative path. Authenticated viewers see the badge rendered inline without going through camo or an external fetch.
-
-```markdown
-![Code Health](.github/badges/codehealth.svg)
-```
-
-| Metric | Label | Message | Color |
-|--------|-------|---------|-------|
-| `codehealth` | `code health` | `avg / min` (e.g. `9.2 / 6.1`) | by min: green >=8.0, yellow >=5.0, red below |
-| `mi` | `maintainability` | average MI (method-bearing types) | green >=80, yellow >=60, red below |
-| `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
-
-#### Quality gates
-
-`unilyze badge` can act as a CI gate. Without these flags the output is unchanged and the exit code stays `0`.
-
-```bash
-unilyze badge --metric codehealth --fail-under 7   # fail if min CodeHealth < 7
-unilyze badge --metric mi --fail-under 70          # fail if average MI < 70
-unilyze badge --metric smells --fail-over 5        # fail if warnings > 5 (or any critical)
-```
-
-| Flag | Valid metrics | Fails when |
-|------|---------------|-----------|
-| `--fail-under <value>` | `codehealth`, `mi` | min CodeHealth (codehealth) or average MI (mi) is strictly below `value` |
-| `--fail-over <count>` | `smells` | warning count is strictly above `count`, or any critical smell exists |
-
-Thresholds are inclusive: values exactly at the threshold pass. Only a value strictly below `--fail-under`, or a warning count strictly above `--fail-over`, fails the gate. Mismatched combinations (e.g. `--fail-under` with `--metric smells`) are a usage error.
-
-The gate is fail-closed: if the metric is unavailable (0 types analyzed, or no method-bearing types for `mi`), the gate exits `2` with `gate failed: metric unavailable (...)` rather than passing. This catches a mistyped `-p` path that would otherwise produce a false green.
-
-Exit codes: `0` success / gate passed, `1` usage error, `2` quality gate failed.
-
-In CI the analysis runs at the SyntaxOnly level (no Unity installation required). Code health and MI are approximately stable across analysis levels (averages match in validation; min values can shift where `#if UNITY_EDITOR` code is excluded at SyntaxOnly). Smell counts are level-dependent: at SyntaxOnly only the syntax-level subset is reported (semantic smells such as boxing are not included), so smell badges are not comparable across levels. See [docs/metrics.md](./docs/metrics.md) for validation data.
+Generate SVG with `unilyze badge --format svg`, commit under `.github/badges/`, and reference via a relative path — shields.io endpoints do not work in private repos. See [docs/ci-integration.md#private-repositories](./docs/ci-integration.md#private-repositories).
 
 ### GitHub Action
 
-Use the official composite action instead of copy-pasting workflow YAML:
-
 ```yaml
-# .github/workflows/unilyze.yml
-name: Unilyze
-on:
-  pull_request:
-  push:
-    branches: [main]
-
-permissions:
-  contents: read
-  # Required only when uploading SARIF in a follow-up step:
-  # security-events: write
-
-jobs:
-  quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0   # required when base-ref is set
-
-      - uses: bigdra50/unilyze@v1
-        id: unilyze
-        with:
-          project-path: .
-          metric: codehealth
-          fail-under: "7.0"
-          base-ref: origin/main          # optional diff regression gate
-          fail-on-regression: "true"
-          baseline: .unilyze/baseline.json  # optional brownfield baseline
-          sarif: "false"                   # set true and upload sarif-path in a later step
-
-      # Optional: upload SARIF when sarif: true
-      # - uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: ${{ steps.unilyze.outputs.sarif-path }}
-      #     category: unilyze
+- uses: bigdra50/unilyze@v1
+  with:
+    project-path: .
+    metric: codehealth
+    fail-under: "7.0"
+    base-ref: origin/main
+    fail-on-regression: "true"
+    baseline: .unilyze/baseline.json
 ```
 
-| Input | Default | Description |
-|-------|---------|-------------|
-| `project-path` | `.` | Project directory to analyze |
-| `metric` | `codehealth` | Gate metric: `codehealth`, `mi`, or `smells` |
-| `fail-under` | *(empty)* | Fail when min CodeHealth or avg MI is below this value |
-| `fail-over` | *(empty)* | Fail when smell warnings exceed this count |
-| `base-ref` | *(empty)* | Git ref for diff gate; writes markdown to `$GITHUB_STEP_SUMMARY` |
-| `baseline` | *(empty)* | Baseline JSON path to suppress known smells |
-| `sarif` | `false` | Emit SARIF; upload with `upload-sarif` using the `sarif-path` output |
-| `pr-comment` | `false` | Upsert one sticky PR comment with diff markdown |
+Full workflow YAML, input table, and `badges.yml` publishing pattern: [docs/ci-integration.md](./docs/ci-integration.md).
 
-Outputs: `codehealth`, `mi`, `smells`, `gate-result` (`passed` / `failed` / `skipped`), and `sarif-path` when SARIF is generated.
+## Why unilyze
 
-To publish badges from GitHub Actions, generate the SVG on every push to `main` and serve it from a `badges` branch (this repository dogfoods the same workflow — see [badges.yml](./.github/workflows/badges.yml)):
+unilyze targets teams that want **commercial-grade metrics and agent workflows without Unity/MSBuild setup cost or per-seat licensing**. The table below compares four axes that matter for Unity game code and AI-assisted refactoring (pricing as of 2026-06 — verify on vendor sites before budgeting).
 
-```yaml
-# .github/workflows/badges.yml
-name: Badges
-on:
-  push:
-    branches: [main]
-permissions:
-  contents: write # force-push to the badges branch
-jobs:
-  badges:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-      - run: dotnet tool install --global Unilyze
-      - run: |
-          mkdir -p /tmp/badge-data
-          unilyze badge -p . --format svg -o /tmp/badge-data/codehealth.svg
-      - run: |
-          cd /tmp/badge-data
-          git init -q -b badges
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -qm "update badges"
-          git push -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" badges
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+| | unilyze | NDepend | SonarQube | CodeScene | Qodana |
+|---|---|---|---|---|---|
+| **Price** | Free (MIT) | ~€399/seat/yr (Developer)[^ndepend] | ~$2,500/yr (Server Developer, 100K LOC)[^sonar] | from €18/active author/mo[^codescene] | €90/contributor/yr (Ultimate, 3-seat min)[^qodana] |
+| **Unity setup** | Zero setup: `.cs`/`.asmdef` alone, Unity DLLs resolved progressively | VS solution / compiled assemblies required[^ndepend-feat] | MSBuild project required (SonarScanner for .NET)[^sonar] | Git repo + service onboarding; no Unity-specific analysis[^codescene-hs] | `.sln`/`.csproj` pre-generated (Rider sync script)[^qodana-unity] |
+| **Churn × complexity hotspots** | `unilyze hotspot`, free | None (trend baselines only)[^ndepend-feat] | None ("Security Hotspot" is unrelated)[^sonar] | File-level; function-level in paid X-Ray[^codescene-hs] | None |
+| **Agent integration** | Bundled skills (Claude/Codex/Cursor/Gemini/Windsurf), self-documenting CLI (`metrics`/`schema`/`query`), stable JSON; MCP on roadmap | [NDepend MCP][^ndepend-mcp] | [SonarQube MCP Server (GA)][^sonar-mcp] | [CodeScene MCP][^codescene-mcp] | None found in survey |
 
-Then reference it from your README:
+[^ndepend]: [NDepend purchase](https://www.ndepend.com/purchase)
+[^ndepend-feat]: [NDepend features](https://www.ndepend.com/features)
+[^sonar]: [SonarQube pricing in 2026 (dev.to)](https://dev.to/sonarsource/sonarqube-pricing-in-2026-community-developer-enterprise-and-cloud-costs-explained-4e8p)
+[^codescene]: [CodeScene pricing](https://codescene.com/pricing)
+[^codescene-hs]: [CodeScene hotspots](https://codescene.io/docs/guides/technical/hotspots.html)
+[^qodana]: [Qodana pricing](https://www.jetbrains.com/help/qodana/pricing.html)
+[^qodana-unity]: [Qodana Unity](https://www.jetbrains.com/help/qodana/unity.html)
+[^ndepend-mcp]: [NDepend MCP](https://github.com/ndepend/ndepend-mcp)
+[^sonar-mcp]: [SonarQube MCP Server](https://github.com/SonarSource/sonarqube-mcp-server)
+[^codescene-mcp]: [CodeScene MCP Server](https://github.com/codescene-oss/codescene-mcp-server)
 
-```markdown
-![Code Health](https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.svg)
-```
+Free alternatives[^free-alt] (SonarQube Community Build, Qodana Community for .NET, Roslynator, Microsoft.CodeAnalysis.Metrics) lack Unity-specific hot-path detectors, asmdef-first discovery, and bundled agent skills.
 
-Prefer shields.io styling options? Generate endpoint JSON instead (the default format) and embed `https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/<owner>/<repo>/badges/codehealth.json`.
+[^free-alt]: See [Roslynator CLI](https://josefpihrt.github.io/docs/roslynator/cli) and vendor community editions; pricing links above are paid tiers.
 
 ## Analysis Levels
 
-unilyze resolves an analysis level based on which Unity DLLs it can locate. Higher levels resolve more types, so semantic metrics that depend on the `SemanticModel` (boxing, params allocations, CBO, DIT) are more complete. When Unity DLLs cannot be resolved (CI without a Unity install, missing `Library/ScriptAssemblies`), the analysis falls back to a lower level. The resolved level is reported on stderr and written to the JSON output as `analysisLevel`.
-
-| Level | Resolved | What is accurate | What is understated |
-|-------|----------|------------------|---------------------|
-| `SyntaxOnly` | No Unity DLLs | CodeHealth, MI, cyclomatic/cognitive complexity, syntactic smells | Boxing, params allocations, CBO, DIT, inheritance across engine types |
-| `CoreEngine` | UnityEngine core + framework | + types referencing `UnityEngine` core | Editor/module types, package assemblies |
-| `FullEngine` | + engine/editor modules | + editor and module types | Compiled package assemblies (`Library/ScriptAssemblies`) |
-| `Complete` | + package assemblies | full semantic resolution | — |
-
-Pin the level with `--level <syntax|core|full|complete>` (supported by the main command, `statusline`, and `badge`). The pin caps the auto-resolved level: a higher resolved level is intentionally lowered for deterministic output, and if the requested level cannot be reached (for example `--level complete` without resolvable DLLs) the command fails with a non-zero exit code instead of silently degrading.
-
-In the status line, a marker (`[syntax]` / `[core]` / `[full]`) is appended when the level is below `Complete`. See [docs/metrics.md](./docs/metrics.md#バリデーション-検証) for measured differences between `Complete` and `SyntaxOnly`.
+unilyze resolves an analysis level based on which Unity DLLs it can locate. Pin with `--level <syntax|core|full|complete>`. See [docs/ci-integration.md#analysis-levels-in-ci](./docs/ci-integration.md#analysis-levels-in-ci) for the full table and CI caveats.
 
 ## Configuration
 
-unilyze loads settings from config files and CLI options. Lists (such as `excludeDirs`) are merged additively (union). Maps (`smells`, `rules`) are merged key-wise: project keys override global keys for the same entry; keys present in only one scope are preserved.
+Settings merge additively from global config (`~/.config/unilyze/config.json`), project `.unilyze.json`, and CLI flags.
 
 | Scope | Path |
 |-------|------|
-| Global | `$XDG_CONFIG_HOME/unilyze/config.json` (default: `~/.config/unilyze/config.json`) |
+| Global | `$XDG_CONFIG_HOME/unilyze/config.json` |
 | Project | `<project-root>/.unilyze.json` |
 | CLI | `--exclude-dir <dir>` (repeatable) |
-
-### Exclude Directories
-
-Exclude directories from analysis (e.g., Asset Store imports, third-party code):
 
 ```jsonc
 // .unilyze.json
 {
-  "excludeDirs": [
-    "Assets/Plugins",
-    "Assets/ThirdParty"
-  ]
+  "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"],
+  "profile": "unity",
+  "smells": { "LongMethod": { "lines": 100, "criticalLines": 200 } },
+  "rules": { "UNI011": "off", "UNI009": "off" }
 }
 ```
 
-Paths are relative to the project root. Config files use JSONC (comments and trailing commas allowed).
+`UNI009` off disables cyclic-dependency detection entirely. Other rule IDs map to smell kinds and filter JSON, SARIF, badge, and statusline output. Threshold keys are case-insensitive; defaults are in [docs/metrics.md](./docs/metrics.md) (drift-tested) and `unilyze metrics`.
 
 ### Assembly mapping
 
 | Project kind | Discovery | One assembly per |
 |--------------|-----------|------------------|
 | Unity | `.asmdef` under `Assets/` | asmdef `name` |
-| .NET (no asmdef, non-Unity) | `.csproj` (solution-first, else recursive) | csproj file name (without extension) |
-| Unity without asmdef / no csproj | fallback | single `Assembly-CSharp` over the scan root |
+| .NET | `.csproj` (solution-first, else recursive) | csproj file name |
+| Fallback | no asmdef / no csproj | single `Assembly-CSharp` |
 
-`ProjectReference` items become assembly dependency edges (same role as asmdef `references`). Nested csproj directories use `ExcludeDirectories` so each `.cs` file belongs to exactly one assembly. Sources outside every csproj directory are attributed to an `Assembly-CSharp` fallback that excludes all csproj directories. `AssemblyName` overrides in csproj are not resolved; unmatched references appear as `unresolvedReferences`. `--prefix` and `--assembly` filter csproj-derived assemblies the same way as asmdefs.
-
-CLI equivalent:
+`ProjectReference` items become assembly dependency edges. `--prefix` and `--assembly` filter assemblies the same way for asmdefs and csproj-derived names.
 
 ```bash
-unilyze -p ~/MyUnityProject --exclude-dir Assets/Plugins --exclude-dir Assets/ThirdParty
-```
-
-The `statusline` subcommand automatically reads config files, so no CLI options are needed for status line integration.
-
-### Smell Threshold Overrides
-
-Override detection thresholds per smell (keys are case-insensitive; unspecified keys keep defaults):
-
-```jsonc
-// .unilyze.json
-{
-  "smells": {
-    "LongMethod": { "lines": 100, "criticalLines": 200 },
-    "HighCoupling": { "cbo": 20 }
-  }
-}
-```
-
-### Rule Enable/Disable
-
-Toggle individual UNI rules with `"on"` or `"off"` (case-insensitive):
-
-```jsonc
-// .unilyze.json
-{
-  "rules": {
-    "UNI011": "off",
-    "UNI009": "off"
-  }
-}
-```
-
-`UNI009` disables cyclic-dependency detection entirely (`CyclicDependencies` becomes `null`). Other rule IDs map to `CodeSmellKind` values and filter smells, counts, SARIF, badge, and statusline output.
-
-### Managing Config
-
-```bash
-unilyze config list                                    # Show current configuration
-unilyze config add-exclude-dir Assets/Plugins          # Add to project config
-unilyze config add-exclude-dir Library --global        # Add to global config
-unilyze config remove-exclude-dir Assets/Plugins       # Remove from project config
+unilyze config add-exclude-dir Assets/Plugins
+unilyze baseline create -p . -o .unilyze/baseline.json
 ```
 
 ## Metrics
@@ -352,178 +182,57 @@ unilyze config remove-exclude-dir Assets/Plugins       # Remove from project con
 |--------|-------------|-------------|
 | [Cognitive Complexity](./docs/metrics.md#cognitive-complexity-cogcc) | SonarSource-compliant cognitive complexity | Method |
 | [Cyclomatic Complexity](./docs/metrics.md#cyclomatic-complexity-cyccc) | McCabe 1976-compliant cyclomatic complexity | Method |
-| [Halstead D/E/B](./docs/metrics.md#halstead-complexity-measures) | Difficulty, Effort, EstimatedBugs from operator/operand counts | Method |
-| [LCOM-HS](./docs/metrics.md#lcom-hs-henderson-sellers) | Henderson-Sellers cohesion (0.0-1.0+) | Type |
-| [WMC](./docs/metrics.md#wmc-weighted-methods-per-class) | Weighted Methods per Class (sum of CycCC) | Type |
-| [NOC](./docs/metrics.md#noc-number-of-children) | Number of Children (direct subclass count) | Type |
-| [RFC](./docs/metrics.md#rfc-response-for-a-class) | Response For a Class (methods + unique external calls) | Type |
-| [CBO](./docs/metrics.md#cbo-coupling-between-objects) | Coupling Between Objects (number of coupled types) | Type |
-| [DIT](./docs/metrics.md#dit-depth-of-inheritance) | Depth of Inheritance (inheritance chain depth) | Type |
-| [Ca / Ce](./docs/metrics.md#ca--ce-afferent--efferent-coupling) | Afferent / Efferent Coupling | Type |
-| [Instability](./docs/metrics.md#instability-i) | Ce / (Ca + Ce) (0.0: stable - 1.0: unstable) | Type |
-| [Maintainability Index](./docs/metrics.md#maintainability-index-mi) | Computed from Halstead Volume, CycCC, LoC (0-100) | Method |
-| [TypeRank](./docs/metrics.md#typerank) | PageRank-based importance score (damping=0.85) | Type |
-| [Code Health](./docs/metrics.md#code-health) | Composite score (1.0: worst - 10.0: best) | Type |
-| [Abstractness](./docs/metrics.md#abstractness-a) | (abstract + interface) / total types | Assembly |
-| [DfMS](./docs/metrics.md#distance-from-main-sequence-dfms) | Distance from Main Sequence \|A + I - 1\| | Assembly |
-| [Relational Cohesion](./docs/metrics.md#relational-cohesion-h) | (R + 1) / N internal relationship density | Assembly |
+| [Halstead D/E/B](./docs/metrics.md#halstead-complexity-measures) | Difficulty, Effort, EstimatedBugs | Method |
+| [LCOM-HS](./docs/metrics.md#lcom-hs-henderson-sellers) | Henderson-Sellers cohesion | Type |
+| [WMC](./docs/metrics.md#wmc-weighted-methods-per-class) | Weighted Methods per Class | Type |
+| [NOC / RFC / CBO / DIT](./docs/metrics.md) | Chidamber-Kemerer suite | Type |
+| [Ca / Ce / Instability](./docs/metrics.md#ca--ce-afferent--efferent-coupling) | Martin package metrics | Type |
+| [Maintainability Index](./docs/metrics.md#maintainability-index-mi) | Halstead Volume + CycCC + LoC | Method |
+| [TypeRank](./docs/metrics.md#typerank) | PageRank-based importance | Type |
+| [Code Health](./docs/metrics.md#code-health) | Composite score (1.0 worst – 10.0 best) | Type |
+| [Abstractness / DfMS / Relational Cohesion](./docs/metrics.md) | Assembly-level metrics | Assembly |
 
-Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs/metrics.md) for detailed specifications.
+Run `unilyze metrics` for definitions and thresholds. See [docs/metrics.md](docs/metrics.md) for specifications and validation data.
 
-## Code Smell Detection
+## Detection capabilities
 
-Metric-threshold smell detection is heuristic, not ground truth. See [docs/metrics.md](./docs/metrics.md#code-smell) for reliability caveats and the detection-responsibility routing table.
-
-| Kind | Warning | Critical |
-|------|---------|----------|
-| GodClass | lines >= 500 OR methods >= 20 | lines >= 1000 |
-| LongMethod | lines >= 80 OR CogCC >= 25 | lines >= 150 OR CogCC >= 40 |
-| HighComplexity | CycCC >= 15 OR CogCC >= 15 | - |
-| ExcessiveParameters | params > 5 | - |
-| DeepNesting | depth >= 4 | depth >= 6 |
-| LowCohesion | LCOM >= 0.8 | - |
-| HighCoupling | CBO >= 15 | CBO >= 25 |
-| LowMaintainability | MI < 60 | - |
-| DeepInheritance | DIT >= 5 | - |
-| CyclicDependency | Cyclic dependencies between types/assemblies | - |
-
-## Performance Analysis
-
-Detects hidden heap allocations that cause GC pressure in Unity (requires SemanticModel):
-
-| Kind | Detection |
-|------|-----------|
-| BoxingAllocation | Value type → object/interface, virtual method on struct without override |
-| ClosureCapture | Lambda/anonymous method capturing outer scope variables |
-| ParamsArrayAllocation | Implicit array allocation for params parameters |
-
-## Exception Flow Analysis
-
-| Kind | Detection |
-|------|-----------|
-| CatchAllException | `catch (Exception)` without rethrow |
-| MissingInnerException | `throw new X()` in catch without passing inner exception |
-| ThrowingSystemException | `throw new Exception()` directly (use specific exception types) |
-
-## Unity Frame-Rate Analysis
-
-| Kind | Detection |
-|------|-----------|
-| WeakTemporization (UNI021) | Incremental `transform` mutation in `Update`/`LateUpdate` without `Time.deltaTime` scaling |
-
-## DI Container Detection
-
-Detects type registrations in Unity DI containers and integrates them into the dependency graph. Registration endpoints are resolved to analyzed types, so the resulting edges feed cycle detection, CBO/Ca/Ce coupling, and TypeRank like any other dependency:
-
-| Container | Patterns |
-|-----------|----------|
-| VContainer | `Register<T>`, `RegisterInstance`, `RegisterFactory`, `[Inject]` attribute |
-| Zenject | `Bind<T>().To<T>()`, `BindInterfacesTo<T>()`, `BindInterfacesAndSelfTo<T>()` |
-
-Endpoints that resolve to a type outside the analyzed set (e.g. a framework type), or to an ambiguous bare name shared by multiple namespaces, stay unconnected and contribute nothing to the metrics.
+Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), performance analysis (boxing, closures, params arrays), exception-flow patterns, Unity frame-rate rules (UNI017–UNI021: hot-path API/LINQ/allocation/string concat, weak temporization), async/blocking rules (UNI022–UNI023), and DI container edge detection (VContainer, Zenject) — all configurable via `.unilyze.json` and `--profile unity`. Thresholds are **not** duplicated here; see [docs/metrics.md](./docs/metrics.md#code-smell) and `unilyze metrics`.
 
 ## Output Formats
 
 | Format | Use Case |
 |--------|----------|
-| `html` | Interactive dependency graph in browser (Cytoscape+dagre bundled; ELK layout via CDN) |
+| `html` | Interactive dependency graph (Cytoscape+dagre bundled; ELK via CDN) |
 | `json` | Agent integration, programmatic use |
-| `sarif` | GitHub Code Scanning (stable fingerprints, rule help links, region `endLine`), IDE integration |
+| `sarif` | GitHub Code Scanning (stable fingerprints, rule help links) |
 
 ## Diff Viewer
 
-`unilyze diff <before.json> <after.json> -o diff.html` overlays metric deltas onto the standard analysis viewer.
-
-Each type row gets:
-
-- A change badge (`A` added / `M` modified / `D` removed) and color-coded left border
-- Inline `▲`/`▼` deltas next to Health, Max CogCC, CBO, DIT cells
-- A `Changed only` toggle in the diff summary bar
-- A "Changes vs Baseline" / "Methods Changed" / "Smells Δ" section in the type detail panel
-
-In graph mode, changed types get colored halos (green added / red degraded / blue improved), the tap detail panel shows the same baseline sections, and `Changed only` hides unchanged types from the graph. Removed types appear in the summary and table views only (they have no node in the after-graph).
-
-The viewer otherwise behaves like a normal `unilyze` HTML report (dependency graph, hotspots, cycles, assembly coupling).
-
-### Regression gate
-
-`--fail-on-regression` turns `diff` into a CI gate. The output (JSON, HTML, or stderr summary) is unchanged; only the exit code reflects the gate.
+`unilyze diff <before.json> <after.json> -o diff.html` overlays metric deltas on the standard viewer (change badges, `Changed only` toggle, graph halos). Regression gates, markdown PR output, and `--base-ref` workflows: [docs/ci-integration.md](./docs/ci-integration.md).
 
 ```bash
 unilyze diff before.json after.json --fail-on-regression
+unilyze diff --base-ref origin/main after.json -f markdown --changed-only
 ```
-
-A regression is any of: average or min CodeHealth dropped, warning smell count increased, or critical smell count increased (after vs before). On regression, the reason is printed to stderr on one line (e.g. `regression: min CodeHealth 7.2 -> 6.8`).
-
-The gate is evaluated on these **project-wide aggregates**, which is intentionally distinct from the per-type `Degraded`/`Improved` counts shown in the diff summary. A single type can degrade while the aggregates stay flat (e.g. another type improves enough to offset it), so it is possible to see `Degraded: 1` in the summary yet get exit `0`. If you want to gate on any individual type degrading rather than on aggregates, judge on the per-type `Degraded` count from the summary instead.
-
-Exit codes: `0` no regression, `1` usage error, `2` regression detected.
-
-### Markdown output (CI / PR comments)
-
-`unilyze diff <before.json> <after.json> -f markdown` emits GFM tables suitable for GitHub PR comments and `$GITHUB_STEP_SUMMARY`.
-
-```bash
-unilyze diff before.json after.json -f markdown >> "$GITHUB_STEP_SUMMARY"
-unilyze diff before.json after.json -f markdown | gh pr comment "$PR" --body-file -
-```
-
-With `--fail-on-regression`, the markdown body is unchanged; only the exit code reflects the gate (stdout still contains the verdict line).
-
-### PR workflow (`--base-ref`)
-
-`diff --base-ref` materializes a git ref in a temporary worktree, analyzes it in-process, and diffs against your after snapshot — no hand-built `before.json` required. Re-analysis of the base ref roughly doubles CI time; caching a baseline JSON on a branch (as in the badges workflow) is the faster alternative when you control storage.
-
-```bash
-git fetch origin main   # or use fetch-depth: 0 in checkout
-unilyze -p . -o after.json
-unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
-```
-
-Use `-p` to override the project path (default: `projectPath` from the after snapshot). Use `--level` to pin the base-side analysis level; if it differs from the after snapshot, the existing level-mismatch warning still applies. Unknown refs, non-repo directories, and a missing `git` binary exit `1` with a one-line stderr hint (fetch the branch or widen `fetch-depth` on shallow clones).
 
 ## Agent Workflow
 
-See the [agent integration tutorial](./docs/tutorials/agent-integration.md) for skills install, snapshot conventions, and the refactor-loop workflow.
+See the [agent integration tutorial](./docs/tutorials/agent-integration.md).
 
 ```
-unilyze (measure) -> unilyze query (evidence) -> fix -> unilyze diff (verify)
+unilyze (measure) → unilyze query (evidence) → fix → unilyze diff (verify)
 ```
-
-### Evidence packs (`query`)
-
-Token-efficient per-type packs for LLM grounding — metrics, smells with `file:line` anchors, dependencies, and top methods:
 
 ```bash
-unilyze query --worst 5 -i snapshot.json          # worst types from snapshot
-unilyze query --type MyService -p . -f json       # single type via direct analysis
-unilyze query --help                              # all flags
-```
-
-Replaces fragile jq one-liners in agent skills. Markdown (default) or compact JSON (`-f json`).
-
-### Install skills
-
-```bash
-unilyze skills install --claude                   # Claude Code
-unilyze skills install --claude --codex --cursor  # Multiple targets
-unilyze skills install --claude --global          # Global install
-```
-
-Supported: `--claude`, `--codex`, `--cursor`, `--gemini`, `--windsurf`
-
-### Self-documenting CLI
-
-Agents can discover metrics and schema without external docs:
-
-```bash
-unilyze metrics   # Definitions & thresholds
-unilyze schema    # JSON field reference
+unilyze query --worst 5 -i snapshot.json          # evidence packs (md or -f json)
+unilyze calibrate snapshots/ -o calibration.json  # percentile thresholds for .unilyze.json
+unilyze skills install --claude --codex --cursor
+unilyze metrics && unilyze schema                 # self-documenting CLI
 ```
 
 ## Known Limitations
 
-- HTML graph works offline (Cytoscape and dagre are bundled). ELK layout requires CDN and falls back to dagre when unavailable.
+- HTML graph works offline (Cytoscape and dagre bundled). ELK layout requires CDN and falls back to dagre when unavailable.
 - Windows is covered by CI (windows-latest, net10.0).
 
 ## License
