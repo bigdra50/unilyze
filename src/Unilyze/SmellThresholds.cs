@@ -123,6 +123,8 @@ public static class SmellThresholds
             "throw new X() in catch block without inner exception.",
         CodeSmellKind.ThrowingSystemException =>
             "throw new Exception() directly (use a specific exception type).",
+        CodeSmellKind.WeakTemporization =>
+            "Incremental transform mutation in Update/LateUpdate without Time.deltaTime scaling (frame-rate dependent).",
         _ => null,
     };
 

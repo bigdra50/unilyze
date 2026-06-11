@@ -532,6 +532,7 @@ LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/q
 | CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
 | ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
+| WeakTemporization | UNI017 | ルール検出（構文解析、セマンティック補強） | SyntaxOnly 可 |
 | Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 命名品質 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
 | 意図とコードの乖離 | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |

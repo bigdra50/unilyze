@@ -7,33 +7,34 @@
       "references": [],
       "metrics": {
         "assemblyName": "Assembly-CSharp",
-        "typeCount": 39,
-        "classCount": 37,
+        "typeCount": 45,
+        "classCount": 42,
         "recordCount": 0,
         "interfaceCount": 2,
         "enumCount": 0,
         "delegateCount": 0,
-        "publicTypeCount": 39,
+        "publicTypeCount": 45,
         "sealedTypeCount": 0,
-        "totalMembers": 81,
+        "totalMembers": 93,
         "namespaces": [
           "GoldenFixture",
           "GoldenFixture.Coupling",
           "GoldenFixture.Cycles",
           "GoldenFixture.DI",
           "GoldenFixture.Inheritance",
+          "UnityEngine",
           "VContainer"
         ],
-        "abstractness": 0.05128205128205128,
-        "distanceFromMainSequence": 0.4487,
-        "relationalCohesion": 0.7436
+        "abstractness": 0.044444444444444446,
+        "distanceFromMainSequence": 0.4556,
+        "relationalCohesion": 0.7333
       },
       "healthMetrics": {
         "averageCodeHealth": 9.7,
         "minCodeHealth": 4.9,
         "highComplexityTypeCount": 0,
-        "totalMethods": 45,
-        "averageCognitiveComplexity": 1.1
+        "totalMethods": 51,
+        "averageCognitiveComplexity": 1
       }
     }
   ],
@@ -2070,6 +2071,276 @@
       "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget"
     },
     {
+      "name": "MonoBehaviour",
+      "namespace": "UnityEngine",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "transform",
+          "type": "Transform",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 4,
+      "startLine": 3,
+      "qualifiedName": "UnityEngine.MonoBehaviour",
+      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "name": "Vector3",
+      "namespace": "UnityEngine",
+      "kind": "struct",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "zero",
+          "type": "Vector3",
+          "memberKind": "Field",
+          "modifiers": [
+            "public",
+            "static"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 5,
+      "startLine": 8,
+      "qualifiedName": "UnityEngine.Vector3",
+      "typeId": "Assembly-CSharp::UnityEngine.Vector3"
+    },
+    {
+      "name": "Transform",
+      "namespace": "UnityEngine",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "position",
+          "type": "Vector3",
+          "memberKind": "Field",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "Translate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "translation",
+              "type": "Vector3"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 17,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "Rotate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "eulers",
+              "type": "Vector3"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 18,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "RotateAround",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [
+            {
+              "name": "point",
+              "type": "Vector3"
+            },
+            {
+              "name": "axis",
+              "type": "Vector3"
+            },
+            {
+              "name": "angle",
+              "type": "float"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 19,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 7,
+      "startLine": 14,
+      "qualifiedName": "UnityEngine.Transform",
+      "typeId": "Assembly-CSharp::UnityEngine.Transform"
+    },
+    {
+      "name": "Time",
+      "namespace": "UnityEngine",
+      "kind": "class",
+      "modifiers": [
+        "public",
+        "static"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "deltaTime",
+          "type": "float",
+          "memberKind": "Field",
+          "modifiers": [
+            "public",
+            "static"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "time",
+          "type": "float",
+          "memberKind": "Field",
+          "modifiers": [
+            "public",
+            "static"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 5,
+      "startLine": 22,
+      "qualifiedName": "UnityEngine.Time",
+      "typeId": "Assembly-CSharp::UnityEngine.Time"
+    },
+    {
+      "name": "Mathf",
+      "namespace": "UnityEngine",
+      "kind": "class",
+      "modifiers": [
+        "public",
+        "static"
+      ],
+      "interfaces": [],
+      "members": [
+        {
+          "name": "Sin",
+          "type": "float",
+          "memberKind": "Method",
+          "modifiers": [
+            "public",
+            "static"
+          ],
+          "parameters": [
+            {
+              "name": "f",
+              "type": "float"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 30,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "isNested": false,
+      "lineCount": 4,
+      "startLine": 28,
+      "qualifiedName": "UnityEngine.Mathf",
+      "typeId": "Assembly-CSharp::UnityEngine.Mathf"
+    },
+    {
       "name": "IContainerBuilder",
       "namespace": "VContainer",
       "kind": "interface",
@@ -2160,6 +2431,71 @@
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
       "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions"
+    },
+    {
+      "name": "WeakTemporizationTarget",
+      "namespace": "GoldenFixture",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "MonoBehaviour",
+      "interfaces": [],
+      "members": [
+        {
+          "name": "velocity",
+          "type": "Vector3",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "Update",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 4,
+          "startLine": 9,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "ScaledUpdate",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 4,
+          "startLine": 14,
+          "halsteadVolume": 6.339850002884624,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs",
+      "isNested": false,
+      "lineCount": 14,
+      "startLine": 5,
+      "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget"
     }
   ],
   "dependencies": [
@@ -2346,11 +2682,46 @@
       "toTypeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5"
     },
     {
+      "fromType": "MonoBehaviour",
+      "toType": "Transform",
+      "kind": "FieldType",
+      "fromTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour",
+      "toTypeId": "Assembly-CSharp::UnityEngine.Transform"
+    },
+    {
+      "fromType": "Transform",
+      "toType": "Vector3",
+      "kind": "FieldType",
+      "fromTypeId": "Assembly-CSharp::UnityEngine.Transform",
+      "toTypeId": "Assembly-CSharp::UnityEngine.Vector3"
+    },
+    {
+      "fromType": "Transform",
+      "toType": "Vector3",
+      "kind": "MethodParam",
+      "fromTypeId": "Assembly-CSharp::UnityEngine.Transform",
+      "toTypeId": "Assembly-CSharp::UnityEngine.Vector3"
+    },
+    {
       "fromType": "ContainerBuilderExtensions",
       "toType": "IContainerBuilder",
       "kind": "MethodParam",
       "fromTypeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions",
       "toTypeId": "Assembly-CSharp::VContainer.IContainerBuilder"
+    },
+    {
+      "fromType": "WeakTemporizationTarget",
+      "toType": "MonoBehaviour",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
+      "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "fromType": "WeakTemporizationTarget",
+      "toType": "Vector3",
+      "kind": "FieldType",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
+      "toTypeId": "Assembly-CSharp::UnityEngine.Vector3"
     },
     {
       "fromType": "IGameService",
@@ -2450,7 +2821,7 @@
       "wmc": 5,
       "noc": 0,
       "rfc": 6,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "boxingCount": 2,
       "closureCaptureCount": 2,
       "paramsAllocationCount": 2,
@@ -2531,7 +2902,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
@@ -2559,7 +2930,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
@@ -2587,7 +2958,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
@@ -2615,7 +2986,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
@@ -2643,7 +3014,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
@@ -2671,7 +3042,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
@@ -2699,7 +3070,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
@@ -2727,7 +3098,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
@@ -2755,7 +3126,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
@@ -2783,7 +3154,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
@@ -2811,7 +3182,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
@@ -2839,7 +3210,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
@@ -2867,7 +3238,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
@@ -2895,7 +3266,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
@@ -2923,7 +3294,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
@@ -2951,7 +3322,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.013464,
+      "typeRank": 0.011946,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
@@ -2995,7 +3366,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "HighCoupling",
@@ -3031,7 +3402,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.085233,
+      "typeRank": 0.075622,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
@@ -3059,7 +3430,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.085233,
+      "typeRank": 0.075622,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
@@ -3087,7 +3458,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.085233,
+      "typeRank": 0.075622,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
@@ -3115,7 +3486,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.085233,
+      "typeRank": 0.075622,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
@@ -3159,7 +3530,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
@@ -3187,7 +3558,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.05791,
+      "typeRank": 0.05138,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
@@ -3215,7 +3586,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.053088,
+      "typeRank": 0.047102,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
@@ -3243,7 +3614,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.047415,
+      "typeRank": 0.042069,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
@@ -3271,7 +3642,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.040741,
+      "typeRank": 0.036147,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
@@ -3299,7 +3670,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.03289,
+      "typeRank": 0.029181,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
@@ -3327,7 +3698,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.023652,
+      "typeRank": 0.020985,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -3363,7 +3734,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -3414,7 +3785,7 @@
       "wmc": 7,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -3487,7 +3858,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -3800,7 +4171,7 @@
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -3857,7 +4228,7 @@
       "wmc": 17,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "HighComplexity",
@@ -3916,7 +4287,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "LongMethod",
@@ -4093,7 +4464,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -4144,7 +4515,7 @@
       "wmc": 19,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -4174,6 +4545,211 @@
       "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget"
     },
     {
+      "typeName": "MonoBehaviour",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 4,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 1,
+      "efferentCoupling": 1,
+      "instability": 0.5,
+      "wmc": 0,
+      "noc": 1,
+      "rfc": 0,
+      "typeRank": 0.016164,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 3,
+      "qualifiedName": "UnityEngine.MonoBehaviour",
+      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "typeName": "Vector3",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 5,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 2,
+      "efferentCoupling": 0,
+      "instability": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.037485,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 8,
+      "qualifiedName": "UnityEngine.Vector3",
+      "typeId": "Assembly-CSharp::UnityEngine.Vector3"
+    },
+    {
+      "typeName": "Transform",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 7,
+      "methodCount": 3,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "Translate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 17,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "Rotate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 18,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "RotateAround",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 3,
+          "lineCount": 1,
+          "startLine": 19,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "lcom": 1.5,
+      "cbo": 1,
+      "dit": 0,
+      "afferentCoupling": 1,
+      "efferentCoupling": 1,
+      "instability": 0.5,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
+      "wmc": 3,
+      "noc": 0,
+      "rfc": 3,
+      "typeRank": 0.025083,
+      "codeSmells": [
+        {
+          "kind": "LowCohesion",
+          "severity": "Warning",
+          "typeName": "Transform",
+          "message": "LCOM 1.50 (threshold: 0.8)"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 14,
+      "qualifiedName": "UnityEngine.Transform",
+      "typeId": "Assembly-CSharp::UnityEngine.Transform"
+    },
+    {
+      "typeName": "Time",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 5,
+      "methodCount": 0,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 0,
+      "maxCyclomaticComplexity": 0,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 0,
+      "wmc": 0,
+      "noc": 0,
+      "rfc": 0,
+      "typeRank": 0.011343,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 22,
+      "qualifiedName": "UnityEngine.Time",
+      "typeId": "Assembly-CSharp::UnityEngine.Time"
+    },
+    {
+      "typeName": "Mathf",
+      "namespace": "UnityEngine",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 4,
+      "methodCount": 1,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "Sin",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 1,
+          "lineCount": 1,
+          "startLine": 30,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "cbo": 0,
+      "dit": 0,
+      "afferentCoupling": 0,
+      "efferentCoupling": 0,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
+      "wmc": 1,
+      "noc": 0,
+      "rfc": 1,
+      "typeRank": 0.011343,
+      "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+      "startLine": 28,
+      "qualifiedName": "UnityEngine.Mathf",
+      "typeId": "Assembly-CSharp::UnityEngine.Mathf"
+    },
+    {
       "typeName": "IContainerBuilder",
       "namespace": "VContainer",
       "assembly": "Assembly-CSharp",
@@ -4195,7 +4771,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.03452,
+      "typeRank": 0.030627,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
@@ -4252,11 +4828,79 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.012785,
+      "typeRank": 0.011343,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
       "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions"
+    },
+    {
+      "typeName": "WeakTemporizationTarget",
+      "namespace": "GoldenFixture",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 14,
+      "methodCount": 2,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "Update",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 4,
+          "startLine": 9,
+          "maintainabilityIndex": 84.6,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "ScaledUpdate",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 4,
+          "startLine": 14,
+          "maintainabilityIndex": 81.1,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        }
+      ],
+      "lcom": 0,
+      "cbo": 4,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 2,
+      "instability": 1,
+      "averageMaintainabilityIndex": 82.8,
+      "minMaintainabilityIndex": 81.1,
+      "wmc": 2,
+      "noc": 0,
+      "rfc": 2,
+      "typeRank": 0.011343,
+      "codeSmells": [
+        {
+          "kind": "WeakTemporization",
+          "severity": "Warning",
+          "typeName": "WeakTemporizationTarget",
+          "methodName": "Update",
+          "message": "transform mutation without delta-time scaling",
+          "line": 11
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs",
+      "startLine": 5,
+      "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget"
     }
   ],
   "analysisLevel": "CoreEngine",

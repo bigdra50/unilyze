@@ -27,6 +27,7 @@ public static class SarifFormatter
         ("UNI014", CodeSmellKind.CatchAllException, "Catch-all exception without rethrow"),
         ("UNI015", CodeSmellKind.MissingInnerException, "Missing inner exception in rethrow"),
         ("UNI016", CodeSmellKind.ThrowingSystemException, "Throwing System.Exception directly"),
+        ("UNI017", CodeSmellKind.WeakTemporization, "Frame-rate dependent update"),
     ];
 
     public static string Generate(AnalysisResult result)

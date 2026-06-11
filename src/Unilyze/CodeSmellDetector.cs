@@ -17,7 +17,8 @@ public enum CodeSmellKind
     ParamsArrayAllocation,
     CatchAllException,
     MissingInnerException,
-    ThrowingSystemException
+    ThrowingSystemException,
+    WeakTemporization
 }
 
 public enum SmellSeverity
