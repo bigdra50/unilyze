@@ -1,0 +1,74 @@
+{
+  "pinDate": "2026-03-16",
+  "editorsRoot": "/Volumes/CrucialX9/Unity/editors",
+  "editorVersionAliases": {
+    "2021.3.30f1": "2022.3.62f3",
+    "2022.3.39f1": "2022.3.62f3",
+    "2022.3.62f2": "2022.3.62f3",
+    "6000.0.52f1": "6000.3.5f2",
+    "6000.0.59f2": "6000.4.1f1"
+  },
+  "projects": [
+    {
+      "id": "vcontainer",
+      "name": "VContainer",
+      "repo": "https://github.com/hadashiA/VContainer.git",
+      "commit": "d9f6dc6b68fc9ad36bce6b580f6405245c28f67d",
+      "cloneDir": "VContainer",
+      "projectPath": "/tmp/cross-validation-repos/VContainer/VContainer",
+      "outputFile": "unilyze-vcontainer-v2.json",
+      "requestedLevel": "complete"
+    },
+    {
+      "id": "unitask",
+      "name": "UniTask",
+      "repo": "https://github.com/Cysharp/UniTask.git",
+      "commit": "a9e27c03d411d2fca01cc7410c24c97cd77cb539",
+      "cloneDir": "UniTask",
+      "projectPath": "/tmp/cross-validation-repos/UniTask/src/UniTask",
+      "outputFile": "unilyze-unitask-v2.json",
+      "requestedLevel": "complete"
+    },
+    {
+      "id": "bossroom",
+      "name": "BossRoom",
+      "repo": "https://github.com/Unity-Technologies/com.unity.multiplayer.samples.coop.git",
+      "commit": "1299ba4fc97d83b634e7d32a86c438ba668d7f9c",
+      "cloneDir": "BossRoom",
+      "projectPath": "/tmp/cross-validation-repos/BossRoom",
+      "outputFile": "unilyze-bossroom-v2.json",
+      "requestedLevel": "complete"
+    },
+    {
+      "id": "hmf",
+      "name": "HelloMarioFramework",
+      "repo": "https://github.com/HelloFangaming/HelloMarioFramework.git",
+      "commit": "a0cb680379a83b11d7f67dc7ecc265364ad7b96f",
+      "cloneDir": "HelloMarioFramework",
+      "projectPath": "/tmp/cross-validation-repos/HelloMarioFramework",
+      "outputFile": "unilyze-hmf-v2.json",
+      "requestedLevel": "complete"
+    },
+    {
+      "id": "self",
+      "name": "UnilyzeSelf",
+      "projectPath": "src/Unilyze",
+      "outputFile": "unilyze-self-v2.json",
+      "requestedLevel": "syntax",
+      "note": "Plain .NET project; SyntaxOnly is the maximum achievable level."
+    },
+    {
+      "id": "decommissioned",
+      "name": "UnityDecommissioned",
+      "repo": "https://github.com/oculus-samples/Unity-Decommissioned.git",
+      "commit": "fe7a65ebbc4a7c49cb8aeb1efc3305f3b6b98872",
+      "cloneDir": "Unity-Decommissioned",
+      "projectPath": "/tmp/cross-validation-repos/Unity-Decommissioned",
+      "outputFile": "unilyze-decommissioned-v2.json",
+      "requestedLevel": "complete",
+      "optional": true,
+      "scriptAssembliesSource": "/Volumes/CrucialX9/dev/github.com/oculus-samples/Unity-Decommissioned/Library/ScriptAssemblies",
+      "note": "Supplemental corpus for semantic Kinds (Boxing, Params, hot-path). Requires prebuilt ScriptAssemblies copied from a local Unity open."
+    }
+  ]
+}
