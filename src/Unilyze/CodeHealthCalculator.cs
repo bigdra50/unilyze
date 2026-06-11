@@ -43,6 +43,7 @@ public sealed record TypeMetrics(
     int? ClosureCaptureCount = null,
     int? ParamsAllocationCount = null,
     IReadOnlyList<CodeSmell>? CodeSmells = null,
+    int? InformationalCount = null,
     string? FilePath = null,
     int? StartLine = null,
     string? QualifiedName = null,

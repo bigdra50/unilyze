@@ -57,6 +57,7 @@ var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembl
 var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
 var noOpen = opts.ContainsKey("--no-open");
 var cliExcludeDirs = ProgramHelpers.ParseMultiValueOption(args, "--exclude-dir");
+var cliProfile = opts.GetValueOrDefault("--profile");
 var levelStr = opts.GetValueOrDefault("--level");
 
 AnalysisLevel? requestedLevel = null;
@@ -80,8 +81,11 @@ try
     AnalysisResult result;
     var resolved = new ResolvedAnalysisConfig(
         EffectiveSmellThresholds.Default,
+        SmellThresholdProfiles.DefaultProfileName,
         new HashSet<CodeSmellKind>(),
-        DisableCycles: false);
+        DisableCycles: false,
+        InformationalSmellKinds: new HashSet<CodeSmellKind>(),
+        SmellOverrides: null);
 
     if (input != null)
     {
@@ -92,15 +96,13 @@ try
     else
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
-        var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs);
+        var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs, cliProfile);
         resolved = config.ResolveAnalysisConfig();
         result = AnalysisPipeline.Build(
             path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
@@ -199,6 +201,7 @@ Options:
       --level        Pin analysis level: syntax, core, full, complete
                      (caps auto-resolved level; fails if the level cannot be reached)
       --baseline     Suppress known smells from a baseline file (see 'unilyze baseline create')
+      --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version
   -h, --help         Show this help
@@ -208,7 +211,7 @@ Configuration:
     Global:  $XDG_CONFIG_HOME/unilyze/config.json (default: ~/.config/unilyze/config.json)
     Project: <project-root>/.unilyze.json
   Example .unilyze.json:
-    { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"] }
+    { "excludeDirs": ["Assets/Plugins", "Assets/ThirdParty"], "profile": "unity" }
 
 Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')

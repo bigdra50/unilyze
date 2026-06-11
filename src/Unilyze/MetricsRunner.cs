@@ -9,13 +9,16 @@ internal static class MetricsRunner
         var usageError = ProgramHelpers.ValidateMetricsArgs(args);
         if (usageError != 0)
             return usageError;
-        return PrintMetrics();
+
+        var opts = ProgramHelpers.ParseOptions(args);
+        var profile = opts.GetValueOrDefault("--profile");
+        return PrintMetrics(profile);
     }
 
-    static int PrintMetrics()
+    static int PrintMetrics(string? profile)
     {
         var text = EmbeddedCliText.Metrics
-            .Replace("{{SMELL_THRESHOLDS}}", SmellThresholds.FormatMetricsCliHelp());
+            .Replace("{{SMELL_THRESHOLDS}}", SmellThresholdProfiles.FormatMetricsCliHelp(profile));
         Console.Write(text);
         return 0;
     }

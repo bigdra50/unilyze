@@ -14,7 +14,7 @@ internal static class ProgramHelpers
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level", "--baseline",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
@@ -109,6 +109,11 @@ internal static class ProgramHelpers
     static readonly HashSet<string> BadgeBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help",
+    };
+
+    static readonly HashSet<string> MetricsValueOptions = new(StringComparer.Ordinal)
+    {
+        "--profile",
     };
 
     static readonly HashSet<string> MetricsBooleanOptions = new(StringComparer.Ordinal)
@@ -325,11 +330,11 @@ internal static class ProgramHelpers
         if (IsHelpRequest(args))
             return 0;
 
-        var unknown = FindUnknownOption(args, NoValueOptions, MetricsBooleanOptions);
+        var unknown = FindUnknownOption(args, MetricsValueOptions, MetricsBooleanOptions);
         if (unknown is not null)
-            return ReportUnknown("option", unknown, MetricsBooleanOptions);
+            return ReportUnknown("option", unknown, MetricsValueOptions.Concat(MetricsBooleanOptions));
 
-        var extra = args.FirstOrDefault(a => !a.StartsWith('-'));
+        var extra = FindUnexpectedPositional(args, MetricsValueOptions);
         return extra is null ? 0 : ReportUnknown("subcommand", extra, ["metrics"]);
     }
 

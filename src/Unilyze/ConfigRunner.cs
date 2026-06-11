@@ -75,7 +75,8 @@ internal static class ConfigRunner
         PrintSection("global", globalPath, global, ref hasAny);
         PrintSection("project", projectPath, project, ref hasAny);
 
-        hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 } || merged.Baseline is not null;
+        hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 }
+            || merged.Baseline is not null || merged.Profile is not null;
 
         if (hasAny)
         {
@@ -83,6 +84,8 @@ internal static class ConfigRunner
             Console.WriteLine("[effective]");
             Console.WriteLine($"  disableDefaultExcludes: {merged.DisableDefaultExcludes.ToString().ToLowerInvariant()}");
             Console.WriteLine($"  disableGeneratedCodeExcludes: {merged.DisableGeneratedCodeExcludes.ToString().ToLowerInvariant()}");
+            if (merged.Profile is not null)
+                Console.WriteLine($"  profile: {merged.Profile}");
             if (merged.ExcludeDirs is { Count: > 0 })
             {
                 Console.WriteLine("  excludeDirs:");
@@ -92,7 +95,7 @@ internal static class ConfigRunner
             if (merged.Baseline is not null)
                 Console.WriteLine($"  baseline: {merged.Baseline}");
 
-            var effectiveThresholds = EffectiveSmellThresholds.FromOverrides(merged.Smells);
+            var effectiveThresholds = merged.ResolveAnalysisConfig().Thresholds;
             PrintEffectiveThresholds(effectiveThresholds);
             PrintEffectiveRules(merged.ResolveAnalysisConfig());
         }

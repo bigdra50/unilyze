@@ -50,7 +50,8 @@ public sealed record TypeNodeInfo(
     int LineCount = 0,
     int? StartLine = null,
     string? QualifiedName = null,
-    string? TypeId = null);
+    string? TypeId = null,
+    TypeRole? Role = null);
 
 public sealed record MemberInfo(
     string Name,

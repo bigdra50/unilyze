@@ -83,9 +83,7 @@ internal static class QueryRunner
             path, null, null, config.ExcludeDirs,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            thresholds: resolved.Thresholds,
-            disabledRuleKinds: resolved.DisabledRuleKinds,
-            disableCycles: resolved.DisableCycles);
+            analysisConfig: resolved);
     }
 
     static void PrintSummary(QueryResult result, string mode, int worstCount)

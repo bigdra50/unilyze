@@ -7,15 +7,15 @@
       "references": [],
       "metrics": {
         "assemblyName": "Assembly-CSharp",
-        "typeCount": 46,
-        "classCount": 43,
+        "typeCount": 48,
+        "classCount": 45,
         "recordCount": 0,
         "interfaceCount": 2,
         "enumCount": 0,
         "delegateCount": 0,
-        "publicTypeCount": 46,
+        "publicTypeCount": 48,
         "sealedTypeCount": 0,
-        "totalMembers": 94,
+        "totalMembers": 140,
         "namespaces": [
           "GoldenFixture",
           "GoldenFixture.Coupling",
@@ -25,16 +25,16 @@
           "UnityEngine",
           "VContainer"
         ],
-        "abstractness": 0.043478260869565216,
-        "distanceFromMainSequence": 0.4565,
-        "relationalCohesion": 0.7391
+        "abstractness": 0.041666666666666664,
+        "distanceFromMainSequence": 0.4583,
+        "relationalCohesion": 0.75
       },
       "healthMetrics": {
         "averageCodeHealth": 9.7,
         "minCodeHealth": 4.9,
         "highComplexityTypeCount": 0,
-        "totalMethods": 52,
-        "averageCognitiveComplexity": 1
+        "totalMethods": 83,
+        "averageCognitiveComplexity": 0.6
       }
     }
   ],
@@ -196,7 +196,8 @@
       "lineCount": 50,
       "startLine": 5,
       "qualifiedName": "GoldenFixture.AllocationPatterns",
-      "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns"
+      "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT01",
@@ -216,7 +217,8 @@
       "lineCount": 1,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT01"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT01",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT02",
@@ -236,7 +238,8 @@
       "lineCount": 1,
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT02"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT02",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT03",
@@ -256,7 +259,8 @@
       "lineCount": 1,
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT03"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT03",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT04",
@@ -276,7 +280,8 @@
       "lineCount": 1,
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT04"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT04",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT05",
@@ -296,7 +301,8 @@
       "lineCount": 1,
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT05"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT05",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT06",
@@ -316,7 +322,8 @@
       "lineCount": 1,
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT06"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT06",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT07",
@@ -336,7 +343,8 @@
       "lineCount": 1,
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT07"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT07",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT08",
@@ -356,7 +364,8 @@
       "lineCount": 1,
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT08"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT08",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT09",
@@ -376,7 +385,8 @@
       "lineCount": 1,
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT09"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT09",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT10",
@@ -396,7 +406,8 @@
       "lineCount": 1,
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT10"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT10",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT11",
@@ -416,7 +427,8 @@
       "lineCount": 1,
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT11"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT11",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT12",
@@ -436,7 +448,8 @@
       "lineCount": 1,
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT12"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT12",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT13",
@@ -456,7 +469,8 @@
       "lineCount": 1,
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT13"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT13",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT14",
@@ -476,7 +490,8 @@
       "lineCount": 1,
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT14"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT14",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT15",
@@ -496,7 +511,8 @@
       "lineCount": 1,
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT15"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT15",
+      "role": "PlainCSharp"
     },
     {
       "name": "CouplingT16",
@@ -516,7 +532,8 @@
       "lineCount": 1,
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT16"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT16",
+      "role": "PlainCSharp"
     },
     {
       "name": "HighCouplingHub",
@@ -700,7 +717,8 @@
       "lineCount": 39,
       "startLine": 20,
       "qualifiedName": "GoldenFixture.Coupling.HighCouplingHub",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub",
+      "role": "PlainCSharp"
     },
     {
       "name": "CycleA",
@@ -732,7 +750,8 @@
       "lineCount": 4,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
-      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA"
+      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA",
+      "role": "PlainCSharp"
     },
     {
       "name": "CycleB",
@@ -764,7 +783,8 @@
       "lineCount": 4,
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
-      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB"
+      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB",
+      "role": "PlainCSharp"
     },
     {
       "name": "IGameService",
@@ -784,7 +804,8 @@
       "lineCount": 1,
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.IGameService"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.IGameService",
+      "role": "PlainCSharp"
     },
     {
       "name": "GameService",
@@ -806,7 +827,8 @@
       "lineCount": 1,
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameService"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameService",
+      "role": "PlainCSharp"
     },
     {
       "name": "GameInstaller",
@@ -851,7 +873,8 @@
       "lineCount": 7,
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase0",
@@ -871,7 +894,8 @@
       "lineCount": 1,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase0"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase0",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase1",
@@ -892,7 +916,8 @@
       "lineCount": 1,
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase1"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase1",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase2",
@@ -913,7 +938,8 @@
       "lineCount": 1,
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase2"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase2",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase3",
@@ -934,7 +960,8 @@
       "lineCount": 1,
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase3"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase3",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase4",
@@ -955,7 +982,8 @@
       "lineCount": 1,
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase4"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase4",
+      "role": "PlainCSharp"
     },
     {
       "name": "InhBase5",
@@ -976,7 +1004,8 @@
       "lineCount": 1,
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase5",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5",
+      "role": "PlainCSharp"
     },
     {
       "name": "DeepLeaf",
@@ -997,7 +1026,8 @@
       "lineCount": 1,
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Inheritance.DeepLeaf",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.DeepLeaf"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.DeepLeaf",
+      "role": "PlainCSharp"
     },
     {
       "name": "DeepNestingTarget",
@@ -1062,7 +1092,8 @@
       "lineCount": 24,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.DeepNestingTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "ExcessiveParametersTarget",
@@ -1131,7 +1162,8 @@
       "lineCount": 5,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.ExcessiveParametersTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "GodClassTarget",
@@ -1596,7 +1628,8 @@
       "lineCount": 26,
       "startLine": 4,
       "qualifiedName": "GoldenFixture.GodClassTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.GodClassTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.GodClassTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "HighComplexityTarget",
@@ -1641,7 +1674,8 @@
       "lineCount": 23,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.HighComplexityTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "LongMethodTarget",
@@ -1686,7 +1720,8 @@
       "lineCount": 93,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LongMethodTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LongMethodTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LongMethodTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "LowCohesionTarget",
@@ -1987,7 +2022,8 @@
       "lineCount": 15,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowCohesionTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget",
+      "role": "PlainCSharp"
     },
     {
       "name": "LowMaintainabilityTarget",
@@ -2068,7 +2104,778 @@
       "lineCount": 31,
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowMaintainabilityTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget",
+      "role": "PlainCSharp"
+    },
+    {
+      "name": "MonoBehaviourGodClassTarget",
+      "namespace": "GoldenFixture",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "MonoBehaviour",
+      "interfaces": [],
+      "members": [
+        {
+          "name": "_a",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_b",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_c",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_d",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_e",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "M01",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 8,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "M02",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 9,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "M03",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 10,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "M04",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 11,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "M05",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 12,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "name": "M06",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 13,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M07",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 14,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M08",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 15,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M09",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 16,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M10",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 17,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M11",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 18,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M12",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 19,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M13",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 20,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M14",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 21,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M15",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 22,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M16",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 23,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M17",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 24,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M18",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 25,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M19",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 26,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M20",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 27,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        },
+        {
+          "name": "M21",
+          "type": "int",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 28,
+          "halsteadVolume": 4.754887502163468,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.754887502163468,
+          "halsteadEstimatedBugs": 0.0009425525573729414
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
+      "isNested": false,
+      "lineCount": 26,
+      "startLine": 4,
+      "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "role": "MonoBehaviour"
+    },
+    {
+      "name": "MonoBehaviourLowCohesionTarget",
+      "namespace": "GoldenFixture",
+      "kind": "class",
+      "modifiers": [
+        "public"
+      ],
+      "baseType": "MonoBehaviour",
+      "interfaces": [],
+      "members": [
+        {
+          "name": "_f01",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f02",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f03",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f04",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f05",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f06",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f07",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f08",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f09",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "_f10",
+          "type": "int",
+          "memberKind": "Field",
+          "modifiers": [],
+          "parameters": [],
+          "attributes": [],
+          "lineCount": 0
+        },
+        {
+          "name": "Use01",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 7,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use02",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 8,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use03",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 9,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use04",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 10,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use05",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 11,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use06",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 12,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use07",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 13,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use08",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 14,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use09",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 15,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        },
+        {
+          "name": "Use10",
+          "type": "void",
+          "memberKind": "Method",
+          "modifiers": [
+            "public"
+          ],
+          "parameters": [],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 16,
+          "halsteadVolume": 2,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003333333333333333
+        }
+      ],
+      "constructorParams": [],
+      "attributes": [],
+      "genericConstraints": [],
+      "assembly": "Assembly-CSharp",
+      "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourLowCohesionTarget.cs",
+      "isNested": false,
+      "lineCount": 15,
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "role": "MonoBehaviour"
     },
     {
       "name": "MonoBehaviour",
@@ -2100,7 +2907,8 @@
       "lineCount": 5,
       "startLine": 3,
       "qualifiedName": "UnityEngine.MonoBehaviour",
-      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour",
+      "role": "PlainCSharp"
     },
     {
       "name": "Vector3",
@@ -2133,7 +2941,8 @@
       "lineCount": 5,
       "startLine": 8,
       "qualifiedName": "UnityEngine.Vector3",
-      "typeId": "Assembly-CSharp::UnityEngine.Vector3"
+      "typeId": "Assembly-CSharp::UnityEngine.Vector3",
+      "role": "PlainCSharp"
     },
     {
       "name": "Transform",
@@ -2245,7 +3054,8 @@
       "lineCount": 7,
       "startLine": 14,
       "qualifiedName": "UnityEngine.Transform",
-      "typeId": "Assembly-CSharp::UnityEngine.Transform"
+      "typeId": "Assembly-CSharp::UnityEngine.Transform",
+      "role": "PlainCSharp"
     },
     {
       "name": "Time",
@@ -2291,7 +3101,8 @@
       "lineCount": 5,
       "startLine": 22,
       "qualifiedName": "UnityEngine.Time",
-      "typeId": "Assembly-CSharp::UnityEngine.Time"
+      "typeId": "Assembly-CSharp::UnityEngine.Time",
+      "role": "PlainCSharp"
     },
     {
       "name": "Mathf",
@@ -2338,7 +3149,8 @@
       "lineCount": 4,
       "startLine": 28,
       "qualifiedName": "UnityEngine.Mathf",
-      "typeId": "Assembly-CSharp::UnityEngine.Mathf"
+      "typeId": "Assembly-CSharp::UnityEngine.Mathf",
+      "role": "PlainCSharp"
     },
     {
       "name": "UnityHotPathTarget",
@@ -2377,7 +3189,8 @@
       "lineCount": 10,
       "startLine": 11,
       "qualifiedName": "GoldenFixture.UnityHotPathTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget",
+      "role": "MonoBehaviour"
     },
     {
       "name": "IContainerBuilder",
@@ -2397,7 +3210,8 @@
       "lineCount": 1,
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
-      "typeId": "Assembly-CSharp::VContainer.IContainerBuilder"
+      "typeId": "Assembly-CSharp::VContainer.IContainerBuilder",
+      "role": "PlainCSharp"
     },
     {
       "name": "ContainerBuilderExtensions",
@@ -2469,7 +3283,8 @@
       "lineCount": 5,
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
-      "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions"
+      "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions",
+      "role": "PlainCSharp"
     },
     {
       "name": "WeakTemporizationTarget",
@@ -2534,7 +3349,8 @@
       "lineCount": 14,
       "startLine": 5,
       "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
+      "role": "MonoBehaviour"
     }
   ],
   "dependencies": [
@@ -2721,6 +3537,20 @@
       "toTypeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5"
     },
     {
+      "fromType": "MonoBehaviourGodClassTarget",
+      "toType": "MonoBehaviour",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
+      "fromType": "MonoBehaviourLowCohesionTarget",
+      "toType": "MonoBehaviour",
+      "kind": "Inheritance",
+      "fromTypeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "toTypeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+    },
+    {
       "fromType": "MonoBehaviour",
       "toType": "Transform",
       "kind": "FieldType",
@@ -2867,7 +3697,7 @@
       "wmc": 5,
       "noc": 0,
       "rfc": 6,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "boxingCount": 2,
       "closureCaptureCount": 2,
       "paramsAllocationCount": 2,
@@ -2948,7 +3778,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
@@ -2976,7 +3806,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
@@ -3004,7 +3834,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
@@ -3032,7 +3862,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
@@ -3060,7 +3890,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
@@ -3088,7 +3918,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
@@ -3116,7 +3946,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
@@ -3144,7 +3974,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
@@ -3172,7 +4002,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
@@ -3200,7 +4030,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
@@ -3228,7 +4058,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
@@ -3256,7 +4086,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
@@ -3284,7 +4114,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
@@ -3312,7 +4142,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
@@ -3340,7 +4170,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
@@ -3368,7 +4198,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.011529,
+      "typeRank": 0.010777,
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
@@ -3412,7 +4242,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "HighCoupling",
@@ -3448,7 +4278,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.072984,
+      "typeRank": 0.068224,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
@@ -3476,7 +4306,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.072984,
+      "typeRank": 0.068224,
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
@@ -3504,7 +4334,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.072984,
+      "typeRank": 0.068224,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
@@ -3532,7 +4362,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.072984,
+      "typeRank": 0.068224,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
@@ -3576,7 +4406,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
@@ -3604,7 +4434,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.049588,
+      "typeRank": 0.046353,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
@@ -3632,7 +4462,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.045459,
+      "typeRank": 0.042494,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
@@ -3660,7 +4490,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.040601,
+      "typeRank": 0.037953,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
@@ -3688,7 +4518,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.034886,
+      "typeRank": 0.032611,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
@@ -3716,7 +4546,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.028163,
+      "typeRank": 0.026326,
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
@@ -3744,7 +4574,7 @@
       "wmc": 0,
       "noc": 1,
       "rfc": 0,
-      "typeRank": 0.020253,
+      "typeRank": 0.018932,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -3780,7 +4610,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "DeepInheritance",
@@ -3831,7 +4661,7 @@
       "wmc": 7,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -3904,7 +4734,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -4217,7 +5047,7 @@
       "wmc": 21,
       "noc": 0,
       "rfc": 21,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "GodClass",
@@ -4274,7 +5104,7 @@
       "wmc": 17,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "HighComplexity",
@@ -4333,7 +5163,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "LongMethod",
@@ -4510,7 +5340,7 @@
       "wmc": 10,
       "noc": 0,
       "rfc": 10,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -4561,7 +5391,7 @@
       "wmc": 19,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "ExcessiveParameters",
@@ -4591,6 +5421,495 @@
       "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget"
     },
     {
+      "typeName": "MonoBehaviourGodClassTarget",
+      "namespace": "GoldenFixture",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 26,
+      "methodCount": 21,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 9.4,
+      "methods": [
+        {
+          "methodName": "M01",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 8,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "M02",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 9,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "M03",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 10,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "M04",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 11,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "M05",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 12,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0
+        },
+        {
+          "methodName": "M06",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 13,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M07",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 14,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M08",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 15,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M09",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 16,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M10",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 17,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M11",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 18,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M12",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 19,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M13",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 20,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M14",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 21,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M15",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 22,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M16",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 23,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M17",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 24,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M18",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 25,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M19",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 26,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M20",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 27,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        },
+        {
+          "methodName": "M21",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 28,
+          "maintainabilityIndex": 95.1,
+          "halsteadDifficulty": 1,
+          "halsteadEffort": 4.8,
+          "halsteadEstimatedBugs": 0.0009
+        }
+      ],
+      "lcom": 0.84,
+      "cbo": 1,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "averageMaintainabilityIndex": 95.7,
+      "minMaintainabilityIndex": 95.1,
+      "wmc": 21,
+      "noc": 0,
+      "rfc": 21,
+      "typeRank": 0.010234,
+      "codeSmells": [
+        {
+          "kind": "GodClass",
+          "severity": "Warning",
+          "typeName": "MonoBehaviourGodClassTarget",
+          "message": "21 methods (threshold: 20)"
+        },
+        {
+          "kind": "LowCohesion",
+          "severity": "Warning",
+          "typeName": "MonoBehaviourGodClassTarget",
+          "message": "LCOM 0.84 (threshold: 0.8)"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
+      "startLine": 4,
+      "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget"
+    },
+    {
+      "typeName": "MonoBehaviourLowCohesionTarget",
+      "namespace": "GoldenFixture",
+      "assembly": "Assembly-CSharp",
+      "lineCount": 15,
+      "methodCount": 10,
+      "maxNestingDepth": 0,
+      "averageCognitiveComplexity": 0,
+      "maxCognitiveComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
+      "excessiveParameterMethodCount": 0,
+      "codeHealth": 10,
+      "methods": [
+        {
+          "methodName": "Use01",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 7,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use02",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 8,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use03",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 9,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use04",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 10,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use05",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 11,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use06",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 12,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use07",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 13,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use08",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 14,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use09",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 15,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        },
+        {
+          "methodName": "Use10",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 0,
+          "lineCount": 1,
+          "startLine": 16,
+          "maintainabilityIndex": 97.8,
+          "halsteadDifficulty": 0.5,
+          "halsteadEffort": 1,
+          "halsteadEstimatedBugs": 0.0003
+        }
+      ],
+      "lcom": 1,
+      "cbo": 1,
+      "dit": 1,
+      "afferentCoupling": 0,
+      "efferentCoupling": 1,
+      "instability": 1,
+      "averageMaintainabilityIndex": 97.8,
+      "minMaintainabilityIndex": 97.8,
+      "wmc": 10,
+      "noc": 0,
+      "rfc": 10,
+      "typeRank": 0.010234,
+      "codeSmells": [
+        {
+          "kind": "LowCohesion",
+          "severity": "Warning",
+          "typeName": "MonoBehaviourLowCohesionTarget",
+          "message": "LCOM 1.00 (threshold: 0.8)"
+        }
+      ],
+      "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourLowCohesionTarget.cs",
+      "startLine": 3,
+      "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget"
+    },
+    {
       "typeName": "MonoBehaviour",
       "namespace": "UnityEngine",
       "assembly": "Assembly-CSharp",
@@ -4606,13 +5925,13 @@
       "methods": [],
       "cbo": 1,
       "dit": 0,
-      "afferentCoupling": 2,
+      "afferentCoupling": 4,
       "efferentCoupling": 1,
-      "instability": 0.33,
+      "instability": 0.2,
       "wmc": 0,
-      "noc": 2,
+      "noc": 4,
       "rfc": 0,
-      "typeRank": 0.024906,
+      "typeRank": 0.040679,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 3,
       "qualifiedName": "UnityEngine.MonoBehaviour",
@@ -4640,7 +5959,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.042901,
+      "typeRank": 0.052672,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 8,
       "qualifiedName": "UnityEngine.Vector3",
@@ -4711,7 +6030,7 @@
       "wmc": 3,
       "noc": 0,
       "rfc": 3,
-      "typeRank": 0.032118,
+      "typeRank": 0.044811,
       "codeSmells": [
         {
           "kind": "LowCohesion",
@@ -4746,7 +6065,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 22,
       "qualifiedName": "UnityEngine.Time",
@@ -4789,7 +6108,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 28,
       "qualifiedName": "UnityEngine.Mathf",
@@ -4833,7 +6152,7 @@
       "wmc": 1,
       "noc": 0,
       "rfc": 1,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "ExpensiveUnityApiInHotPath",
@@ -4911,7 +6230,7 @@
       "wmc": 0,
       "noc": 0,
       "rfc": 0,
-      "typeRank": 0.029559,
+      "typeRank": 0.027631,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
@@ -4968,7 +6287,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
@@ -5026,7 +6345,7 @@
       "wmc": 2,
       "noc": 0,
       "rfc": 2,
-      "typeRank": 0.010948,
+      "typeRank": 0.010234,
       "codeSmells": [
         {
           "kind": "WeakTemporization",

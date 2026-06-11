@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -19,17 +20,23 @@ internal static class SemanticEnricher
         Dictionary<string, TypeNodeInfo> TypeInfoByKey,
         CompilationResult CompilationResult,
         ConcurrentDictionary<SyntaxTree, SemanticModel> ModelCache,
-        EffectiveSmellThresholds Thresholds,
+        string Profile,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? SmellOverrides,
+        IReadOnlySet<CodeSmellKind> InformationalSmellKinds,
         IReadOnlySet<CodeSmellKind> DisabledRuleKinds)
     {
         public static EnrichmentContext Create(
             IReadOnlyList<TypeNodeInfo> allTypes,
             IReadOnlyList<SyntaxTree> syntaxTrees,
             CompilationResult compilationResult,
-            EffectiveSmellThresholds? thresholds,
+            string profile,
+            IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? smellOverrides,
+            IReadOnlySet<CodeSmellKind>? informationalSmellKinds,
             IReadOnlySet<CodeSmellKind>? disabledRuleKinds)
         {
-            thresholds ??= EffectiveSmellThresholds.Default;
+            profile = SmellThresholdProfiles.NormalizeProfile(profile);
+            smellOverrides ??= null;
+            informationalSmellKinds ??= new HashSet<CodeSmellKind>();
             disabledRuleKinds ??= NoDisabledRules;
             var treeByPath = SyntaxLookups.BuildTreeLookup(compilationResult, syntaxTrees);
 
@@ -43,7 +50,7 @@ internal static class SemanticEnricher
 
             return new EnrichmentContext(
                 typeDeclLookup, typeInfoByKey, compilationResult, modelCache,
-                thresholds, disabledRuleKinds);
+                profile, smellOverrides, informationalSmellKinds, disabledRuleKinds);
         }
 
         static void PrewarmModelCache(
@@ -67,11 +74,14 @@ internal static class SemanticEnricher
         IReadOnlyList<TypeNodeInfo> allTypes,
         IReadOnlyList<SyntaxTree> syntaxTrees,
         CompilationResult compilationResult,
-        EffectiveSmellThresholds? thresholds = null,
+        string profile = SmellThresholdProfiles.DefaultProfileName,
+        IReadOnlyDictionary<string, IReadOnlyDictionary<string, JsonElement>>? smellOverrides = null,
+        IReadOnlySet<CodeSmellKind>? informationalSmellKinds = null,
         IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null)
     {
         var context = EnrichmentContext.Create(
-            allTypes, syntaxTrees, compilationResult, thresholds, disabledRuleKinds);
+            allTypes, syntaxTrees, compilationResult, profile, smellOverrides,
+            informationalSmellKinds, disabledRuleKinds);
 
         var result = new TypeMetrics[typeMetrics.Count];
         Parallel.For(0, typeMetrics.Count, i =>
@@ -87,27 +97,69 @@ internal static class SemanticEnricher
         var key = TypeIdentity.GetTypeId(metrics);
         context.TypeInfoByKey.TryGetValue(key, out var typeInfo);
 
-        var current = context.TypeDeclLookup.TryGetValue(key, out var typeDecl)
+        SemanticModel? model = null;
+        TypeDeclarationSyntax? typeDecl = null;
+        if (context.TypeDeclLookup.TryGetValue(key, out typeDecl)
+            && context.CompilationResult.Compilation is not null)
+        {
+            model = context.ModelCache.GetOrAdd(
+                typeDecl.SyntaxTree,
+                static (t, c) => c.GetSemanticModel(t),
+                context.CompilationResult.Compilation);
+        }
+
+        var role = typeInfo is not null
+            ? UnityContextClassifier.ClassifyRole(typeInfo, typeDecl, model)
+            : TypeRole.PlainCSharp;
+        var thresholds = SmellThresholdProfiles.ResolveEffectiveThresholds(
+            context.Profile, role, context.SmellOverrides);
+
+        var current = typeDecl is not null
             ? CohesionEnrichment.Apply(metrics, typeDecl, typeInfo, context)
             : metrics;
 
         var smells = typeInfo is not null
-            ? CodeSmellDetector.Detect(current, typeInfo, current.Lcom, current.Cbo, current.Dit, context.Thresholds)
+            ? CodeSmellDetector.Detect(current, typeInfo, current.Lcom, current.Cbo, current.Dit, thresholds).ToList()
             : new List<CodeSmell>();
+
+        var informationalCount = ApplyInformationalSmells(
+            ref smells, current, thresholds, context.InformationalSmellKinds);
 
         var wmc = WmcCalculator.Calculate(typeInfo?.Members ?? []);
         var detected = FeatureDetection.Run(metrics, context);
         smells = SmellFiltering.Apply(smells, context.DisabledRuleKinds);
         detected = SmellFiltering.Apply(detected, context.DisabledRuleKinds);
 
-        return StampEnrichedMetrics(current, smells, detected, wmc);
+        return StampEnrichedMetrics(current, smells, detected, wmc, informationalCount);
+    }
+
+    static int ApplyInformationalSmells(
+        ref List<CodeSmell> smells,
+        TypeMetrics metrics,
+        EffectiveSmellThresholds thresholds,
+        IReadOnlySet<CodeSmellKind> informationalKinds)
+    {
+        if (informationalKinds.Count == 0)
+            return 0;
+
+        var count = 0;
+        if (informationalKinds.Contains(CodeSmellKind.LowCohesion)
+            && metrics.Lcom is { } lcom
+            && lcom >= thresholds.LowCohesionLcomWarning)
+        {
+            count++;
+            smells = smells.Where(s => s.Kind != CodeSmellKind.LowCohesion).ToList();
+        }
+
+        return count;
     }
 
     static TypeMetrics StampEnrichedMetrics(
         TypeMetrics current,
         IReadOnlyList<CodeSmell> smells,
         IReadOnlyList<DetectedSmell> detected,
-        int wmc)
+        int wmc,
+        int informationalCount)
     {
         var allSmells = SmellMerging.Convert(smells, detected);
         var boxingCount = SmellMerging.CountByKind(detected, CodeSmellKind.BoxingAllocation);
@@ -120,7 +172,8 @@ internal static class SemanticEnricher
             BoxingCount = boxingCount > 0 ? boxingCount : null,
             ClosureCaptureCount = closureCount > 0 ? closureCount : null,
             ParamsAllocationCount = paramsCount > 0 ? paramsCount : null,
-            CodeSmells = allSmells.Count > 0 ? allSmells : null
+            CodeSmells = allSmells.Count > 0 ? allSmells : null,
+            InformationalCount = informationalCount > 0 ? informationalCount : null
         };
     }
 

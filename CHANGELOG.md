@@ -13,6 +13,8 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Built-in `unity` smell-threshold profile with SATT-style role-aware thresholds (`MonoBehaviour`, `ScriptableObject`, `EditorExtension`, `PlainCSharp`) selectable via `"profile": "unity"` in `.unilyze.json` or `--profile unity`; user `smells` overrides take precedence over profile defaults ([#87](https://github.com/bigdra50/unilyze/issues/87))
+- Per-type `role` field and optional `informationalCount` on `typeMetrics` (unity profile records `LowCohesion` as informational instead of a warning smell, per Palomba ICSME 2014); root `profile` field when a non-default profile is active; `diff`/`trend` warn on profile mismatch ([#87](https://github.com/bigdra50/unilyze/issues/87))
 - `calibrate` subcommand: derive smell-threshold candidates from two or more unilyze JSON snapshots using Alves, Ypma & Visser (ICSM 2010) LOC-weighted pooling and 70/80/90 percentiles (80/90/95 for parameter count); outputs risk bands and a `.unilyze.json` smells fragment without changing built-in defaults ([#86](https://github.com/bigdra50/unilyze/issues/86))
 - `diff --base-ref <git-ref> <after.json>` analyzes the base ref in a temporary git worktree and diffs against the after snapshot in one command; composes with `-f markdown`, `--fail-on-regression`, and `--changed-only` ([#82](https://github.com/bigdra50/unilyze/issues/82))
 - Baseline workflow for brownfield quality gates: `unilyze baseline create` snapshots current smells into `.unilyze/baseline.json`, and `--baseline <file>` suppresses matched fingerprints at analysis time so reports and gates see only newly introduced violations ([#81](https://github.com/bigdra50/unilyze/issues/81))

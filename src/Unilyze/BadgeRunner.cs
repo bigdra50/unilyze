@@ -77,9 +77,7 @@ internal static class BadgeRunner
                 fullPath, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                thresholds: resolved.Thresholds,
-                disabledRuleKinds: resolved.DisabledRuleKinds,
-                disableCycles: resolved.DisableCycles);
+                analysisConfig: resolved);
 
             var effectiveBaseline = baselinePath ?? config.Baseline;
             var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);

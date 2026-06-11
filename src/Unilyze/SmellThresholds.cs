@@ -36,27 +36,30 @@ public static class SmellThresholds
     public const int DeepInheritanceDitWarning = 5;
 
     public static string FormatMetricsCliHelp()
+        => FormatMetricsCliHelp(EffectiveSmellThresholds.Default);
+
+    public static string FormatMetricsCliHelp(EffectiveSmellThresholds thresholds)
     {
         var sb = new StringBuilder();
         sb.AppendLine("    CodeSmell detection thresholds:");
         AppendMetricsLine(sb, "GodClass",
-            $"lines >= {GodClassLinesWarning} OR methods >= {GodClassMethodsWarning}",
-            $"lines >= {GodClassLinesCritical}");
+            $"lines >= {thresholds.GodClassLinesWarning} OR methods >= {thresholds.GodClassMethodsWarning}",
+            $"lines >= {thresholds.GodClassLinesCritical}");
         AppendMetricsLine(sb, "LongMethod",
-            $"lines >= {LongMethodLinesWarning} OR CogCC >= {LongMethodCogCcWarning}",
-            $"lines >= {LongMethodLinesCritical} OR CogCC >= {LongMethodCogCcCritical}");
+            $"lines >= {thresholds.LongMethodLinesWarning} OR CogCC >= {thresholds.LongMethodCogCcWarning}",
+            $"lines >= {thresholds.LongMethodLinesCritical} OR CogCC >= {thresholds.LongMethodCogCcCritical}");
         AppendMetricsLine(sb, "HighComplexity",
-            $"CycCC >= {HighComplexityCycCcWarning} OR CogCC >= {HighComplexityCogCcWarning}");
+            $"CycCC >= {thresholds.HighComplexityCycCcWarning} OR CogCC >= {thresholds.HighComplexityCogCcWarning}");
         AppendMetricsLine(sb, "DeepNesting",
-            $"depth >= {DeepNestingDepthWarning}",
-            $"depth >= {DeepNestingDepthCritical}");
-        sb.AppendLine($"      ExcessiveParameters  params > {ExcessiveParametersMax}");
-        AppendMetricsLine(sb, "LowCohesion", $"LCOM >= {LowCohesionLcomWarning:0.0}");
+            $"depth >= {thresholds.DeepNestingDepthWarning}",
+            $"depth >= {thresholds.DeepNestingDepthCritical}");
+        sb.AppendLine($"      ExcessiveParameters  params > {thresholds.ExcessiveParametersMax}");
+        AppendMetricsLine(sb, "LowCohesion", $"LCOM >= {thresholds.LowCohesionLcomWarning:0.0}");
         AppendMetricsLine(sb, "HighCoupling",
-            $"CBO >= {HighCouplingCboWarning}",
-            $"CBO >= {HighCouplingCboCritical}");
-        AppendMetricsLine(sb, "DeepInheritance", $"DIT >= {DeepInheritanceDitWarning}");
-        AppendMetricsLine(sb, "LowMaintainability", $"MI < {LowMaintainabilityMiWarning:0}");
+            $"CBO >= {thresholds.HighCouplingCboWarning}",
+            $"CBO >= {thresholds.HighCouplingCboCritical}");
+        AppendMetricsLine(sb, "DeepInheritance", $"DIT >= {thresholds.DeepInheritanceDitWarning}");
+        AppendMetricsLine(sb, "LowMaintainability", $"MI < {thresholds.LowMaintainabilityMiWarning:0}");
         sb.AppendLine("      CyclicDependency     type participates in a dependency cycle");
         return sb.ToString().TrimEnd();
     }

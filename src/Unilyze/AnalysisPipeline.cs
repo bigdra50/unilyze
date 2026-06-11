@@ -17,12 +17,16 @@ internal static class AnalysisPipeline
         bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true,
         IAnalysisLogSink? logSink = null,
-        EffectiveSmellThresholds? thresholds = null,
-        IReadOnlySet<CodeSmellKind>? disabledRuleKinds = null,
-        bool disableCycles = false)
+        ResolvedAnalysisConfig? analysisConfig = null)
     {
-        thresholds ??= EffectiveSmellThresholds.Default;
-        disabledRuleKinds ??= new HashSet<CodeSmellKind>();
+        analysisConfig ??= new ResolvedAnalysisConfig(
+            EffectiveSmellThresholds.Default,
+            SmellThresholdProfiles.DefaultProfileName,
+            new HashSet<CodeSmellKind>(),
+            DisableCycles: false,
+            InformationalSmellKinds: new HashSet<CodeSmellKind>(),
+            SmellOverrides: null);
+        var config = analysisConfig.Value;
         var log = logSink ?? new ConsoleAnalysisLogSink(quiet: false);
         var sw = Stopwatch.StartNew();
 
@@ -112,7 +116,10 @@ internal static class AnalysisPipeline
         typeMetrics = EnrichWithCouplingMetrics(typeMetrics, couplingMap);
 
         typeMetrics = SemanticEnricher.Enrich(
-            typeMetrics, allTypes, allSyntaxTrees, compilationResult, thresholds, disabledRuleKinds);
+            typeMetrics, allTypes, allSyntaxTrees, compilationResult,
+            config.Profile, config.SmellOverrides, config.InformationalSmellKinds,
+            config.DisabledRuleKinds);
+        allTypes = TypeRoleStamper.ApplyRoles(allTypes, allSyntaxTrees, compilationResult).ToList();
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 
@@ -138,12 +145,16 @@ internal static class AnalysisPipeline
         }).ToList();
 
         IReadOnlyList<CyclicDependency>? cycles = null;
-        if (!disableCycles)
+        if (!config.DisableCycles)
         {
             var detectedCycles = CycleDetector.DetectAll(deps, assemblyInfos);
             cycles = detectedCycles.Count > 0 ? detectedCycles : null;
         }
         log.PhaseCompleted("aggregate", sw.Elapsed);
+
+        var profileField = config.Profile == SmellThresholdProfiles.DefaultProfileName
+            ? null
+            : config.Profile;
 
         return new AnalysisResult(
             Path.GetFullPath(path),
@@ -156,7 +167,8 @@ internal static class AnalysisPipeline
             cycles,
             AnalysisResult.CurrentMetricsVersion,
             ToolVersionInfo.Current,
-            ProjectKind: projectKind);
+            ProjectKind: projectKind,
+            Profile: profileField);
     }
 
     static CsprojInfo? ResolveCsprojInfo(

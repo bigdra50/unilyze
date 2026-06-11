@@ -52,9 +52,7 @@ internal static class BaselineRunner
                 projectRoot, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-                thresholds: resolved.Thresholds,
-                disabledRuleKinds: resolved.DisabledRuleKinds,
-                disableCycles: resolved.DisableCycles);
+                analysisConfig: resolved);
 
             var baseline = BaselineFile.FromAnalysis(result);
             BaselineFile.Save(outputPath, baseline);
