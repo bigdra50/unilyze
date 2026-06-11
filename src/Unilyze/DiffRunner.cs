@@ -5,8 +5,10 @@ namespace Unilyze;
 internal static class DiffRunner
 {
     private sealed record DiffRunOptions(
-        string BeforePath,
+        string? BeforePath,
+        AnalysisResult? BeforeResult,
         string AfterPath,
+        AnalysisResult? AfterResult,
         string? Output,
         OutputFormat Format,
         bool NoOpen,
@@ -38,6 +40,25 @@ internal static class DiffRunner
         RegressionGateResult RegressionGate,
         int VersionExit);
 
+    private sealed record DiffCliInput(
+        string? BaseRef,
+        string? Output,
+        OutputFormat Format,
+        bool NoOpen,
+        bool FailOnRegression,
+        bool FailOnVersionMismatch,
+        bool ChangedOnly,
+        string? PathOverride,
+        AnalysisLevel? RequestedLevel,
+        IReadOnlyList<string> Positional);
+
+    private sealed record BaseRefRequest(
+        string BaseRef,
+        string AfterPath,
+        string? PathOverride,
+        AnalysisLevel? RequestedLevel,
+        DiffRunOptions Options);
+
     public static int Run(string[] args)
     {
         if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
@@ -47,24 +68,82 @@ internal static class DiffRunner
         if (usageError != 0)
             return usageError;
 
-        var positional = args.Where(a => !a.StartsWith('-')).ToList();
-        if (positional.Count < 2)
+        if (ProgramHelpers.HasFlagWithoutValue(args, "--base-ref"))
         {
-            Console.Error.WriteLine("Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression] [--changed-only]");
+            Console.Error.WriteLine("--base-ref requires a value");
             return 1;
         }
 
+        var parseError = TryParseDiffCliInput(args, out var input);
+        if (parseError != 0)
+            return parseError;
+
+        return input.BaseRef != null
+            ? ExecuteBaseRefDiff(input)
+            : ExecuteFileDiff(input);
+    }
+
+    static int TryParseDiffCliInput(string[] args, out DiffCliInput input)
+    {
         var opts = ProgramHelpers.ParseOptions(args);
+        var levelError = TryParseRequestedLevel(opts.GetValueOrDefault("--level"), out var requestedLevel);
+        if (levelError != 0)
+        {
+            input = null!;
+            return levelError;
+        }
+
         var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
         var formatStr = opts.GetValueOrDefault("-f") ?? opts.GetValueOrDefault("--format");
-        var noOpen = opts.ContainsKey("--no-open");
-        var failOnRegression = opts.ContainsKey("--fail-on-regression");
-        var failOnVersionMismatch = opts.ContainsKey("--fail-on-version-mismatch");
-        var changedOnly = opts.ContainsKey("--changed-only");
+        var formatError = TryResolveDiffFormat(formatStr, output, out var format);
+        if (formatError != 0)
+        {
+            input = null!;
+            return formatError;
+        }
 
-        OutputFormat format;
-        try { format = ProgramHelpers.ResolveFormat(formatStr, output); }
-        catch (ArgumentException ex) { Console.Error.WriteLine(ex.Message); return 1; }
+        input = new DiffCliInput(
+            opts.GetValueOrDefault("--base-ref"),
+            output,
+            format,
+            opts.ContainsKey("--no-open"),
+            opts.ContainsKey("--fail-on-regression"),
+            opts.ContainsKey("--fail-on-version-mismatch"),
+            opts.ContainsKey("--changed-only"),
+            opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path"),
+            requestedLevel,
+            ProgramHelpers.ExtractPositionalArgs(args, ProgramHelpers.DiffValueOptions));
+        return 0;
+    }
+
+    static int TryParseRequestedLevel(string? levelStr, out AnalysisLevel? requestedLevel)
+    {
+        requestedLevel = null;
+        if (levelStr == null)
+            return 0;
+
+        if (!AnalysisLevelOption.TryParse(levelStr, out var lvl))
+        {
+            Console.Error.WriteLine($"Unknown level: '{levelStr}'. Valid levels: syntax, core, full, complete");
+            return 1;
+        }
+
+        requestedLevel = lvl;
+        return 0;
+    }
+
+    static int TryResolveDiffFormat(string? formatStr, string? output, out OutputFormat format)
+    {
+        format = OutputFormat.Json;
+        try
+        {
+            format = ProgramHelpers.ResolveFormat(formatStr, output);
+        }
+        catch (ArgumentException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
 
         if (format == OutputFormat.Sarif)
         {
@@ -75,14 +154,27 @@ internal static class DiffRunner
         if (formatStr == null && output == null)
             format = OutputFormat.Json;
 
-        var beforePath = positional[0];
-        var afterPath = positional[1];
+        return 0;
+    }
+
+    static DiffRunOptions ToDiffRunOptions(DiffCliInput input) =>
+        new(null, null, "", null, input.Output, input.Format, input.NoOpen,
+            input.FailOnRegression, input.FailOnVersionMismatch, input.ChangedOnly);
+
+    static int ExecuteBaseRefDiff(DiffCliInput input)
+    {
+        if (input.Positional.Count != 1)
+        {
+            Console.Error.WriteLine(
+                "Usage: unilyze diff --base-ref <git-ref> <after.json> [-p path] [--level syntax|core|full|complete] ...");
+            return 1;
+        }
 
         try
         {
-            return RunComparison(new DiffRunOptions(
-                beforePath, afterPath, output, format, noOpen,
-                failOnRegression, failOnVersionMismatch, changedOnly));
+            return RunWithBaseRef(new BaseRefRequest(
+                input.BaseRef!, input.Positional[0], input.PathOverride,
+                input.RequestedLevel, ToDiffRunOptions(input)));
         }
         catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
         {
@@ -91,15 +183,109 @@ internal static class DiffRunner
         }
     }
 
+    static int ExecuteFileDiff(DiffCliInput input)
+    {
+        if (input.Positional.Count < 2)
+        {
+            Console.Error.WriteLine(
+                "Usage: unilyze diff <before.json> <after.json> [-o output.{json,html}] [-f html] [--no-open] [--fail-on-regression] [--changed-only]");
+            return 1;
+        }
+
+        try
+        {
+            return RunComparison(ToDiffRunOptions(input) with
+            {
+                BeforePath = input.Positional[0],
+                AfterPath = input.Positional[1],
+            });
+        }
+        catch (Exception ex) when (ex is FileNotFoundException or JsonException or IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+    }
+
+    static int RunWithBaseRef(BaseRefRequest request)
+    {
+        try
+        {
+            var after = LoadAfterSnapshot(request.AfterPath);
+            return RunBaseRefComparison(request, after);
+        }
+        catch (GitWorktreeException ex)
+        {
+            Console.Error.WriteLine(ex.Message);
+            return 1;
+        }
+    }
+
+    static AnalysisResult LoadAfterSnapshot(string afterPath)
+    {
+        var afterJson = File.ReadAllText(afterPath);
+        return JsonSerializer.Deserialize(afterJson, AnalysisJsonContext.Default.AnalysisResult)
+               ?? throw new InvalidOperationException($"Failed to parse: {afterPath}");
+    }
+
+    static int RunBaseRefComparison(BaseRefRequest request, AnalysisResult after)
+    {
+        var projectPath = request.PathOverride ?? after.ProjectPath;
+        var beforeLabel = $"base-ref:{request.BaseRef}";
+
+        GitWorktreeSession? session = null;
+        try
+        {
+            session = GitWorktreeSession.Create(projectPath, request.BaseRef);
+            var before = AnalyzeBaseRef(session, projectPath, request.RequestedLevel);
+            return RunComparison(request.Options with
+            {
+                BeforePath = beforeLabel,
+                BeforeResult = before,
+                AfterPath = request.AfterPath,
+                AfterResult = after,
+            });
+        }
+        finally
+        {
+            session?.Dispose();
+        }
+    }
+
+    static string ResolveBaseProjectPath(GitWorktreeSession session, string projectPath)
+    {
+        var relative = GitWorktreeSession.GetRepoRelativePath(projectPath);
+        return string.IsNullOrEmpty(relative)
+            ? session.WorktreePath
+            : Path.GetFullPath(Path.Combine(session.WorktreePath, relative));
+    }
+
+    static AnalysisResult AnalyzeBaseRef(
+        GitWorktreeSession session,
+        string projectPath,
+        AnalysisLevel? requestedLevel)
+    {
+        var baseProjectPath = ResolveBaseProjectPath(session, projectPath);
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(baseProjectPath);
+        var config = UnilyzeConfig.LoadMerged(projectRoot, []);
+        var resolved = config.ResolveAnalysisConfig();
+        return AnalysisPipeline.Build(
+            baseProjectPath,
+            null,
+            null,
+            config.ExcludeDirs,
+            requestedLevel,
+            excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+            applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+            thresholds: resolved.Thresholds,
+            disabledRuleKinds: resolved.DisabledRuleKinds,
+            disableCycles: resolved.DisableCycles);
+    }
+
     static int RunComparison(DiffRunOptions options)
     {
-        var beforeJson = File.ReadAllText(options.BeforePath);
-        var afterJson = File.ReadAllText(options.AfterPath);
-
-        var before = JsonSerializer.Deserialize(beforeJson, AnalysisJsonContext.Default.AnalysisResult)
-                     ?? throw new InvalidOperationException($"Failed to parse: {options.BeforePath}");
-        var after = JsonSerializer.Deserialize(afterJson, AnalysisJsonContext.Default.AnalysisResult)
-                    ?? throw new InvalidOperationException($"Failed to parse: {options.AfterPath}");
+        var before = LoadBeforeSnapshot(options);
+        var (after, afterJson) = LoadAfterSnapshot(options);
 
         WarnIfAnalysisLevelsDiffer(before, after);
 
@@ -114,7 +300,7 @@ internal static class DiffRunner
         var regressionGate = EvaluateRegressionGate(summaries, options.FailOnRegression);
 
         return WriteFormattedOutput(new DiffOutputContext(
-            options.BeforePath,
+            options.BeforePath!,
             options.AfterPath,
             afterJson,
             diffJson,
@@ -128,6 +314,31 @@ internal static class DiffRunner
             options.FailOnRegression,
             regressionGate,
             versionExit));
+    }
+
+    static AnalysisResult LoadBeforeSnapshot(DiffRunOptions options)
+    {
+        if (options.BeforeResult != null)
+            return options.BeforeResult;
+
+        var beforeJson = File.ReadAllText(options.BeforePath!);
+        return JsonSerializer.Deserialize(beforeJson, AnalysisJsonContext.Default.AnalysisResult)
+               ?? throw new InvalidOperationException($"Failed to parse: {options.BeforePath}");
+    }
+
+    static (AnalysisResult After, string AfterJson) LoadAfterSnapshot(DiffRunOptions options)
+    {
+        if (options.AfterResult != null)
+        {
+            return (
+                options.AfterResult,
+                JsonSerializer.Serialize(options.AfterResult, AnalysisJsonContext.Default.AnalysisResult));
+        }
+
+        var afterJson = File.ReadAllText(options.AfterPath);
+        var after = JsonSerializer.Deserialize(afterJson, AnalysisJsonContext.Default.AnalysisResult)
+                    ?? throw new InvalidOperationException($"Failed to parse: {options.AfterPath}");
+        return (after, afterJson);
     }
 
     static void WarnIfAnalysisLevelsDiffer(AnalysisResult before, AnalysisResult after)
@@ -274,10 +485,14 @@ internal static class DiffRunner
               unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
               unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
               unilyze diff <before.json> <after.json> --changed-only             Omit unchanged types from JSON output
+              unilyze diff --base-ref <git-ref> <after.json>            Analyze base ref in a temp worktree and diff
 
             Options:
               -o, --output             Output file path (format inferred from extension: .html or .json)
               -f, --format             Output format: json, html, markdown (default: json when no -o specified)
+              -p, --path               Project path for base analysis (default: after snapshot projectPath)
+                  --base-ref           Git ref for baseline; analyzes it in a temporary worktree (one after.json positional)
+                  --level              Pin analysis level for base side: syntax, core, full, complete
                   --no-open            When generating HTML, do not auto-open in browser
                   --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
                   --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
@@ -288,6 +503,11 @@ internal static class DiffRunner
               0  Success / no regression
               1  Usage error
               2  Regression detected (with --fail-on-regression) or metricsVersion mismatch (with --fail-on-version-mismatch)
+
+            CI PR gate (single command):
+              git fetch origin main   # or use fetch-depth: 0 in checkout
+              unilyze -p . -o after.json
+              unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
             """);
         return 0;
     }

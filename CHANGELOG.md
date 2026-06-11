@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `diff --base-ref <git-ref> <after.json>` analyzes the base ref in a temporary git worktree and diffs against the after snapshot in one command; composes with `-f markdown`, `--fail-on-regression`, and `--changed-only` ([#82](https://github.com/bigdra50/unilyze/issues/82))
 - HTML viewer bundles Cytoscape.js, dagre, and cytoscape-dagre for full offline graph support; ELK layout remains CDN-only with dagre fallback ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - `THIRD-PARTY-NOTICES.txt` at repo root documenting bundled MIT libraries and CDN-only dependencies ([#74](https://github.com/bigdra50/unilyze/issues/74))
 - Per-smell threshold overrides (`smells`) and per-rule enable/disable toggles (`rules`) in `.unilyze.json` ([#71](https://github.com/bigdra50/unilyze/issues/71)); maps merge key-wise across global and project config

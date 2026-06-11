@@ -49,6 +49,7 @@ unilyze -p ~/MyUnityProject --level core         # Pin analysis level (see Analy
 ```bash
 unilyze config list                                # Show/manage configuration
 unilyze diff <before.json> <after.json>            # Compare snapshots (JSON)
+unilyze diff --base-ref origin/main after.json     # Diff against a git ref (temp worktree)
 unilyze diff <before.json> <after.json> -o diff.html  # Compare snapshots (interactive HTML)
 unilyze hotspot -p ~/MyUnityProject                # Git churn x complexity
 unilyze trend <dir-of-jsons>                       # Quality trend
@@ -401,6 +402,18 @@ unilyze diff before.json after.json -f markdown | gh pr comment "$PR" --body-fil
 ```
 
 With `--fail-on-regression`, the markdown body is unchanged; only the exit code reflects the gate (stdout still contains the verdict line).
+
+### PR workflow (`--base-ref`)
+
+`diff --base-ref` materializes a git ref in a temporary worktree, analyzes it in-process, and diffs against your after snapshot — no hand-built `before.json` required. Re-analysis of the base ref roughly doubles CI time; caching a baseline JSON on a branch (as in the badges workflow) is the faster alternative when you control storage.
+
+```bash
+git fetch origin main   # or use fetch-depth: 0 in checkout
+unilyze -p . -o after.json
+unilyze diff --base-ref origin/main after.json -f markdown --fail-on-regression
+```
+
+Use `-p` to override the project path (default: `projectPath` from the after snapshot). Use `--level` to pin the base-side analysis level; if it differs from the after snapshot, the existing level-mismatch warning still applies. Unknown refs, non-repo directories, and a missing `git` binary exit `1` with a one-line stderr hint (fetch the branch or widen `fetch-depth` on shallow clones).
 
 ## Agent Workflow
 

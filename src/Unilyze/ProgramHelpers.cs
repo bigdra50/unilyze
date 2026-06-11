@@ -37,9 +37,9 @@ internal static class ProgramHelpers
 
     public static readonly string[] SkillsSubcommands = ["install", "uninstall", "list"];
 
-    static readonly HashSet<string> DiffValueOptions = new(StringComparer.Ordinal)
+    internal static readonly HashSet<string> DiffValueOptions = new(StringComparer.Ordinal)
     {
-        "-o", "--output", "-f", "--format",
+        "-o", "--output", "-f", "--format", "-p", "--path", "--base-ref", "--level",
     };
 
     static readonly HashSet<string> DiffBooleanOptions = new(StringComparer.Ordinal)
@@ -145,6 +145,26 @@ internal static class ProgramHelpers
         }
 
         return null;
+    }
+
+    public static List<string> ExtractPositionalArgs(
+        string[] args,
+        IReadOnlySet<string> valueOptions)
+    {
+        var positionals = new List<string>();
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (!args[i].StartsWith('-'))
+            {
+                positionals.Add(args[i]);
+                continue;
+            }
+
+            if (valueOptions.Contains(args[i]))
+                i++;
+        }
+
+        return positionals;
     }
 
     public static int ValidateAnalyzeOptions(string[] args)
