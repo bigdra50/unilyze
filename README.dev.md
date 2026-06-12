@@ -107,6 +107,54 @@ UNILYZE_GOLDEN_UPDATE=1 dotnet test tests/Unilyze.Tests -f net10.0 --filter Gold
 
 Review the `expected.json` diff in your PR. When the change alters measured values, also bump `AnalysisResult.CurrentMetricsVersion` and add a `[metrics]` entry to `CHANGELOG.md` per the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー). Do not auto-regenerate in CI.
 
+### Complete-level CI validation (GameCI)
+
+[`.github/workflows/complete-validation.yml`](.github/workflows/complete-validation.yml) runs weekly and on manual dispatch in the pinned `unityci/editor:ubuntu-2022.3.0f1-base-3` image.
+It batch-compiles the golden Unity fixture, maps `/opt/unity` into the Unity Hub version-directory convention expected by `UnityDllResolver`, and runs the fixture with `--level complete`.
+The validation fails if DLL resolution degrades, if `Library/ScriptAssemblies` is missing, or if the normalized metrics differ from `expected.json` beyond the expected `analysisLevel` change.
+Repositories without the `UNITY_LICENSE` secret report an explicit green skip.
+
+To activate a Unity Personal license:
+
+1. Create a writable local directory outside the repository, then start the same image used by the workflow:
+
+   ```bash
+   mkdir -p "$HOME/.local/state/unilyze-unity-license"
+   docker run --rm -it \
+     -v "$HOME/.local/state/unilyze-unity-license:/license" \
+     -w /license \
+     --entrypoint bash \
+     unityci/editor:ubuntu-2022.3.0f1-base-3
+   ```
+
+2. In the container, generate the manual activation request:
+
+   ```bash
+   unity-editor -batchmode -nographics -quit -createManualActivationFile -logFile -
+   ```
+
+3. Upload the generated `.alf` file at [Unity manual license activation](https://license.unity3d.com/manual), select the Personal license, and download the resulting `.ulf`.
+4. Store the full `.ulf` contents in the repository Actions secret named `UNITY_LICENSE`.
+   The `.alf` must be generated with the same pinned GameCI image because Personal license files are machine-bound.
+   Do not commit `.alf` or `.ulf` files.
+
+Run the same validation locally after obtaining the `.ulf`:
+
+```bash
+docker run --rm \
+  -v "$PWD:/repo" \
+  -w /repo \
+  -e UNITY_LICENSE="$(cat "$HOME/.local/state/unilyze-unity-license/Unity_v2022.x.ulf")" \
+  unityci/editor:ubuntu-2022.3.0f1-base-3 \
+  bash scripts/complete-validation/run.sh
+```
+
+Failure diagnosis:
+
+- Resolver or Unity layout failure: inspect the `UNILYZE_EDITORS_ROOT` bridge and update `UnityDllResolver` for the editor layout.
+- Reproducible metric drift: follow the golden regeneration and metrics compatibility policy above.
+- Activation failure: regenerate the `.alf` with the pinned image, obtain a new `.ulf`, and replace `UNITY_LICENSE`.
+
 ### Pack / Install Smoke
 
 Release readiness is determined by [scripts/release-smoke.sh](scripts/release-smoke.sh), which validates the standard `.NET tool` workflow.
