@@ -162,6 +162,18 @@ Settings merge additively from global config (`~/.config/unilyze/config.json`), 
 
 `UNI009` off disables cyclic-dependency detection entirely. Other rule IDs map to smell kinds and filter JSON, SARIF, badge, and statusline output. Threshold keys are case-insensitive; defaults are in [docs/metrics.md](./docs/metrics.md) (drift-tested) and `unilyze metrics`.
 
+### Reference analysis opt-ins (.NET)
+
+For general .NET projects, semantic metrics (CBO, DIT, boxing) use BCL references by default. Optional flags deepen resolution without MSBuild:
+
+```bash
+unilyze -p . --resolve-nuget              # NuGet compile assemblies from obj/project.assets.json (after dotnet restore)
+unilyze -p . --include-generated        # EmitCompilerGeneratedFiles output (compilation only; metrics unchanged)
+unilyze -p . --resolve-nuget --tfm net8.0 # Pin target framework for multi-TFM repos
+```
+
+Equivalent `.unilyze.json` keys: `"resolveNuget"`, `"includeGenerated"`, `"targetFramework"`. Enabled settings are echoed in JSON output. Compare snapshots only with identical opt-in settings — see [docs/metrics.md](./docs/metrics.md#参照解析オプトインnuget--生成コード).
+
 ### Suppressing findings
 
 Three suppression mechanisms compose without double-counting:

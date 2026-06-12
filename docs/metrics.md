@@ -825,6 +825,16 @@ JSON 出力のルートに `metricsVersion`（int）と `toolVersion`（string�
 同一リリースウィンドウ（`[Unreleased]` 期間）では `metricsVersion` のバンプは 1 回にまとめる。
 未リリースのバージョン番号に対応する定義は流動的であり、タグ付け前に複数の `[metrics]` 変更が入っても番号の再割り当ては行わない。
 
+### 参照解析オプトイン（NuGet / 生成コード）
+
+`--resolve-nuget` と `--include-generated` は既定オフ。有効化すると CBO / DIT / boxing などの semantic メトリクスが package 型や source generator 出力を解決できるようになり、値が変わる場合がある。`metricsVersion` は上がらない（既定出力は byte-identical）。
+
+- `--resolve-nuget` / `"resolveNuget": true` — `obj/project.assets.json` から NuGet compile アセンブリを注入（`dotnet restore` 後）。BCL ランタイム注入（#84）と併用。
+- `--include-generated` / `"includeGenerated": true` — `EmitCompilerGeneratedFiles=true` ビルドの `obj/<Config>/<TFM>/generated/**/*.cs` を compilation のみに追加（型数・LineCount・smells には含めない）。
+- `--tfm` / `"targetFramework"` — 単一 TFM を明示。省略時は csproj の `TargetFramework(s)` 先頭、次に実行中ランタイム、最後に最高バージョン。
+
+JSON 出力には有効な opt-in 設定（`resolveNuget`, `includeGenerated`, `targetFramework`）が echo される。`diff` / `trend` / baseline 比較は **同一 opt-in 設定** のスナップショット同士でのみ有効。
+
 ### 将来課題
 
 （解決済み: issue #30 で `metricsVersion` / `toolVersion` を実装。上記「metricsVersion による機械的検出」を参照。）

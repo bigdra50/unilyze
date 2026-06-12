@@ -268,6 +268,7 @@ internal static class DiffRunner
         var baseProjectPath = ResolveBaseProjectPath(session, projectPath);
         var projectRoot = ProgramHelpers.ResolveProjectRoot(baseProjectPath);
         var config = UnilyzeConfig.LoadMerged(projectRoot, []);
+        var referenceSettings = ReferenceAnalysisSettings.LoadMerged(projectRoot);
         var resolved = config.ResolveAnalysisConfig();
         return AnalysisPipeline.Build(
             baseProjectPath,
@@ -278,7 +279,10 @@ internal static class DiffRunner
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             analysisConfig: resolved,
-            maxParallelism: config.MaxParallelism);
+            maxParallelism: config.MaxParallelism,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework);
     }
 
     static AnalysisResult ApplyWorkingTreeTriage(AnalysisResult result, string projectPath)
@@ -306,6 +310,7 @@ internal static class DiffRunner
 
         WarnIfAnalysisLevelsDiffer(before, after);
         WarnIfProfilesDiffer(before, after);
+        WarnIfReferenceOptionsDiffer(before, after);
 
         var versionExit = EvaluateVersionMismatch(before, after, options.FailOnVersionMismatch);
 
@@ -368,6 +373,20 @@ internal static class DiffRunner
             Console.Error.WriteLine(
                 $"Warning: profiles differ (before: {beforeProfile}, after: {afterProfile}). "
                 + "Smell counts and thresholds may not be comparable.");
+        }
+    }
+
+    static void WarnIfReferenceOptionsDiffer(AnalysisResult before, AnalysisResult after)
+    {
+        if (before.ResolveNuget != after.ResolveNuget
+            || before.IncludeGenerated != after.IncludeGenerated
+            || !string.Equals(before.TargetFramework, after.TargetFramework, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine(
+                "Warning: reference-analysis opt-ins differ "
+                + $"(before: resolveNuget={before.ResolveNuget ?? false}, includeGenerated={before.IncludeGenerated ?? false}, tfm={before.TargetFramework ?? "auto"}; "
+                + $"after: resolveNuget={after.ResolveNuget ?? false}, includeGenerated={after.IncludeGenerated ?? false}, tfm={after.TargetFramework ?? "auto"}). "
+                + "Semantic metrics (CBO, DIT, boxing) may not be comparable.");
         }
     }
 

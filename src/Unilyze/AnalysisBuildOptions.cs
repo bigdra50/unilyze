@@ -11,7 +11,10 @@ internal sealed record AnalysisBuildOptions(
     bool IncludeApiSurface = false,
     IAnalysisLogSink? LogSink = null,
     ResolvedAnalysisConfig? AnalysisConfig = null,
-    int? MaxParallelism = null)
+    int? MaxParallelism = null,
+    bool ResolveNuget = false,
+    bool IncludeGenerated = false,
+    string? TargetFramework = null)
 {
     static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(
         EffectiveSmellThresholds.Default,

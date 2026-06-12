@@ -17,7 +17,10 @@ public sealed record AnalysisResult(
     string? ProjectKind = null,
     string? Profile = null,
     int? SuppressedCount = null,
-    IReadOnlyList<TypeApiSurface>? ApiSurface = null)
+    IReadOnlyList<TypeApiSurface>? ApiSurface = null,
+    bool? ResolveNuget = null,
+    bool? IncludeGenerated = null,
+    string? TargetFramework = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.

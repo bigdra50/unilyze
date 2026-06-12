@@ -56,12 +56,16 @@ internal static class MultiProjectAnalyzeRunner
         var projectRoot = ProgramHelpers.ResolveProjectRoot(request.RawPath);
         var name = DirectoryGlobMatcher.DeriveProjectName(request.Pattern, projectRoot);
         var config = UnilyzeConfig.LoadMerged(projectRoot, context.CliExcludeDirs, context.CliProfile);
+        var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(projectRoot, context.Cli.Opts);
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             projectRoot, context.Prefix, context.Assembly, config.ExcludeDirs, context.RequestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework);
 
         if (!MultiProjectRunnerSupport.TryApplyPostProcessing(context.Cli.Opts, config, projectRoot, ref result))
             return null;

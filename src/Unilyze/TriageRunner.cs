@@ -155,13 +155,17 @@ internal static class TriageRunner
         }
 
         var config = UnilyzeConfig.LoadMerged(projectRoot);
+        var referenceSettings = ReferenceAnalysisSettings.LoadMerged(projectRoot);
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             projectRoot, null, null, config.ExcludeDirs, requestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             analysisConfig: resolved,
-            maxParallelism: config.MaxParallelism);
+            maxParallelism: config.MaxParallelism,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework);
         return TriageMatcher.CollectCurrentIds(result);
     }
 

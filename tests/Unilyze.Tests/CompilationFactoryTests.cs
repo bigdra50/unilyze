@@ -47,7 +47,7 @@ public class CompilationFactoryTests
         // Start with SyntaxOnly + empty paths; CsprojInfo provides a valid reference.
         // The merge logic upgrades SyntaxOnly -> CoreEngine when merged list is non-empty.
         var resolved = new ResolvedDlls(AnalysisLevel.Syntax, []);
-        var csprojInfo = new CsprojInfo([ValidDllPath], [], [], null);
+        var csprojInfo = new CsprojInfo([ValidDllPath], [], [], null, []);
 
         var result = CompilationFactory.Create(resolved, SingleTree, csprojInfo);
 
@@ -61,7 +61,7 @@ public class CompilationFactoryTests
         // A SyntaxOnly pin must win over the csproj merge: without the cap this
         // exact input re-elevates to CoreEngine (see MergesCsprojReferencePaths).
         var resolved = new ResolvedDlls(AnalysisLevel.Syntax, []);
-        var csprojInfo = new CsprojInfo([ValidDllPath], [], [], null);
+        var csprojInfo = new CsprojInfo([ValidDllPath], [], [], null, []);
 
         var result = CompilationFactory.Create(
             resolved, SingleTree, csprojInfo, maxLevel: AnalysisLevel.Syntax);

@@ -356,6 +356,7 @@ internal static class StatuslineRunner
         ConsoleAnalysisLogSink log)
     {
         var config = UnilyzeConfig.LoadMerged(fullPath);
+        var referenceSettings = ReferenceAnalysisSettings.LoadMerged(fullPath);
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             fullPath, null, null, config.ExcludeDirs, request.RequestedLevel,
@@ -363,7 +364,10 @@ internal static class StatuslineRunner
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             logSink: log,
             analysisConfig: resolved,
-            maxParallelism: config.MaxParallelism);
+            maxParallelism: config.MaxParallelism,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework);
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);

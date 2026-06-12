@@ -13,12 +13,13 @@ internal static class ProgramHelpers
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage", "--projects",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage", "--projects", "--tfm",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help", "-v", "--version", "--no-open", "--no-triage", "--include-api-surface",
+        "--resolve-nuget", "--include-generated",
     };
 
     static readonly HashSet<string> NoValueOptions = new(StringComparer.Ordinal);
@@ -627,6 +628,18 @@ internal static class ProgramHelpers
         }
         Console.Write(content);
         return 0;
+    }
+
+    public static ReferenceAnalysisSettings LoadReferenceAnalysisSettings(
+        string projectRoot,
+        IReadOnlyDictionary<string, string>? opts = null)
+    {
+        opts ??= new Dictionary<string, string>();
+        return ReferenceAnalysisSettings.LoadMerged(
+            projectRoot,
+            opts.ContainsKey("--resolve-nuget"),
+            opts.ContainsKey("--include-generated"),
+            opts.GetValueOrDefault("--tfm"));
     }
 
     public static void TryOpenInBrowser(string path)

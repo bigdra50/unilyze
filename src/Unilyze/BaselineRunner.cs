@@ -47,13 +47,17 @@ internal static class BaselineRunner
                 outputPath = Path.GetFullPath(Path.Combine(projectRoot, outputPath));
 
             var config = UnilyzeConfig.LoadMerged(projectRoot);
+            var referenceSettings = ReferenceAnalysisSettings.LoadMerged(projectRoot);
             var resolved = config.ResolveAnalysisConfig();
             var result = AnalysisPipeline.Build(
                 projectRoot, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
                 analysisConfig: resolved,
-                maxParallelism: config.MaxParallelism);
+                maxParallelism: config.MaxParallelism,
+                resolveNuget: referenceSettings.ResolveNuget,
+                includeGenerated: referenceSettings.IncludeGenerated,
+                targetFramework: referenceSettings.TargetFramework);
 
             var baseline = BaselineFile.FromAnalysis(result);
             BaselineFile.Save(outputPath, baseline);

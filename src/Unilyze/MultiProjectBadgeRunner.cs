@@ -83,12 +83,16 @@ internal static class MultiProjectBadgeRunner
         var projectRoot = ProgramHelpers.ResolveProjectRoot(request.RawPath);
         var name = DirectoryGlobMatcher.DeriveProjectName(request.Pattern, projectRoot);
         var config = UnilyzeConfig.LoadMerged(projectRoot);
+        var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(projectRoot, context.Cli.Opts);
         var resolved = config.ResolveAnalysisConfig();
         var result = AnalysisPipeline.Build(
             projectRoot, null, null, config.ExcludeDirs, context.Setup.RequestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
-            analysisConfig: resolved);
+            analysisConfig: resolved,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework);
 
         var effectiveBaseline = context.Setup.BaselinePath ?? config.Baseline;
         if (!MultiProjectRunnerSupport.TryApplyPostProcessing(
