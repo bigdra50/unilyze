@@ -13,12 +13,13 @@ internal static class CliArgValidation
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-i", "--input", "-o", "--output", "--prefix", "-a", "--assembly",
-        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage", "--projects",
+        "-f", "--format", "--exclude-dir", "--level", "--baseline", "--profile", "--triage", "--projects", "--tfm",
     };
 
     static readonly HashSet<string> AnalyzeBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help", "-v", "--version", "--no-open", "--no-triage", "--include-api-surface",
+        "--resolve-nuget", "--include-generated", "--incremental",
     };
 
     static readonly HashSet<string> NoValueOptions = new(StringComparer.Ordinal);
@@ -106,7 +107,7 @@ internal static class CliArgValidation
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--verbose", "--quiet", "--background-refresh",
+        "-h", "--help", "--verbose", "--quiet", "--background-refresh", "--incremental",
     };
 
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
