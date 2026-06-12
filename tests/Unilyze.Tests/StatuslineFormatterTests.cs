@@ -44,6 +44,8 @@ public sealed class StatuslineFormatterTests
         Assert.Equal(2, summary.TypeCount);
         Assert.Equal(80.0, summary.AverageMaintainabilityIndex);
         Assert.Equal(4, summary.BoxingCount);
+        Assert.Equal(8.7, summary.LocWeightedAverageCodeHealth);
+        Assert.Equal(8.0, summary.WorstDecileCodeHealth);
     }
 
     [Fact]
@@ -78,13 +80,39 @@ public sealed class StatuslineFormatterTests
     }
 
     [Fact]
+    public void ComputeSummary_CodeHealthV1_UsesLegacyScoresForAllAggregates()
+    {
+        var metrics = new List<TypeMetrics>
+        {
+            new("TypeA", "Ns", "Asm", 100, 1, 0, 0, 0, 0, 0, 0, 3.0, [],
+                CodeHealthV1: 9.0),
+            new("TypeB", "Ns", "Asm", 50, 1, 0, 0, 0, 0, 0, 0, 5.0, [],
+                CodeHealthV1: 7.0),
+        };
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], metrics);
+
+        var actual = StatuslineFormatter.ComputeSummary(result, useCodeHealthV1: true);
+
+        Assert.Equal(8.0, actual.AverageCodeHealth);
+        Assert.Equal(7.0, actual.MinCodeHealth);
+        Assert.Equal(8.3, actual.LocWeightedAverageCodeHealth);
+        Assert.Equal(7.0, actual.WorstDecileCodeHealth);
+        Assert.True(actual.UsesCodeHealthV1);
+    }
+
+    [Fact]
     public void Format_HighHealth_ContainsAllSections()
     {
-        var summary = new StatuslineFormatter.Summary(9.4, 8.5, 87, 5, 100, 75.0, 10, 0);
+        var summary = new StatuslineFormatter.Summary(
+            9.4, 8.5, 87, 5, 100, 75.0, 10, 0,
+            LocWeightedAverageCodeHealth: 9.2,
+            WorstDecileCodeHealth: 7.8);
         var output = StatuslineFormatter.Format(summary);
 
         Assert.Contains("CH:9.4", output);
         Assert.Contains("8.5", output);        // min health
+        Assert.Contains("W:9.2", output);
+        Assert.Contains("T:7.8", output);
         Assert.Contains("MI:75", output);
         Assert.Contains("87smells", output);
         Assert.Contains("\U0001f5345", output); // 🔴5

@@ -14,16 +14,39 @@ internal static class StatuslineFormatter
         int BoxingCount,
         int CyclicDependencyCount,
         int MiBearingCount = 0,
-        string? AnalysisLevel = null);
+        string? AnalysisLevel = null,
+        double LocWeightedAverageCodeHealth = 0.0,
+        double WorstDecileCodeHealth = 0.0,
+        bool UsesCodeHealthV1 = false)
+    {
+        internal double EffectiveLocWeightedAverageCodeHealth =>
+            LocWeightedAverageCodeHealth > 0.0 ? LocWeightedAverageCodeHealth : AverageCodeHealth;
 
-    internal static Summary ComputeSummary(AnalysisResult result, bool excludeBaselined = false)
+        internal double EffectiveWorstDecileCodeHealth =>
+            WorstDecileCodeHealth > 0.0 ? WorstDecileCodeHealth : MinCodeHealth;
+    }
+
+    internal static Summary ComputeSummary(
+        AnalysisResult result,
+        bool excludeBaselined = false,
+        bool useCodeHealthV1 = false)
     {
         var metrics = result.TypeMetrics ?? [];
         if (metrics.Count == 0)
-            return new Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, 0, result.AnalysisLevel);
+        {
+            return new Summary(
+                0.0, 0.0, 0, 0, 0, 0.0, 0, 0, 0, result.AnalysisLevel,
+                UsesCodeHealthV1: useCodeHealthV1);
+        }
 
-        var avg = Math.Round(metrics.Average(t => t.CodeHealth), 1);
-        var min = Math.Round(metrics.Min(t => t.CodeHealth), 1);
+        double SelectHealth(TypeMetrics type) => CodeHealthVersionSelector.Score(type, useCodeHealthV1);
+
+        var avg = Math.Round(metrics.Average(SelectHealth), 1);
+        var min = Math.Round(metrics.Min(SelectHealth), 1);
+        var locWeightedAverage = Math.Round(
+            CodeHealthCalculator.ComputeLocWeightedAverage(metrics, SelectHealth), 1);
+        var worstDecile = Math.Round(
+            CodeHealthCalculator.ComputeWorstDecileAverage(metrics, SelectHealth), 1);
         var warnings = metrics.Sum(t =>
             t.CodeSmells?.Count(s => s.Severity == SmellSeverity.Warning && CountForSummary(s, excludeBaselined)) ?? 0);
         var criticals = metrics.Sum(t =>
@@ -38,7 +61,20 @@ internal static class StatuslineFormatter
         var boxing = metrics.Sum(t => t.BoxingCount ?? 0);
         var cyclicDeps = result.CyclicDependencies?.Count ?? 0;
 
-        return new Summary(avg, min, warnings, criticals, metrics.Count, avgMi, boxing, cyclicDeps, miValues.Count, result.AnalysisLevel);
+        return new Summary(
+            avg,
+            min,
+            warnings,
+            criticals,
+            metrics.Count,
+            avgMi,
+            boxing,
+            cyclicDeps,
+            miValues.Count,
+            result.AnalysisLevel,
+            locWeightedAverage,
+            worstDecile,
+            useCodeHealthV1);
     }
 
     static bool CountForSummary(CodeSmell smell, bool excludeBaselined)
@@ -55,17 +91,10 @@ internal static class StatuslineFormatter
         const string Red = "\x1b[31m";
         const string Cyan = "\x1b[36m";
 
-        var healthColor = s.AverageCodeHealth switch
+        var healthColor = s.EffectiveLocWeightedAverageCodeHealth switch
         {
-            >= 8.0 => Green,
-            >= 5.0 => Yellow,
-            _ => Red
-        };
-
-        var minHealthColor = s.MinCodeHealth switch
-        {
-            >= 8.0 => Green,
-            >= 5.0 => Yellow,
+            >= 9.0 => Green,
+            >= 4.0 => Yellow,
             _ => Red
         };
 
@@ -78,9 +107,11 @@ internal static class StatuslineFormatter
 
         var sb = new StringBuilder();
 
-        // Code Health (avg/min)
-        sb.Append($"{healthColor}CH:{s.AverageCodeHealth:F1}{Reset}");
-        sb.Append($"/{minHealthColor}{s.MinCodeHealth:F1}{Reset}");
+        var healthLabel = s.UsesCodeHealthV1 ? "CHv1" : "CH";
+        sb.Append($"{healthColor}{healthLabel}:{s.AverageCodeHealth:F1}{Reset}");
+        sb.Append($"/{healthColor}{s.MinCodeHealth:F1}{Reset}");
+        sb.Append($" {healthColor}W:{s.EffectiveLocWeightedAverageCodeHealth:F1}{Reset}");
+        sb.Append($" T:{s.EffectiveWorstDecileCodeHealth:F1}");
 
         // Maintainability Index
         sb.Append($" {miColor}MI:{s.AverageMaintainabilityIndex:F0}{Reset}");

@@ -36,7 +36,14 @@ analyze (unilyze -f json):
     .directory                         string   Source directory path
     .references[]                       string   Referenced assembly names
     .metrics                           object   Assembly-level metrics (abstractness, etc.)
-    .healthMetrics                     object?  Average/min CodeHealth and method counts
+    .healthMetrics                     object?  CodeHealth aggregates and method counts
+      .averageCodeHealth               float    Unweighted average across types
+      .minCodeHealth                   float    Minimum across types
+      .locWeightedAverageCodeHealth    float    sum(score * LOC) / sum(LOC)
+      .worstDecileCodeHealth           float    Mean of the bottom 10%, at least one type
+      .highComplexityTypeCount         int      Types in the alert category
+      .totalMethods                    int      Total methods across types
+      .averageCognitiveComplexity      float    Average method CogCC
   .types[]                             object   Type topology nodes
     .name, .namespace, .assembly       string   Type identity
     .kind                              string   "class","interface","struct","enum","record","delegate"
@@ -77,7 +84,9 @@ typeMetrics[]:
   .typeId                              string?  Unique identifier
   .lineCount                           int      Total lines
   .methodCount                         int      Method count
-  .codeHealth                          float    1.0-10.0 (higher is better)
+  .codeHealth                          float    CodeHealth v2, 1.0-10.0 (higher is better)
+  .codeHealthCategory                  string   healthy | warning | alert
+  .codeHealthV1                        float    Legacy score during the one-release migration window
   .lcom                                float?   LCOM-HS (0.0-1.0, null if N/A)
   .dit                                 int?     Depth of Inheritance Tree
   .cbo                                 int?     Coupling Between Objects
@@ -202,7 +211,7 @@ trend (unilyze trend):
 dup (unilyze dup):
   .projectPath                         string   Analyzed project path
   .toolVersion                         string   unilyze assembly version
-  .metricsVersion                      int      Metric definition version (currently 3; dup report is independent)
+  .metricsVersion                      int      Dup metric definition version (currently 3; independent of analysis)
   .summary                             object
     .analyzedFiles                     int      Number of .cs files tokenized
     .totalLines                        int      Sum of physical lines in analyzed files

@@ -99,7 +99,10 @@ internal static class MultiProjectBadgeRunner
                 context.Cli.Opts, config, projectRoot, ref result, effectiveBaseline))
             return (null, MultiProjectRunnerSupport.ExitUsageError);
 
-        var summary = StatuslineFormatter.ComputeSummary(result, effectiveBaseline is not null);
+        var summary = StatuslineFormatter.ComputeSummary(
+            result,
+            effectiveBaseline is not null,
+            context.Setup.UseCodeHealthV1);
         var gate = BadgeGate.Evaluate(
             context.Setup.Metric, summary, context.Setup.FailUnder, context.Setup.FailOver);
         if (gate.Outcome == GateOutcome.UsageError)
@@ -176,6 +179,7 @@ internal static class MultiProjectBadgeRunner
             opts.GetValueOrDefault("--fail-under"),
             opts.GetValueOrDefault("--fail-over"),
             opts.GetValueOrDefault("--baseline"),
+            opts.ContainsKey("--codehealth-v1"),
             MultiProjectRunnerSupport.MetricSlug(metric));
         return 0;
     }

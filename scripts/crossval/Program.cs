@@ -162,8 +162,6 @@ static partial class CompareMode
     // Program: top-level statements compile to Program.<Main>$; unilyze has no matching type.
     static readonly HashSet<string> ExcludedOfficialTypes = new(StringComparer.Ordinal)
     {
-        "AnalysisJsonContext",
-        "BadgeJsonContext",
         "Program",
     };
 
@@ -198,7 +196,9 @@ static partial class CompareMode
 
         foreach (var type in official.OrderBy(t => t.Name, StringComparer.Ordinal))
         {
-            if (type.Name.StartsWith("<", StringComparison.Ordinal) || ExcludedOfficialTypes.Contains(type.Name))
+            if (type.Name.StartsWith("<", StringComparison.Ordinal)
+                || type.Name.EndsWith("JsonContext", StringComparison.Ordinal)
+                || ExcludedOfficialTypes.Contains(type.Name))
                 continue;
 
             var unilyzeName = ToUnilyzeTypeName(type.Name);

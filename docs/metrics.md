@@ -485,16 +485,82 @@ eligible が 0 のアセンブリでは `burstCoverage` は null（`RelationalCo
 
 独自メトリクス。型単位のスコア (1.0 - 10.0)。
 
-### 重み付け
+### v2 定義
 
-| 要素 | 重み |
-|------|------|
-| 平均 CogCC | 25% |
-| 最大 CogCC | 20% |
-| 行数 | 15% |
-| メソッド数 | 10% |
-| 最大ネスト深度 | 15% |
-| 過剰パラメータ数 | 15% |
+CodeHealth v2 は、良い要素が深刻な悪化要素を相殺しない非補償的な区分ペナルティ方式を使う。
+各入力を 0 以上のペナルティへ変換し、最終値を次の式で求める。
+
+```text
+complexity = max(maxCogCCPenalty, maxNestingPenalty)
+size = max(lineCountPenalty, methodCountPenalty)
+interface = excessiveParameterMethodCountPenalty
+
+codeHealth = clamp(10 - complexity - size - interface, 1, 10)
+```
+
+同一軸で `max` を取るのは、Phase 6 で確認した共線性による二重加算を避けるため。
+`avgCogCC` は `maxCogCC` と Spearman ρ = 0.98、nesting は CogCC と ρ = 0.94-0.96、lineCount は methodCount と ρ = 0.75 だった。
+
+各ペナルティは safe 上限以下で 0、safe から warning で最大値の 25% まで増加し、warning から alert で最大値まで増加する。
+alert 以上は飽和する。
+
+| 軸 | 入力 | safe | warning | alert | 最大ペナルティ |
+|----|------|-----:|--------:|------:|-----------------:|
+| complexity | maxCogCC | 16 | 19 | 24 | 4.0 |
+| complexity | maxNestingDepth | 3 | 4 | 5 | 4.0 |
+| size | lineCount | 272 | 391 | 878 | 3.0 |
+| size | methodCount | 11 | 16 | 34 | 3.0 |
+| interface | excessiveParameterMethodCount | 0 | 1 | 2 | 2.0 |
+
+しきい値は Phase 6 の 5 プロジェクト、1,456 型を `ThresholdCalibrator` と同じ Alves 方式で LoC 加重・システム等重みとして校正した。
+size は P70/P80/P90 をそのまま使う。
+complexity は `maxCogCC = -18.908071 + 5.968062 * ln(LOC + 1)` の残差 P70/P80/P90 = 1.166/4.028/9.453 を基準 LOC 272 に射影し、16/19/24 とした。
+残差を実行時に直接減算すると LOC 増加でスコアが改善し得るため、単調性を守る固定しきい値へ射影している。
+分位点が同値になる整数メトリクスは、警告帯を保持するため次の整数へ広げる。
+
+v2 は次の不変条件を持つ。
+
+- 全入力が safe 帯なら 10.0。
+- 全軸が飽和すれば 1.0。
+- どの入力を増やしてもスコアは増えない。
+- どれか 1 軸が飽和すると、他が safe でも 9.0 未満。
+
+### カテゴリ
+
+| category | 範囲 |
+|----------|------|
+| `healthy` | 9.0 以上 |
+| `warning` | 4.0 以上 9.0 未満 |
+| `alert` | 4.0 未満 |
+
+JSON の `typeMetrics[].codeHealthCategory` に小文字で出力する。
+`highComplexityTypeCount` は `alert` 型数と同じ。
+
+### プロジェクト集約
+
+- `averageCodeHealth`: 型の単純平均。
+- `minCodeHealth`: 最小値。`badge --fail-under` は引き続きこの値を評価する。
+- `locWeightedAverageCodeHealth`: `sum(codeHealth * lineCount) / sum(lineCount)`。
+- `worstDecileCodeHealth`: スコア下位 10% の平均。最低 1 型を含む。
+
+badge と statusline は単純平均、最小値、LoC 加重平均、下位 10% 平均を表示する。
+色は LoC 加重平均のカテゴリ境界に従う。
+
+### v1 移行互換
+
+v2 導入リリースでは `typeMetrics[].codeHealthV1` に旧値を併記する。
+badge、statusline、diff の `--codehealth-v1` は表示とゲートを v1 値へ切り替える。
+このフィールドとフラグは v2 導入後の最初の minor リリースで削除する。
+
+| 項目 | v1 | v2 |
+|------|----|----|
+| 合成 | 6 要素の線形加重和 | 飽和する区分ペナルティの加算 |
+| CogCC | avg 25% + max 20% | max の残差校正しきい値。avg は除外 |
+| nesting | 独立 15% | complexity 軸内で max |
+| size | LOC 15% + methods 10% | size 軸内で max |
+| interface | 15% の線形スコア | 最大 2.0 の飽和ペナルティ |
+| 深刻要素の相殺 | 可能 | 不可 |
+| カテゴリ | なし | healthy / warning / alert |
 
 ## Code Smell
 

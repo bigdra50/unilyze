@@ -67,9 +67,11 @@ internal static class MultiProjectSummary
         {
             BadgeMetric.CodeHealth => string.Format(
                 CultureInfo.InvariantCulture,
-                "{0:F1} / {1:F1}",
+                "{0:F1} / {1:F1} / w{2:F1} / t{3:F1}",
                 summary.AverageCodeHealth,
-                summary.MinCodeHealth),
+                summary.MinCodeHealth,
+                summary.EffectiveLocWeightedAverageCodeHealth,
+                summary.EffectiveWorstDecileCodeHealth),
             BadgeMetric.Mi => summary.AverageMaintainabilityIndex.ToString("F0", CultureInfo.InvariantCulture),
             BadgeMetric.Smells => summary.WarningCount.ToString(CultureInfo.InvariantCulture),
             _ => "n/a",

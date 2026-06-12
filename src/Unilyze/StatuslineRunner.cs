@@ -16,6 +16,7 @@ internal static class StatuslineRunner
         bool Quiet,
         bool BackgroundRefresh,
         bool Incremental,
+        bool UseCodeHealthV1,
         string Path,
         int RefreshSeconds,
         string? BaselinePath,
@@ -41,7 +42,7 @@ internal static class StatuslineRunner
         if (!TryResolveFullPath(request.Path, request.Verbose, out var fullPath))
             return 1;
 
-        var paths = CreateCachePaths(fullPath);
+        var paths = CreateCachePaths(fullPath, request.UseCodeHealthV1);
 
         return request.BackgroundRefresh
             ? RunBackgroundRefresh(fullPath, request, paths.TxtPath)
@@ -56,6 +57,7 @@ internal static class StatuslineRunner
         var quiet = opts.ContainsKey("--quiet");
         var backgroundRefresh = opts.ContainsKey("--background-refresh");
         var incremental = opts.ContainsKey("--incremental");
+        var useCodeHealthV1 = opts.ContainsKey("--codehealth-v1");
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
@@ -81,6 +83,7 @@ internal static class StatuslineRunner
             quiet,
             backgroundRefresh,
             incremental,
+            useCodeHealthV1,
             path,
             refreshSeconds,
             baselinePath,
@@ -104,9 +107,10 @@ internal static class StatuslineRunner
         }
     }
 
-    static StatuslineCachePaths CreateCachePaths(string fullPath)
+    static StatuslineCachePaths CreateCachePaths(string fullPath, bool useCodeHealthV1)
     {
-        var cacheHash = ComputePathHash(fullPath);
+        var cacheKey = useCodeHealthV1 ? $"{fullPath}\0codehealth-v1" : fullPath;
+        var cacheHash = ComputePathHash(cacheKey);
         var cacheDir = Path.GetTempPath();
         return new StatuslineCachePaths(
             Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt"),
@@ -241,6 +245,9 @@ internal static class StatuslineRunner
         if (request.Incremental)
             childArgs.Add("--incremental");
 
+        if (request.UseCodeHealthV1)
+            childArgs.Add("--codehealth-v1");
+
         return childArgs;
     }
 
@@ -355,7 +362,10 @@ internal static class StatuslineRunner
         if (built is null)
             return 1;
 
-        var formatted = FormatStatusline(built.Value.Result, built.Value.ExcludeBaselined);
+        var formatted = FormatStatusline(
+            built.Value.Result,
+            built.Value.ExcludeBaselined,
+            request.UseCodeHealthV1);
         File.WriteAllText(cacheTxtPath, formatted);
         Console.Write(formatted);
         return 0;
@@ -391,9 +401,12 @@ internal static class StatuslineRunner
         return triageError is 1 ? null : (result, effectiveBaseline is not null);
     }
 
-    static string FormatStatusline(AnalysisResult result, bool excludeBaselined)
+    static string FormatStatusline(
+        AnalysisResult result,
+        bool excludeBaselined,
+        bool useCodeHealthV1)
     {
-        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
+        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined, useCodeHealthV1);
         return StatuslineFormatter.Format(summary);
     }
 
@@ -441,6 +454,8 @@ internal static class StatuslineRunner
           --level        Pin analysis level: syntax, core, full, complete
           --baseline     Suppress known smells from a baseline file in smell counts
           --incremental  Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
+          --codehealth-v1
+                         Display legacy CodeHealth v1 during the one-release migration window
           --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
           --quiet        Suppress info lines on stderr (warnings still shown)
           --background-refresh
@@ -457,7 +472,7 @@ internal static class StatuslineRunner
 
     static string BuildUsageOutputSection() =>
         """
-        Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
+        Output format: CH:9.4/3.2 W:9.1 T:7.8 MI:72 87smells 🔴5 📦12 ♻3 [core]
           CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown
           MI:<n>         = Average Maintainability Index (integer), always shown
           <n>smells      = Warning code smells count, always shown
