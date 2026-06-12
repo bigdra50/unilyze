@@ -9,8 +9,21 @@ public sealed class BadgeGateTests
         int criticals = 0,
         int typeCount = 10,
         double avgMi = 80.0,
-        int miBearingCount = 10) =>
-        new(avgHealth, minHealth, warnings, criticals, typeCount, avgMi, 0, 0, miBearingCount);
+        int miBearingCount = 10,
+        int hotPathSmells = 0,
+        int hotPathMethods = 0) =>
+        new(
+            avgHealth,
+            minHealth,
+            warnings,
+            criticals,
+            typeCount,
+            avgMi,
+            0,
+            0,
+            miBearingCount,
+            hotPathSmells,
+            hotPathMethods);
 
     [Fact]
     public void Evaluate_NoGateFlags_Passes()
@@ -161,6 +174,53 @@ public sealed class BadgeGateTests
     {
         var result = BadgeGate.Evaluate(BadgeMetric.Smells, Summary(), null, value);
         Assert.Equal(GateOutcome.UsageError, result.Outcome);
+    }
+
+    [Fact]
+    public void Evaluate_Energy_AboveThresholdFails()
+    {
+        var result = BadgeGate.Evaluate(
+            BadgeMetric.Energy,
+            Summary(hotPathSmells: 3, hotPathMethods: 2),
+            null,
+            "1.0");
+
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("energy pressure 1.5 > 1", result.Message);
+    }
+
+    [Fact]
+    public void Evaluate_Energy_AtThresholdPasses()
+    {
+        var result = BadgeGate.Evaluate(
+            BadgeMetric.Energy,
+            Summary(hotPathSmells: 2, hotPathMethods: 2),
+            null,
+            "1.0");
+
+        Assert.Equal(GateOutcome.Pass, result.Outcome);
+    }
+
+    [Fact]
+    public void Evaluate_Energy_FailUnderIsUsageError()
+    {
+        var result = BadgeGate.Evaluate(
+            BadgeMetric.Energy,
+            Summary(hotPathMethods: 1),
+            "1.0",
+            null);
+
+        Assert.Equal(GateOutcome.UsageError, result.Outcome);
+    }
+
+    [Fact]
+    public void Evaluate_Energy_NoHotPathMethodsFailsAsUnavailable()
+    {
+        var result = BadgeGate.Evaluate(BadgeMetric.Energy, Summary(), null, "1.0");
+
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+        Assert.Contains("metric unavailable", result.Message);
+        Assert.Contains("hot-path methods", result.Message);
     }
 
     // --- fail-closed when the metric is unavailable (no data) ---

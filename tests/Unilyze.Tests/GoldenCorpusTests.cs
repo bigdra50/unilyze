@@ -20,6 +20,12 @@ public sealed class GoldenCorpusTests
         var root = GoldenCorpusTestSupport.ParseNormalized(actual);
         Assert.Equal("CoreEngine", root["analysisLevel"]?.GetValue<string>());
         Assert.Equal("unity", root["projectKind"]?.GetValue<string>());
+        Assert.Equal(3.5, root["energyPressure"]?.GetValue<double>());
+
+        var weakTemporization = root["typeMetrics"]!.AsArray()
+            .Single(type => type!["typeName"]!.GetValue<string>() == "WeakTemporizationTarget")!;
+        Assert.Equal(1, weakTemporization["hotPathMethodCount"]?.GetValue<int>());
+        Assert.True(weakTemporization["codeSmells"]![0]!["inHotPath"]?.GetValue<bool>());
 
         if (IsUpdateRequested())
         {

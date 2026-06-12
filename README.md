@@ -108,8 +108,11 @@ Run `unilyze --help` for all options. JSON output includes `projectKind` (`unity
 
 ```bash
 unilyze badge -p . --metric codehealth --fail-under 7   # CI gate example
+unilyze badge -p . --metric energy --fail-over 1.0      # Unity hot-path smell density proxy
 unilyze badge -p . --format svg -o .github/badges/codehealth.svg
 ```
+
+The energy metric is a static source-code proxy, not measured energy or power.
 
 See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) and [docs/ci-integration.md](./docs/ci-integration.md) for endpoint vs SVG badges, quality-gate semantics, GitHub Actions, diff regression gates, and [monorepo `--projects`](./docs/ci-integration.md#monorepo) batch analysis.
 

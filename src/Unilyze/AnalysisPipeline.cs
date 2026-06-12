@@ -113,6 +113,9 @@ internal static class AnalysisPipeline
 
         var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
         InlineSuppression.WriteSummary(inlineSuppressedCount);
+        var energyPressure = discover.ProjectKind == "unity"
+            ? EnergyPressureCalculator.ForGate(finalMetrics, excludeBaselined: false).Pressure
+            : null;
 
         var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
@@ -133,7 +136,8 @@ internal static class AnalysisPipeline
                 : null,
             ResolveNuget: options.ResolveNuget ? true : null,
             IncludeGenerated: options.IncludeGenerated ? true : null,
-            TargetFramework: selectedTfm);
+            TargetFramework: selectedTfm,
+            EnergyPressure: energyPressure);
 
         return FindingFingerprint.AssignIds(result);
     }

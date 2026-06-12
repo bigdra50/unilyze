@@ -41,14 +41,18 @@ Authenticated viewers see the badge inline without camo or an external fetch.
 unilyze badge --metric codehealth --fail-under 7   # fail if min CodeHealth < 7
 unilyze badge --metric mi --fail-under 70          # fail if average MI < 70
 unilyze badge --metric smells --fail-over 5        # fail if warnings > 5 (or any critical)
+unilyze badge --metric energy --fail-over 1.0      # fail if Unity hot-path smell density > 1.0
 ```
 
 | Flag | Valid metrics | Fails when |
 |------|---------------|-----------|
 | `--fail-under <value>` | `codehealth`, `mi` | min CodeHealth (codehealth) or average MI (mi) is **strictly below** `value` |
-| `--fail-over <count>` | `smells` | warning count is **strictly above** `count`, or any critical smell exists |
+| `--fail-over <value>` | `smells`, `energy`, `dup` | warning count, energy pressure, or duplication is **strictly above** `value` |
 
-Thresholds are inclusive at the boundary: values exactly at `--fail-under` pass; only strictly below fails. Mismatched combinations (e.g. `--fail-under` with `--metric smells`) are a usage error (exit `1`).
+Thresholds are inclusive at the boundary.
+Values exactly at `--fail-under` or `--fail-over` pass.
+Mismatched combinations, such as `--fail-under` with `--metric energy`, are a usage error (exit `1`).
+Energy pressure is a static proxy, not measured energy or power.
 
 The gate is **fail-closed**: if the metric is unavailable (0 types analyzed, or no method-bearing types for `mi`), the gate exits `2` with `gate failed: metric unavailable (...)` rather than passing — this catches a mistyped `-p` path that would otherwise produce a false green.
 

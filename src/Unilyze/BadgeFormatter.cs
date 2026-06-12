@@ -9,7 +9,7 @@ namespace Unilyze;
 internal sealed record ShieldsBadge(
     int SchemaVersion, string Label, string Message, string Color, string? AnalysisLevel = null);
 
-internal enum BadgeMetric { CodeHealth, Mi, Smells, Dup }
+internal enum BadgeMetric { CodeHealth, Mi, Smells, Energy, Dup }
 
 internal enum BadgeFormat { Json, Svg }
 
@@ -25,12 +25,16 @@ internal static class BadgeFormatter
             BadgeMetric.CodeHealth => "code health",
             BadgeMetric.Mi => "maintainability",
             BadgeMetric.Smells => "smells",
+            BadgeMetric.Energy => "energy pressure",
             BadgeMetric.Dup => "duplication",
             _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, null)
         };
 
         if (metric == BadgeMetric.Dup)
             return BuildDupBadge(label, duplicationPercent, s.AnalysisLevel);
+
+        if (metric == BadgeMetric.Energy && s.HotPathMethodCount == 0)
+            return new ShieldsBadge(1, label, "n/a", "lightgrey", s.AnalysisLevel);
 
         if (s.TypeCount == 0)
             return new ShieldsBadge(1, label, "n/a", "lightgrey", s.AnalysisLevel);
@@ -65,9 +69,23 @@ internal static class BadgeFormatter
                 s.WarningCount.ToString(CultureInfo.InvariantCulture),
                 s.CriticalCount > 0 ? "red" : s.WarningCount > 0 ? "yellow" : "brightgreen",
                 s.AnalysisLevel),
+            BadgeMetric.Energy => new ShieldsBadge(
+                1,
+                label,
+                EnergyPressure(s).ToString("F2", CultureInfo.InvariantCulture),
+                EnergyPressure(s) switch
+                {
+                    0 => "brightgreen",
+                    < 1.0 => "yellow",
+                    _ => "red"
+                },
+                s.AnalysisLevel),
             _ => throw new ArgumentOutOfRangeException(nameof(metric), metric, null)
         };
     }
+
+    static double EnergyPressure(StatuslineFormatter.Summary summary)
+        => summary.HotPathSmellCount / (double)summary.HotPathMethodCount;
 
     static ShieldsBadge BuildDupBadge(string label, double? duplicationPercent, string? analysisLevel)
     {
@@ -106,6 +124,12 @@ internal static class BadgeFormatter
         if (value.Equals("smells", StringComparison.OrdinalIgnoreCase))
         {
             metric = BadgeMetric.Smells;
+            return true;
+        }
+
+        if (value.Equals("energy", StringComparison.OrdinalIgnoreCase))
+        {
+            metric = BadgeMetric.Energy;
             return true;
         }
 

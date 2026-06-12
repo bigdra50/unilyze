@@ -6969,7 +6969,8 @@
       "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "hotPathMethodCount": 0
     },
     {
       "typeName": "MonoBehaviourLowCohesionTarget",
@@ -7140,7 +7141,8 @@
       "filePath": "/golden-fixture/Assets/Scripts/MonoBehaviourLowCohesionTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "hotPathMethodCount": 0
     },
     {
       "typeName": "SerializedRefBase",
@@ -7168,7 +7170,8 @@
       "filePath": "/golden-fixture/Assets/Scripts/SerializedRefBase.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefBase",
-      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase"
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase",
+      "hotPathMethodCount": 0
     },
     {
       "typeName": "SerializedRefConcrete",
@@ -7196,7 +7199,8 @@
       "filePath": "/golden-fixture/Assets/Scripts/SerializedRefConcrete.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefConcrete",
-      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete"
+      "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete",
+      "hotPathMethodCount": 0
     },
     {
       "typeName": "SerializeFieldAttribute",
@@ -7715,7 +7719,8 @@
           "methodName": "Update",
           "message": "GetComponent call in hot-path method \u0027Update\u0027",
           "line": 15,
-          "id": "eafd14593b83366d61fe800642e113a76a9d514fd760dd7bebfed4fd3c2073e4"
+          "id": "eafd14593b83366d61fe800642e113a76a9d514fd760dd7bebfed4fd3c2073e4",
+          "inHotPath": true
         },
         {
           "kind": "LinqInHotPath",
@@ -7724,7 +7729,8 @@
           "methodName": "Update",
           "message": "LINQ \u0027ToList\u0027 in hot-path method \u0027Update\u0027",
           "line": 16,
-          "id": "af729421b5a2305be4c3a4431bb8b7f01cc02455a2976621f745a8d507d55729"
+          "id": "af729421b5a2305be4c3a4431bb8b7f01cc02455a2976621f745a8d507d55729",
+          "inHotPath": true
         },
         {
           "kind": "LinqInHotPath",
@@ -7733,7 +7739,8 @@
           "methodName": "Update",
           "message": "LINQ \u0027Where\u0027 in hot-path method \u0027Update\u0027",
           "line": 16,
-          "id": "0baa3bddd0bffe6b8f5885551ba972e4e5953c6161bf9985d0919569e7d4abbc"
+          "id": "0baa3bddd0bffe6b8f5885551ba972e4e5953c6161bf9985d0919569e7d4abbc",
+          "inHotPath": true
         },
         {
           "kind": "CollectionAllocationInHotPath",
@@ -7742,7 +7749,8 @@
           "methodName": "Update",
           "message": "Array allocation in hot-path method \u0027Update\u0027",
           "line": 16,
-          "id": "6e9ba13d3ebc65ee83bd579951dc0c24ebb4f6095ca190208334170c6d9555c4"
+          "id": "6e9ba13d3ebc65ee83bd579951dc0c24ebb4f6095ca190208334170c6d9555c4",
+          "inHotPath": true
         },
         {
           "kind": "CollectionAllocationInHotPath",
@@ -7751,7 +7759,8 @@
           "methodName": "Update",
           "message": "Collection allocation in hot-path method \u0027Update\u0027",
           "line": 17,
-          "id": "08f9ce7d0a9127be7059422b47dbeffa062f2be59c5034e39fde8ac4c9633db8"
+          "id": "08f9ce7d0a9127be7059422b47dbeffa062f2be59c5034e39fde8ac4c9633db8",
+          "inHotPath": true
         },
         {
           "kind": "StringConcatenationInHotPath",
@@ -7760,13 +7769,15 @@
           "methodName": "Update",
           "message": "String concatenation in hot-path method \u0027Update\u0027",
           "line": 18,
-          "id": "ffda00a113ae50c4667f2a9cd8f0564498234eb6e5003dbce1410aaa848eefe9"
+          "id": "ffda00a113ae50c4667f2a9cd8f0564498234eb6e5003dbce1410aaa848eefe9",
+          "inHotPath": true
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/UnityHotPathTarget.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.UnityHotPathTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget",
+      "hotPathMethodCount": 1
     },
     {
       "typeName": "IContainerBuilder",
@@ -7914,13 +7925,15 @@
           "methodName": "Update",
           "message": "transform mutation without delta-time scaling",
           "line": 11,
-          "id": "6145364ec2cda0aa456b2c0aca1281b137db573d5f5103de7aae709742686ee3"
+          "id": "6145364ec2cda0aa456b2c0aca1281b137db573d5f5103de7aae709742686ee3",
+          "inHotPath": true
         }
       ],
       "filePath": "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
+      "hotPathMethodCount": 1
     }
   ],
   "analysisLevel": "CoreEngine",
@@ -7941,5 +7954,6 @@
     }
   ],
   "metricsVersion": 3,
-  "projectKind": "unity"
+  "projectKind": "unity",
+  "energyPressure": 3.5
 }

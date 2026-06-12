@@ -60,6 +60,9 @@ internal static class MultiProjectSummary
 
     public static string FormatBadgeMetricValue(BadgeMetric metric, StatuslineFormatter.Summary summary)
     {
+        if (metric == BadgeMetric.Energy && summary.HotPathMethodCount == 0)
+            return "n/a";
+
         if (summary.TypeCount == 0)
             return "n/a";
 
@@ -72,6 +75,8 @@ internal static class MultiProjectSummary
                 summary.MinCodeHealth),
             BadgeMetric.Mi => summary.AverageMaintainabilityIndex.ToString("F0", CultureInfo.InvariantCulture),
             BadgeMetric.Smells => summary.WarningCount.ToString(CultureInfo.InvariantCulture),
+            BadgeMetric.Energy => (summary.HotPathSmellCount / (double)summary.HotPathMethodCount)
+                .ToString("F2", CultureInfo.InvariantCulture),
             _ => "n/a",
         };
     }

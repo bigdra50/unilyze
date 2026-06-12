@@ -14,13 +14,17 @@ internal static class StatuslineFormatter
         int BoxingCount,
         int CyclicDependencyCount,
         int MiBearingCount = 0,
+        int HotPathSmellCount = 0,
+        int HotPathMethodCount = 0,
         string? AnalysisLevel = null);
 
     internal static Summary ComputeSummary(AnalysisResult result, bool excludeBaselined = false)
     {
         var metrics = result.TypeMetrics ?? [];
         if (metrics.Count == 0)
-            return new Summary(0.0, 0.0, 0, 0, 0, 0.0, 0, 0, 0, result.AnalysisLevel);
+            return new Summary(
+                0.0, 0.0, 0, 0, 0, 0.0, 0, 0,
+                AnalysisLevel: result.AnalysisLevel);
 
         var avg = Math.Round(metrics.Average(t => t.CodeHealth), 1);
         var min = Math.Round(metrics.Min(t => t.CodeHealth), 1);
@@ -37,8 +41,21 @@ internal static class StatuslineFormatter
         var avgMi = miValues.Count > 0 ? Math.Round(miValues.Average(), 1) : 0.0;
         var boxing = metrics.Sum(t => t.BoxingCount ?? 0);
         var cyclicDeps = result.CyclicDependencies?.Count ?? 0;
+        var energy = EnergyPressureCalculator.ForGate(metrics, excludeBaselined);
 
-        return new Summary(avg, min, warnings, criticals, metrics.Count, avgMi, boxing, cyclicDeps, miValues.Count, result.AnalysisLevel);
+        return new Summary(
+            avg,
+            min,
+            warnings,
+            criticals,
+            metrics.Count,
+            avgMi,
+            boxing,
+            cyclicDeps,
+            miValues.Count,
+            energy.HotPathSmellCount,
+            energy.HotPathMethodCount,
+            result.AnalysisLevel);
     }
 
     static bool CountForSummary(CodeSmell smell, bool excludeBaselined)

@@ -16,6 +16,7 @@
   --min: #f59e0b;
   --warning: #fbbf24;
   --critical: #ef4444;
+  --energy: #22d3ee;
   --types: #34d399;
   --highcc: #a78bfa;
   --marker: #f87171;
@@ -87,6 +88,7 @@ h1 { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.25rem; }
 .legend .min::before { background: var(--min); }
 .legend .warn::before { background: var(--warning); }
 .legend .crit::before { background: var(--critical); }
+.legend .energy::before { background: var(--energy); }
 .legend .types::before { background: var(--types); }
 .legend .highcc::before { background: var(--highcc); }
 .legend .marker::before {
@@ -141,6 +143,13 @@ svg.chart { width: 100%; height: auto; display: block; }
     <span class="crit">Critical</span>
   </div>
   __SMELLS_CHART_PLACEHOLDER__
+</div>
+<div class="chart-card">
+  <h2>Energy pressure proxy</h2>
+  <div class="legend">
+    <span class="energy">Hot-path smells / hot-path methods</span>
+  </div>
+  __ENERGY_CHART_PLACEHOLDER__
 </div>
 <div class="chart-card">
   <h2>Type counts</h2>

@@ -47,7 +47,8 @@ public sealed record TypeMetrics(
     string? FilePath = null,
     int? StartLine = null,
     string? QualifiedName = null,
-    string? TypeId = null);
+    string? TypeId = null,
+    int? HotPathMethodCount = null);
 
 public sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,

@@ -154,12 +154,16 @@ internal static class TrendRunner
         if (trend.Snapshots.Count > 0)
         {
             Console.Error.WriteLine();
-            Console.Error.WriteLine("  Date                Types  Health  Smells  HighCC  AvgCogCC");
-            Console.Error.WriteLine("  ------------------  -----  ------  ------  ------  --------");
+            Console.Error.WriteLine("  Date                Types  Health  Smells  Energy  HighCC  AvgCogCC");
+            Console.Error.WriteLine("  ------------------  -----  ------  ------  ------  ------  --------");
             foreach (var s in trend.Snapshots)
             {
+                var energy = s.HotPathMethodCount > 0
+                    ? (s.HotPathSmellCount / (double)s.HotPathMethodCount).ToString(
+                        "F2", System.Globalization.CultureInfo.InvariantCulture)
+                    : "-";
                 Console.Error.WriteLine(
-                    $"  {s.AnalyzedAt:yyyy-MM-dd HH:mm}  {s.TypeCount,5}  {s.AverageCodeHealth,6:F1}  {s.CodeSmellCount,6}  {s.HighComplexityTypeCount,6}  {s.AverageCognitiveComplexity,8:F1}");
+                    $"  {s.AnalyzedAt:yyyy-MM-dd HH:mm}  {s.TypeCount,5}  {s.AverageCodeHealth,6:F1}  {s.CodeSmellCount,6}  {energy,6}  {s.HighComplexityTypeCount,6}  {s.AverageCognitiveComplexity,8:F1}");
             }
         }
     }

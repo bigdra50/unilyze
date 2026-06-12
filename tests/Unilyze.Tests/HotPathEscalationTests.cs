@@ -46,6 +46,8 @@ public sealed class HotPathEscalationTests : IDisposable
         var smell = FindSmell(metrics, "Player", CodeSmellKind.BoxingAllocation, "Update");
 
         Assert.Equal(SmellSeverity.Critical, smell.Severity);
+        Assert.True(smell.InHotPath);
+        Assert.Equal(1, FindMetrics(metrics, "Player").HotPathMethodCount);
     }
 
     [Fact]
@@ -67,6 +69,7 @@ public sealed class HotPathEscalationTests : IDisposable
         var smell = FindSmell(metrics, "Player", CodeSmellKind.BoxingAllocation, "Awake");
 
         Assert.Equal(SmellSeverity.Warning, smell.Severity);
+        Assert.Null(smell.InHotPath);
     }
 
     [Fact]
@@ -86,6 +89,8 @@ public sealed class HotPathEscalationTests : IDisposable
         var smell = FindSmell(metrics, "PlainClass", CodeSmellKind.BoxingAllocation, "Update");
 
         Assert.Equal(SmellSeverity.Warning, smell.Severity);
+        Assert.Null(smell.InHotPath);
+        Assert.Null(FindMetrics(metrics, "PlainClass").HotPathMethodCount);
     }
 
     [Fact]
@@ -111,6 +116,8 @@ public sealed class HotPathEscalationTests : IDisposable
         var smell = FindSmell(metrics, "Player", CodeSmellKind.ClosureCapture, "MyCoroutine");
 
         Assert.Equal(SmellSeverity.Critical, smell.Severity);
+        Assert.True(smell.InHotPath);
+        Assert.Equal(1, FindMetrics(metrics, "Player").HotPathMethodCount);
     }
 
     [Fact]
@@ -136,6 +143,7 @@ public sealed class HotPathEscalationTests : IDisposable
         var smell = FindSmell(metrics, "Player", CodeSmellKind.ClosureCapture, "MyCoroutine");
 
         Assert.Equal(SmellSeverity.Critical, smell.Severity);
+        Assert.True(smell.InHotPath);
     }
 
     [Fact]

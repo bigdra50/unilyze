@@ -133,7 +133,10 @@ internal static class SemanticEnricher
             ref smells, current, thresholds, context.InformationalSmellKinds);
 
         var wmc = WmcCalculator.Calculate(typeInfo?.Members ?? []);
-        var detected = FeatureDetection.Run(metrics, context);
+        var unityContext = typeDecl is not null
+            ? UnityContextClassifier.Classify(typeDecl, model)
+            : new UnityTypeContext(false, new HashSet<string>());
+        var detected = FeatureDetection.Run(typeDecl, model, unityContext);
         smells = SmellFiltering.Apply(smells, context.DisabledRuleKinds);
         detected = SmellFiltering.Apply(detected, context.DisabledRuleKinds);
 
@@ -142,7 +145,8 @@ internal static class SemanticEnricher
             : SuppressionIndex.Empty;
         smells = ApplyInlineSuppressionToMetricSmells(smells, suppressionIndex);
 
-        return StampEnrichedMetrics(current, smells, detected, suppressionIndex, wmc, informationalCount);
+        return StampEnrichedMetrics(
+            current, smells, detected, suppressionIndex, wmc, informationalCount, unityContext);
     }
 
     static int ApplyInformationalSmells(
@@ -191,7 +195,8 @@ internal static class SemanticEnricher
         IReadOnlyList<DetectedSmell> detected,
         SuppressionIndex suppressionIndex,
         int wmc,
-        int informationalCount)
+        int informationalCount,
+        UnityTypeContext unityContext)
     {
         var allSmells = SmellMerging.Convert(smells, detected, suppressionIndex);
         var activeDetected = detected.Where(d => !suppressionIndex.IsDetectorSmellSuppressed(d, out _)).ToList();
@@ -206,7 +211,10 @@ internal static class SemanticEnricher
             ClosureCaptureCount = closureCount > 0 ? closureCount : null,
             ParamsAllocationCount = paramsCount > 0 ? paramsCount : null,
             CodeSmells = allSmells.Count > 0 ? allSmells : null,
-            InformationalCount = informationalCount > 0 ? informationalCount : null
+            InformationalCount = informationalCount > 0 ? informationalCount : null,
+            HotPathMethodCount = unityContext.IsMonoBehaviour
+                ? unityContext.HotPathMethodNames.Count
+                : null
         };
     }
 
@@ -344,17 +352,13 @@ internal static class SemanticEnricher
 
     static class FeatureDetection
     {
-        public static IReadOnlyList<DetectedSmell> Run(TypeMetrics metrics, EnrichmentContext context)
+        public static IReadOnlyList<DetectedSmell> Run(
+            TypeDeclarationSyntax? td,
+            SemanticModel? mdl,
+            UnityTypeContext unityContext)
         {
-            if (!context.TypeDeclLookup.TryGetValue(TypeIdentity.GetTypeId(metrics), out var td))
+            if (td is null)
                 return [];
-
-            SemanticModel? mdl = null;
-            if (context.CompilationResult.Compilation is not null)
-            {
-                mdl = context.ModelCache.GetOrAdd(
-                    td.SyntaxTree, static (t, c) => c.GetSemanticModel(t), context.CompilationResult.Compilation);
-            }
 
             try
             {
@@ -362,8 +366,7 @@ internal static class SemanticEnricher
                     throw new NullReferenceException("Simulated Roslyn internal error");
 
                 var detected = RunAllDetectors(td, mdl);
-                var unityContext = UnityContextClassifier.Classify(td, mdl);
-                return ApplyHotPathEscalation(detected, unityContext);
+                return StampHotPathMembership(detected, unityContext);
             }
             catch (Exception)
             {
@@ -379,7 +382,7 @@ internal static class SemanticEnricher
             return detected;
         }
 
-        static IReadOnlyList<DetectedSmell> ApplyHotPathEscalation(
+        static IReadOnlyList<DetectedSmell> StampHotPathMembership(
             List<DetectedSmell> detected,
             UnityTypeContext context)
         {
@@ -389,24 +392,38 @@ internal static class SemanticEnricher
             for (var i = 0; i < detected.Count; i++)
             {
                 var smell = detected[i];
-                if (!ShouldEscalateHotPathSmell(context, smell))
+                if (!IsHotPathSmell(context, smell))
                     continue;
 
-                detected[i] = smell with { Severity = SmellSeverity.Critical };
+                detected[i] = ShouldEscalateHotPathSmell(smell)
+                    ? smell with { Severity = SmellSeverity.Critical, InHotPath = true }
+                    : smell with { InHotPath = true };
             }
 
             return detected;
         }
 
-        static bool ShouldEscalateHotPathSmell(UnityTypeContext context, DetectedSmell smell)
+        static bool IsHotPathSmell(UnityTypeContext context, DetectedSmell smell)
         {
-            if (smell.MethodName is null || !context.HotPathMethodNames.Contains(smell.MethodName))
-                return false;
+            if (smell.Kind is CodeSmellKind.ExpensiveUnityApiInHotPath
+                or CodeSmellKind.LinqInHotPath
+                or CodeSmellKind.CollectionAllocationInHotPath
+                or CodeSmellKind.StringConcatenationInHotPath)
+                return true;
 
-            return smell.Kind is CodeSmellKind.BoxingAllocation
+            return smell.MethodName is not null
+                && context.HotPathMethodNames.Contains(smell.MethodName)
+                && smell.Kind is (
+                    CodeSmellKind.WeakTemporization
+                    or CodeSmellKind.ClosureCapture
+                    or CodeSmellKind.BoxingAllocation
+                    or CodeSmellKind.ParamsArrayAllocation);
+        }
+
+        static bool ShouldEscalateHotPathSmell(DetectedSmell smell)
+            => smell.Kind is CodeSmellKind.BoxingAllocation
                 or CodeSmellKind.ClosureCapture
                 or CodeSmellKind.ParamsArrayAllocation;
-        }
     }
 
     static class SmellFiltering
@@ -445,7 +462,8 @@ internal static class SemanticEnricher
                 allSmells.Add(new CodeSmell(
                     d.Kind, d.Severity, d.TypeName, d.MethodName, d.Message, d.Line,
                     Suppressed: suppressed ? true : null,
-                    SuppressionJustification: justification));
+                    SuppressionJustification: justification,
+                    InHotPath: d.InHotPath));
             }
             return allSmells;
         }

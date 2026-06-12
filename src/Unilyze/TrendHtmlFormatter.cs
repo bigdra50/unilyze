@@ -29,6 +29,7 @@ public static class TrendHtmlFormatter
             .Replace("__TITLE__", WebUtility.HtmlEncode(pageTitle))
             .Replace("__HEALTH_CHART_PLACEHOLDER__", charts.Health)
             .Replace("__SMELLS_CHART_PLACEHOLDER__", charts.Smells)
+            .Replace("__ENERGY_CHART_PLACEHOLDER__", charts.Energy)
             .Replace("__TYPES_CHART_PLACEHOLDER__", charts.Types)
             .Replace("__WARNINGS_PLACEHOLDER__", WebUtility.HtmlEncode(warnings));
     }
