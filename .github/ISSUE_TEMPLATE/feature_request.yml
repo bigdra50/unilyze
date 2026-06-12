@@ -1,0 +1,69 @@
+name: Feature request
+description: Propose an improvement to unilyze
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem first, then explain the proposed change.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or limitation should this feature address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior, command, output, or API.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe existing workarounds or alternative designs.
+  - type: input
+    id: version
+    attributes:
+      label: unilyze version
+      description: Paste the output of `unilyze --version`, if available.
+      placeholder: "0.0.0 or not installed"
+    validations:
+      required: true
+  - type: dropdown
+    id: project_kind
+    attributes:
+      label: projectKind
+      description: Select the target `projectKind`.
+      options:
+        - unity
+        - dotnet
+        - both
+        - not project-specific
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Example usage or output
+      description: Show how the feature would be used or what output it should produce.
+      render: shell
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Add links, prior art, or constraints relevant to the proposal.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues for similar requests.
+          required: true
+        - label: This request describes a concrete problem or workflow.
+          required: true
