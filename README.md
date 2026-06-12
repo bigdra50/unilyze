@@ -16,14 +16,35 @@ Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyz
 
 ### Requirements
 
-- .NET 8.0 or later
+- No .NET installation is required for Homebrew, Scoop, or direct-download binaries
+- The `dotnet tool` channel requires .NET 8.0 or later
 
 **.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
 
 ## Quick Start
 
+For users who already have .NET, the global tool remains the recommended installation:
+
 ```
 dotnet tool install --global Unilyze
+```
+
+Install a self-contained binary without .NET:
+
+```bash
+# macOS or Linux
+brew install bigdra50/tap/unilyze
+
+# Windows
+scoop install https://raw.githubusercontent.com/bigdra50/unilyze/main/packaging/unilyze.json
+```
+
+Release archives for `osx-arm64`, `osx-x64`, `linux-x64`, and `win-x64` are also available from [GitHub Releases](https://github.com/bigdra50/unilyze/releases).
+Verify downloads with the attached `SHA256SUMS` file.
+For a macOS archive downloaded through a browser, remove the quarantine attribute before the first run:
+
+```bash
+xattr -d com.apple.quarantine ./unilyze
 ```
 
 Run in a Unity project directory to open the analysis results in your browser:

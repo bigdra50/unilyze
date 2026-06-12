@@ -34,6 +34,7 @@ Supported runtimes are the **current LTS** and the **previous LTS** (until its E
 
 - [src/Unilyze](src/Unilyze): CLI main project
 - [scripts/release-smoke.sh](scripts/release-smoke.sh): Release smoke test for standard `.NET tool` workflow
+- [packaging](packaging): Homebrew formula and Scoop manifest templates rendered by the release workflow
 - [tests/Unilyze.Tests](tests/Unilyze.Tests): xUnit tests
 - [docs/metrics.md](docs/metrics.md): Metric definitions
 - [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke / CodeHealth gate
@@ -129,6 +130,62 @@ dotnet pack src/Unilyze/Unilyze.csproj -c Release -o ./artifacts/nupkg
 bash scripts/release-smoke.sh --package-source ./artifacts/nupkg --version 0.1.0
 ```
 
+### Self-contained binary publish
+
+The semver-tag release workflow publishes untrimmed, self-contained, compressed single-file binaries for `osx-arm64`, `osx-x64`, `linux-x64`, and `win-x64`.
+These binaries use `net10.0`, but users do not need a .NET SDK or runtime because the runtime is bundled.
+
+Roslyn is not trimming-safe, so trimming is intentionally disabled.
+Framework-dependent single-file binaries were rejected because they retain a runtime prerequisite.
+An in-memory metadata-reference fallback was also rejected because it would add a second runtime reference-resolution path with metric compatibility risk.
+
+`IncludeAllContentForSelfExtract=true` is required.
+Without it, bundled framework assemblies have no stable on-disk locations and `DotnetRuntimeReferenceResolver` can silently degrade non-Unity analysis from Complete to Syntax.
+The runtime extracts bundle content under `$HOME/.net` on Unix-like systems and `%TEMP%/.net` on Windows on first use.
+Set `DOTNET_BUNDLE_EXTRACT_BASE_DIR` to override the extraction root when the default home directory is not writable.
+
+Local host-RID verification:
+
+```bash
+dotnet publish src/Unilyze/Unilyze.csproj -c Release -f net10.0 -r osx-arm64 \
+  --self-contained -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
+  -p:IncludeAllContentForSelfExtract=true -o artifacts/publish/osx-arm64
+./artifacts/publish/osx-arm64/Unilyze --version
+```
+
+Each RID job writes the uncompressed binary size and archive size to the GitHub Actions job summary.
+Record the first tagged release measurements here:
+
+| RID | Binary size | Archive size |
+| --- | ---: | ---: |
+| `osx-arm64` | Pending a network-enabled publish | Recorded by release job |
+| `osx-x64` | Recorded by release job | Recorded by release job |
+| `linux-x64` | Recorded by release job | Recorded by release job |
+| `win-x64` | Recorded by release job | Recorded by release job |
+
+The accepted tradeoff is a larger download in exchange for an installation path with no .NET prerequisite.
+
+### Homebrew tap and Scoop manifest
+
+The tracked files [packaging/unilyze.rb](packaging/unilyze.rb) and [packaging/unilyze.json](packaging/unilyze.json) contain release placeholders.
+The release workflow replaces the version and SHA256 placeholders, validates the rendered files, and attaches `unilyze.rb` and `unilyze.json` to the GitHub Release.
+
+Create the Homebrew tap once:
+
+1. Create the public repository `bigdra50/homebrew-tap`.
+2. Create a `Formula/` directory in that repository.
+3. Copy the rendered release asset to `Formula/unilyze.rb`.
+4. Commit and push the formula in the tap repository.
+
+For every release:
+
+1. Download the rendered `unilyze.rb` and `unilyze.json` assets from the GitHub Release.
+2. Replace `Formula/unilyze.rb` in `bigdra50/homebrew-tap`.
+3. Replace `packaging/unilyze.json` in this repository with the rendered manifest so its raw GitHub URL is installable by Scoop.
+4. Verify `brew install bigdra50/tap/unilyze` and the documented Scoop install command on machines without .NET.
+
+Automating the tap update with a cross-repository personal access token is intentionally deferred.
+
 ## Current Implementation Notes
 
 ### Type Identity
@@ -194,12 +251,27 @@ Related files:
 6. Apply the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
 7. If you changed a metric-calculation file, verify the `metricsVersion` bump (`AnalysisResult.CurrentMetricsVersion`) and CHANGELOG `[metrics]` entry
 8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into a new `## [X.Y.Z]` section and set the release date). The publish workflow fails if this section is missing for the tagged version.
+9. After the release workflow completes, copy the rendered `unilyze.rb` to `bigdra50/homebrew-tap/Formula/unilyze.rb`
+10. Replace `packaging/unilyze.json` with the rendered release asset and verify Homebrew and Scoop installation without .NET
 
 ## NuGet Publish
 
 Publishing is automated on semver tag push. Local API key storage is not assumed.
 
-Set the repository secret `NUGET_API_KEY` beforehand.
+The current workflow uses the repository secret `NUGET_API_KEY`.
+The release operator should migrate it to [NuGet Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing) as follows:
+
+1. Sign in to nuget.org and open the account's **Trusted Publishing** page.
+2. Add a GitHub policy for owner `bigdra50`, repository `unilyze`, and workflow file `publish.yml`. Enter only the file name, not `.github/workflows/`.
+3. Optionally create a protected GitHub environment such as `release`, add required reviewers, set `environment: release` on the publish job, and enter the same environment in the NuGet policy.
+4. Add `id-token: write` to the publish job permissions. Keep `contents: write` for GitHub Release creation.
+5. Immediately before `dotnet nuget push`, add `NuGet/login@v1` with the nuget.org profile name and use its `NUGET_API_KEY` output for the push. Request the temporary key late because it is valid for one hour and each OIDC token can be exchanged only once.
+6. Run `workflow_dispatch` to validate build, test, pack, and release smoke without publishing.
+7. Push a release tag and verify package publication and GitHub Release creation.
+8. After a successful Trusted Publishing release, delete the long-lived `NUGET_API_KEY` repository secret and remove the API-key preflight step from `.github/workflows/publish.yml`.
+
+This issue documents the migration only.
+The release operator must perform the nuget.org policy creation, workflow switch, first trusted publish, and secret removal.
 
 Publish procedure:
 
@@ -207,13 +279,16 @@ Publish procedure:
 2. Update `CHANGELOG.md` (Release Checklist step 8)
 3. Create and push a semver tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
 4. The `Publish NuGet` workflow runs `net10.0` test, pack, release smoke, `dotnet nuget push`, and creates a GitHub Release whose body is the matching `CHANGELOG.md` section
+5. Four matrix jobs publish and archive self-contained binaries, recording binary and archive sizes in their job summaries
+6. The release-assets job creates `SHA256SUMS`, renders the Homebrew formula and Scoop manifest, and uploads all assets to the GitHub Release
 
-Dry-run (no NuGet push, no GitHub Release): manually trigger the `Publish NuGet` workflow from Actions (`workflow_dispatch`).
+Dry-run (no NuGet push, no GitHub Release upload): manually trigger the `Publish NuGet` workflow from Actions (`workflow_dispatch`).
+The dry-run still builds all four binaries, runs the Linux bundle smoke, generates checksums, and validates the rendered package files.
 
 Publish workflow:
 
 - [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
-- Secret name: `NUGET_API_KEY`
+- Current secret name until migration: `NUGET_API_KEY`
 
 ## Known Local Caveats
 

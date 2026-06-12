@@ -1,0 +1,94 @@
+name: Bug report
+description: Report reproducible incorrect behavior in unilyze
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+        Please include a minimal reproduction and remove sensitive information from logs or output.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the incorrect behavior and its impact.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide the commands, configuration, and smallest project needed to reproduce the issue.
+      placeholder: |
+        1. Run `unilyze ...`
+        2. Inspect ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include relevant output, errors, or screenshots.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: unilyze version
+      description: Paste the output of `unilyze --version`.
+      placeholder: "0.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: project_kind
+    attributes:
+      label: projectKind
+      description: Select the `projectKind` reported in unilyze JSON output.
+      options:
+        - unity
+        - dotnet
+        - unknown or unavailable
+    validations:
+      required: true
+  - type: input
+    id: dotnet_version
+    attributes:
+      label: .NET SDK version
+      description: Paste the output of `dotnet --version`.
+    validations:
+      required: true
+  - type: dropdown
+    id: operating_system
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Add configuration, analysis level, logs, or other relevant context.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed secrets and private source code from the report.
+          required: true

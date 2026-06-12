@@ -14,11 +14,16 @@ public static class HtmlFormatter
     {
         var title = Path.GetFileName(projectPath.TrimEnd('/').TrimEnd('\\'));
         if (string.IsNullOrEmpty(title)) title = "Unity Project";
+        var safeAnalysisJson = EscapeInlineScriptPayload(analysisJson);
+        var safeDiffJson = EscapeInlineScriptPayload(diffJson);
 
         return HtmlTemplate.Value
             .Replace("__VENDOR_SCRIPTS__", HtmlTemplate.VendorScripts)
-            .Replace("__DATA_PLACEHOLDER__", analysisJson)
-            .Replace("__DIFF_DATA_PLACEHOLDER__", diffJson)
+            .Replace("__DATA_PLACEHOLDER__", safeAnalysisJson)
+            .Replace("__DIFF_DATA_PLACEHOLDER__", safeDiffJson)
             .Replace("__TITLE__", WebUtility.HtmlEncode(title));
     }
+
+    static string EscapeInlineScriptPayload(string json) =>
+        json.Replace("</script", "<\\/script", StringComparison.OrdinalIgnoreCase);
 }

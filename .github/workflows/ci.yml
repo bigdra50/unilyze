@@ -57,7 +57,7 @@ jobs:
         run: dotnet build src/Unilyze/Unilyze.csproj -c Release --no-restore
 
       # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net10.0).
-      # Path and Release/net10.0 match .github/workflows/badges.yml; SyntaxOnly is automatic (no Unity).
+      # Path and Release/net10.0 match .github/workflows/badges.yml; runtime references enable Complete analysis.
       - name: CodeHealth gate
         run: |
           dotnet run --project src/Unilyze -c Release --framework net10.0 --no-build -- \

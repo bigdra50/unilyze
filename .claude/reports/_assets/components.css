@@ -1,0 +1,571 @@
+/* ============================================================
+ * .reports components.css
+ * 再利用可能なコンポーネント
+ * ============================================================ */
+
+/* ------------------------------------------------------------
+ * Card
+ * ------------------------------------------------------------ */
+
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: var(--sp-5) var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+
+.card.priority-1 { border-left-color: var(--bad); }
+.card.priority-2 { border-left-color: var(--warn); }
+.card.priority-3 { border-left-color: var(--accent-warm); }
+.card.priority-4 { border-left-color: var(--accent); }
+.card.priority-5 { border-left-color: var(--text-dim); }
+.card.good { border-left-color: var(--good); }
+.card.info { border-left-color: var(--info); }
+
+.card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: var(--fz-md);
+  margin: 0;
+}
+
+.card-title code { font-size: 0.95em; }
+
+.card dl {
+  margin: var(--sp-3) 0 0;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--sp-2) var(--sp-4);
+}
+
+.card dt {
+  color: var(--text-dim);
+  font-size: var(--fz-sm);
+  font-weight: 600;
+}
+
+.card dd {
+  margin: 0;
+  font-size: var(--fz-base);
+}
+
+/* Summary card (top-of-section call-out) */
+
+.summary {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-5) var(--sp-6);
+  margin-bottom: var(--sp-4);
+}
+
+.summary p { margin: 0; }
+.summary p + p { margin-top: var(--sp-2); }
+
+/* ------------------------------------------------------------
+ * Badge
+ * ------------------------------------------------------------ */
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: var(--fz-xs);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-bad   { background: rgba(248, 81, 73, 0.15);  color: var(--bad); }
+.badge-warn  { background: rgba(210, 153, 34, 0.15); color: var(--warn); }
+.badge-info  { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+.badge-good  { background: rgba(63, 185, 80, 0.15);  color: var(--good); }
+.badge-mute  { background: rgba(139, 148, 158, 0.15); color: var(--text-dim); }
+.badge-purple { background: rgba(163, 113, 247, 0.15); color: var(--info); }
+
+/* Tag (pill, smaller) */
+
+.tag {
+  display: inline-block;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fz-xs);
+  font-family: var(--font-mono);
+}
+
+.tag-row {
+  display: flex;
+  gap: var(--sp-1);
+  flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------
+ * Table
+ * ------------------------------------------------------------ */
+
+table.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--sp-4) 0;
+  font-size: var(--fz-base);
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+table.report-table th,
+table.report-table td {
+  text-align: left;
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+table.report-table th {
+  background: var(--bg-card);
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: var(--fz-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+table.report-table tr:last-child td { border-bottom: none; }
+table.report-table tr:hover td { background: rgba(88, 166, 255, 0.04); }
+
+/* Sticky header for long tables */
+table.report-table.sticky th {
+  position: sticky;
+  top: 0;
+}
+
+/* ------------------------------------------------------------
+ * Tabs (CSS-only)
+ * ------------------------------------------------------------ */
+
+.tabs {
+  margin: var(--sp-4) 0;
+}
+
+.tabs > input[type="radio"] {
+  display: none;
+}
+
+.tabs > .tab-labels {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  gap: var(--sp-1);
+}
+
+.tabs > .tab-labels > label {
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  color: var(--text-dim);
+  font-size: var(--fz-sm);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tabs > .tab-labels > label:hover { color: var(--text); }
+
+.tabs > .tab-panel {
+  display: none;
+  padding: var(--sp-4) 0;
+}
+
+/* tabs activation: linked by name attribute via attr in markup */
+.tabs > input:checked + .tab-labels label[for] { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ------------------------------------------------------------
+ * Details / Collapsible
+ * ------------------------------------------------------------ */
+
+details.collapsible {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: var(--sp-3) 0;
+  overflow: hidden;
+}
+
+details.collapsible > summary {
+  padding: var(--sp-3) var(--sp-5);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--fz-base);
+  color: var(--text);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+details.collapsible > summary::-webkit-details-marker { display: none; }
+
+details.collapsible > summary::before {
+  content: "▶";
+  color: var(--text-dim);
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+
+details.collapsible[open] > summary::before { transform: rotate(90deg); }
+
+details.collapsible > .body {
+  padding: 0 var(--sp-5) var(--sp-4);
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ------------------------------------------------------------
+ * Notes / Callouts
+ * ------------------------------------------------------------ */
+
+.note {
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--fz-sm);
+  color: var(--text-dim);
+  margin: var(--sp-4) 0;
+  border-left: 3px solid var(--accent);
+  background: rgba(88, 166, 255, 0.06);
+}
+
+.note strong { color: var(--accent); }
+
+.note-warn { border-left-color: var(--warn); background: rgba(210, 153, 34, 0.08); }
+.note-warn strong { color: var(--warn); }
+
+.note-bad { border-left-color: var(--bad); background: rgba(248, 81, 73, 0.08); }
+.note-bad strong { color: var(--bad); }
+
+.note-good { border-left-color: var(--good); background: rgba(63, 185, 80, 0.08); }
+.note-good strong { color: var(--good); }
+
+/* ------------------------------------------------------------
+ * Signals / Chips (compact in-card markers)
+ * ------------------------------------------------------------ */
+
+.signals {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin: var(--sp-2) 0;
+}
+
+.signal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fz-xs);
+}
+
+/* ------------------------------------------------------------
+ * Verdict grid (decision summary)
+ * ------------------------------------------------------------ */
+
+.verdict {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+}
+
+.verdict-item {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.verdict-item h4 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fz-base);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.verdict-item h4::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.verdict-item.go h4::before      { background: var(--good); }
+.verdict-item.wait h4::before    { background: var(--warn); }
+.verdict-item.discuss h4::before { background: var(--accent); }
+.verdict-item.stop h4::before    { background: var(--bad); }
+
+.verdict-item p {
+  margin: 0;
+  font-size: var(--fz-sm);
+  color: var(--text-dim);
+}
+
+/* ------------------------------------------------------------
+ * Code reference (with filepath header)
+ * ------------------------------------------------------------ */
+
+.code-ref {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: var(--sp-4) 0;
+  overflow: hidden;
+}
+
+.code-ref-header {
+  background: var(--bg-card);
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fz-sm);
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.code-ref-header .path { color: var(--accent); }
+.code-ref-header .lang {
+  text-transform: uppercase;
+  font-size: var(--fz-xs);
+  letter-spacing: 0.5px;
+}
+
+.code-ref pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+/* ------------------------------------------------------------
+ * Diff (inline)
+ * ------------------------------------------------------------ */
+
+.diff {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: var(--fz-sm);
+  line-height: 1.5;
+  margin: var(--sp-4) 0;
+  overflow-x: auto;
+}
+
+.diff-line {
+  padding: 1px var(--sp-4);
+  white-space: pre;
+  display: block;
+}
+
+.diff-add {
+  background: var(--diff-add-bg);
+  border-left: 3px solid var(--diff-add-line);
+}
+
+.diff-del {
+  background: var(--diff-del-bg);
+  border-left: 3px solid var(--diff-del-line);
+}
+
+.diff-ctx { border-left: 3px solid transparent; }
+
+.diff-hunk {
+  background: var(--bg-card);
+  color: var(--text-dim);
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fz-xs);
+}
+
+/* Side-by-side diff layout */
+.diff-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.diff-side > div {
+  background: var(--bg-code);
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-mono);
+  font-size: var(--fz-sm);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.diff-side .label {
+  font-family: var(--font-sans);
+  font-size: var(--fz-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sp-2);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------
+ * Progress / Bar
+ * ------------------------------------------------------------ */
+
+.progress {
+  background: var(--bg-card);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--good));
+  transition: width 0.3s;
+}
+
+.progress-bar.warn { background: var(--warn); }
+.progress-bar.bad  { background: var(--bad); }
+.progress-bar.good { background: var(--good); }
+
+/* ------------------------------------------------------------
+ * Metric tiles (KPI)
+ * ------------------------------------------------------------ */
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--sp-4);
+  margin: var(--sp-4) 0;
+}
+
+.metric {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.metric-label {
+  color: var(--text-dim);
+  font-size: var(--fz-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: var(--sp-1);
+}
+
+.metric-value {
+  font-size: var(--fz-2xl);
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono);
+  line-height: 1.2;
+}
+
+.metric-delta {
+  font-size: var(--fz-sm);
+  margin-top: var(--sp-1);
+  color: var(--text-dim);
+}
+
+.metric-delta.up   { color: var(--good); }
+.metric-delta.down { color: var(--bad); }
+
+/* ------------------------------------------------------------
+ * Heatmap (CSS grid based)
+ * ------------------------------------------------------------ */
+
+.heatmap {
+  display: grid;
+  gap: 2px;
+  background: var(--bg-card);
+  padding: 2px;
+  border-radius: var(--radius);
+  margin: var(--sp-4) 0;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  background: var(--bg-elev);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fz-xs);
+  font-family: var(--font-mono);
+  color: var(--text);
+  border-radius: 2px;
+  position: relative;
+}
+
+.heatmap-cell.h-0 { background: rgba(63, 185, 80, 0.15); }
+.heatmap-cell.h-1 { background: rgba(63, 185, 80, 0.35); }
+.heatmap-cell.h-2 { background: rgba(210, 153, 34, 0.35); }
+.heatmap-cell.h-3 { background: rgba(240, 136, 62, 0.45); }
+.heatmap-cell.h-4 { background: rgba(248, 81, 73, 0.55); }
+
+/* ------------------------------------------------------------
+ * Status dot
+ * ------------------------------------------------------------ */
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-mute);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.dot-good { background: var(--good); }
+.dot-warn { background: var(--warn); }
+.dot-bad  { background: var(--bad); }
+.dot-info { background: var(--accent); }
+
+/* ------------------------------------------------------------
+ * Mermaid container styling override
+ * ------------------------------------------------------------ */
+
+.mermaid-wrap {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  margin: var(--sp-4) 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.mermaid-wrap .figcap {
+  display: block;
+  margin-top: var(--sp-2);
+  color: var(--text-dim);
+  font-size: var(--fz-sm);
+  font-style: italic;
+}

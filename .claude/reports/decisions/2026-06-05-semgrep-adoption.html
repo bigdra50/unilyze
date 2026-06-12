@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>semgrepからunilyzeへ取り入れる機能の選定</title>
+
+<meta name="report:type" content="decision">
+<meta name="report:weight" content="heavy">
+<meta name="report:date" content="2026-06-05">
+<meta name="report:tags" content="decision,semgrep,roadmap,ci,sarif">
+
+<link rel="stylesheet" href="../_assets/theme.css">
+<link rel="stylesheet" href="../_assets/components.css">
+<style>
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--sp-4);
+    margin: var(--sp-4) 0;
+  }
+  .option-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-top: 4px solid var(--text-mute);
+    border-radius: var(--radius);
+    padding: var(--sp-4) var(--sp-5);
+  }
+  .option-card.selected {
+    border-top-color: var(--good);
+    background: linear-gradient(180deg, rgba(63, 185, 80, 0.08) 0%, var(--bg-elev) 60%);
+  }
+  .option-card.deferred {
+    border-top-color: var(--warn);
+  }
+  .option-card.rejected {
+    border-top-color: var(--bad);
+    opacity: 0.75;
+  }
+  .option-title {
+    font-weight: 600;
+    font-size: var(--fz-md);
+    margin: 0 0 var(--sp-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--sp-2);
+  }
+  .option-pros, .option-cons { list-style: none; padding: 0; margin: var(--sp-2) 0; font-size: var(--fz-sm); }
+  .option-pros li::before { content: "+ "; color: var(--good); font-weight: 700; }
+  .option-cons li::before { content: "− "; color: var(--bad); font-weight: 700; }
+  .option-card h5 { margin: var(--sp-3) 0 var(--sp-1); font-size: var(--fz-xs); text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px; }
+
+  .matrix-cell { text-align: center; font-family: var(--font-mono); }
+  .score-5 { color: var(--good); font-weight: 700; }
+  .score-4 { color: var(--good); }
+  .score-3 { color: var(--warn); }
+  .score-2 { color: var(--accent-warm); }
+  .score-1 { color: var(--bad); }
+
+  details.spec {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--sp-2) var(--sp-4);
+    margin: var(--sp-2) 0;
+  }
+  details.spec summary { cursor: pointer; font-weight: 600; padding: var(--sp-1) 0; }
+  details.spec summary .badge { margin-left: var(--sp-2); }
+
+  body[data-weight="light"] [data-show-when="weight:heavy"] { display: none; }
+  body[data-weight="heavy"] [data-show-when="weight:light"] { display: none; }
+</style>
+</head>
+<body data-weight="heavy">
+<div class="container">
+
+<header class="report-header">
+  <h1>semgrepからunilyzeへ取り入れる機能の選定</h1>
+  <div class="meta">
+    <span>Type: Decision</span>
+    <span>Weight: <code id="weight-display">heavy</code></span>
+    <span>Date: 2026-06-05</span>
+    <span>Status: Proposed</span>
+  </div>
+</header>
+
+<nav class="no-print">
+  <a href="../index.html">← Index</a>
+</nav>
+
+<!-- ============================================================
+     1. 結論
+     ============================================================ -->
+<h2>結論</h2>
+<div class="note note-good">
+  <strong>採用案:</strong> semgrepから「運用層・出力契約層」の設計を選択導入する。
+  第1弾は E (schemaVersion) → A (diff --fail-on) → B (StableFindingId + SARIF partialFingerprints) の順で着手する。<br>
+  エンジン系の翻案（パターンマッチ・dataflow基盤）は採用しない。
+</div>
+
+<!-- ============================================================
+     2. 理由 / 適用範囲
+     ============================================================ -->
+<h2>理由</h2>
+<div class="summary">
+  <p>
+    semgrepはルールがデータ (YAML)、unilyzeはルールがコード (C#のCalculator) という根本差があり、
+    エンジン・テスト記法の直輸入は動機となる制約がunilyze側に存在しない。
+    一方「CIゲート」「finding安定ID」「抑制コメント」「確度可視化」といった
+    CLI解析ツールの運用層はそのまま課題が共通しており、ここに価値が集中する。
+  </p>
+  <ul>
+    <li>19候補を抽出し、全件を「unilyzeの実コードを読んで反証を試みる」懐疑的検証にかけた結果、17件がadapt (形を直せば価値あり)、2件reject</li>
+    <li>E はCodeHealth重み調整 (文献根拠なしの独自重み付けで、将来チューニング予定) の前に入れないと過去trendが壊れるため最優先</li>
+    <li>A は <code>DiffCalculator.cs:198-200</code> が劣化を計算済みなのに <code>Program.cs:457,460</code> が常に return 0 という「配線のみで完成する」最大の即効候補</li>
+    <li>優先順位はgpt-5.5と2ターン議論して決着 (E→A→B の並べ替え、ID契約のB内包化、ParameterTypes不採用)</li>
+  </ul>
+</div>
+
+<h2>適用範囲</h2>
+<div class="summary">
+  <p>
+    unilyze本体 (bigdra50/unilyze) のロードマップ判断。
+    第1弾〜第3弾は製品機能、K (性能ベンチCI) はリポジトリ内部のCI投資としてロードマップ外管理。
+    L (到達不能コード検出) はexperimental smellsとして隔離しない限り保留。
+  </p>
+</div>
+
+<!-- ============================================================
+     3. 課題 / コンテキスト
+     ============================================================ -->
+<h2>課題 / コンテキスト</h2>
+<div class="summary">
+  <p><strong>解決したい問題:</strong>
+    unilyzeの次の開発方向を決めるにあたり、成熟した静的解析ツールであるsemgrep (LGPL 2.1のCE部分) から
+    移植・翻案できる設計を体系的に洗い出したい。
+  </p>
+  <p><strong>調査方法:</strong>
+    semgrepコードベース5領域 (rules-config / scan-pipeline / output-ci / testing-qa / engine-core) と
+    unilyze本体を計30エージェントで並列調査。
+    領域ごとに導入候補を抽出し、各候補を独立した懐疑的レビュアーがunilyzeの実コードと突合して
+    adopt / adapt / reject 判定。最終優先順位はgpt-5.5とのLLM間議論 (2ターン) で確定。
+  </p>
+  <p><strong>制約:</strong>
+    1人開発の小規模OSS。ワークアイテムの粒度過多はオーバーヘッド。
+    CLIは手書き args ディスパッチ (<code>Program.cs:4-26</code>) で表面積を増やしにくい。
+    終了コードは 0/1 が公開契約 (<code>Program.cs:173-176</code>)。
+  </p>
+</div>
+
+<!-- ============================================================
+     4. ロードマップ全体図
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>採用ロードマップ</h2>
+<figure class="mermaid-wrap">
+  <div class="mermaid">
+flowchart LR
+  subgraph W1["第1弾: 出力契約の固定 (すべてsmall)"]
+    E["E. schemaVersion"] --> A["A. diff --fail-on<br/>exit 2"] --> B["B. StableFindingId<br/>+ SARIF fingerprints"]
+  end
+  subgraph W2["第2弾: エージェントワークフロー信頼性"]
+    C["C. // unilyze-ignore"]
+    D["D. confidence出力"]
+    I["I. excludeGlobs"]
+  end
+  subgraph W3["第3弾: 基盤整備"]
+    G["G. JSONスナップショット"]
+    F["F. 実UnityリポジトリQA"]
+    J["J. --require-level"]
+    H["H. --jobs"]
+  end
+  B --> C
+  B --> D
+  W2 --> W3
+  </div>
+  <figcaption class="figcap">
+    E が土台 (これ無しでCodeHealth重み調整するとtrendが壊れる)。
+    B で確立する StableFindingId 契約を C (ignoreのID語彙) が再利用する依存関係。
+  </figcaption>
+</figure>
+</section>
+
+<!-- ============================================================
+     5. 決定マトリクス
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>決定マトリクス</h2>
+<p style="color: var(--text-dim); font-size: var(--fz-sm);">
+  value / effort は懐疑的検証「後」の再評価値 (元提案から下方修正されたものが多い)。
+</p>
+<table class="report-table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>候補</th>
+      <th>由来領域</th>
+      <th class="matrix-cell">value</th>
+      <th class="matrix-cell">effort</th>
+      <th class="matrix-cell">判定</th>
+      <th>フェーズ</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>E</td><td>メトリクススキーマversioning</td><td>engine-core</td>
+      <td class="matrix-cell"><span class="score-5">high</span></td>
+      <td class="matrix-cell"><span class="score-5">small</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第1弾</td>
+    </tr>
+    <tr>
+      <td>A</td><td>diff のCI回帰ゲート化 (--fail-on)</td><td>output-ci ほか3領域</td>
+      <td class="matrix-cell"><span class="score-5">high</span></td>
+      <td class="matrix-cell"><span class="score-5">small</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第1弾</td>
+    </tr>
+    <tr>
+      <td>B</td><td>StableFindingId + SARIF partialFingerprints</td><td>scan-pipeline ほか2領域</td>
+      <td class="matrix-cell"><span class="score-5">high</span></td>
+      <td class="matrix-cell"><span class="score-4">small-med</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第1弾</td>
+    </tr>
+    <tr>
+      <td>C</td><td>インライン抑制コメント // unilyze-ignore</td><td>rules-config</td>
+      <td class="matrix-cell"><span class="score-5">high</span></td>
+      <td class="matrix-cell"><span class="score-4">small-med</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第2弾</td>
+    </tr>
+    <tr>
+      <td>D</td><td>解析確度 (confidence) の型単位出力</td><td>engine-core</td>
+      <td class="matrix-cell"><span class="score-5">high</span></td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第2弾</td>
+    </tr>
+    <tr>
+      <td>I</td><td>生成コード除外 (excludeGlobs)</td><td>scan-pipeline</td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="score-5">small</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第2弾</td>
+    </tr>
+    <tr>
+      <td>G</td><td>JSONゴールデンスナップショット (Verify)</td><td>testing-qa</td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第3弾</td>
+    </tr>
+    <tr>
+      <td>F</td><td>実UnityリポジトリQAコーパス (release時)</td><td>testing-qa</td>
+      <td class="matrix-cell"><span class="score-4">med-high</span></td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第3弾</td>
+    </tr>
+    <tr>
+      <td>J</td><td>--require-level (解析レベル要求)</td><td>output-ci</td>
+      <td class="matrix-cell"><span class="score-2">low-med</span></td>
+      <td class="matrix-cell"><span class="score-5">small</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第3弾</td>
+    </tr>
+    <tr>
+      <td>H</td><td>--jobs / maxJobs 並列度上書き</td><td>scan-pipeline</td>
+      <td class="matrix-cell"><span class="score-2">low-med</span></td>
+      <td class="matrix-cell"><span class="score-5">small</span></td>
+      <td class="matrix-cell"><span class="badge badge-good">採用</span></td><td>第3弾</td>
+    </tr>
+    <tr>
+      <td>K</td><td>解析性能ベンチ回帰CI (BenchmarkDotNet)</td><td>testing-qa</td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="score-2">med-large</span></td>
+      <td class="matrix-cell"><span class="badge badge-warn">保留</span></td><td>内部投資</td>
+    </tr>
+    <tr>
+      <td>L</td><td>ConstantCondition / UnreachableCode 検出器</td><td>engine-core</td>
+      <td class="matrix-cell"><span class="score-3">medium</span></td>
+      <td class="matrix-cell"><span class="score-1">large</span></td>
+      <td class="matrix-cell"><span class="badge badge-warn">保留</span></td><td>linter越境</td>
+    </tr>
+    <tr>
+      <td>—</td><td>// ruleid: 式ゴールデンアノテーション</td><td>testing-qa</td>
+      <td class="matrix-cell"><span class="score-1">—</span></td>
+      <td class="matrix-cell"><span class="score-1">—</span></td>
+      <td class="matrix-cell"><span class="badge badge-bad">却下</span></td><td>—</td>
+    </tr>
+    <tr>
+      <td>—</td><td>不動点ワークリスト共通基盤の先行導入</td><td>engine-core</td>
+      <td class="matrix-cell"><span class="score-1">—</span></td>
+      <td class="matrix-cell"><span class="score-1">—</span></td>
+      <td class="matrix-cell"><span class="badge badge-bad">却下</span></td><td>—</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================================
+     6. 第1弾の詳細スペック
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>第1弾の詳細スペック (検証済みの最小形)</h2>
+<div class="options-grid">
+
+  <div class="option-card selected">
+    <div class="option-title">
+      <span>E. schemaVersion</span>
+      <span class="badge badge-good">第1弾-1</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      整数定数 <code>MetricsSchema.Version</code> 1本をJSONに常時埋め込み。
+      CodeHealth重み・CycCC加算ルール・TypeId形式の変更で+1。
+    </p>
+    <h5>仕様</h5>
+    <ul class="option-pros">
+      <li>旧JSON (版なし) はv0扱いで後方互換</li>
+      <li>diffで不一致なら SchemaMismatch フラグ + 警告1行</li>
+      <li>trendも混在検知時にstderr警告</li>
+    </ul>
+    <h5>見送り</h5>
+    <ul class="option-cons">
+      <li>指標単位の自動比較除外 (対応表メンテが重い)</li>
+      <li>semver採用 (整数で足りる)</li>
+      <li>SARIFのtool.driver.versionとは混同しない (properties側に分離)</li>
+    </ul>
+    <p style="font-size: var(--fz-xs); color: var(--text-dim);">
+      根拠: <code>AnalysisResult.cs:6-14</code> に版なし /
+      <code>DiffCalculator.Compare</code> は盲目比較
+    </p>
+  </div>
+
+  <div class="option-card selected">
+    <div class="option-title">
+      <span>A. diff --fail-on</span>
+      <span class="badge badge-good">第1弾-2</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      <code>--fail-on-degrade</code> / <code>--max-degraded N</code> /
+      <code>--fail-on-new-critical</code> / <code>--audit</code> を追加し、ゲート違反は exit 2。
+    </p>
+    <h5>仕様</h5>
+    <ul class="option-pros">
+      <li>DiffCalculatorが劣化を計算済み (DiffCalculator.cs:198-200)。配線のみで完成</li>
+      <li>exit 2 = quality gate failed に統一 (実行エラー1と区別)</li>
+      <li>GitHub Actionsサンプルをdocsに追加 (baseline解決は外部shellで例示)</li>
+      <li>E2E: 劣化→2 / --audit→0 / 新規Critical→2 / パースエラー→1</li>
+    </ul>
+    <h5>見送り</h5>
+    <ul class="option-cons">
+      <li>--baseline-ref (git worktree自動化) — 外部4行で代替可能、保留</li>
+      <li>semgrep流5値exit code表・欠番予約 — 過剰</li>
+    </ul>
+    <p style="font-size: var(--fz-xs); color: var(--text-dim);">
+      根拠: <code>Program.cs:457,460</code> が常に return 0
+    </p>
+  </div>
+
+  <div class="option-card selected">
+    <div class="option-title">
+      <span>B. StableFindingId + SARIF fingerprints</span>
+      <span class="badge badge-good">第1弾-3</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      <code>TypeId + Kind + MethodName + ParameterCount</code> のSHA256を
+      <code>unilyzeSmellHash/1</code> としてSARIF partialFingerprintsへ出力。
+    </p>
+    <h5>仕様</h5>
+    <ul class="option-pros">
+      <li>コード本文・メッセージ・行番号はhashに含めない (微変更でIDが割れる事故を防ぐ)</li>
+      <li>StableFindingId 型として切り出し、CのID語彙・SARIF ruleIdと同一の公開契約に</li>
+      <li>ID契約のdocsも同じPRで公開 (独立ワークアイテムにはしない)</li>
+      <li>付随: diffの型リネーム耐性化 (unmatched同士をシグネチャ集合のJaccard類似度でフォールバック照合)</li>
+    </ul>
+    <h5>見送り</h5>
+    <ul class="option-cons">
+      <li>ParameterTypes — 型リネームで割れる方が実害大 (gpt-5.5と合意)</li>
+      <li>正規化スニペットhash — 安定IDの目的と逆行</li>
+      <li>BloomFilter128流用 — 弱ハッシュで不適、SHA256を使う</li>
+    </ul>
+    <p style="font-size: var(--fz-xs); color: var(--text-dim);">
+      根拠: <code>SarifFormatter.cs:113-134</code> にfingerprintなし →
+      Code Scanningで行ズレ重複が発生する構造
+    </p>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     7. 第2弾・第3弾の詳細
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>第2弾・第3弾の詳細</h2>
+
+<details class="spec">
+  <summary>C. インライン抑制コメント <code>// unilyze-ignore: &lt;id&gt;</code><span class="badge badge-good">第2弾</span></summary>
+  <p>
+    型/メソッド宣言の同一行末尾または直前行の単独コメントで該当findingを抑制。
+    エージェントの「ここは意図的に複雑」判断をコードに恒久記録し、refactor-loopの収束ノイズを構造的に除去する。
+  </p>
+  <ul>
+    <li>ID語彙はBで確立する StableFindingId 契約の完全一致のみ。サフィックス一致は不採用 (unilyzeのIDはフラット16種)</li>
+    <li>裸の <code>// unilyze-ignore</code> (ID無し) は不採用 — god-class狙いの抑制がboxingまで消す事故を防ぐ</li>
+    <li>未知IDはstderr警告。抑制済みは出力から単に除外 (--show-suppressed は将来拡張)</li>
+    <li>実装フックは <code>AnalysisPipeline.cs:357-416</code> — 型宣言ノードとSemanticModelが手元にありtrivia走査が容易。CodeSmellDetectorには手を入れない</li>
+    <li>スキル側docs (blind-spots.md / refactor-loop) を「合意済み箇所は1度コメントで恒久化」運用に更新</li>
+  </ul>
+</details>
+
+<details class="spec">
+  <summary>D. 解析確度 (confidence) の型単位出力<span class="badge badge-good">第2弾</span></summary>
+  <p>
+    SemanticModel例外時のsilentフォールバック (<code>AnalysisPipeline.cs:332-339</code>) と
+    DITの0/1概算 (<code>:341-352</code>) を TypeMetrics に記録し可視化する。
+  </p>
+  <ul>
+    <li>「semanticが使えたか / catchフォールバックしたか / DIT概算か」のbool数個から開始 (指標×3値の全付与は過剰)</li>
+    <li>statuslineに「N型がapprox」の1行サマリ</li>
+    <li>命名はdiffの「degraded」(メトリクス悪化の意味で予約済み) と衝突させず confidence 系を使う</li>
+    <li>HTML色分け・終了コード連動は次フェーズ</li>
+    <li>付随バグ: <code>Program.cs:266</code> のschema説明が "SyntaxOnly" or "Semantic" のままで実装の4値enumと不一致 (別issue)</li>
+    <li>注意: 元提案の動機「refactor-loopが誤収束」は不成立 — 収束判定のCodeHealthは全構成要素が構文解析でexact</li>
+  </ul>
+</details>
+
+<details class="spec">
+  <summary>I. 生成コード除外 (excludeGlobs)<span class="badge badge-good">第2弾</span></summary>
+  <p>
+    <code>*.g.cs</code> 等のグロブ除外設定を excludeDirs と同系統で追加。
+    blind-spots.md:9 が認めている実在ギャップへの直接対処。
+  </p>
+  <ul>
+    <li>gitignoreフィルタはopt-in (<code>--respect-gitignore</code>、既定off) — 既定onだと未コミットの新規.csが無言で消える</li>
+    <li>元提案の git ls-files ターゲット選択差し替えは不採用 — 解析は既にAssets/配下スコープ (<code>ProgramHelpers.cs:99-106</code>) でPackageCache混入は起きず、ボトルネックも列挙ではなくSemanticModel構築</li>
+  </ul>
+</details>
+
+<details class="spec">
+  <summary>G. JSONゴールデンスナップショットテスト (Verify)<span class="badge badge-good">第3弾</span></summary>
+  <ul>
+    <li>VerifyXunitのreceived/verifiedフローでJSONから段階導入。価値が出たらSARIF/statusline追加</li>
+    <li>ノーマライザ必須: <code>AnalysisPipeline.cs:80</code> のUtcNow、<code>SarifFormatter.cs:82</code> の絶対URIを固定トークン化。Windows対応時のパス差検出器を兼ねる</li>
+    <li>HTMLフルスナップは不採用 — 静的テンプレ2398行+JSON注入なのでJSONスナップで実質カバー</li>
+    <li>現状の構造アサーション型テストはCodeHealth重み定数の変更をすり抜けうる、という穴への対処</li>
+  </ul>
+</details>
+
+<details class="spec">
+  <summary>F. 実UnityリポジトリQAコーパス (release時のみ)<span class="badge badge-good">第3弾</span></summary>
+  <ul>
+    <li><code>tests/qa/repos.json</code> (url + 固定SHA + xfail理由 + expectedLevel) を定義</li>
+    <li>シードはcross-validationで選定済みの BossRoom / HelloMarioFramework / UniTask / VContainer / unilyze-self + Zenject系1つ</li>
+    <li>release時に --depth=1 clone → 完走 + exit 0 + 未処理例外なし + analysisLevelが想定以上、を検証</li>
+    <li>graceful degradation (NullableWalker NRE catch等) は実リポジトリでしか踏みにくいのに現状E2Eは合成フィクスチャのみ (<code>CliE2eTests.cs:92-160</code>)</li>
+    <li><code>unilyze qa</code> サブコマンド新設はしない (CLI表面積を増やさない)。通常CIのnet8/9/10マトリクスにも入れない</li>
+  </ul>
+</details>
+
+<details class="spec">
+  <summary>J. --require-level / H. --jobs<span class="badge badge-good">第3弾</span></summary>
+  <ul>
+    <li>J: 到達解析レベルが要求未満なら出力は通常通り出した上で exit 2。「CIが知らないうちにSyntaxOnlyで回っていた」事故の検知。逆側の --suppress-analysis-errors は不採用 (unilyzeは既に常にexit 0の最大fail-open)</li>
+    <li>H: <code>--jobs &lt;n&gt;</code> と maxJobs 設定による手動上書きのみ。3箇所のParallelに共通ParallelOptionsを渡す。cgroup自前読み・0.85係数は不採用 — .NETランタイムが既にcgroup-aware (semgrepが自作するのはOCamlにランタイム支援がないから)</li>
+  </ul>
+</details>
+</section>
+
+<!-- ============================================================
+     8. 保留・却下した代替案
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>保留・却下した候補</h2>
+<div class="options-grid">
+
+  <div class="option-card deferred">
+    <div class="option-title">
+      <span>K. 解析性能ベンチ回帰CI</span>
+      <span class="badge badge-warn">内部投資扱い</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      BenchmarkDotNet別プロジェクト + CIでbase/head 2点比較。
+    </p>
+    <h5>保留理由</h5>
+    <ul class="option-cons">
+      <li>元提案の「既存統計出力から所要時間取得」は事実誤認 (Stopwatch計装が一切ない)</li>
+      <li>製品価値でなく開発運用 — 公開ロードマップから外し内部品質投資として別管理</li>
+      <li>製品CLIに計時APIは入れない (gh pr comment相当もCLIに実装しない)</li>
+    </ul>
+  </div>
+
+  <div class="option-card deferred">
+    <div class="option-title">
+      <span>L. ConstantCondition / UnreachableCode 検出器</span>
+      <span class="badge badge-warn">保留</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      Roslyn AnalyzeControlFlow / GetConstantValue の薄いラッパで新CodeSmellKind 2種。
+    </p>
+    <h5>保留理由</h5>
+    <ul class="option-cons">
+      <li>メトリクス+改善検証ツールからlinterへの軸ずれ (gpt-5.5判定: experimental smellsとして隔離しない限り保留)</li>
+      <li>採用する場合のゲートはFullEngine限定でなくCoreEngine以上 (既存検出器の慣行)、#if UNITY_EDITOR偽陽性対策が必須、dead storeは別タスク</li>
+    </ul>
+  </div>
+
+  <div class="option-card rejected">
+    <div class="option-title">
+      <span>// ruleid: 式ゴールデンアノテーション</span>
+      <span class="badge badge-bad">却下</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      semgrep流: テストコードにアノテーションを書き期待findingを宣言する方式。
+    </p>
+    <h5>却下理由</h5>
+    <ul class="option-cons">
+      <li>semgrepがこの方式を取るのは「ルールがYAMLデータでホスト言語のユニットテストからimportできない」制約への回避策</li>
+      <li>unilyzeのメトリクスは普通のC#関数で、既に638個の Assert.Equal がゴールデン値をピン留め済み。移植動機となる制約が存在しない</li>
+      <li><code>unilyze test</code> サブコマンドはテストランナーのCLI同梱で役割逸脱</li>
+    </ul>
+  </div>
+
+  <div class="option-card rejected">
+    <div class="option-title">
+      <span>不動点ワークリスト共通基盤の先行導入</span>
+      <span class="badge badge-bad">却下</span>
+    </div>
+    <p style="margin: 0; color: var(--text-dim); font-size: var(--fz-sm);">
+      将来のメソッド内フロー解析に備えたCFG上の有界不動点ヘルパ。
+    </p>
+    <h5>却下理由</h5>
+    <ul class="option-cons">
+      <li>消費者となる機能がゼロのYAGNI (前提となるL自体が保留)</li>
+      <li>unilyzeは純粋に構文ベース — CFG/dataflowパラダイムが完全に不在で、使うメトリクス未確定のまま持ち込むのは負債</li>
+      <li>「有界反復」の思想は <code>RankCalculator.cs:73-106</code> のpower iteration (MaxIterations=100 + 収束閾値) として採用済み</li>
+    </ul>
+  </div>
+</div>
+</section>
+
+<!-- ============================================================
+     9. 検証で潰れた「もっともらしいが間違い」な翻案前提
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>検証で潰れた翻案前提 (semgrepでは正しいがunilyzeでは不成立)</h2>
+<table class="report-table">
+  <thead>
+    <tr><th>翻案案</th><th>semgrepで成立する理由</th><th>unilyzeで不成立な理由</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>git ls-filesターゲット選択</td>
+      <td>リポジトリ全体走査で列挙が律速</td>
+      <td>既に <code>Assets/</code> 配下スコープでPackageCache/Temp混入は起きない。ボトルネックはSemanticModel構築</td>
+    </tr>
+    <tr>
+      <td>cgroup対応の並列度自動決定</td>
+      <td>OCamlにランタイム支援がなく自前実装が必要</td>
+      <td>.NET Core 3.0+ ランタイムが既にcgroup-aware。0.85係数もOCaml GC事情由来</td>
+    </tr>
+    <tr>
+      <td>コード本文を含むfingerprint</td>
+      <td>パターンマッチ結果はマッチしたコード片が同一性の本体</td>
+      <td>メトリクスfindingは型/メソッド粒度の集計値。1文字の変更でIDが割れ「安定ID」と逆行</td>
+    </tr>
+    <tr>
+      <td>行番号非依存のdiffキー導入</td>
+      <td>findingが行に紐づく</td>
+      <td>既に TypeId + Kind:MethodName で行非依存 (<code>DiffCalculator.cs:48-55,182</code>)。SARIFだけが未対応の残り</td>
+    </tr>
+    <tr>
+      <td>fail-openモードの導入</td>
+      <td>スキャン失敗でCIを止めない選択が必要</td>
+      <td>unilyzeは常にexit 0の最大fail-open。守るべき品質ゲートがまだ存在しない (Aで初めて生まれる)</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================================
+     10. LLM間議論の決着点
+     ============================================================ -->
+<section data-show-when="weight:heavy">
+<h2>LLM間議論の決着点 (gpt-5.5 / copilot、2ターン)</h2>
+<table class="report-table">
+  <thead>
+    <tr><th>論点</th><th>結論</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>第1弾の順序</td>
+      <td>A→E→B から E→A→B へ並べ替え。EはJSON/diff/trend/エージェント契約すべての土台のため最初に固定</td>
+    </tr>
+    <tr>
+      <td>exit code 2 の意味</td>
+      <td>A/Jで分けず「quality gate failed」に統一。詳細理由はstderr/JSONへ</td>
+    </tr>
+    <tr>
+      <td>安定finding ID契約の扱い</td>
+      <td>独立ワークアイテム化せずBの実装内で StableFindingId として切り出し (1人開発でアイテム粒度過多は逆効果)。契約化は必須、ワークアイテム化は不要</td>
+    </tr>
+    <tr>
+      <td>fingerprint入力</td>
+      <td>ParameterCountまで。ParameterTypesは型リネーム/namespace移動/using整理で割れやすくbaseline/ignore用途でノイズ。同名同数別型overloadの衝突は許容できる低頻度リスク</td>
+    </tr>
+    <tr>
+      <td>analyze --baseline</td>
+      <td>現段階では diff の糖衣。Aの失敗判定基盤が固まるまでdocsレベルの運用例に留める</td>
+    </tr>
+    <tr>
+      <td>L / K の扱い</td>
+      <td>Lはlinter領域への越境で捨て寄り保留。Kは内部品質投資扱いで公開ロードマップ外</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================================
+     11. 結果として生じる変更
+     ============================================================ -->
+<h2>結果として生じる変更</h2>
+<ul>
+  <li>第1弾: <code>AnalysisResult.cs</code> (SchemaVersion追加) / <code>DiffCalculator.cs</code> (SchemaMismatch + リネーム耐性) / <code>Program.cs</code> (--fail-on系フラグ + exit 2 + help更新) / <code>SarifFormatter.cs</code> (partialFingerprints) / 新規 <code>StableFindingId</code></li>
+  <li>第2弾: <code>AnalysisPipeline.cs</code> (trivia走査による抑制 + confidence記録) / <code>UnilyzeConfig.cs</code> (excludeGlobs) / TypeMetricsへのconfidenceフィールド</li>
+  <li>第3弾: tests/ (Verifyスナップショット + qa/repos.json) / publish.yml (QAコーパスステップ)</li>
+  <li>docs: ID契約 / exit code表 / GitHub Actionsサンプル / スキル側 (blind-spots.md, refactor-loop) の運用更新</li>
+</ul>
+
+<!-- ============================================================
+     12. リスク・フォローアップ
+     ============================================================ -->
+<h2>リスク・フォローアップ</h2>
+<table class="report-table">
+  <thead>
+    <tr><th>項目</th><th>対策</th><th>担当</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CのID語彙が安定する前に公開すると抑制コメントが負債化</td>
+      <td>BのStableFindingId契約を先に確立し、Cはそれを参照する順序を守る</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>exit code 2の追加は公開契約の変更</td>
+      <td>既存0/1の意味は変えない (追加のみ)。helpのExit codes節を必ず更新</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>Program.cs:266</code> のschema説明が実装と不一致 (既存バグ)</td>
+      <td>D着手時に併せて修正。CIが依存する値なので独立issueとして先行修正も可</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>fingerprintのoverload衝突 (同名同数別型)</td>
+      <td>許容と判断済み。実害が観測されたら <code>unilyzeSmellHash/2</code> へキー構成を改版 (versioned keyにした理由)</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>調査ログの散逸</td>
+      <td>全17件の詳細検証ログは /tmp に出力済みのため揮発する。必要なら tasks/research-semgrep-adoption.md として保存</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+<footer class="report-footer">
+  調査: semgrep 5領域 × unilyze実コード、30エージェント並列 + 全候補の懐疑的検証 (17 adapt / 2 reject)。
+  優先順位: gpt-5.5とのLLM間議論2ターンで決着。2026-06-05
+</footer>
+
+</div>
+
+<script src="../_assets/reports.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const weight = document.body.getAttribute("data-weight") || "light";
+  const wd = document.getElementById("weight-display");
+  if (wd) wd.textContent = weight;
+});
+</script>
+</body>
+</html>
