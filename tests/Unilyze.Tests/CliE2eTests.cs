@@ -1683,9 +1683,24 @@ public sealed class CliE2eTests : IDisposable
         };
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        proc.WaitForExit(30_000);
-        return stdout;
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
+        {
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException("git worktree list timed out");
+        }
+
+        _ = stderrTask.GetAwaiter().GetResult();
+        return stdoutTask.GetAwaiter().GetResult();
     }
 
     private static void RunGit(string workingDirectory, params string[] args)
@@ -1704,12 +1719,26 @@ public sealed class CliE2eTests : IDisposable
 
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        proc.WaitForExit(30_000);
-        if (proc.ExitCode != 0)
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
         {
-            var stderr = proc.StandardError.ReadToEnd();
-            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException($"git {string.Join(' ', args)} timed out");
         }
+
+        _ = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
+        if (proc.ExitCode != 0)
+            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
     }
 
     private string WriteMonorepoFixture()
