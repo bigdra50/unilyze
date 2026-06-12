@@ -87,6 +87,7 @@ public sealed class BadgeFormatterTests
     [InlineData("codehealth", "code health")]
     [InlineData("mi", "maintainability")]
     [InlineData("smells", "smells")]
+    [InlineData("energy", "energy pressure")]
     public void Build_ZeroTypes_ReturnsNaLightgrey(string metricStr, string expectedLabel)
     {
         BadgeFormatter.TryParseMetric(metricStr, out var metric);
@@ -123,6 +124,7 @@ public sealed class BadgeFormatterTests
     [InlineData("CodeHealth", true, "codehealth")]
     [InlineData("mi", true, "mi")]
     [InlineData("SMELLS", true, "smells")]
+    [InlineData("energy", true, "energy")]
     [InlineData("", true, "codehealth")]
     [InlineData("bogus", false, "codehealth")]
     public void TryParseMetric_ParsesKnownValues(string? value, bool expected, string expectedMetricStr)
@@ -202,6 +204,39 @@ public sealed class BadgeFormatterTests
         var result = BadgeFormatter.TryParseMetric("dup", out var metric);
         Assert.True(result);
         Assert.Equal(BadgeMetric.Dup, metric);
+    }
+
+    [Theory]
+    [InlineData(0, 2, "0.00", "brightgreen")]
+    [InlineData(1, 2, "0.50", "yellow")]
+    [InlineData(2, 2, "1.00", "red")]
+    public void Build_Energy_ReturnsDensityAndColor(
+        int smellCount,
+        int methodCount,
+        string expectedMessage,
+        string expectedColor)
+    {
+        var summary = new StatuslineFormatter.Summary(
+            9, 9, 0, 0, 1, 80, 0, 0,
+            HotPathSmellCount: smellCount,
+            HotPathMethodCount: methodCount);
+
+        var badge = BadgeFormatter.Build(BadgeMetric.Energy, summary);
+
+        Assert.Equal("energy pressure", badge.Label);
+        Assert.Equal(expectedMessage, badge.Message);
+        Assert.Equal(expectedColor, badge.Color);
+    }
+
+    [Fact]
+    public void Build_EnergyWithoutHotPath_ReturnsNa()
+    {
+        var summary = new StatuslineFormatter.Summary(9, 9, 0, 0, 1, 80, 0, 0);
+
+        var badge = BadgeFormatter.Build(BadgeMetric.Energy, summary);
+
+        Assert.Equal("n/a", badge.Message);
+        Assert.Equal("lightgrey", badge.Color);
     }
 
     [Fact]

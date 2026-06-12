@@ -16,6 +16,7 @@ analyze (unilyze -f json):
   .projectKind                         string?  Detected project kind: "unity",
                                                 "dotnet", or "unknown"; null in
                                                 older snapshots.
+  .energyPressure                      float?   Unity hot-path smell density proxy; omitted when unavailable
   .resolveNuget                        bool?    true when --resolve-nuget / config enabled; omitted when default
   .includeGenerated                    bool?    true when --include-generated / config enabled; omitted when default
   .targetFramework                      string?  TFM used for NuGet/generated-source resolution; omitted when N/A
@@ -100,6 +101,7 @@ typeMetrics[]:
   .boxingCount                         int?     Boxing operations detected
   .closureCaptureCount                 int?     Closure captures detected
   .paramsAllocationCount               int?     Implicit params array allocations
+  .hotPathMethodCount                  int?     Distinct Unity hot-path method names; MonoBehaviour types only
   .averageCognitiveComplexity          float    Avg CogCC across methods
   .averageCyclomaticComplexity         float    Avg CycCC across methods
   .maxCognitiveComplexity              int      Max CogCC
@@ -118,6 +120,7 @@ typeMetrics[]:
     .id                                string?  Stable finding identity (unilyzeFingerprint/v1; optional on legacy snapshots)
     .triage                            string?  Verdict from .unilyze/triage.json: confirmed, false-positive, wontfix
     .suppressed                        bool?    true when suppressed by an inline unilyze-disable comment (optional)
+    .inHotPath                         bool?    true when the smell contributes to energyPressure
   .methods[]                           object   Per-method metrics
 
 methods[]:
@@ -203,6 +206,8 @@ trend (unilyze trend):
     .profile                           string   Smell-threshold profile from snapshot
     .warningSmellCount                 int      Warning-severity smell count
     .criticalSmellCount                int      Critical-severity smell count
+    .hotPathSmellCount                 int      Energy proxy numerator (0 for legacy snapshots)
+    .hotPathMethodCount                int      Energy proxy denominator (0 means unavailable)
   .summary                             object
     .snapshotCount                     int      Number of snapshots
     .codeHealthDelta                   float    First-to-last health change

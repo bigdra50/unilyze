@@ -38,9 +38,9 @@ jobs:
         run: dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f ${{ matrix.framework }} --no-restore -v minimal
 
   # Self quality gate (issue #29): dogfood badge --fail-under on this repo.
-  # Re-measured 2026-06-12 under CodeHealth v2 (#155, non-compensatory aggregation):
-  # avg 9.8 / min 5.5 / LoC-weighted 9.2 / tail 8.2 at Complete level.
-  # --fail-under 5.5 = floor(v2 min); gates on min CodeHealth (inclusive at boundary).
+  # Re-measured 2026-06-13 under CodeHealth v2 (#155, non-compensatory aggregation),
+  # after merging main (#173 energy proxy): avg 9.8 / min 6.6 / LoC-weighted 9.3 / tail 8.3
+  # at Complete level. --fail-under 6.6 = v2 min; gates on min CodeHealth (inclusive at boundary).
   quality-gate:
     runs-on: ubuntu-latest
 
@@ -62,7 +62,7 @@ jobs:
       - name: CodeHealth gate
         run: |
           dotnet run --project src/Unilyze -c Release --framework net10.0 --no-build -- \
-            badge -p src/Unilyze --metric codehealth --fail-under 5.5
+            badge -p src/Unilyze --metric codehealth --fail-under 6.6
 
   code-scanning:
     runs-on: ubuntu-latest

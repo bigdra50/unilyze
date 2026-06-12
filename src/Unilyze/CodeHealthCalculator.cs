@@ -49,7 +49,8 @@ public sealed record TypeMetrics(
     string? QualifiedName = null,
     string? TypeId = null,
     double? CodeHealthV1 = null,
-    string? CodeHealthCategory = null);
+    string? CodeHealthCategory = null,
+    int? HotPathMethodCount = null);
 
 public sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,

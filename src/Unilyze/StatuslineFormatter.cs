@@ -17,7 +17,9 @@ internal static class StatuslineFormatter
         string? AnalysisLevel = null,
         double LocWeightedAverageCodeHealth = 0.0,
         double WorstDecileCodeHealth = 0.0,
-        bool UsesCodeHealthV1 = false)
+        bool UsesCodeHealthV1 = false,
+        int HotPathSmellCount = 0,
+        int HotPathMethodCount = 0)
     {
         internal double EffectiveLocWeightedAverageCodeHealth =>
             LocWeightedAverageCodeHealth > 0.0 ? LocWeightedAverageCodeHealth : AverageCodeHealth;
@@ -60,6 +62,7 @@ internal static class StatuslineFormatter
         var avgMi = miValues.Count > 0 ? Math.Round(miValues.Average(), 1) : 0.0;
         var boxing = metrics.Sum(t => t.BoxingCount ?? 0);
         var cyclicDeps = result.CyclicDependencies?.Count ?? 0;
+        var energy = EnergyPressureCalculator.ForGate(metrics, excludeBaselined);
 
         return new Summary(
             avg,
@@ -74,7 +77,9 @@ internal static class StatuslineFormatter
             result.AnalysisLevel,
             locWeightedAverage,
             worstDecile,
-            useCodeHealthV1);
+            useCodeHealthV1,
+            energy.HotPathSmellCount,
+            energy.HotPathMethodCount);
     }
 
     static bool CountForSummary(CodeSmell smell, bool excludeBaselined)

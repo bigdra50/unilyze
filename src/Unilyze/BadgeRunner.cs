@@ -37,7 +37,7 @@ internal static class BadgeRunner
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
-            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells, dup");
+            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells, energy, dup");
             return 1;
         }
 
@@ -161,6 +161,7 @@ internal static class BadgeRunner
               unilyze badge -p <path> --metric codehealth      Code health badge (default)
               unilyze badge -p <path> --metric mi              Maintainability index badge
               unilyze badge -p <path> --metric smells          Code smells badge
+              unilyze badge -p <path> --metric energy          Energy pressure proxy badge
               unilyze badge -p <path> --metric dup             Duplication badge
               unilyze badge -p <path> -o badge.json            Write JSON to file
               unilyze badge -p <path> --format svg -o codehealth.svg   SVG badge (works in private repos via relative path)
@@ -168,6 +169,7 @@ internal static class BadgeRunner
               unilyze badge --metric codehealth --codehealth-v1    Display and gate with legacy CodeHealth v1
               unilyze badge --metric mi --fail-under 70         Exit 2 if average MI < 70
               unilyze badge --metric smells --fail-over 5       Exit 2 if warnings > 5 (or any critical)
+              unilyze badge --metric energy --fail-over 1.0     Exit 2 if hot-path smell density > 1.0
               unilyze badge --metric dup --fail-over 3          Exit 2 if duplication > 3%
               unilyze badge --projects 'packages/*' --metric codehealth --fail-under 7 -o out/
                                                            Per-project badges + summary table on stderr
@@ -176,13 +178,14 @@ internal static class BadgeRunner
               -p, --path     Project root (default: .)
               --projects     Glob of project roots (repeatable; requires -o <dir> when multiple match)
               -o, --output   Output file path (default: stdout)
-              --metric       Badge metric: codehealth, mi, smells, dup (default: codehealth)
+              --metric       Badge metric: codehealth, mi, smells, energy, dup (default: codehealth)
               --format       Output format: json, svg (default: json)
               --level        Pin analysis level: syntax, core, full, complete
               --fail-under   Quality gate for codehealth/mi: fail if value below threshold
                              (codehealth: min CodeHealth, mi: average MI)
               --fail-over    Quality gate for smells: fail if warning count above count
                              (any critical smell always fails)
+                             Quality gate for energy: fail if hot-path smell density is above threshold
                              Quality gate for dup: fail if duplication percent above threshold
               --baseline     Suppress known smells from a baseline file before gating
               --codehealth-v1 Use legacy CodeHealth v1 for codehealth display and gates

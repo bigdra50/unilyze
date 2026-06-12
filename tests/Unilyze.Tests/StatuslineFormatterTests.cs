@@ -101,6 +101,35 @@ public sealed class StatuslineFormatterTests
     }
 
     [Fact]
+    public void ComputeSummary_EnergyPressure_ExcludesSuppressedTriagedAndBaselinedSmells()
+    {
+        var smells = new List<CodeSmell>
+        {
+            new(CodeSmellKind.WeakTemporization, SmellSeverity.Warning, "A", "Update", "active",
+                InHotPath: true),
+            new(CodeSmellKind.LinqInHotPath, SmellSeverity.Warning, "A", "Update", "suppressed",
+                Suppressed: true, InHotPath: true),
+            new(CodeSmellKind.BoxingAllocation, SmellSeverity.Critical, "A", "Update", "triaged",
+                Triage: "false-positive", InHotPath: true),
+            new(CodeSmellKind.ParamsArrayAllocation, SmellSeverity.Critical, "A", "Update", "baselined",
+                Baselined: true, InHotPath: true),
+        };
+        var metrics = new[]
+        {
+            new TypeMetrics(
+                "A", "Ns", "Asm", 20, 2, 0, 0, 0, 1, 1, 0, 10, [],
+                CodeSmells: smells,
+                HotPathMethodCount: 2),
+        };
+        var result = new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], metrics);
+
+        var actual = StatuslineFormatter.ComputeSummary(result, excludeBaselined: true);
+
+        Assert.Equal(1, actual.HotPathSmellCount);
+        Assert.Equal(2, actual.HotPathMethodCount);
+    }
+
+    [Fact]
     public void Format_HighHealth_ContainsAllSections()
     {
         var summary = new StatuslineFormatter.Summary(

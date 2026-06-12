@@ -108,8 +108,11 @@ Run `unilyze --help` for all options. JSON output includes `projectKind` (`unity
 
 ```bash
 unilyze badge -p . --metric codehealth --fail-under 7   # CI gate example
+unilyze badge -p . --metric energy --fail-over 1.0      # Unity hot-path smell density proxy
 unilyze badge -p . --format svg -o .github/badges/codehealth.svg
 ```
+
+The energy metric is a static source-code proxy, not measured energy or power.
 
 See the [CI quality gate tutorial](./docs/tutorials/ci-quality-gate.md) and [docs/ci-integration.md](./docs/ci-integration.md) for endpoint vs SVG badges, quality-gate semantics, GitHub Actions, diff regression gates, and [monorepo `--projects`](./docs/ci-integration.md#monorepo) batch analysis.
 
@@ -283,7 +286,7 @@ Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), perf
 
 | Format | Use Case |
 |--------|----------|
-| `html` | Interactive dependency graph (Cytoscape+dagre bundled; ELK via CDN) |
+| `html` | Interactive dependency graph (lazy Cytoscape elements; dagre bundled; ELK Worker via CDN) |
 | `json` | Agent integration, programmatic use |
 | `sarif` | GitHub Code Scanning (stable fingerprints, rule help links) |
 
@@ -313,7 +316,8 @@ unilyze metrics && unilyze schema                 # self-documenting CLI
 
 ## Known Limitations
 
-- HTML graph works offline (Cytoscape and dagre bundled). ELK layout requires CDN and falls back to dagre when unavailable.
+- HTML graph works offline (Cytoscape and dagre bundled). ELK layout runs in a CDN-loaded Worker, falls back to main-thread ELK if Worker startup fails, and uses dagre when ELK is unavailable.
+- Large graphs initially materialize only namespace nodes and types in the initially expanded namespace. Type nodes and edges are added on expansion and removed on collapse.
 - Windows is covered by CI (windows-latest, net10.0).
 
 ## License

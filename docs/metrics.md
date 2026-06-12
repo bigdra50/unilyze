@@ -680,6 +680,37 @@ Under `SyntaxOnly` analysis:
 - **ClosureCapture only:** Boxing and Params require a `SemanticModel` and emit nothing under SyntaxOnly, so hot-path escalation applies to ClosureCapture only.
 - **MonoBehaviour detection:** the syntactic fallback matches the direct base-list type name against `MonoBehaviour` and cannot see through intermediate project base classes (e.g. `Player : BaseView` where `BaseView : MonoBehaviour` is not recognized without semantic resolution).
 
+### Energy proxy (hot-path smell density)
+
+`energyPressure` is a static proxy derived from source-code smell counts.
+It is not measured energy, power, battery consumption, joules, or watts.
+
+For Unity projects with at least one detected hot-path method:
+
+```text
+energyPressure = hot-path performance smell count / Unity hot-path method count
+```
+
+The numerator counts UNI017-UNI021 plus `BoxingAllocation`, `ClosureCapture`, and `ParamsArrayAllocation` when they occur in a detected hot path.
+UNI022 and UNI023 are excluded because they are correctness and responsiveness findings, not per-frame work indicators.
+Suppressed and gate-excluded triage findings are excluded; `--baseline` also excludes baselined findings from badge gates.
+
+The denominator is the number of distinct hot-path method names detected on `MonoBehaviour` types.
+It includes `Update`, `FixedUpdate`, `LateUpdate`, `OnGUI`, and coroutine methods returning `IEnumerator`.
+Overloads with the same method name are merged, and the analysis does not follow transitive call graphs.
+
+The field is emitted only for Unity projects with a non-zero denominator.
+`badge --metric energy` reports `n/a` for non-Unity projects or Unity projects without hot paths.
+`--fail-over <density>` passes at or below the threshold and fails above it.
+Badge colors are provisional: `0` bright green, below `1.0` yellow, and `1.0` or above red.
+
+The proxy is independent of CodeHealth and is not included in CodeHealth aggregation.
+Because Boxing and Params detection requires a `SemanticModel`, values from different `analysisLevel` values are not directly comparable.
+Old trend snapshots without energy counts render as missing (`-` or chart gaps), not as `0.00`.
+
+Research grounding: Pérez Caseiras, Veron, Perez, Moraga, Calero, and Cetina, "Towards green game software engineering: A comparative analysis of energy consumption between the widespread Unity and Unreal video game engines", Information and Software Technology (2025), arXiv:2402.06346.
+The study shows that code and engine implementation choices can produce measurable energy differences, but it does not calibrate this static density to physical energy units.
+
 ### 検出責務ルーティング
 
 各スメルの検出責務を、決定的ルール検出（構造系・グラフ系・セマンティック系）と LLM 委譲（セマンティックな意図判断）に分ける。

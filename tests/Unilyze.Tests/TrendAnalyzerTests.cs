@@ -24,7 +24,8 @@ public class TrendAnalyzerTests
         string assembly = "TestAssembly",
         double codeHealth = 8.0,
         double avgCogCC = 3.0,
-        IReadOnlyList<CodeSmell>? smells = null)
+        IReadOnlyList<CodeSmell>? smells = null,
+        int? hotPathMethodCount = null)
     {
         return new TypeMetrics(
             typeName, ns, assembly,
@@ -32,7 +33,8 @@ public class TrendAnalyzerTests
             avgCogCC, 5, 3.0, 5,
             0, codeHealth,
             [],
-            CodeSmells: smells);
+            CodeSmells: smells,
+            HotPathMethodCount: hotPathMethodCount);
     }
 
     // --- ToSnapshot ---
@@ -77,6 +79,67 @@ public class TrendAnalyzerTests
         Assert.Equal(2, snapshot.CodeSmellCount);
         Assert.Equal(1, snapshot.WarningSmellCount);
         Assert.Equal(1, snapshot.CriticalSmellCount);
+    }
+
+    [Fact]
+    public void ToSnapshot_CapturesEnergyCountsUsingTrendFilters()
+    {
+        var smells = new[]
+        {
+            new CodeSmell(
+                CodeSmellKind.WeakTemporization,
+                SmellSeverity.Warning,
+                "TestClass",
+                "Update",
+                "active",
+                InHotPath: true),
+            new CodeSmell(
+                CodeSmellKind.LinqInHotPath,
+                SmellSeverity.Warning,
+                "TestClass",
+                "Update",
+                "suppressed",
+                Suppressed: true,
+                InHotPath: true),
+        };
+        var result = MakeResult(
+            DateTimeOffset.UtcNow,
+            typeMetrics: [MakeTypeMetrics(smells: smells, hotPathMethodCount: 2)]);
+
+        var snapshot = TrendAnalyzer.ToSnapshot(result);
+
+        Assert.Equal(1, snapshot.HotPathSmellCount);
+        Assert.Equal(2, snapshot.HotPathMethodCount);
+    }
+
+    [Fact]
+    public void JsonDeserialization_OldTrendSnapshot_DefaultsEnergyCountsToZero()
+    {
+        const string json = """
+            {
+              "snapshots": [{
+                "analyzedAt": "2025-01-01T00:00:00+00:00",
+                "projectPath": "/project",
+                "typeCount": 1,
+                "averageCodeHealth": 8,
+                "minCodeHealth": 8,
+                "codeSmellCount": 0,
+                "highComplexityTypeCount": 0,
+                "averageCognitiveComplexity": 1
+              }],
+              "summary": {
+                "snapshotCount": 1,
+                "codeHealthDelta": 0,
+                "codeSmellDelta": 0
+              }
+            }
+            """;
+
+        var actual = JsonSerializer.Deserialize(json, AnalysisJsonContext.Default.TrendResult);
+
+        Assert.NotNull(actual);
+        Assert.Equal(0, actual.Snapshots[0].HotPathSmellCount);
+        Assert.Equal(0, actual.Snapshots[0].HotPathMethodCount);
     }
 
     [Fact]

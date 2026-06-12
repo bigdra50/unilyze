@@ -146,7 +146,7 @@ internal static class MultiProjectBadgeRunner
 
         if (!BadgeFormatter.TryParseMetric(metricStr, out var metric))
         {
-            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells");
+            Console.Error.WriteLine($"Unknown metric: '{metricStr}'. Valid metrics: codehealth, mi, smells, energy, dup");
             return MultiProjectRunnerSupport.ExitUsageError;
         }
 

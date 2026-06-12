@@ -25,7 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Skills\**\*" LogicalName="Skills/%(RecursiveDir)%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Templates\viewer.html" LogicalName="Unilyze.Templates.viewer.html" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)viewer.html" LogicalName="Unilyze.Templates.viewer.html" Visible="false" />
     <EmbeddedResource Include="Templates\trend.html" LogicalName="Unilyze.Templates.trend.html" />
     <!-- Bundled vendor JS (offline graph): cytoscape.min.js v3.30.4 SHA256 1bb5340e549511e111b31e5684872c949ad33d40ea5dba0ad8e7d90c62c7b3b9 MIT -->
     <EmbeddedResource Include="Templates\vendor\cytoscape.min.js" LogicalName="Unilyze.Templates.vendor.cytoscape.min.js" />
@@ -44,4 +44,12 @@
       <AssemblyVersion>$(MinVerMajor).$(MinVerMinor).$(MinVerPatch).0</AssemblyVersion>
     </PropertyGroup>
   </Target>
+
+  <Target Name="CombineViewerTemplate" BeforeTargets="PrepareForBuild"
+          Inputs="Templates/viewer/index.html;Templates/viewer/styles.css;Templates/viewer/main.js;Templates/viewer/combine.py"
+          Outputs="$(IntermediateOutputPath)viewer.html">
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Exec Command="python3 &quot;$(MSBuildProjectDirectory)/Templates/viewer/combine.py&quot; &quot;$(IntermediateOutputPath)viewer.html&quot;" />
+  </Target>
+
 </Project>
