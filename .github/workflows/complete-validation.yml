@@ -1,0 +1,56 @@
+name: Complete-level validation
+
+on:
+  schedule:
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complete-level-validation
+  cancel-in-progress: false
+
+jobs:
+  license-check:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.license.outputs.configured }}
+
+    steps:
+      - name: Check Unity license secret
+        id: license
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        shell: bash
+        run: |
+          if [[ -n "$UNITY_LICENSE" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped Complete-level validation because UNITY_LICENSE is not configured." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  complete-validation:
+    needs: license-check
+    if: needs.license-check.outputs.configured == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: unityci/editor:ubuntu-2022.3.0f1-base-3
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run Complete-level validation
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        shell: bash
+        run: bash scripts/complete-validation/run.sh
