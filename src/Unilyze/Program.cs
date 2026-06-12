@@ -61,6 +61,12 @@ if (ProgramHelpers.HasFlagWithoutValue(args, "--triage"))
 var projectGlobs = ProgramHelpers.ParseMultiValueOption(args, "--projects");
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
+var incremental = opts.ContainsKey("--incremental");
+if (incremental && input != null)
+{
+    Console.Error.WriteLine("--incremental cannot be combined with -i/--input.");
+    return 1;
+}
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
 var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
@@ -127,7 +133,8 @@ try
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             includeApiSurface: includeApiSurface,
             analysisConfig: resolved,
-            maxParallelism: config.MaxParallelism);
+            maxParallelism: config.MaxParallelism,
+            incremental: incremental);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
@@ -237,6 +244,7 @@ Options:
       --no-triage    Disable triage verdict application
       --include-api-surface
                      Emit per-type API surface (doc comments, public signatures, identifiers)
+      --incremental    Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
       --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version

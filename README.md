@@ -140,6 +140,24 @@ Free alternatives[^free-alt] (SonarQube Community Build, Qodana Community for .N
 
 unilyze resolves an analysis level based on which Unity DLLs it can locate. Pin with `--level <syntax|core|full|complete>`. See [docs/ci-integration.md#analysis-levels-in-ci](./docs/ci-integration.md#analysis-levels-in-ci) for the full table and CI caveats.
 
+### Incremental analysis
+
+`--incremental` speeds up **syntax-level** runs by caching per-file parse and enrich results under `<project>/.unilyze/cache/syntax/v1/`. Only changed files are re-parsed on warm runs; cross-file aggregates (dependencies, coupling, cycles) are always recomputed so JSON output matches a full run (`metricsVersion` unchanged).
+
+```bash
+unilyze -p . --level syntax --incremental -f json -o result.json
+```
+
+Requirements and limits:
+
+- Must be combined with `--level syntax`. Other levels print a one-line stderr warning and run the normal full pipeline with no cache I/O.
+- Cannot be used with `-i/--input`.
+- Cache invalidates when `toolVersion`, `metricsVersion`, preprocessor defines, thresholds/profile/rules, exclude dirs, or assembly layout change.
+- Semantic-level incremental analysis (core/full/complete) is intentionally deferred: metrics such as DIT, boxing, and CBO depend on cross-file symbol resolution, so sound invalidation needs a dependency-closure design.
+- CI: persist `.unilyze/cache/` with `actions/cache` keyed on lockfiles and `.unilyze.json` when using `--level syntax --incremental`.
+
+The cache directory includes `.unilyze/cache/.gitignore` containing `*` (auto-created).
+
 ## Configuration
 
 Settings merge additively from global config (`~/.config/unilyze/config.json`), project `.unilyze.json`, and CLI flags.
