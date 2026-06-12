@@ -47,7 +47,10 @@ public sealed class HtmlFormatterTests
         Assert.DoesNotContain("unpkg.com/dagre@", html);
         Assert.DoesNotContain("unpkg.com/cytoscape-dagre@", html);
         Assert.Contains("unpkg.com/elkjs@", html);
-        Assert.Contains("unpkg.com/cytoscape-elk@", html);
+        Assert.DoesNotContain("unpkg.com/cytoscape-elk@", html);
+        Assert.Contains("elk-worker.min.js", html);
+        Assert.Contains("name:'preset',positions:elkPositions(result)", html);
+        Assert.Contains("layoutDagre(vis)", html);
     }
 
     [Fact]

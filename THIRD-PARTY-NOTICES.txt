@@ -89,7 +89,6 @@ The HTML viewer loads the following libraries from unpkg.com at runtime. They ar
 NOT bundled in the unilyze package or embedded in generated HTML output.
 
 - elkjs 0.9.3 (EPL-2.0) — https://github.com/kieler/elkjs
-- cytoscape-elk 2.3.0 — https://github.com/cytoscape/cytoscape.js-elk
 
 When ELK layout is unavailable (e.g. offline), the viewer falls back to the
 bundled dagre layout. If elkjs were embedded in a future release, its EPL-2.0

@@ -283,7 +283,7 @@ Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), perf
 
 | Format | Use Case |
 |--------|----------|
-| `html` | Interactive dependency graph (Cytoscape+dagre bundled; ELK via CDN) |
+| `html` | Interactive dependency graph (lazy Cytoscape elements; dagre bundled; ELK Worker via CDN) |
 | `json` | Agent integration, programmatic use |
 | `sarif` | GitHub Code Scanning (stable fingerprints, rule help links) |
 
@@ -313,7 +313,8 @@ unilyze metrics && unilyze schema                 # self-documenting CLI
 
 ## Known Limitations
 
-- HTML graph works offline (Cytoscape and dagre bundled). ELK layout requires CDN and falls back to dagre when unavailable.
+- HTML graph works offline (Cytoscape and dagre bundled). ELK layout runs in a CDN-loaded Worker, falls back to main-thread ELK if Worker startup fails, and uses dagre when ELK is unavailable.
+- Large graphs initially materialize only namespace nodes and types in the initially expanded namespace. Type nodes and edges are added on expansion and removed on collapse.
 - Windows is covered by CI (windows-latest, net10.0).
 
 ## License
