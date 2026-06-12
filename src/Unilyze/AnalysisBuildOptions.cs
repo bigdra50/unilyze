@@ -12,6 +12,9 @@ internal sealed record AnalysisBuildOptions(
     IAnalysisLogSink? LogSink = null,
     ResolvedAnalysisConfig? AnalysisConfig = null,
     int? MaxParallelism = null,
+    bool ResolveNuget = false,
+    bool IncludeGenerated = false,
+    string? TargetFramework = null,
     bool Incremental = false)
 {
     static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(

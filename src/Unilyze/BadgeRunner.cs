@@ -75,13 +75,17 @@ internal static class BadgeRunner
         {
             var fullPath = ProgramHelpers.ResolveProjectRoot(path);
             var config = UnilyzeConfig.LoadMerged(fullPath);
+            var referenceSettings = ReferenceAnalysisSettings.LoadMerged(fullPath);
             var resolved = config.ResolveAnalysisConfig();
             var result = AnalysisPipeline.Build(
                 fullPath, null, null, config.ExcludeDirs, requestedLevel,
                 excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
                 analysisConfig: resolved,
-                maxParallelism: config.MaxParallelism);
+                maxParallelism: config.MaxParallelism,
+                resolveNuget: referenceSettings.ResolveNuget,
+                includeGenerated: referenceSettings.IncludeGenerated,
+                targetFramework: referenceSettings.TargetFramework);
 
             var effectiveBaseline = baselinePath ?? config.Baseline;
             var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);

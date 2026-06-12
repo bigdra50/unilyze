@@ -97,6 +97,7 @@ internal static class QueryRunner
         {
             projectRoot = ProgramHelpers.ResolveProjectRoot(path);
             var config = UnilyzeConfig.LoadMerged(projectRoot, excludeDirs);
+            var referenceSettings = ReferenceAnalysisSettings.LoadMerged(projectRoot);
             var resolved = config.ResolveAnalysisConfig();
             result = AnalysisPipeline.Build(
                 path, null, null, config.ExcludeDirs,
@@ -104,7 +105,10 @@ internal static class QueryRunner
                 applyAnyDepthExcludes: !config.DisableDefaultExcludes,
                 includeApiSurface: includeApiSurface,
                 analysisConfig: resolved,
-                maxParallelism: config.MaxParallelism);
+                maxParallelism: config.MaxParallelism,
+                resolveNuget: referenceSettings.ResolveNuget,
+                includeGenerated: referenceSettings.IncludeGenerated,
+                targetFramework: referenceSettings.TargetFramework);
         }
 
         if (Directory.Exists(projectRoot))

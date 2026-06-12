@@ -18,12 +18,15 @@ internal static class AnalysisPipeline
         IAnalysisLogSink? logSink = null,
         ResolvedAnalysisConfig? analysisConfig = null,
         int? maxParallelism = null,
+        bool resolveNuget = false,
+        bool includeGenerated = false,
+        string? targetFramework = null,
         bool incremental = false)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
             excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig,
-            maxParallelism, incremental);
+            maxParallelism, resolveNuget, includeGenerated, targetFramework, incremental);
         return Build(options);
     }
 
@@ -59,11 +62,14 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("parse");
         var (allTypes, allSyntaxTrees) = AnalysisPipelineDiscovery.CollectTypes(discover, options);
+        var referenceOnlyTrees = AnalysisPipelineDiscovery.CollectReferenceOnlyTrees(
+            discover, options, allSyntaxTrees);
         log.PhaseCompleted("parse", sw.Elapsed);
         sw.Restart();
 
         log.PhaseStarted("compile");
-        var compile = AnalysisPipelineDiscovery.Compile(options, discover, allSyntaxTrees, log);
+        var compile = AnalysisPipelineDiscovery.Compile(
+            options, discover, allSyntaxTrees, referenceOnlyTrees, log);
         log.PhaseCompleted("compile", sw.Elapsed);
         sw.Restart();
 
@@ -101,6 +107,10 @@ internal static class AnalysisPipeline
             ? null
             : config.Profile;
 
+        var selectedTfm = options.IncludeGenerated || options.ResolveNuget
+            ? discover.SelectedTargetFramework ?? options.TargetFramework
+            : null;
+
         var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
         InlineSuppression.WriteSummary(inlineSuppressedCount);
 
@@ -120,7 +130,10 @@ internal static class AnalysisPipeline
             SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null,
             ApiSurface: options.IncludeApiSurface
                 ? ApiSurfaceExtractor.Extract(allSyntaxTrees, resolvedTypes)
-                : null);
+                : null,
+            ResolveNuget: options.ResolveNuget ? true : null,
+            IncludeGenerated: options.IncludeGenerated ? true : null,
+            TargetFramework: selectedTfm);
 
         return FindingFingerprint.AssignIds(result);
     }
