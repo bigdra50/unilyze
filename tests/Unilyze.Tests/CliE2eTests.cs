@@ -729,7 +729,69 @@ public sealed class CliE2eTests : IDisposable
         Assert.Contains("Avg CH", stdout);
         Assert.Contains("Warnings", stdout);
         Assert.Contains("| Degraded | 1 |", stdout);
+        Assert.Contains("| deltaScore |", stdout);
         Assert.Matches(@"\|\s*-{3,}", stdout);
+    }
+
+    [Fact]
+    public void Diff_FailOnDeltaBelow_WhenScoreMissesThreshold_ExitsTwo()
+    {
+        var beforeMetrics = new TypeMetrics(
+            "RiskyClass", "TestNs", "TestAssembly",
+            100, 1, 1, 2.0, 2, 2.0, 2, 0, 9.0,
+            [new MethodMetrics("Run", 2, 2, 1, 0, 10)],
+            CodeSmells: []);
+        var afterMetrics = beforeMetrics with
+        {
+            MaxNestingDepth = 4,
+            MaxCognitiveComplexity = 15,
+            Methods = [new MethodMetrics("Run", 15, 8, 4, 0, 80)],
+        };
+        var jsonOpts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var beforeFile = Path.Combine(_tempDir, "before.json");
+        var afterFile = Path.Combine(_tempDir, "after.json");
+        File.WriteAllText(beforeFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [beforeMetrics]), jsonOpts));
+        File.WriteAllText(afterFile, JsonSerializer.Serialize(
+            new AnalysisResult("/test", DateTimeOffset.UtcNow, [], [], [], [afterMetrics]), jsonOpts));
+
+        var (exitCode, stdout, stderr) = Run(
+            "diff", beforeFile, afterFile, "-f", "markdown", "--fail-on-delta-below", "0.5");
+
+        Assert.Equal(2, exitCode);
+        Assert.Contains("**Verdict:** FAIL", stdout);
+        Assert.Contains("| deltaScore | 0 |", stdout);
+        Assert.Contains("deltaScore gate failed", stderr);
+    }
+
+    [Fact]
+    public void Diff_FailOnDeltaBelow_WithInvalidThreshold_ExitsOne()
+    {
+        var (exitCode, _, stderr) = Run(
+            "diff", "before.json", "after.json", "--fail-on-delta-below", "1.1");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("number from 0 to 1", stderr);
+    }
+
+    [Fact]
+    public void Diff_FailOnDeltaBelow_WithNaN_ExitsOne()
+    {
+        var (exitCode, _, stderr) = Run(
+            "diff", "before.json", "after.json", "--fail-on-delta-below", "NaN");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("number from 0 to 1", stderr);
+    }
+
+    [Fact]
+    public void Diff_FailOnDeltaBelow_WithoutValue_ExitsOne()
+    {
+        var (exitCode, _, stderr) = Run(
+            "diff", "before.json", "after.json", "--fail-on-delta-below");
+
+        Assert.Equal(1, exitCode);
+        Assert.Contains("requires a value", stderr);
     }
 
     [Fact]

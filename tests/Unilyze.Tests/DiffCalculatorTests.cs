@@ -65,6 +65,73 @@ public class DiffCalculatorTests
         Assert.Empty(diff.Improved);
         Assert.Empty(diff.Degraded);
         Assert.Single(diff.Unchanged);
+        Assert.Equal(1.0, diff.DeltaScore);
+        Assert.Equal(0, diff.LowRiskChangeCount);
+        Assert.Equal(0, diff.HighRiskChangeCount);
+    }
+
+    [Fact]
+    public void ChangedLowRiskTypeAndMethod_DeltaScoreIsOne()
+    {
+        var before = MakeResult([MakeTypeMetrics(
+            lineCount: 40,
+            methods: [new MethodMetrics("Run", 2, 2, 1, 0, 10)])]);
+        var after = MakeResult([MakeTypeMetrics(
+            lineCount: 41,
+            methods: [new MethodMetrics("Run", 3, 2, 1, 0, 11)])]);
+
+        var diff = DiffCalculator.Compare(before, after);
+
+        Assert.Equal(1.0, diff.DeltaScore);
+        Assert.Equal(2, diff.LowRiskChangeCount);
+        Assert.Equal(0, diff.HighRiskChangeCount);
+    }
+
+    [Fact]
+    public void ChangedHighRiskMethod_LowersDeltaScore()
+    {
+        var before = MakeResult([MakeTypeMetrics(
+            methods: [new MethodMetrics("Run", 2, 2, 1, 0, 10)])]);
+        var after = MakeResult([MakeTypeMetrics(
+            lineCount: 101,
+            methods: [new MethodMetrics("Run", 15, 8, 4, 0, 80)])]);
+
+        var diff = DiffCalculator.Compare(before, after);
+
+        Assert.Equal(0.5, diff.DeltaScore);
+        Assert.Equal(1, diff.LowRiskChangeCount);
+        Assert.Equal(1, diff.HighRiskChangeCount);
+    }
+
+    [Fact]
+    public void AddedHighRiskTypeAndMethod_AreBothCounted()
+    {
+        var after = MakeResult([MakeTypeMetrics(
+            lineCount: 500,
+            maxCogCC: 15,
+            maxNestingDepth: 4,
+            methods: [new MethodMetrics("Run", 15, 8, 4, 0, 80)])]);
+
+        var diff = DiffCalculator.Compare(MakeResult([]), after);
+
+        Assert.Equal(0.0, diff.DeltaScore);
+        Assert.Equal(0, diff.LowRiskChangeCount);
+        Assert.Equal(2, diff.HighRiskChangeCount);
+    }
+
+    [Fact]
+    public void OverloadsWithSameParameterCount_InDifferentOrder_AreUnchanged()
+    {
+        var first = new MethodMetrics("Convert", 2, 2, 1, 1, 10);
+        var second = new MethodMetrics("Convert", 4, 3, 2, 1, 20);
+        var before = MakeResult([MakeTypeMetrics(methods: [first, second])]);
+        var after = MakeResult([MakeTypeMetrics(methods: [second, first])]);
+
+        var diff = DiffCalculator.Compare(before, after);
+
+        Assert.Equal(1.0, diff.DeltaScore);
+        Assert.Equal(0, diff.LowRiskChangeCount);
+        Assert.Equal(0, diff.HighRiskChangeCount);
     }
 
     [Fact]
