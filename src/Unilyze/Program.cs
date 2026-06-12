@@ -3,7 +3,7 @@ using Unilyze;
 
 if (args.Length >= 1 && !args[0].StartsWith('-'))
 {
-    var topLevelError = ProgramHelpers.ValidateTopLevelCommand(args[0]);
+    var topLevelError = CliArgValidation.ValidateTopLevelCommand(args[0]);
     if (topLevelError != 0)
         return topLevelError;
 }
@@ -12,6 +12,8 @@ if (args.Length >= 1 && args[0] == "diff")
     return DiffRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "hotspot")
     return HotspotRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "dup")
+    return DupRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "trend")
     return TrendRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "metrics")
@@ -45,7 +47,7 @@ if (opts.ContainsKey("-h") || opts.ContainsKey("--help") || (args.Length == 1 &&
 if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1 && args[0] is "version"))
     return PrintVersion();
 
-var analyzeUsageError = ProgramHelpers.ValidateAnalyzeOptions(args);
+var analyzeUsageError = CliArgValidation.ValidateAnalyzeOptions(args);
 if (analyzeUsageError != 0)
     return analyzeUsageError;
 if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
@@ -220,6 +222,7 @@ Usage:
   unilyze                                  Analyze current directory and open in browser
   unilyze diff <before.json> <after.json>  Compare two analysis snapshots
   unilyze hotspot                          Identify refactoring hotspots (git churn x complexity)
+  unilyze dup                              Detect duplicated code (token-normalized clone detection)
   unilyze query --worst 5 -i snapshot.json Per-type evidence packs for agent grounding
   unilyze trend <dir-of-jsons>             Show quality trend across multiple snapshots
   unilyze -p <path>                        Analyze project and open in browser
@@ -271,6 +274,7 @@ Configuration:
 Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')
   calibrate       Derive smell-threshold candidates from analysis snapshots
+  dup             Detect duplicated code (run 'unilyze dup --help')
   triage          Persist per-finding verdicts (run 'unilyze triage --help')
   mcp             MCP server over stdio for agent integration (run 'unilyze mcp --help')
   badge           Output shields.io endpoint badge JSON

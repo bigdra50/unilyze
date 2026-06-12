@@ -198,3 +198,26 @@ trend (unilyze trend):
     .snapshotCount                     int      Number of snapshots
     .codeHealthDelta                   float    First-to-last health change
     .codeSmellDelta                    int      First-to-last smell count change
+
+dup (unilyze dup):
+  .projectPath                         string   Analyzed project path
+  .toolVersion                         string   unilyze assembly version
+  .metricsVersion                      int      Metric definition version (currently 3; dup report is independent)
+  .summary                             object
+    .analyzedFiles                     int      Number of .cs files tokenized
+    .totalLines                        int      Sum of physical lines in analyzed files
+    .totalTokens                       int      Normalized token count across all files
+    .duplicatedLines                   int      Union of clone-covered lines
+    .duplicatedTokens                  int      Sum(tokenCount × occurrenceCount) across clone classes
+    .duplicationPercent                float    duplicatedLines / totalLines × 100
+    .cloneClassCount                   int      Reported clone classes after third-party filtering
+    .suppressedPairCount               int      Same-third-party pairs suppressed by default
+    .minTokens                         int      Minimum token window used for detection
+  .cloneClasses[]                      object
+    .id                                int      Clone class id
+    .tokenCount                        int      Normalized tokens in each occurrence
+    .findingKind                        string   Always "DuplicatedCode"
+    .occurrences[]                     object
+      .file                            string   Absolute source file path
+      .startLine                       int      First line of clone occurrence
+      .endLine                         int      Last line of clone occurrence

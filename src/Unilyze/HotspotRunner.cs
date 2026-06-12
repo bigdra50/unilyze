@@ -6,10 +6,10 @@ internal static class HotspotRunner
 {
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateHotspotArgs(args);
+        var usageError = CliArgValidation.ValidateHotspotArgs(args);
         if (usageError != 0)
             return usageError;
 

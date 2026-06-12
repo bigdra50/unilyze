@@ -6,7 +6,7 @@ internal static class TriageRunner
 
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
         var usageError = ValidateArgs(args);
@@ -18,7 +18,7 @@ internal static class TriageRunner
             "set" => Set(args[1..]),
             "list" => List(args[1..]),
             "prune" => Prune(args[1..]),
-            _ => ProgramHelpers.ReportUnknown("subcommand", args[0], Subcommands),
+            _ => CliArgValidationSupport.ReportUnknown("subcommand", args[0], Subcommands),
         };
     }
 
@@ -191,16 +191,18 @@ internal static class TriageRunner
 
     static int ValidateArgs(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args) || args.Length == 0)
+        if (CliArgValidationSupport.IsHelpRequest(args) || args.Length == 0)
             return 0;
 
         if (!Subcommands.Contains(args[0]))
-            return ProgramHelpers.ReportUnknown("subcommand", args[0], Subcommands);
+            return CliArgValidationSupport.ReportUnknown("subcommand", args[0], Subcommands);
 
         var valueOptions = args[0] == "set" ? SetValueOptions : ListPruneValueOptions;
         var booleanOptions = args[0] == "set" ? SetBooleanOptions : ListPruneBooleanOptions;
-        var unknown = ProgramHelpers.FindUnknownOption(args[1..], valueOptions, booleanOptions);
-        return unknown is null ? 0 : ProgramHelpers.ReportUnknown("option", unknown, valueOptions.Concat(booleanOptions));
+        var unknown = CliArgValidationSupport.FindUnknownOption(args[1..], valueOptions, booleanOptions);
+        return unknown is null
+            ? 0
+            : CliArgValidationSupport.ReportUnknown("option", unknown, valueOptions.Concat(booleanOptions));
     }
 
     static int PrintUsage()

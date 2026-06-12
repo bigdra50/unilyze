@@ -216,8 +216,32 @@ public sealed class BadgeGateTests
     }
 
     [Fact]
-    public void ValidateOptions_NoFlags_Passes()
+    public void ValidateOptions_DupFailOverDecimal_Passes()
     {
-        Assert.Equal(GateOutcome.Pass, BadgeGate.ValidateOptions(BadgeMetric.Smells, null, null).Outcome);
+        Assert.Equal(GateOutcome.Pass, BadgeGate.ValidateOptions(BadgeMetric.Dup, null, "3.5").Outcome);
+    }
+
+    [Fact]
+    public void Evaluate_Dup_OverThreshold_Fails()
+    {
+        var result = BadgeGate.Evaluate(
+            BadgeMetric.Dup,
+            new StatuslineFormatter.Summary(0, 0, 0, 0, 10, 0, 0, 0),
+            null,
+            "3",
+            duplicationPercent: 4.2);
+        Assert.Equal(GateOutcome.Fail, result.Outcome);
+    }
+
+    [Fact]
+    public void Evaluate_Dup_FailUnder_IsUsageError()
+    {
+        var result = BadgeGate.Evaluate(
+            BadgeMetric.Dup,
+            new StatuslineFormatter.Summary(0, 0, 0, 0, 10, 0, 0, 0),
+            "3",
+            null,
+            duplicationPercent: 1.0);
+        Assert.Equal(GateOutcome.UsageError, result.Outcome);
     }
 }

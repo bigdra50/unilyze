@@ -191,4 +191,32 @@ public sealed class BadgeFormatterTests
         Assert.Equal(expectedResult, result);
         Assert.Equal(expectedFormat, format);
     }
+
+    [Fact]
+    public void TryParseMetric_ParsesDup()
+    {
+        var result = BadgeFormatter.TryParseMetric("dup", out var metric);
+        Assert.True(result);
+        Assert.Equal(BadgeMetric.Dup, metric);
+    }
+
+    [Fact]
+    public void Build_Dup_LowPercent_ReturnsBrightgreen()
+    {
+        var summary = new StatuslineFormatter.Summary(0, 0, 0, 0, 5, 0, 0, 0);
+        var badge = BadgeFormatter.Build(BadgeMetric.Dup, summary, duplicationPercent: 1.5);
+        Assert.Equal("duplication", badge.Label);
+        Assert.Equal("1.5%", badge.Message);
+        Assert.Equal("brightgreen", badge.Color);
+    }
+
+    [Theory]
+    [InlineData(5.0, "yellow")]
+    [InlineData(12.0, "red")]
+    public void Build_Dup_PercentBands(double percent, string expectedColor)
+    {
+        var summary = new StatuslineFormatter.Summary(0, 0, 0, 0, 5, 0, 0, 0);
+        var badge = BadgeFormatter.Build(BadgeMetric.Dup, summary, duplicationPercent: percent);
+        Assert.Equal(expectedColor, badge.Color);
+    }
 }

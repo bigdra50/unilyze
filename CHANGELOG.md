@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- **[metrics]** `unilyze dup` subcommand: Roslyn token-stream normalization (identifiers/literals collapsed), Rabin-Karp rolling-hash clone detection (default 100-token window), Markdown/JSON report, third-party same-directory suppression, and `badge --metric dup --fail-over <percent>` CI gate; independent of main analysis output — `metricsVersion` stays 3 ([#130](https://github.com/bigdra50/unilyze/issues/130))
 - Opt-in `--resolve-nuget` (or `"resolveNuget": true` in `.unilyze.json`) resolves NuGet package compile-time assemblies from `obj/project.assets.json` and merges them with BCL runtime references; semantic metrics (CBO, DIT, boxing) can increase versus the default run — `metricsVersion` stays 3 ([#136](https://github.com/bigdra50/unilyze/issues/136))
 - Opt-in `--include-generated` (or `"includeGenerated": true`) injects `EmitCompilerGeneratedFiles` outputs from `obj/<Config>/<TFM>/generated/**/*.cs` into the Roslyn compilation only (excluded from type counts, smells, and LineCount); requires a single deterministic TFM selection (`--tfm` or csproj `TargetFramework(s)` first) ([#136](https://github.com/bigdra50/unilyze/issues/136))
 - JSON output echoes enabled reference-analysis opt-ins (`resolveNuget`, `includeGenerated`, `targetFramework`) when non-default; `diff` warns when opt-in settings differ between snapshots ([#136](https://github.com/bigdra50/unilyze/issues/136))

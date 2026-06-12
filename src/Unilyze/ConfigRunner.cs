@@ -4,10 +4,10 @@ internal static class ConfigRunner
 {
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateConfigArgs(args);
+        var usageError = CliArgValidation.ValidateConfigArgs(args);
         if (usageError != 0)
             return usageError;
 
@@ -25,7 +25,8 @@ internal static class ConfigRunner
             "list" => List(projectRoot),
             "add-exclude-dir" => AddExcludeDir(configPath, positional),
             "remove-exclude-dir" => RemoveExcludeDir(configPath, positional),
-            _ => ProgramHelpers.ReportUnknown("subcommand", subcommand, ProgramHelpers.ConfigSubcommands),
+            _ => CliArgValidationSupport.ReportUnknown(
+                "subcommand", subcommand, CliArgValidation.ConfigSubcommands),
         };
     }
 

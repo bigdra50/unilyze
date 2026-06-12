@@ -7,10 +7,10 @@ internal static class CalibrateRunner
 {
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateCalibrateArgs(args);
+        var usageError = CliArgValidation.ValidateCalibrateArgs(args);
         if (usageError != 0)
             return usageError;
 

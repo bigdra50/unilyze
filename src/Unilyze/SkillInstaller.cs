@@ -23,7 +23,7 @@ static class SkillInstaller
         if (args.Length < 2)
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateSkillsArgs(args);
+        var usageError = CliArgValidation.ValidateSkillsArgs(args);
         if (usageError != 0)
             return usageError;
 
@@ -36,7 +36,8 @@ static class SkillInstaller
             "install" => Install(targetIds, global),
             "uninstall" => Uninstall(targetIds, global),
             "list" => List(targetIds, global),
-            _ => ProgramHelpers.ReportUnknown("subcommand", subcommand, ProgramHelpers.SkillsSubcommands),
+            _ => CliArgValidationSupport.ReportUnknown(
+                "subcommand", subcommand, CliArgValidation.SkillsSubcommands),
         };
     }
 

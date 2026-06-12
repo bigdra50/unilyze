@@ -4,7 +4,7 @@ internal static class SchemaRunner
 {
     public static int Run(string[] args)
     {
-        var usageError = ProgramHelpers.ValidateSchemaArgs(args);
+        var usageError = CliArgValidation.ValidateSchemaArgs(args);
         if (usageError != 0)
             return usageError;
         return PrintSchema();

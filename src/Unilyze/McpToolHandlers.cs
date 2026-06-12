@@ -25,7 +25,9 @@ internal sealed class McpToolHandlers
                 "version" => HandleVersion(args),
                 _ => throw new InvalidOperationException($"Unknown tool: {name}"),
             };
-            var maxChars = McpResponseTrimmer.ResolveMaxChars(args);
+            var maxChars = name == "schema"
+                ? McpResponseTrimmer.ResolveMaxChars(args, McpResponseTrimmer.ReferenceMaxChars)
+                : McpResponseTrimmer.ResolveMaxChars(args);
             return McpToolResult.Success(McpResponseTrimmer.Apply(text, maxChars));
         }
         catch (Exception ex) when (ex is InvalidOperationException or ArgumentException or JsonException

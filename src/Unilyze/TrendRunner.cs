@@ -6,10 +6,10 @@ internal static class TrendRunner
 {
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateTrendArgs(args);
+        var usageError = CliArgValidation.ValidateTrendArgs(args);
         if (usageError != 0)
             return usageError;
 

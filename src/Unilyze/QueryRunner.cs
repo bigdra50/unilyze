@@ -6,10 +6,10 @@ internal static class QueryRunner
 {
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateQueryArgs(args);
+        var usageError = CliArgValidation.ValidateQueryArgs(args);
         if (usageError != 0)
             return usageError;
 

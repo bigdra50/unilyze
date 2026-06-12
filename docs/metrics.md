@@ -756,6 +756,55 @@ unilyze calibrate <dir-of-jsons> [-o thresholds.json]
 
 Alves 原論文は約 100 システムのベンチマークを使用する。unilyze の検証用 Unity OSS コーパス（HelloMarioFramework、Boss Room、UniTask、VContainer 等）は規模が小さく、導出値は暫定的な候補として扱う。コーパス拡大時は同一手順で再実行すること。
 
+## コード重複 (dup)
+
+`unilyze dup` はメイン解析 JSON とは独立した重複コードレポートを出力する。CodeHealth への組み込みは CodeHealth v2 で予定。
+
+### 正規化
+
+各 `.cs` ファイルの Roslyn トークン列を走査し、以下のルールで正規化する。
+
+| トークン種別 | 正規化 |
+|-------------|--------|
+| 識別子 | `ID` |
+| 数値/文字列/文字/真偽値リテラル、補間文字列テキスト | `LIT` |
+| キーワード、演算子、句読点 | 原文のまま |
+| トリビア（空白、コメント） | 除外 |
+
+Type-2（識別子・リテラル差し替え）および Type 3-2 相当（識別子/リテラル盲目）のクローンを検出する。文の挿入/削除で一致が分割される点は既知の限界。
+
+### 検出アルゴリズム
+
+- 最小ウィンドウ: 100 トークン（既定、`--min-tokens` または `.unilyze.json` の `dup.minTokens` で上書き、CLI が最優先）
+- Rabin-Karp ローリングハッシュで候補をバケット化し、ハッシュ衝突時はトークン列の完全一致で検証
+- 一致ウィンドウを双方向に拡張し、同一ファイル内の重なりはマージ
+
+### 重複率
+
+`duplicationPercent` = クローンでカバーされる行の和集合 / 解析対象ファイルの総行数 × 100。SonarQube の Duplicated Lines % と同様の行ベース密度。
+
+### サードパーティ抑制
+
+既定の third-party ルート: `Assets/Plugins`, `Assets/Standard Assets`, `Assets/AssetStoreTools`（`--third-party-dir` と `.unilyze.json` の `dup.thirdPartyDirs` で拡張可能）。
+
+両端が同一 third-party ルート内にあるペアは既定で抑制し、`suppressedPairCount` に計上する。first-party ↔ third-party のペアは常に報告。`--include-third-party` で抑制を無効化。
+
+### CI ゲート
+
+```bash
+unilyze badge -p . --metric dup --fail-over 3   # 3% 超で exit 2
+```
+
+バッジ色: green < 3%, yellow 3–10%, red ≥ 10%（SonarQube 既定の 3% 品質ゲートに準拠）。
+
+### SyntaxOnly 完全動作
+
+`dup` は `SyntaxTree` のみを消費し、`Compilation` / `SemanticModel` に依存しない。Unity DLL なしの CI でも Complete レベルと同一結果。
+
+### 既知のノイズ
+
+大規模な配列初期化子など `LIT` トークンが支配的なウィンドウは、データテーブル同士をクローンとして検出しうる。
+
 ## アセンブリマッピング
 
 アセンブリ粒度メトリクス（Abstractness、Instability、Distance from Main Sequence、Relational Cohesion、アセンブリ循環）は、解析対象をアセンブリ単位に分割したうえで集計する。

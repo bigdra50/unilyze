@@ -4,10 +4,10 @@ internal static class McpRunner
 {
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateMcpArgs(args);
+        var usageError = CliArgValidation.ValidateMcpArgs(args);
         if (usageError != 0)
             return usageError;
 
