@@ -2,6 +2,15 @@ namespace Unilyze;
 
 public static class DiffCalculator
 {
+    private sealed record DeltaScoreCalculation(double Score, int LowRiskCount, int HighRiskCount);
+
+    const int MethodCognitiveComplexityThreshold = 15;
+    const int MethodNestingDepthThreshold = 4;
+    const int MethodLineCountThreshold = 80;
+    const int TypeCognitiveComplexityThreshold = 15;
+    const int TypeNestingDepthThreshold = 4;
+    const int TypeLineCountThreshold = 500;
+
     public static DiffResult Compare(AnalysisResult before, AnalysisResult after)
     {
         var beforeByKey = IndexByTypeKey(before.TypeMetrics);
@@ -38,11 +47,114 @@ public static class DiffCalculator
             improved.Count, degraded.Count, unchanged.Count,
             added.Count, removed.Count);
 
+        var delta = CalculateDeltaScore(beforeByKey, afterByKey);
         return new DiffResult(
             before.ProjectPath, after.ProjectPath,
             before.AnalyzedAt, after.AnalyzedAt,
             summary,
+            delta.Score,
+            delta.LowRiskCount,
+            delta.HighRiskCount,
             improved, degraded, unchanged, added, removed);
+    }
+
+    static DeltaScoreCalculation CalculateDeltaScore(
+        IReadOnlyDictionary<string, TypeMetrics> beforeByKey,
+        IReadOnlyDictionary<string, TypeMetrics> afterByKey)
+    {
+        var lowRiskCount = 0;
+        var highRiskCount = 0;
+
+        foreach (var (key, after) in afterByKey)
+        {
+            beforeByKey.TryGetValue(key, out var before);
+            CountChangedType(before, after, ref lowRiskCount, ref highRiskCount);
+            CountChangedMethods(before?.Methods ?? [], after.Methods, ref lowRiskCount, ref highRiskCount);
+        }
+
+        var total = lowRiskCount + highRiskCount;
+        var score = total == 0 ? 1.0 : (double)lowRiskCount / total;
+        return new DeltaScoreCalculation(score, lowRiskCount, highRiskCount);
+    }
+
+    static void CountChangedType(
+        TypeMetrics? before,
+        TypeMetrics after,
+        ref int lowRiskCount,
+        ref int highRiskCount)
+    {
+        if (before != null && HasSameRiskMetrics(before, after))
+            return;
+
+        CountRisk(IsHighRisk(after), ref lowRiskCount, ref highRiskCount);
+    }
+
+    static void CountChangedMethods(
+        IReadOnlyList<MethodMetrics> before,
+        IReadOnlyList<MethodMetrics> after,
+        ref int lowRiskCount,
+        ref int highRiskCount)
+    {
+        var beforeByKey = new Dictionary<string, List<MethodMetrics>>();
+        foreach (var method in before)
+        {
+            var key = MethodKey(method);
+            if (!beforeByKey.TryGetValue(key, out var candidates))
+            {
+                candidates = [];
+                beforeByKey[key] = candidates;
+            }
+            candidates.Add(method);
+        }
+
+        foreach (var method in after)
+        {
+            var key = MethodKey(method);
+            if (!beforeByKey.TryGetValue(key, out var candidates))
+            {
+                CountRisk(IsHighRisk(method), ref lowRiskCount, ref highRiskCount);
+                continue;
+            }
+
+            var unchangedIndex = candidates.FindIndex(candidate => HasSameRiskMetrics(candidate, method));
+            if (unchangedIndex >= 0)
+            {
+                candidates.RemoveAt(unchangedIndex);
+                continue;
+            }
+
+            if (candidates.Count > 0)
+                candidates.RemoveAt(0);
+            CountRisk(IsHighRisk(method), ref lowRiskCount, ref highRiskCount);
+        }
+    }
+
+    static bool HasSameRiskMetrics(TypeMetrics before, TypeMetrics after) =>
+        before.MaxCognitiveComplexity == after.MaxCognitiveComplexity
+        && before.MaxNestingDepth == after.MaxNestingDepth
+        && before.LineCount == after.LineCount;
+
+    static bool HasSameRiskMetrics(MethodMetrics before, MethodMetrics after) =>
+        before.CognitiveComplexity == after.CognitiveComplexity
+        && before.MaxNestingDepth == after.MaxNestingDepth
+        && before.LineCount == after.LineCount;
+
+    static bool IsHighRisk(TypeMetrics metrics) =>
+        metrics.MaxCognitiveComplexity >= TypeCognitiveComplexityThreshold
+        || metrics.MaxNestingDepth >= TypeNestingDepthThreshold
+        || metrics.LineCount >= TypeLineCountThreshold;
+
+    static bool IsHighRisk(MethodMetrics metrics) =>
+        metrics.CognitiveComplexity >= MethodCognitiveComplexityThreshold
+        || metrics.MaxNestingDepth >= MethodNestingDepthThreshold
+        || metrics.LineCount >= MethodLineCountThreshold;
+
+    static void CountRisk(bool isHighRisk, ref int lowRiskCount, ref int highRiskCount)
+    {
+        if (isHighRisk)
+            highRiskCount++;
+        else
+            lowRiskCount++;
     }
 
     static Dictionary<string, TypeMetrics> IndexByTypeKey(IReadOnlyList<TypeMetrics>? metrics)

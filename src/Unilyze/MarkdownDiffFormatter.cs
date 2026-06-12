@@ -12,26 +12,33 @@ internal static class MarkdownDiffFormatter
         DiffResult diff,
         StatuslineFormatter.Summary before,
         StatuslineFormatter.Summary after,
-        DiffGateResult? gate)
+        DiffGateResult? gate,
+        double? deltaThreshold = null)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(VerdictLine(diff, gate));
+        sb.AppendLine(VerdictLine(diff, gate, deltaThreshold));
         sb.AppendLine();
         AppendCodeHealthTable(sb, before, after);
         sb.AppendLine();
         AppendSmellTable(sb, before, after);
         sb.AppendLine();
         AppendTypeCountTable(sb, diff);
+        sb.AppendLine();
+        MarkdownDeltaScoreFormatter.Append(sb, diff);
         AppendWorstDegraded(sb, diff);
         return sb.ToString().TrimEnd() + Environment.NewLine;
     }
 
-    static string VerdictLine(DiffResult diff, DiffGateResult? gate)
+    static string VerdictLine(DiffResult diff, DiffGateResult? gate, double? deltaThreshold)
     {
-        if (gate != null)
-            return gate.HasRegression
-                ? $"**Verdict:** FAIL — {gate.Reason}"
-                : "**Verdict:** PASS";
+        if (gate?.HasRegression == true)
+            return $"**Verdict:** FAIL — {gate.Reason}";
+
+        if (deltaThreshold.HasValue && diff.DeltaScore < deltaThreshold.Value)
+            return $"**Verdict:** FAIL — deltaScore {Fmt(diff.DeltaScore)} is below {Fmt(deltaThreshold.Value)}";
+
+        if (gate != null || deltaThreshold.HasValue)
+            return "**Verdict:** PASS";
 
         var s = diff.Summary;
         return $"**Verdict:** {s.DegradedCount} degraded, {s.ImprovedCount} improved, {s.UnchangedCount} unchanged";
@@ -159,5 +166,5 @@ internal static class MarkdownDiffFormatter
     static string FormatIntDelta(int delta) =>
         delta > 0 ? $"+{delta}" : delta.ToString(CultureInfo.InvariantCulture);
 
-    static string Fmt(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+    internal static string Fmt(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
 }

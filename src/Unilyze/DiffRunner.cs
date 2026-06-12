@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace Unilyze;
@@ -14,7 +15,8 @@ internal static class DiffRunner
         bool NoOpen,
         bool FailOnRegression,
         bool FailOnVersionMismatch,
-        bool ChangedOnly);
+        bool ChangedOnly,
+        double? FailOnDeltaBelow);
 
     private sealed record DiffSummaries(
         StatuslineFormatter.Summary? Before,
@@ -37,8 +39,10 @@ internal static class DiffRunner
         bool ChangedOnly,
         DiffSummaries Summaries,
         bool FailOnRegression,
+        double? FailOnDeltaBelow,
         RegressionGateResult RegressionGate,
-        int VersionExit);
+        int VersionExit,
+        int DeltaExit);
 
     private sealed record DiffCliInput(
         string? BaseRef,
@@ -48,6 +52,7 @@ internal static class DiffRunner
         bool FailOnRegression,
         bool FailOnVersionMismatch,
         bool ChangedOnly,
+        double? FailOnDeltaBelow,
         string? PathOverride,
         AnalysisLevel? RequestedLevel,
         IReadOnlyList<string> Positional);
@@ -71,6 +76,11 @@ internal static class DiffRunner
         if (ProgramHelpers.HasFlagWithoutValue(args, "--base-ref"))
         {
             Console.Error.WriteLine("--base-ref requires a value");
+            return 1;
+        }
+        if (ProgramHelpers.HasFlagWithoutValue(args, "--fail-on-delta-below"))
+        {
+            Console.Error.WriteLine("--fail-on-delta-below requires a value");
             return 1;
         }
 
@@ -101,6 +111,13 @@ internal static class DiffRunner
             input = null!;
             return formatError;
         }
+        var deltaError = TryParseDeltaThreshold(
+            opts.GetValueOrDefault("--fail-on-delta-below"), out var failOnDeltaBelow);
+        if (deltaError != 0)
+        {
+            input = null!;
+            return deltaError;
+        }
 
         input = new DiffCliInput(
             opts.GetValueOrDefault("--base-ref"),
@@ -110,9 +127,28 @@ internal static class DiffRunner
             opts.ContainsKey("--fail-on-regression"),
             opts.ContainsKey("--fail-on-version-mismatch"),
             opts.ContainsKey("--changed-only"),
+            failOnDeltaBelow,
             opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path"),
             requestedLevel,
             CliArgValidationSupport.ExtractPositionalArgs(args, CliArgValidation.DiffValueOptions));
+        return 0;
+    }
+
+    static int TryParseDeltaThreshold(string? value, out double? threshold)
+    {
+        threshold = null;
+        if (value == null)
+            return 0;
+
+        if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+            || !double.IsFinite(parsed)
+            || parsed is < 0 or > 1)
+        {
+            Console.Error.WriteLine("--fail-on-delta-below must be a number from 0 to 1");
+            return 1;
+        }
+
+        threshold = parsed;
         return 0;
     }
 
@@ -159,7 +195,8 @@ internal static class DiffRunner
 
     static DiffRunOptions ToDiffRunOptions(DiffCliInput input) =>
         new(null, null, "", null, input.Output, input.Format, input.NoOpen,
-            input.FailOnRegression, input.FailOnVersionMismatch, input.ChangedOnly);
+            input.FailOnRegression, input.FailOnVersionMismatch, input.ChangedOnly,
+            input.FailOnDeltaBelow);
 
     static int ExecuteBaseRefDiff(DiffCliInput input)
     {
@@ -318,6 +355,7 @@ internal static class DiffRunner
         var diffJson = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);
 
         PrintSummary(diff);
+        var deltaExit = EvaluateDeltaGate(diff.DeltaScore, options.FailOnDeltaBelow);
 
         var summaries = ComputeSummariesIfNeeded(before, after, options.FailOnRegression, options.Format);
         var regressionGate = EvaluateRegressionGate(summaries, options.FailOnRegression);
@@ -335,8 +373,21 @@ internal static class DiffRunner
             options.ChangedOnly,
             summaries,
             options.FailOnRegression,
+            options.FailOnDeltaBelow,
             regressionGate,
-            versionExit));
+            versionExit,
+            deltaExit));
+    }
+
+    static int EvaluateDeltaGate(double deltaScore, double? threshold)
+    {
+        if (threshold == null || deltaScore >= threshold.Value)
+            return 0;
+
+        Console.Error.WriteLine(
+            $"deltaScore gate failed: {deltaScore.ToString("0.###", CultureInfo.InvariantCulture)} "
+            + $"is below {threshold.Value.ToString("0.###", CultureInfo.InvariantCulture)}");
+        return 2;
     }
 
     static AnalysisResult LoadBeforeSnapshot(DiffRunOptions options)
@@ -465,20 +516,19 @@ internal static class DiffRunner
         if (ctx.Output == null && !ctx.NoOpen)
             ProgramHelpers.TryOpenInBrowser(htmlPath);
 
-        return ctx.RegressionGate.GateExit != 0 ? ctx.RegressionGate.GateExit : ctx.VersionExit;
+        return ResolveExitCode(ctx);
     }
 
     static int WriteMarkdownOutput(DiffOutputContext ctx)
     {
         var markdown = MarkdownDiffFormatter.Generate(
             ctx.Diff, ctx.Summaries.Before!, ctx.Summaries.After!,
-            ctx.FailOnRegression ? ctx.RegressionGate.Gate : null);
+            ctx.FailOnRegression ? ctx.RegressionGate.Gate : null,
+            ctx.FailOnDeltaBelow);
         var markdownWrite = ProgramHelpers.WriteOutput(markdown, ctx.Output);
         if (markdownWrite != 0)
             return markdownWrite;
-        if (ctx.RegressionGate.GateExit != 0)
-            return ctx.RegressionGate.GateExit;
-        return ctx.VersionExit;
+        return ResolveExitCode(ctx);
     }
 
     static int WriteJsonOutput(DiffOutputContext ctx)
@@ -489,10 +539,11 @@ internal static class DiffRunner
         var writeResult = ProgramHelpers.WriteOutput(jsonOutput, ctx.Output);
         if (writeResult != 0)
             return writeResult;
-        if (ctx.RegressionGate.GateExit != 0)
-            return ctx.RegressionGate.GateExit;
-        return ctx.VersionExit;
+        return ResolveExitCode(ctx);
     }
+
+    static int ResolveExitCode(DiffOutputContext ctx) =>
+        ctx.RegressionGate.GateExit != 0 || ctx.VersionExit != 0 || ctx.DeltaExit != 0 ? 2 : 0;
 
     static void PrintSummary(DiffResult diff)
     {
@@ -502,6 +553,9 @@ internal static class DiffRunner
         Console.Error.WriteLine($"  Unchanged: {diff.Summary.UnchangedCount}");
         Console.Error.WriteLine($"  Added:     {diff.Summary.AddedCount}");
         Console.Error.WriteLine($"  Removed:   {diff.Summary.RemovedCount}");
+        Console.Error.WriteLine(
+            $"  DeltaScore: {diff.DeltaScore.ToString("0.###", CultureInfo.InvariantCulture)} "
+            + $"({diff.LowRiskChangeCount} low / {diff.HighRiskChangeCount} high risk)");
 
         if (diff.Degraded.Count > 0)
         {
@@ -534,6 +588,7 @@ internal static class DiffRunner
               unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
               unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
               unilyze diff <before.json> <after.json> --changed-only             Omit unchanged types from JSON output
+              unilyze diff <before.json> <after.json> --fail-on-delta-below 0.8 Exit 2 if deltaScore is below 0.8
               unilyze diff --base-ref <git-ref> <after.json>            Analyze base ref in a temp worktree and diff
 
             Options:
@@ -546,12 +601,13 @@ internal static class DiffRunner
                   --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
                   --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
                   --changed-only       Omit unchanged types from JSON output (summary counts preserved)
+                  --fail-on-delta-below Exit 2 when deltaScore is below the given value (0..1)
               -h, --help               Show this help
 
             Exit codes:
               0  Success / no regression
               1  Usage error
-              2  Regression detected (with --fail-on-regression) or metricsVersion mismatch (with --fail-on-version-mismatch)
+              2  A configured diff quality gate failed
 
             CI PR gate (single command):
               git fetch origin main   # or use fetch-depth: 0 in checkout

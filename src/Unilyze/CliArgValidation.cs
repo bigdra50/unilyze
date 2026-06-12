@@ -42,6 +42,7 @@ internal static class CliArgValidation
     internal static readonly HashSet<string> DiffValueOptions = new(StringComparer.Ordinal)
     {
         "-o", "--output", "-f", "--format", "-p", "--path", "--base-ref", "--level",
+        "--fail-on-delta-below",
     };
 
     static readonly HashSet<string> DiffBooleanOptions = new(StringComparer.Ordinal)
