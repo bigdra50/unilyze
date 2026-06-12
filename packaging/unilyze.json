@@ -1,0 +1,24 @@
+{
+  "_comment": "Release automation replaces __VERSION__ and __WIN_X64_SHA256__. After publishing, copy the rendered release asset back to packaging/unilyze.json so the raw GitHub URL remains installable.",
+  "version": "__VERSION__",
+  "description": "Static analyzer for Unity and general C# projects",
+  "homepage": "https://github.com/bigdra50/unilyze",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/bigdra50/unilyze/releases/download/v__VERSION__/unilyze-__VERSION__-win-x64.zip",
+      "hash": "__WIN_X64_SHA256__"
+    }
+  },
+  "bin": "unilyze.exe",
+  "checkver": {
+    "github": "https://github.com/bigdra50/unilyze"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/bigdra50/unilyze/releases/download/v$version/unilyze-$version-win-x64.zip"
+      }
+    }
+  }
+}

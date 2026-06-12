@@ -290,9 +290,14 @@ internal static class StatuslineRunner
         string? processPath,
         IReadOnlyList<string> args)
     {
+        // Single-file binaries never reach this method: ResolveSelfInvocation returns
+        // Environment.ProcessPath directly for non-dotnet hosts, and Location is only
+        // consulted when running under the dotnet host where it is populated.
+        #pragma warning disable IL3000
         var entryAssembly = Assembly.GetEntryAssembly()?.Location;
         if (string.IsNullOrEmpty(entryAssembly))
             entryAssembly = typeof(StatuslineRunner).Assembly.Location;
+        #pragma warning restore IL3000
 
         var dotnetHost = string.IsNullOrEmpty(processPath) || IsDotnetHost(processPath)
             ? "dotnet"
