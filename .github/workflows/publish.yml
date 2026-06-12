@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.package.outputs.version }}
 
     steps:
       - uses: actions/checkout@v4
@@ -88,3 +90,171 @@ jobs:
             exit 1
           fi
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+
+  binaries:
+    needs: publish
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid:
+          - osx-arm64
+          - osx-x64
+          - linux-x64
+          - win-x64
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish self-contained binary
+        env:
+          RID: ${{ matrix.rid }}
+        run: |
+          dotnet publish src/Unilyze/Unilyze.csproj \
+            -c Release \
+            -f net10.0 \
+            -r "$RID" \
+            --self-contained \
+            -p:PublishSingleFile=true \
+            -p:EnableCompressionInSingleFile=true \
+            -p:IncludeAllContentForSelfExtract=true \
+            -o "./artifacts/publish/$RID"
+
+      - name: Archive binary
+        id: archive
+        env:
+          RID: ${{ matrix.rid }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          mkdir -p ./artifacts/release
+          if [[ "$RID" == "win-x64" ]]; then
+            cp "./artifacts/publish/$RID/Unilyze.exe" ./artifacts/release/unilyze.exe
+            archive="unilyze-$VERSION-$RID.zip"
+            (cd ./artifacts/release && zip "$archive" unilyze.exe)
+            rm ./artifacts/release/unilyze.exe
+            binary="./artifacts/publish/$RID/Unilyze.exe"
+          else
+            cp "./artifacts/publish/$RID/Unilyze" ./artifacts/release/unilyze
+            chmod +x ./artifacts/release/unilyze
+            archive="unilyze-$VERSION-$RID.tar.gz"
+            tar -C ./artifacts/release -czf "./artifacts/release/$archive" unilyze
+            rm ./artifacts/release/unilyze
+            binary="./artifacts/publish/$RID/Unilyze"
+          fi
+
+          binary_bytes=$(stat -c %s "$binary")
+          archive_bytes=$(stat -c %s "./artifacts/release/$archive")
+          {
+            echo "### $RID binary"
+            echo
+            echo "| File | Bytes | Human-readable |"
+            echo "| --- | ---: | ---: |"
+            echo "| Binary | $binary_bytes | $(numfmt --to=iec-i --suffix=B "$binary_bytes") |"
+            echo "| $archive | $archive_bytes | $(numfmt --to=iec-i --suffix=B "$archive_bytes") |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "archive=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test Linux binary
+        if: matrix.rid == 'linux-x64'
+        env:
+          EXPECTED_VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          binary=./artifacts/publish/linux-x64/Unilyze
+          actual_version=$("$binary" --version)
+          if [[ "$actual_version" != "unilyze $EXPECTED_VERSION" ]]; then
+            echo "::error::Expected 'unilyze $EXPECTED_VERSION', got '$actual_version'"
+            exit 1
+          fi
+
+          "$binary" skills list
+          "$binary" badge -p src/Unilyze --metric codehealth --fail-under 8.0
+          "$binary" -p src/Unilyze -f json -o ./artifacts/self-contained.json
+          dotnet run --project src/Unilyze -c Release -f net10.0 -- \
+            -p src/Unilyze -f json -o ./artifacts/dotnet-hosted.json
+
+          bundled_level=$(jq -r .analysisLevel ./artifacts/self-contained.json)
+          hosted_level=$(jq -r .analysisLevel ./artifacts/dotnet-hosted.json)
+          if [[ "$bundled_level" != "$hosted_level" ]]; then
+            echo "::error::Single-file analysis level '$bundled_level' differs from hosted level '$hosted_level'"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.rid }}
+          path: artifacts/release/${{ steps.archive.outputs.archive }}
+          if-no-files-found: error
+
+  release-assets:
+    needs:
+      - publish
+      - binaries
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: binary-*
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: Generate checksums and package manifests
+        env:
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          cd artifacts/release
+          sha256sum unilyze-"$VERSION"-*.tar.gz unilyze-"$VERSION"-*.zip | sort -k 2 > SHA256SUMS
+
+          osx_arm64_sha=$(sha256sum "unilyze-$VERSION-osx-arm64.tar.gz" | cut -d ' ' -f 1)
+          osx_x64_sha=$(sha256sum "unilyze-$VERSION-osx-x64.tar.gz" | cut -d ' ' -f 1)
+          linux_x64_sha=$(sha256sum "unilyze-$VERSION-linux-x64.tar.gz" | cut -d ' ' -f 1)
+          win_x64_sha=$(sha256sum "unilyze-$VERSION-win-x64.zip" | cut -d ' ' -f 1)
+
+          sed \
+            -e "s/__VERSION__/$VERSION/g" \
+            -e "s/__OSX_ARM64_SHA256__/$osx_arm64_sha/g" \
+            -e "s/__OSX_X64_SHA256__/$osx_x64_sha/g" \
+            -e "s/__LINUX_X64_SHA256__/$linux_x64_sha/g" \
+            "$GITHUB_WORKSPACE/packaging/unilyze.rb" > unilyze.rb
+          sed \
+            -e "s/__VERSION__/$VERSION/g" \
+            -e "s/__WIN_X64_SHA256__/$win_x64_sha/g" \
+            "$GITHUB_WORKSPACE/packaging/unilyze.json" > unilyze.json
+
+          ruby -c unilyze.rb
+          jq . unilyze.json >/dev/null
+          if grep -Eq '__[A-Z0-9_]+__' unilyze.rb unilyze.json; then
+            echo "::error::Unresolved packaging placeholder"
+            exit 1
+          fi
+
+          {
+            echo "### Release assets"
+            echo
+            echo '```text'
+            cat SHA256SUMS
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload assets to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" \
+            artifacts/release/unilyze-"${{ needs.publish.outputs.version }}"-*.tar.gz \
+            artifacts/release/unilyze-"${{ needs.publish.outputs.version }}"-*.zip \
+            artifacts/release/SHA256SUMS \
+            artifacts/release/unilyze.rb \
+            artifacts/release/unilyze.json \
+            --clobber
