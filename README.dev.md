@@ -258,7 +258,20 @@ Related files:
 
 Publishing is automated on semver tag push. Local API key storage is not assumed.
 
-Set the repository secret `NUGET_API_KEY` beforehand.
+The current workflow uses the repository secret `NUGET_API_KEY`.
+The release operator should migrate it to [NuGet Trusted Publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing) as follows:
+
+1. Sign in to nuget.org and open the account's **Trusted Publishing** page.
+2. Add a GitHub policy for owner `bigdra50`, repository `unilyze`, and workflow file `publish.yml`. Enter only the file name, not `.github/workflows/`.
+3. Optionally create a protected GitHub environment such as `release`, add required reviewers, set `environment: release` on the publish job, and enter the same environment in the NuGet policy.
+4. Add `id-token: write` to the publish job permissions. Keep `contents: write` for GitHub Release creation.
+5. Immediately before `dotnet nuget push`, add `NuGet/login@v1` with the nuget.org profile name and use its `NUGET_API_KEY` output for the push. Request the temporary key late because it is valid for one hour and each OIDC token can be exchanged only once.
+6. Run `workflow_dispatch` to validate build, test, pack, and release smoke without publishing.
+7. Push a release tag and verify package publication and GitHub Release creation.
+8. After a successful Trusted Publishing release, delete the long-lived `NUGET_API_KEY` repository secret and remove the API-key preflight step from `.github/workflows/publish.yml`.
+
+This issue documents the migration only.
+The release operator must perform the nuget.org policy creation, workflow switch, first trusted publish, and secret removal.
 
 Publish procedure:
 
@@ -275,7 +288,7 @@ The dry-run still builds all four binaries, runs the Linux bundle smoke, generat
 Publish workflow:
 
 - [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
-- Secret name: `NUGET_API_KEY`
+- Current secret name until migration: `NUGET_API_KEY`
 
 ## Known Local Caveats
 

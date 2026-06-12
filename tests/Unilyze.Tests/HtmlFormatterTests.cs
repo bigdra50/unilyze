@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Unilyze.Tests;
@@ -70,6 +71,33 @@ public sealed class HtmlFormatterTests
         Assert.Contains("underlay-color", html);
     }
 
+    [Fact]
+    public void Generate_MaliciousAnalysisValues_CannotBreakOutOfInlineScript()
+    {
+        const string Payload = "</script><script>globalThis.unilyzeXss=true</script>";
+        var result = MakeResultWithMaliciousValues(Payload);
+        var jsonOptions = new JsonSerializerOptions(AnalysisJsonContext.Default.Options)
+        {
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+        var json = JsonSerializer.Serialize(result, jsonOptions);
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath);
+
+        Assert.DoesNotContain(Payload, html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Serialize_MaliciousAnalysisValues_DefaultEncoderEscapesScriptMarkup()
+    {
+        const string Payload = "</script><script>globalThis.unilyzeXss=true</script>";
+        var result = MakeResultWithMaliciousValues(Payload);
+
+        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+
+        Assert.DoesNotContain(Payload, json, StringComparison.OrdinalIgnoreCase);
+    }
+
     static AnalysisResult MakeEmptyResult() => new(
         "/tmp/SampleProject",
         DateTimeOffset.UtcNow,
@@ -98,5 +126,57 @@ public sealed class HtmlFormatterTests
                 Methods: [],
                 QualifiedName: "Sample.Foo",
                 TypeId: "Sample.Asm::Sample.Foo")
+        ]);
+
+    static AnalysisResult MakeResultWithMaliciousValues(string payload) => new(
+        $"/tmp/{payload}",
+        DateTimeOffset.UtcNow,
+        Assemblies: [],
+        Types: [
+            new TypeNodeInfo(
+                Name: payload,
+                Namespace: "Sample",
+                Kind: "class",
+                Modifiers: [],
+                BaseType: null,
+                Interfaces: [],
+                Members: [],
+                ConstructorParams: [],
+                Attributes: [],
+                GenericConstraints: [],
+                EnumBaseType: null,
+                Assembly: "Sample.Asm",
+                FilePath: $"/tmp/{payload}.cs",
+                IsNested: false,
+                QualifiedName: $"Sample.{payload}",
+                TypeId: $"Sample.Asm::Sample.{payload}")
+        ],
+        Dependencies: [],
+        TypeMetrics: [
+            new TypeMetrics(
+                TypeName: payload,
+                Namespace: "Sample",
+                Assembly: "Sample.Asm",
+                LineCount: 1,
+                MethodCount: 0,
+                MaxNestingDepth: 0,
+                AverageCognitiveComplexity: 0,
+                MaxCognitiveComplexity: 0,
+                AverageCyclomaticComplexity: 0,
+                MaxCyclomaticComplexity: 0,
+                ExcessiveParameterMethodCount: 0,
+                CodeHealth: 10,
+                Methods: [],
+                CodeSmells: [
+                    new CodeSmell(
+                        CodeSmellKind.GodClass,
+                        SmellSeverity.Warning,
+                        payload,
+                        null,
+                        payload)
+                ],
+                FilePath: $"/tmp/{payload}.cs",
+                QualifiedName: $"Sample.{payload}",
+                TypeId: $"Sample.Asm::Sample.{payload}")
         ]);
 }
