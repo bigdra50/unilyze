@@ -1,0 +1,221 @@
+/* ============================================================
+ * .reports theme.css
+ * デザイントークン + ベーススタイル + ダークテーマ
+ * ============================================================ */
+
+:root {
+  /* Colors - base */
+  --bg: #0f1419;
+  --bg-elev: #1a2129;
+  --bg-card: #1f2730;
+  --bg-code: #161b22;
+  --border: #2d3742;
+  --border-soft: #232a33;
+
+  /* Colors - text */
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --text-mute: #6e7681;
+
+  /* Colors - semantic */
+  --accent: #58a6ff;
+  --accent-warm: #f0883e;
+  --good: #3fb950;
+  --warn: #d29922;
+  --bad: #f85149;
+  --info: #a371f7;
+
+  /* Diff colors */
+  --diff-add-bg: rgba(63, 185, 80, 0.15);
+  --diff-add-line: rgba(63, 185, 80, 0.4);
+  --diff-del-bg: rgba(248, 81, 73, 0.15);
+  --diff-del-line: rgba(248, 81, 73, 0.4);
+
+  /* Type colors (report types - 6 種スキーマ) */
+  --type-decision: #a371f7;       /* 紫: 旧 adr 色を継承 */
+  --type-plan: #3fb950;            /* 緑 */
+  --type-brief: #f0883e;           /* 橙: 伝達系で目立たせる */
+  --type-review: #58a6ff;          /* 青 */
+  --type-retrospective: #ec6cb9;   /* ピンク: 振り返り */
+  --type-architecture: #5bd3c7;    /* ティール: 地図・俯瞰の質感 */
+
+  /* 後方互換 (旧 type 用) */
+  --type-audit: var(--type-brief);
+  --type-adr: var(--type-decision);
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+  --font-mono: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  --fz-xs: 11px;
+  --fz-sm: 13px;
+  --fz-base: 14px;
+  --fz-md: 15px;
+  --fz-lg: 16px;
+  --fz-xl: 20px;
+  --fz-2xl: 24px;
+  --fz-3xl: 28px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: var(--fz-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: var(--sp-12) var(--sp-8);
+}
+
+.container-wide {
+  max-width: 1400px;
+}
+
+/* ============================================================
+ * Typography
+ * ============================================================ */
+
+h1, h2, h3, h4 {
+  color: var(--text);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: var(--fz-3xl);
+  margin: 0 0 var(--sp-2);
+}
+
+h2 {
+  font-size: var(--fz-xl);
+  margin: var(--sp-10) 0 var(--sp-4);
+  padding-left: var(--sp-3);
+  border-left: 4px solid var(--accent);
+}
+
+h3 {
+  font-size: var(--fz-lg);
+  margin: var(--sp-6) 0 var(--sp-3);
+  color: var(--accent);
+}
+
+h4 {
+  font-size: var(--fz-base);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+
+p { margin: var(--sp-3) 0; }
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+
+code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  color: var(--accent);
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--sp-4) var(--sp-5);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fz-sm);
+  line-height: 1.5;
+  margin: var(--sp-4) 0;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--text);
+  font-size: inherit;
+}
+
+mark {
+  background: rgba(240, 136, 62, 0.25);
+  color: var(--text);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+ * Layout: header / footer
+ * ============================================================ */
+
+header.report-header {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: var(--sp-6);
+  margin-bottom: var(--sp-8);
+}
+
+.meta {
+  color: var(--text-dim);
+  font-size: var(--fz-sm);
+  margin-top: var(--sp-2);
+}
+
+.meta span + span::before {
+  content: " · ";
+  margin: 0 var(--sp-1);
+  color: var(--text-mute);
+}
+
+footer.report-footer {
+  margin-top: var(--sp-12);
+  padding-top: var(--sp-6);
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: var(--fz-xs);
+  text-align: center;
+}
+
+/* ============================================================
+ * Print
+ * ============================================================ */
+
+@media print {
+  body { background: white; color: black; }
+  .no-print { display: none !important; }
+  a { color: black; text-decoration: underline; }
+  pre, code { background: #f0f0f0; color: black; border-color: #ccc; }
+}

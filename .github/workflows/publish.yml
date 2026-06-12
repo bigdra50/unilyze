@@ -122,6 +122,7 @@ jobs:
             -r "$RID" \
             --self-contained \
             -p:PublishSingleFile=true \
+            -p:IncludeAllContentForSelfExtract=true \
             -p:EnableCompressionInSingleFile=true \
             -p:IncludeAllContentForSelfExtract=true \
             -o "./artifacts/publish/$RID"
