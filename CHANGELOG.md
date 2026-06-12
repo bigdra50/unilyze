@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- `--incremental` flag for syntax-level analysis: persists a per-file content-hash cache under `<project>/.unilyze/cache/syntax/v1/` and re-parses only changed files; semantic levels (core/full/complete) ignore the flag with a stderr note; `metricsVersion` stays 3 ([#135](https://github.com/bigdra50/unilyze/issues/135))
 - `--projects <glob>` on analyze and badge for monorepo batch analysis: expands repeatable globs to project roots, writes per-project `AnalysisResult` JSON (or SARIF/badge files) plus `summary.json`, prints a per-project gate table on stderr, and aggregates exit code `2` when any gate fails ([#137](https://github.com/bigdra50/unilyze/issues/137))
 - **[metrics]** DOTS/ECS smell detectors UNI024 (`MissingBurstCompile` on `ISystem`/`IJobEntity`/`IJobChunk` structs) and UNI025 (`ManagedReferenceInComponentData` on `struct IComponentData`); per-assembly `burstCoverage` and `ecsTypeCount` metrics when ECS types exist; `metricsVersion` stays 3 ([#133](https://github.com/bigdra50/unilyze/issues/133))
 - Opt-in `--include-api-surface` flag emits per-type API surface (XML doc presence/summary, public signature strings, identifier lists, doc coverage counts) in analyze JSON and `query` evidence packs; quality-audit skill adds a review-coverage phase (CRScore-style pseudo-reference matching) ([#134](https://github.com/bigdra50/unilyze/issues/134))

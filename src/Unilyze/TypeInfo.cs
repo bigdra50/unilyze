@@ -94,6 +94,17 @@ public static class TypeAnalyzer
             .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
                 f, excludeDirectories, excludeGeneratedCode, directory, applyAnyDepthExcludes))
             .ToList();
+        var (rawTypeList, treeList) = ParseSourceFiles(
+            csFiles, assemblyName, parseOptions, maxParallelism);
+        return new AnalyzeDirectoryResult(ApplySyntaxPostProcessing(rawTypeList), treeList);
+    }
+
+    internal static (List<TypeNodeInfo> RawTypes, List<SyntaxTree> Trees) ParseSourceFiles(
+        IReadOnlyList<string> csFiles,
+        string assemblyName,
+        CSharpParseOptions parseOptions,
+        int? maxParallelism = null)
+    {
         var rawTypes = new ConcurrentBag<TypeNodeInfo>();
         var trees = new ConcurrentBag<SyntaxTree>();
         var parallelOptions = new ParallelOptions
@@ -103,43 +114,70 @@ public static class TypeAnalyzer
 
         Parallel.ForEach(csFiles, parallelOptions, file =>
         {
-            var source = File.ReadAllText(file);
-            var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: file);
+            var (tree, fileRawTypes) = ParseSingleFile(file, assemblyName, parseOptions);
             trees.Add(tree);
-            var root = tree.GetRoot();
-            ExtractTypesInto(rawTypes, root, assemblyName, file);
+            foreach (var rawType in fileRawTypes)
+                rawTypes.Add(rawType);
         });
 
-        // Sort to ensure deterministic partial merge order (ConcurrentBag is unordered)
         var rawTypeList = rawTypes.OrderBy(t => t.FilePath, StringComparer.Ordinal)
             .ThenBy(t => t.StartLine).ToList();
-        var treeList = trees.ToList();
+        return (rawTypeList, trees.ToList());
+    }
 
+    internal static (SyntaxTree Tree, IReadOnlyList<TypeNodeInfo> RawTypes) ParseSingleFile(
+        string filePath,
+        string assemblyName,
+        CSharpParseOptions parseOptions)
+    {
+        var source = File.ReadAllText(filePath);
+        var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: filePath);
+        var fileRawTypes = new List<TypeNodeInfo>();
+        ExtractTypesInto(fileRawTypes, tree.GetRoot(), assemblyName, filePath);
+        return (tree, fileRawTypes);
+    }
+
+    internal static IReadOnlyList<TypeNodeInfo> ApplySyntaxPostProcessing(IReadOnlyList<TypeNodeInfo> rawTypeList)
+    {
         // B2: 2パス interface 判定
         var knownInterfaces = new HashSet<string>(
             rawTypeList.Where(t => t.Kind == "interface").Select(t => t.Name.Split('<')[0]));
         var resolved = rawTypeList.Select(t => ResolveBaseTypes(t, knownInterfaces)).ToList();
 
         // B4: partial マージ
-        return new AnalyzeDirectoryResult(MergePartialTypes(resolved), treeList);
+        return MergePartialTypes(resolved);
     }
+
+    internal static string ComputeKnownInterfacesHash(IReadOnlyList<TypeNodeInfo> rawTypeList) =>
+        SyntaxCacheFingerprint.HashKnownInterfaces(rawTypeList);
 
     // --- Phase 1: Raw extraction (allocation-reduced: no yield state machines) ---
 
     static void ExtractTypesInto(ConcurrentBag<TypeNodeInfo> bag, SyntaxNode root, string assemblyName, string filePath)
+    {
+        foreach (var rawType in ExtractRawTypesFromRoot(root, assemblyName, filePath))
+            bag.Add(rawType);
+    }
+
+    static void ExtractTypesInto(List<TypeNodeInfo> list, SyntaxNode root, string assemblyName, string filePath)
+    {
+        list.AddRange(ExtractRawTypesFromRoot(root, assemblyName, filePath));
+    }
+
+    static IEnumerable<TypeNodeInfo> ExtractRawTypesFromRoot(SyntaxNode root, string assemblyName, string filePath)
     {
         foreach (var node in root.DescendantNodes())
         {
             switch (node)
             {
                 case TypeDeclarationSyntax typeDecl:
-                    bag.Add(ExtractSingleTypeDecl(typeDecl, assemblyName, filePath));
+                    yield return ExtractSingleTypeDecl(typeDecl, assemblyName, filePath);
                     break;
                 case EnumDeclarationSyntax enumDecl:
-                    bag.Add(ExtractSingleEnumDecl(enumDecl, assemblyName, filePath));
+                    yield return ExtractSingleEnumDecl(enumDecl, assemblyName, filePath);
                     break;
                 case DelegateDeclarationSyntax delDecl:
-                    bag.Add(ExtractSingleDelegateDecl(delDecl, assemblyName, filePath));
+                    yield return ExtractSingleDelegateDecl(delDecl, assemblyName, filePath);
                     break;
             }
         }
