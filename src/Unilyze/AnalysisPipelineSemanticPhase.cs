@@ -14,12 +14,14 @@ internal static class AnalysisPipelineSemanticPhase
             List<TypeNodeInfo> allTypes,
             List<SyntaxTree> allSyntaxTrees,
             CompilationResult compilationResult,
-            AnalysisBuildOptions options)
+            AnalysisBuildOptions options,
+            PipelineDiscoverState discover)
     {
         allTypes = BaseTypeResolver.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         var deps = DependencyBuilder.Build(allTypes).ToList();
         AppendDiRegistrationDependencies(deps, allSyntaxTrees, compilationResult, allTypes);
+        AppendSerializedReferenceDependencies(deps, discover, allTypes, options);
 
         var typeMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
@@ -50,6 +52,40 @@ internal static class AnalysisPipelineSemanticPhase
             deps.Add(new TypeDependency(
                 reg.ServiceType, reg.ImplementationType, DependencyKind.DIRegistration, fromTypeId, toTypeId));
         }
+    }
+
+    static void AppendSerializedReferenceDependencies(
+        List<TypeDependency> deps,
+        PipelineDiscoverState discover,
+        IReadOnlyList<TypeNodeInfo> allTypes,
+        AnalysisBuildOptions options)
+    {
+        if (discover.ProjectKind != "unity")
+            return;
+
+        var assetsDir = ProgramHelpers.ResolveAssetsDir(discover.ProjectRoot);
+        var excludeDirectories = MergeSerializedReferenceExcludes(discover, options);
+        var serializedDeps = SerializedReferenceResolver.Resolve(
+            assetsDir,
+            allTypes,
+            excludeDirectories,
+            options.ExcludeGeneratedCode,
+            options.ApplyAnyDepthExcludes);
+        deps.AddRange(serializedDeps);
+    }
+
+    static IReadOnlyList<string>? MergeSerializedReferenceExcludes(
+        PipelineDiscoverState discover,
+        AnalysisBuildOptions options)
+    {
+        var projectExcludes = DefaultExcludes.ResolveProjectPaths(discover.ProjectRoot);
+        if (options.ExcludeDirectories is not { Count: > 0 })
+            return projectExcludes;
+
+        var merged = new List<string>(projectExcludes.Count + options.ExcludeDirectories.Count);
+        merged.AddRange(projectExcludes);
+        merged.AddRange(options.ExcludeDirectories);
+        return merged;
     }
 
     static IReadOnlyList<TypeMetrics> EnrichWithCouplingMetrics(

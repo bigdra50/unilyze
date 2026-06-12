@@ -23,7 +23,8 @@ public enum DependencyKind
     ReturnType,
     EventType,
     GenericConstraint,
-    DIRegistration
+    DIRegistration,
+    SerializedReference
 }
 
 public sealed record ParameterInfo(string Name, string Type);
