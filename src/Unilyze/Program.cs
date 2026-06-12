@@ -63,6 +63,12 @@ if (ProgramHelpers.HasFlagWithoutValue(args, "--triage"))
 var projectGlobs = ProgramHelpers.ParseMultiValueOption(args, "--projects");
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
+var incremental = opts.ContainsKey("--incremental");
+if (incremental && input != null)
+{
+    Console.Error.WriteLine("--incremental cannot be combined with -i/--input.");
+    return 1;
+}
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
 var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
@@ -122,6 +128,7 @@ try
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
         var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs, cliProfile);
+        var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(projectRoot, opts);
         resolved = config.ResolveAnalysisConfig();
         result = AnalysisPipeline.Build(
             path!, prefix, assembly, config.ExcludeDirs, requestedLevel,
@@ -129,7 +136,11 @@ try
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
             includeApiSurface: includeApiSurface,
             analysisConfig: resolved,
-            maxParallelism: config.MaxParallelism);
+            maxParallelism: config.MaxParallelism,
+            resolveNuget: referenceSettings.ResolveNuget,
+            includeGenerated: referenceSettings.IncludeGenerated,
+            targetFramework: referenceSettings.TargetFramework,
+            incremental: incremental);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
@@ -240,6 +251,11 @@ Options:
       --no-triage    Disable triage verdict application
       --include-api-surface
                      Emit per-type API surface (doc comments, public signatures, identifiers)
+      --resolve-nuget  Resolve NuGet package compile-time assemblies from obj/project.assets.json
+      --include-generated
+                     Include EmitCompilerGeneratedFiles output (obj/<Config>/<TFM>/generated) in compilation only
+      --tfm            Target framework for NuGet/generated-source resolution (default: csproj first TFM)
+      --incremental    Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
       --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version

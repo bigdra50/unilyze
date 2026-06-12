@@ -16,6 +16,9 @@ analyze (unilyze -f json):
   .projectKind                         string?  Detected project kind: "unity",
                                                 "dotnet", or "unknown"; null in
                                                 older snapshots.
+  .resolveNuget                        bool?    true when --resolve-nuget / config enabled; omitted when default
+  .includeGenerated                    bool?    true when --include-generated / config enabled; omitted when default
+  .targetFramework                      string?  TFM used for NuGet/generated-source resolution; omitted when N/A
   .suppressedCount                     int?     Count of smells suppressed by inline comments and/or --baseline;
                                                 present only when at least one smell was suppressed.
   .assemblies[]                        object   Assembly info

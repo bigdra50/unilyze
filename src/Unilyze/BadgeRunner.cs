@@ -78,6 +78,17 @@ internal static class BadgeRunner
             ShieldsBadge badge;
             double? duplicationPercent = null;
             StatuslineFormatter.Summary summary;
+            var referenceSettings = ReferenceAnalysisSettings.LoadMerged(fullPath);
+            var resolved = config.ResolveAnalysisConfig();
+            var result = AnalysisPipeline.Build(
+                fullPath, null, null, config.ExcludeDirs, requestedLevel,
+                excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
+                applyAnyDepthExcludes: !config.DisableDefaultExcludes,
+                analysisConfig: resolved,
+                maxParallelism: config.MaxParallelism,
+                resolveNuget: referenceSettings.ResolveNuget,
+                includeGenerated: referenceSettings.IncludeGenerated,
+                targetFramework: referenceSettings.TargetFramework);
 
             if (metric == BadgeMetric.Dup)
             {

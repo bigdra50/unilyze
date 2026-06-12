@@ -19,5 +19,7 @@ public sealed class StatuslineHelpTests
         Assert.Contains("--verbose", help);
         Assert.Contains("--quiet", help);
         Assert.Contains("--background-refresh", help);
+        Assert.Contains("--incremental", help);
+        Assert.Contains(".unilyze/cache", help);
     }
 }

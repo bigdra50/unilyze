@@ -6,7 +6,8 @@ public sealed record CsprojInfo(
     IReadOnlyList<string> ReferencePaths,
     IReadOnlyList<string> ProjectReferences,
     IReadOnlyList<string> DefineConstants,
-    string? LangVersion);
+    string? LangVersion,
+    IReadOnlyList<string> TargetFrameworks);
 
 public static class CsprojParser
 {
@@ -24,8 +25,9 @@ public static class CsprojParser
             var projectRefs = ExtractProjectReferences(doc, ns);
             var defines = ExtractDefineConstants(doc, ns);
             var langVersion = ExtractLangVersion(doc, ns);
+            var targetFrameworks = ExtractTargetFrameworks(doc, ns);
 
-            return new CsprojInfo(references, projectRefs, defines, langVersion);
+            return new CsprojInfo(references, projectRefs, defines, langVersion, targetFrameworks);
         }
         catch (Exception ex)
         {
@@ -108,6 +110,25 @@ public static class CsprojParser
     static string? ExtractLangVersion(XDocument doc, XNamespace ns)
     {
         return doc.Descendants(ns + "LangVersion").FirstOrDefault()?.Value;
+    }
+
+    static List<string> ExtractTargetFrameworks(XDocument doc, XNamespace ns)
+    {
+        var tfms = new List<string>();
+
+        var multi = doc.Descendants(ns + "TargetFrameworks").FirstOrDefault()?.Value;
+        if (!string.IsNullOrWhiteSpace(multi))
+        {
+            tfms.AddRange(multi.Split([';', ','], StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim())
+                .Where(t => t.Length > 0));
+        }
+
+        var single = doc.Descendants(ns + "TargetFramework").FirstOrDefault()?.Value;
+        if (!string.IsNullOrWhiteSpace(single))
+            tfms.Insert(0, single.Trim());
+
+        return tfms.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     static IEnumerable<string> ExtractCsprojFromSln(string slnPath, string projectRoot)

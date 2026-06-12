@@ -17,16 +17,39 @@ internal static class AnalysisPipeline
         bool includeApiSurface = false,
         IAnalysisLogSink? logSink = null,
         ResolvedAnalysisConfig? analysisConfig = null,
-        int? maxParallelism = null)
+        int? maxParallelism = null,
+        bool resolveNuget = false,
+        bool includeGenerated = false,
+        string? targetFramework = null,
+        bool incremental = false)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
             excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig,
-            maxParallelism);
+            maxParallelism, resolveNuget, includeGenerated, targetFramework, incremental);
         return Build(options);
     }
 
     static AnalysisResult Build(AnalysisBuildOptions options)
+    {
+        if (options.Incremental && options.RequestedLevel != AnalysisLevel.Syntax)
+        {
+            options.EffectiveLog.Warning(
+                "--incremental currently accelerates syntax-level analysis only; running full analysis");
+            options = options with { Incremental = false };
+        }
+
+        try
+        {
+            return BuildCore(options);
+        }
+        finally
+        {
+            SyntaxIncrementalState.Current = null;
+        }
+    }
+
+    static AnalysisResult BuildCore(AnalysisBuildOptions options)
     {
         var config = options.EffectiveAnalysisConfig;
         var log = options.EffectiveLog;
@@ -39,17 +62,32 @@ internal static class AnalysisPipeline
 
         log.PhaseStarted("parse");
         var (allTypes, allSyntaxTrees) = AnalysisPipelineDiscovery.CollectTypes(discover, options);
+        var referenceOnlyTrees = AnalysisPipelineDiscovery.CollectReferenceOnlyTrees(
+            discover, options, allSyntaxTrees);
         log.PhaseCompleted("parse", sw.Elapsed);
         sw.Restart();
 
         log.PhaseStarted("compile");
-        var compile = AnalysisPipelineDiscovery.Compile(options, discover, allSyntaxTrees, log);
+        var compile = AnalysisPipelineDiscovery.Compile(
+            options, discover, allSyntaxTrees, referenceOnlyTrees, log);
         log.PhaseCompleted("compile", sw.Elapsed);
         sw.Restart();
 
         log.PhaseStarted("semantic");
-        var (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
-            allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
+        List<TypeNodeInfo> resolvedTypes;
+        List<TypeDependency> deps;
+        List<TypeMetrics> typeMetrics;
+        IReadOnlyDictionary<string, CouplingInfo> couplingMap;
+        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } collect)
+        {
+            (resolvedTypes, deps, typeMetrics, couplingMap) = SyntaxIncrementalSemanticPhase.Run(
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, collect, discover);
+        }
+        else
+        {
+            (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
+        }
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 
@@ -58,9 +96,20 @@ internal static class AnalysisPipeline
             discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
 
+        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
+        {
+            var manifest = SyntaxIncrementalCollector.BuildManifest(
+                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);
+            SyntaxCacheStore.Save(discover.ProjectRoot, manifest);
+        }
+
         var profileField = config.Profile == SmellThresholdProfiles.DefaultProfileName
             ? null
             : config.Profile;
+
+        var selectedTfm = options.IncludeGenerated || options.ResolveNuget
+            ? discover.SelectedTargetFramework ?? options.TargetFramework
+            : null;
 
         var inlineSuppressedCount = InlineSuppression.CountSuppressed(finalMetrics);
         InlineSuppression.WriteSummary(inlineSuppressedCount);
@@ -81,7 +130,10 @@ internal static class AnalysisPipeline
             SuppressedCount: inlineSuppressedCount > 0 ? inlineSuppressedCount : null,
             ApiSurface: options.IncludeApiSurface
                 ? ApiSurfaceExtractor.Extract(allSyntaxTrees, resolvedTypes)
-                : null);
+                : null,
+            ResolveNuget: options.ResolveNuget ? true : null,
+            IncludeGenerated: options.IncludeGenerated ? true : null,
+            TargetFramework: selectedTfm);
 
         return FindingFingerprint.AssignIds(result);
     }
