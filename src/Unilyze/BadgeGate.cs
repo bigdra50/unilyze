@@ -22,6 +22,7 @@ internal static class BadgeGate
         {
             BadgeMetric.CodeHealth or BadgeMetric.Mi => ValidateThresholdMetric(metric, failUnder, failOver),
             BadgeMetric.Smells => ValidateSmellsOptions(failUnder, failOver),
+            BadgeMetric.Energy => ValidateEnergyOptions(failUnder, failOver),
             BadgeMetric.Dup => BadgeDupGate.ValidateOptions(failUnder, failOver),
             _ => UsageError($"Unsupported metric: {metric}")
         };
@@ -56,6 +57,7 @@ internal static class BadgeGate
         {
             BadgeMetric.CodeHealth or BadgeMetric.Mi => EvaluateThreshold(metric, summary, failUnder),
             BadgeMetric.Smells => EvaluateSmells(summary, failOver),
+            BadgeMetric.Energy => EvaluateEnergy(summary, failOver),
             _ => UsageError($"Unsupported metric: {metric}")
         };
     }
@@ -83,6 +85,17 @@ internal static class BadgeGate
         return Pass();
     }
 
+    static BadgeGateResult ValidateEnergyOptions(string? failUnder, string? failOver)
+    {
+        if (failUnder is not null)
+            return UsageError("--fail-under is not valid with --metric energy. Use --fail-over <density>.");
+
+        if (!TryParseDouble(failOver, out var density) || density < 0)
+            return UsageError($"--fail-over requires a non-negative numeric value (got '{failOver}').");
+
+        return Pass();
+    }
+
     static BadgeGateResult? EvaluateAvailability(BadgeMetric metric, StatuslineFormatter.Summary summary)
     {
         if (summary.TypeCount == 0)
@@ -90,6 +103,9 @@ internal static class BadgeGate
 
         if (metric == BadgeMetric.Mi && summary.MiBearingCount == 0)
             return MetricUnavailable("no method-bearing types (MI undefined)");
+
+        if (metric == BadgeMetric.Energy && summary.HotPathMethodCount == 0)
+            return MetricUnavailable("no Unity hot-path methods");
 
         return null;
     }
@@ -123,6 +139,18 @@ internal static class BadgeGate
             : Pass();
     }
 
+    static BadgeGateResult EvaluateEnergy(StatuslineFormatter.Summary summary, string? failOver)
+    {
+        TryParseDouble(failOver, out var threshold);
+        var actual = summary.HotPathSmellCount / (double)summary.HotPathMethodCount;
+
+        return actual > threshold
+            ? new BadgeGateResult(
+                GateOutcome.Fail,
+                $"gate failed: energy pressure {FormatValue(actual)} > {FormatValue(threshold)}")
+            : Pass();
+    }
+
     internal static BadgeGateResult Pass() => new(GateOutcome.Pass, null);
 
     internal static BadgeGateResult UsageError(string message) => new(GateOutcome.UsageError, message);
@@ -132,6 +160,7 @@ internal static class BadgeGate
         BadgeMetric.CodeHealth => "codehealth",
         BadgeMetric.Mi => "mi",
         BadgeMetric.Smells => "smells",
+        BadgeMetric.Energy => "energy",
         BadgeMetric.Dup => "dup",
         _ => metric.ToString()
     };

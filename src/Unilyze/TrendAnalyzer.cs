@@ -15,7 +15,9 @@ public sealed record TrendSnapshot(
     int MetricsVersion = 0,
     string? Profile = null,
     int WarningSmellCount = 0,
-    int CriticalSmellCount = 0);
+    int CriticalSmellCount = 0,
+    int HotPathSmellCount = 0,
+    int HotPathMethodCount = 0);
 
 public sealed record TrendSummary(
     int SnapshotCount,
@@ -48,6 +50,7 @@ public static class TrendAnalyzer
         var avgCogCC = typeCount > 0
             ? Math.Round(typeMetrics.Average(t => t.AverageCognitiveComplexity), 1)
             : 0.0;
+        var energy = EnergyPressureCalculator.ForTrend(typeMetrics);
 
         return new TrendSnapshot(
             result.AnalyzedAt,
@@ -62,7 +65,9 @@ public static class TrendAnalyzer
             result.MetricsVersion,
             result.Profile,
             warningCount,
-            criticalCount);
+            criticalCount,
+            energy.HotPathSmellCount,
+            energy.HotPathMethodCount);
     }
 
     public static TrendResult Analyze(IReadOnlyList<AnalysisResult> results) =>

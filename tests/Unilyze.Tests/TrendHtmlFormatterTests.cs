@@ -16,6 +16,7 @@ public sealed class TrendHtmlFormatterTests
         Assert.DoesNotContain("<script src=", html);
         Assert.DoesNotContain("<link ", html);
         Assert.DoesNotContain("unpkg.com", html);
+        Assert.Contains("chart-energy", html);
     }
 
     [Fact]
@@ -82,12 +83,14 @@ public sealed class TrendHtmlFormatterTests
                 new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero),
                 "/project", 10, 7.5, 6.0, 5, 2, 4.0,
                 "snap-a.json", MetricsVersion: 3, Profile: "default",
-                WarningSmellCount: 3, CriticalSmellCount: 2),
+                WarningSmellCount: 3, CriticalSmellCount: 2,
+                HotPathSmellCount: 2, HotPathMethodCount: 2),
             new TrendSnapshot(
                 new DateTimeOffset(2025, 6, 1, 0, 0, 0, TimeSpan.Zero),
                 "/project", 12, 8.0, 7.0, 3, 1, 3.5,
                 "snap-b.json", MetricsVersion: 3, Profile: "default",
-                WarningSmellCount: 2, CriticalSmellCount: 1),
+                WarningSmellCount: 2, CriticalSmellCount: 1,
+                HotPathSmellCount: 1, HotPathMethodCount: 2),
         ],
         new TrendSummary(2, 0.5, -2));
 }

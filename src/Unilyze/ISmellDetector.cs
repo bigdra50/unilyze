@@ -9,7 +9,8 @@ public sealed record DetectedSmell(
     string TypeName,
     string? MethodName,
     string Message,
-    int? Line);
+    int? Line,
+    bool? InHotPath = null);
 
 public interface ISmellDetector
 {

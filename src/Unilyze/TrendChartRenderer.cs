@@ -11,22 +11,22 @@ internal static class TrendChartRenderer
     const int PadRight = 16;
     const int PadTop = 16;
     const int PadBottom = 36;
-
-    public static (string Health, string Smells, string Types) RenderAll(IReadOnlyList<TrendSnapshot> snapshots)
+    public static (string Health, string Smells, string Energy, string Types) RenderAll(
+        IReadOnlyList<TrendSnapshot> snapshots)
     {
         if (snapshots.Count == 0)
         {
             const string empty = "<p>No snapshots</p>";
-            return (empty, empty, empty);
+            return (empty, empty, empty, empty);
         }
 
         var crossings = DetectCrossings(snapshots);
         return (
             RenderHealthChart(snapshots, crossings),
             RenderSmellChart(snapshots, crossings),
+            TrendChartSeries.RenderEnergy(snapshots, crossings),
             RenderTypeChart(snapshots, crossings));
     }
-
     static List<int> DetectCrossings(IReadOnlyList<TrendSnapshot> snapshots)
     {
         var crossings = new List<int>();
@@ -43,13 +43,12 @@ internal static class TrendChartRenderer
 
     static string DefaultProfile(string? profile) =>
         profile ?? SmellThresholdProfiles.DefaultProfileName;
-
     static string RenderHealthChart(IReadOnlyList<TrendSnapshot> snapshots, List<int> crossings)
     {
         var series = new[]
         {
-            (Values: snapshots.Select(s => s.AverageCodeHealth).ToArray(), Color: "#4da3ff"),
-            (Values: snapshots.Select(s => s.MinCodeHealth).ToArray(), Color: "#f59e0b"),
+            (Values: snapshots.Select(s => (double?)s.AverageCodeHealth).ToArray(), Color: "#4da3ff"),
+            (Values: snapshots.Select(s => (double?)s.MinCodeHealth).ToArray(), Color: "#f59e0b"),
         };
         return RenderChart("chart-health", snapshots, series, crossings, fixedMax: 10, yTicks: [0, 2, 4, 6, 8, 10]);
     }
@@ -58,10 +57,10 @@ internal static class TrendChartRenderer
     {
         var series = new[]
         {
-            (Values: snapshots.Select(s => (double)s.WarningSmellCount).ToArray(), Color: "#fbbf24"),
-            (Values: snapshots.Select(s => (double)s.CriticalSmellCount).ToArray(), Color: "#ef4444"),
+            (Values: snapshots.Select(s => (double?)s.WarningSmellCount).ToArray(), Color: "#fbbf24"),
+            (Values: snapshots.Select(s => (double?)s.CriticalSmellCount).ToArray(), Color: "#ef4444"),
         };
-        var max = series.SelectMany(s => s.Values).DefaultIfEmpty(0).Max();
+        var max = series.SelectMany(s => s.Values).OfType<double>().DefaultIfEmpty(0).Max();
         var mid = Math.Ceiling(max / 2);
         return RenderChart("chart-smells", snapshots, series, crossings, fixedMax: null, yTicks: [0, mid, max]);
     }
@@ -70,18 +69,18 @@ internal static class TrendChartRenderer
     {
         var series = new[]
         {
-            (Values: snapshots.Select(s => (double)s.TypeCount).ToArray(), Color: "#34d399"),
-            (Values: snapshots.Select(s => (double)s.HighComplexityTypeCount).ToArray(), Color: "#a78bfa"),
+            (Values: snapshots.Select(s => (double?)s.TypeCount).ToArray(), Color: "#34d399"),
+            (Values: snapshots.Select(s => (double?)s.HighComplexityTypeCount).ToArray(), Color: "#a78bfa"),
         };
-        var max = series.SelectMany(s => s.Values).DefaultIfEmpty(0).Max();
+        var max = series.SelectMany(s => s.Values).OfType<double>().DefaultIfEmpty(0).Max();
         var mid = Math.Ceiling(max / 2);
         return RenderChart("chart-types", snapshots, series, crossings, fixedMax: null, yTicks: [0, mid, max]);
     }
 
-    static string RenderChart(
+    internal static string RenderChart(
         string chartId,
         IReadOnlyList<TrendSnapshot> snapshots,
-        (double[] Values, string Color)[] series,
+        (double?[] Values, string Color)[] series,
         List<int> crossings,
         double? fixedMax,
         double[] yTicks)
@@ -89,8 +88,9 @@ internal static class TrendChartRenderer
         var n = snapshots.Count;
         var innerW = Width - PadLeft - PadRight;
         var innerH = Height - PadTop - PadBottom;
-        var lo = fixedMax.HasValue ? 0 : Math.Min(0, series.SelectMany(s => s.Values).Min());
-        var hi = fixedMax ?? Math.Max(1, series.SelectMany(s => s.Values).Max());
+        var presentValues = series.SelectMany(s => s.Values).OfType<double>().ToList();
+        var lo = fixedMax.HasValue ? 0 : Math.Min(0, presentValues.DefaultIfEmpty(0).Min());
+        var hi = fixedMax ?? Math.Max(1, presentValues.DefaultIfEmpty(0).Max());
         var range = hi - lo;
         if (range <= 0) range = 1;
 
@@ -152,27 +152,12 @@ internal static class TrendChartRenderer
             sb.Append("<title>").Append(Escape(string.Join(", ", reasons))).Append("</title></line>");
         }
 
-        foreach (var (values, color) in series)
-        {
-            var points = string.Join(' ',
-                values.Select((v, i) => $"{Fmt(XAt(i))},{Fmt(YAt(v))}"));
-            sb.Append("<polyline fill=\"none\" stroke=\"").Append(color)
-                .Append("\" stroke-width=\"2\" points=\"").Append(points).Append("\"/>");
-        }
-
-        for (var i = 0; i < n; i++)
-        {
-            foreach (var (values, color) in series)
-            {
-                var x = XAt(i);
-                var y = YAt(values[i]);
-                var r = n == 1 ? 6 : 4;
-                sb.Append("<circle class=\"point\" cx=\"").Append(Fmt(x)).Append("\" cy=\"").Append(Fmt(y))
-                    .Append("\" r=\"").Append(r).Append("\" fill=\"").Append(color)
-                    .Append("\" data-index=\"").Append(i).Append("\" data-chart=\"").Append(chartId).Append("\">");
-                sb.Append("<title>").Append(Escape(BuildTooltip(snapshots[i]))).Append("</title></circle>");
-            }
-        }
+        TrendChartSeries.AppendPolylines(sb, series, XAt, YAt, Fmt);
+        TrendChartSeries.AppendPoints(
+            sb, series, snapshots, chartId,
+            i => XAt(i).ToString("0.##", CultureInfo.InvariantCulture),
+            value => YAt(value).ToString("0.##", CultureInfo.InvariantCulture),
+            snapshot => Escape(BuildTooltip(snapshot)));
 
         sb.Append("</svg>");
         return sb.ToString();
@@ -183,6 +168,7 @@ internal static class TrendChartRenderer
         + $"{s.AnalyzedAt:yyyy-MM-dd HH:mm}\n"
         + $"CodeHealth avg/min: {s.AverageCodeHealth} / {s.MinCodeHealth}\n"
         + $"Smells: {s.CodeSmellCount} (warn {s.WarningSmellCount}, crit {s.CriticalSmellCount})\n"
+        + $"Energy pressure: {(s.HotPathMethodCount > 0 ? Fmt(s.HotPathSmellCount / (double)s.HotPathMethodCount) : "n/a")}\n"
         + $"Types: {s.TypeCount}, high CC: {s.HighComplexityTypeCount}\n"
         + $"metricsVersion: {ToolVersionInfo.FormatMetricsVersion(s.MetricsVersion)}, profile: {DefaultProfile(s.Profile)}";
 

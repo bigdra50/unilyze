@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- **[metrics]** Unity `energyPressure` static proxy (hot-path performance smells per hot-path method), `badge --metric energy --fail-over`, and trend JSON/table/HTML series; independent of CodeHealth, additive JSON fields only, and `metricsVersion` stays 3 ([#157](https://github.com/bigdra50/unilyze/issues/157))
 - DMM-style `deltaScore` on diff JSON and Markdown output classifies changed methods and types by their post-change complexity, nesting, and size risk; `--fail-on-delta-below <0..1>` exits `2` when the low-risk change ratio misses the gate; based on di Biase et al. (TechDebt 2019), with `metricsVersion` unchanged ([#154](https://github.com/bigdra50/unilyze/issues/154))
 - Self-contained single-file binaries for macOS arm64/x64, Linux x64, and Windows x64, with GitHub Release checksums plus Homebrew and Scoop installation channels that require no .NET SDK or runtime ([#153](https://github.com/bigdra50/unilyze/issues/153))
 - Security policy with private vulnerability reporting guidance, an HTML viewer threat model, XSS regression coverage for untrusted analysis values, and NuGet Trusted Publishing migration instructions ([#160](https://github.com/bigdra50/unilyze/issues/160))

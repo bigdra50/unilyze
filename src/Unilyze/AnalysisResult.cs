@@ -20,7 +20,8 @@ public sealed record AnalysisResult(
     IReadOnlyList<TypeApiSurface>? ApiSurface = null,
     bool? ResolveNuget = null,
     bool? IncludeGenerated = null,
-    string? TargetFramework = null)
+    string? TargetFramework = null,
+    double? EnergyPressure = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.

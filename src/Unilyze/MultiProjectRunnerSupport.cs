@@ -87,6 +87,8 @@ internal static class MultiProjectRunnerSupport
         BadgeMetric.CodeHealth => "codehealth",
         BadgeMetric.Mi => "mi",
         BadgeMetric.Smells => "smells",
+        BadgeMetric.Energy => "energy",
+        BadgeMetric.Dup => "dup",
         _ => "badge",
     };
 }
