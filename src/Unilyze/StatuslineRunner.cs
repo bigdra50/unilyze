@@ -373,8 +373,7 @@ internal static class StatuslineRunner
             maxParallelism: config.MaxParallelism,
             resolveNuget: referenceSettings.ResolveNuget,
             includeGenerated: referenceSettings.IncludeGenerated,
-            targetFramework: referenceSettings.TargetFramework);
-            maxParallelism: config.MaxParallelism,
+            targetFramework: referenceSettings.TargetFramework,
             incremental: request.Incremental);
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;

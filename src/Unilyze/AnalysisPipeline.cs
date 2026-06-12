@@ -20,15 +20,13 @@ internal static class AnalysisPipeline
         int? maxParallelism = null,
         bool resolveNuget = false,
         bool includeGenerated = false,
-        string? targetFramework = null)
-        int? maxParallelism = null,
+        string? targetFramework = null,
         bool incremental = false)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
             excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig,
-            maxParallelism, resolveNuget, includeGenerated, targetFramework);
-            maxParallelism, incremental);
+            maxParallelism, resolveNuget, includeGenerated, targetFramework, incremental);
         return Build(options);
     }
 

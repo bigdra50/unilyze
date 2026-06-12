@@ -14,8 +14,7 @@ internal sealed record AnalysisBuildOptions(
     int? MaxParallelism = null,
     bool ResolveNuget = false,
     bool IncludeGenerated = false,
-    string? TargetFramework = null)
-    int? MaxParallelism = null,
+    string? TargetFramework = null,
     bool Incremental = false)
 {
     static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(
