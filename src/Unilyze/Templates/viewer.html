@@ -380,7 +380,6 @@ body.offline-mode .panel{
 <!-- Cytoscape, dagre, and cytoscape-dagre are bundled inline for offline graph support -->
 __VENDOR_SCRIPTS__
 <script src="https://unpkg.com/elkjs@0.9.3/lib/elk.bundled.js"></script>
-<script src="https://unpkg.com/cytoscape-elk@2.3.0/dist/cytoscape-elk.js"></script>
 <script>
 const DATA = __DATA_PLACEHOLDER__;
 
@@ -1173,7 +1172,9 @@ nsTree.forEach((_,path)=>{
   });
 });
 
-// --- Cytoscape elements ---
+performance.mark('unilyze-element-index-start');
+
+// --- Cytoscape elements and lazy type indexes ---
 const els=[];
 
 // For each tree node: summary + compound pair
@@ -1191,30 +1192,48 @@ nsTree.forEach((node,path)=>{
   }});
 });
 
-// Type nodes with ownerNs + health color + diff bucket
+const typesByNamespace=new Map();
+let _mc=null;
+const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
+function _mw(label,font){
+  if(!_mc) return undefined;
+  _mc.font=font;
+  return Math.ceil(_mc.measureText(label).width)+8;
+}
 DATA.types.forEach(t=>{
   const tk=typeKey(t);
+  const ns=t.namespace||'(global)';
+  if(!typesByNamespace.has(ns)) typesByNamespace.set(ns,[]);
+  typesByNamespace.get(ns).push(t);
+});
+
+function typeNodeElement(t){
+  const tk=typeKey(t);
   const m=tm[tk];
-  const hc=m?healthColor(m.codeHealth):null;
   const diffEntry=dl[t.assembly+'::'+tk]||dl[tk];
-  const nodeData={
+  const data={
     id:'t:'+tk, typeId:tk, label:t.name, nodeType:'type', kind:t.kind,
     assembly:t.assembly, color:ac[t.assembly]||'#6e7681',
-    healthColor:hc, health:m?m.codeHealth:null,
+    healthColor:m?healthColor(m.codeHealth):null, health:m?m.codeHealth:null,
     shape:KS[t.kind]||'round-rectangle', ownerNs:t.namespace||'(global)',
-    mc:(t.members||[]).length
+    mc:(t.members||[]).length, parent:'cp:'+(t.namespace||'(global)')
   };
-  if(diffEntry&&diffEntry._bucket) nodeData.diffBucket=diffEntry._bucket;
-  els.push({group:'nodes',data:nodeData});
-});
+  if(diffEntry&&diffEntry._bucket) data.diffBucket=diffEntry._bucket;
+  const width=_mw(data.label,_mf.type);
+  if(width!==undefined) data.nw=width;
+  return {group:'nodes',data};
+}
 
 // Edge opacity per kind (structural edges prominent, usage edges subtle)
 const EO={
   Inheritance:.85,InterfaceImpl:.75,FieldType:.35,PropertyType:.35,
   MethodParam:.28,ReturnType:.4,ConstructorParam:.45,EventType:.35,GenericConstraint:.28
 };
+const _edgeVis=new Map();
+Object.keys(DC).forEach(k=>_edgeVis.set(k,true));
+let _edgeStyleMode='elk';
 
-// Type-level edges (namespace meta-edges built dynamically in rebuild)
+// Type-level edge descriptors (namespace meta-edges are built from DATA.dependencies)
 const _pairCount=new Map();
 DATA.dependencies.forEach((d,i)=>{
   const fromId=depFromId(d), toId=depToId(d);
@@ -1224,6 +1243,7 @@ DATA.dependencies.forEach((d,i)=>{
   _pairCount.set(pk,idx+1);
 });
 const _pairIdx=new Map();
+const dependencyElements=[];
 DATA.dependencies.forEach((d,i)=>{
   const fromId=depFromId(d), toId=depToId(d);
   if(!tl[fromId]||!tl[toId]) return;
@@ -1234,12 +1254,14 @@ DATA.dependencies.forEach((d,i)=>{
   _pairIdx.set(pk,ci+1);
   const step=25;
   const cpd=total<=1?0:(-((total-1)*step)/2+ci*step);
-  els.push({group:'edges',data:{
+  dependencyElements.push({group:'edges',data:{
     id:'e'+i, source:'t:'+fromId, target:'t:'+toId,
     kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a,
-    cpd:[cpd], opa:EO[d.kind]||.45
+    cpd:[cpd], opa:EO[d.kind]||.45, fromId, toId
   }});
 });
+performance.mark('unilyze-element-index-end');
+performance.measure('unilyze-element-index','unilyze-element-index-start','unilyze-element-index-end');
 
 // --- Init Cytoscape (deferred until fonts are ready when supported) ---
 const fontReady=document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();
@@ -1249,9 +1271,7 @@ if(typeof cytoscape==='undefined'||typeof cytoscapeDagre==='undefined'){
   return;
 }
 // Pre-measure label widths with loaded font to avoid Cytoscape clipping
-const _mc=document.createElement('canvas').getContext('2d');
-const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
-function _mw(label,font){_mc.font=font;return Math.ceil(_mc.measureText(label).width)+8;}
+_mc=document.createElement('canvas').getContext('2d');
 els.forEach(e=>{
   if(e.group!=='nodes') return;
   const d=e.data;
@@ -1348,6 +1368,7 @@ cy = cytoscape({
 // --- State ---
 const expanded = new Set();
 if(commonRoot) expanded.add(commonRoot);
+const materializedNamespaces = new Set();
 
 // --- Visibility helpers ---
 function isVisible(ns){
@@ -1373,6 +1394,37 @@ function findVisibleAncestor(ns){
 function collapseDescendants(ns){
   const node=nsTree.get(ns); if(!node) return;
   node.children.forEach(ch=>{expanded.delete(ch);collapseDescendants(ch)});
+}
+
+function typePassesMaterialization(t){
+  if(!diffState.changedOnly||!DIFF) return true;
+  const tk=typeKey(t);
+  const diffEntry=dl[t.assembly+'::'+tk]||dl[tk];
+  return !!diffEntry&&diffEntry._bucket!=='unchanged';
+}
+
+function typeEdgeElements(visibleTypeIds){
+  return dependencyElements.filter(e=>
+    visibleTypeIds.has(e.data.fromId)&&visibleTypeIds.has(e.data.toId));
+}
+
+function currentEdgeStyle(){
+  if(_edgeStyleMode==='bezier'){
+    return {
+      'curve-style':'unbundled-bezier',
+      'control-point-distances':'data(cpd)',
+      'control-point-weights':[0.5]
+    };
+  }
+  return {
+    'curve-style':'taxi','taxi-direction':'downward',
+    'taxi-turn':20,'taxi-turn-min-distance':8
+  };
+}
+
+function applyCurrentEdgeStyle(edges){
+  edges.style(currentEdgeStyle());
+  if(_edgeStyleMode==='bezier') edges.removeStyle('taxi-direction taxi-turn taxi-turn-min-distance');
 }
 
 // --- Hover cleanup helpers ---
@@ -1405,9 +1457,10 @@ function applyEdgeHover(edge){
 
 // --- Rebuild view ---
 function rebuild(){
+  performance.mark('unilyze-rebuild-start');
   hideTip();clearEdgeHover();
   cy.startBatch();
-  cy.elements('edge[?meta]').remove();
+  cy.edges().remove();
 
   nsTree.forEach((node,path)=>{
     const nsN=cy.getElementById('ns:'+path);
@@ -1444,36 +1497,46 @@ function rebuild(){
     }
   });
 
-  // Type nodes
-  cy.nodes('[nodeType="type"]').forEach(n=>{
-    const ns=n.data('ownerNs');
-    const tk=n.data('typeId');
-    const asm=n.data('assembly');
-    let hideByDiff=false;
-    if(diffState.changedOnly&&DIFF){
-      const diffEntry=dl[asm+'::'+tk]||dl[tk];
-      hideByDiff=!diffEntry||diffEntry._bucket==='unchanged';
-    }
-    if(isVisible(ns)&&expanded.has(ns)&&!hideByDiff){
-      const cpId='cp:'+ns;
-      if(!n.parent().length||n.parent().id()!==cpId) n.move({parent:cpId});
-      n.style('display','element');
-    } else {
-      if(n.parent().length) n.move({parent:null});
-      n.style('display','none');
-    }
+  const desiredNamespaces=new Set();
+  nsTree.forEach((_,path)=>{
+    if(isVisible(path)&&expanded.has(path)) desiredNamespaces.add(path);
+  });
+  [...materializedNamespaces].forEach(ns=>{
+    if(desiredNamespaces.has(ns)) return;
+    const nodes=cy.nodes('[nodeType="type"]').filter(n=>n.data('ownerNs')===ns);
+    if(nodes.length) nodes.remove();
+    materializedNamespaces.delete(ns);
   });
 
-  // Meta-edges: route hidden endpoints to nearest visible ancestor
-  const mm=new Map();
-  cy.edges().filter(e=>!e.data('meta')).forEach(e=>{
-    const sv=e.source().style('display')!=='none';
-    const tv=e.target().style('display')!=='none';
-    if(sv&&tv){e.style('display','element');return}
-    e.style('display','none');
+  desiredNamespaces.forEach(ns=>{
+    const desiredTypes=(typesByNamespace.get(ns)||[]).filter(typePassesMaterialization);
+    const desiredIds=new Set(desiredTypes.map(t=>'t:'+typeKey(t)));
+    cy.nodes('[nodeType="type"]').filter(n=>n.data('ownerNs')===ns&&!desiredIds.has(n.id())).remove();
+    const additions=desiredTypes
+      .filter(t=>cy.getElementById('t:'+typeKey(t)).empty())
+      .map(typeNodeElement);
+    if(additions.length) cy.add(additions);
+    materializedNamespaces.add(ns);
+  });
 
-    const si=sv?e.source().id():findVisibleAncestor(e.source().data('ownerNs'));
-    const ti=tv?e.target().id():findVisibleAncestor(e.target().data('ownerNs'));
+  const visibleTypeIds=new Set(cy.nodes('[nodeType="type"]').map(n=>n.data('typeId')));
+  const addedEdges=cy.add(typeEdgeElements(visibleTypeIds));
+  applyCurrentEdgeStyle(addedEdges);
+  addedEdges.forEach(e=>{
+    if(!_edgeVis.get(e.data('kind'))) e.style('display','none');
+  });
+
+  // Meta-edges: aggregate DATA dependencies and route absent endpoints to visible ancestors.
+  const mm=new Map();
+  DATA.dependencies.forEach(d=>{
+    const fromId=depFromId(d),toId=depToId(d);
+    const fromType=tl[fromId],toType=tl[toId];
+    if(!fromType||!toType) return;
+    const sourceNode=cy.getElementById('t:'+fromId);
+    const targetNode=cy.getElementById('t:'+toId);
+    if(!sourceNode.empty()&&!targetNode.empty()) return;
+    const si=!sourceNode.empty()?'t:'+fromId:findVisibleAncestor(fromType.namespace||'(global)');
+    const ti=!targetNode.empty()?'t:'+toId:findVisibleAncestor(toType.namespace||'(global)');
     if(!si||!ti||si===ti) return;
     const sn=cy.getElementById(si),tn=cy.getElementById(ti);
     if(sn.empty()||tn.empty()||sn.style('display')==='none'||tn.style('display')==='none') return;
@@ -1489,14 +1552,18 @@ function rebuild(){
   });
 
   cy.endBatch();
+  performance.mark('unilyze-rebuild-end');
+  performance.measure('unilyze-rebuild','unilyze-rebuild-start','unilyze-rebuild-end');
 }
 
 let _layoutEngine='elk';
+let _layoutRequest=0;
+let _elkWorkerUrl=null;
 
 function layout(){
   const vis=cy.elements().filter(e=>e.style('display')!=='none');
   if(_layoutEngine==='elk'&&typeof ELK!=='undefined'){
-    layoutElk(vis);
+    void layoutElk(vis);
   } else {
     layoutDagre(vis);
   }
@@ -1511,11 +1578,32 @@ function layoutDagre(vis){
   }).run();
 }
 
-function layoutElk(vis){
-  vis.layout({
-    name:'elk',
-    elk:{
-      algorithm:'layered',
+function elkWorkerUrl(){
+  if(_elkWorkerUrl) return _elkWorkerUrl;
+  const source='importScripts("https://unpkg.com/elkjs@0.9.3/lib/elk-worker.min.js");';
+  _elkWorkerUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
+  return _elkWorkerUrl;
+}
+
+function buildElkGraph(vis){
+  const included=new Set(vis.nodes().map(n=>n.id()));
+  const childrenByParent=new Map();
+  vis.nodes().forEach(n=>{
+    const parent=n.parent();
+    const parentId=parent.length&&included.has(parent.id())?parent.id():'root';
+    if(!childrenByParent.has(parentId)) childrenByParent.set(parentId,[]);
+    childrenByParent.get(parentId).push(n);
+  });
+  const buildNode=n=>({
+    id:n.id(),
+    width:Math.max(20,n.outerWidth()),
+    height:Math.max(20,n.outerHeight()),
+    children:(childrenByParent.get(n.id())||[]).map(buildNode)
+  });
+  return {
+    id:'root',
+    layoutOptions:{
+      'elk.algorithm':'layered',
       'elk.direction':'DOWN',
       'elk.edgeRouting':'ORTHOGONAL',
       'elk.spacing.nodeNode':'80',
@@ -1523,10 +1611,48 @@ function layoutElk(vis){
       'elk.layered.spacing.edgeEdgeBetweenLayers':'30',
       'elk.layered.spacing.edgeNodeBetweenLayers':'30',
       'elk.layered.crossingMinimization.strategy':'LAYER_SWEEP',
-      'elk.hierarchyHandling':'INCLUDE_CHILDREN',
+      'elk.hierarchyHandling':'INCLUDE_CHILDREN'
     },
+    children:(childrenByParent.get('root')||[]).map(buildNode),
+    edges:vis.edges().map(e=>({id:e.id(),sources:[e.source().id()],targets:[e.target().id()]}))
+  };
+}
+
+function elkPositions(graph){
+  const positions={};
+  const visit=(node,ox,oy)=>{
+    const x=ox+(node.x||0),y=oy+(node.y||0);
+    if(node.id!=='root') positions[node.id]={x:x+(node.width||0)/2,y:y+(node.height||0)/2};
+    (node.children||[]).forEach(ch=>visit(ch,x,y));
+  };
+  visit(graph,0,0);
+  return positions;
+}
+
+async function layoutElk(vis){
+  const request=++_layoutRequest;
+  performance.mark('unilyze-layout-start');
+  const graph=buildElkGraph(vis);
+  let result;
+  try{
+    result=await new ELK({workerUrl:elkWorkerUrl()}).layout(graph);
+  }catch(workerError){
+    console.warn('Unilyze ELK worker unavailable; using main-thread ELK.',workerError);
+    try{
+      result=await new ELK().layout(graph);
+    }catch(elkError){
+      console.warn('Unilyze ELK layout failed; using dagre.',elkError);
+      if(request===_layoutRequest) layoutDagre(vis);
+      return;
+    }
+  }
+  if(request!==_layoutRequest) return;
+  vis.layout({
+    name:'preset',positions:elkPositions(result),
     animate:true,animationDuration:250,fit:true,padding:40
   }).run();
+  performance.mark('unilyze-layout-end');
+  performance.measure('unilyze-layout','unilyze-layout-start','unilyze-layout-end');
 }
 
 function colAll(){
@@ -2181,27 +2307,15 @@ installViewerKeyboard({offline:false});
 document.getElementById('edgeStyle').addEventListener('change',function(){
   const mode=this.value;
   const prevEngine=_layoutEngine;
+  _edgeStyleMode=mode;
   _layoutEngine=(mode==='elk')?'elk':'dagre';
   cy.startBatch();
-  if(mode==='taxi'||mode==='elk'){
-    cy.edges(':not([?meta])').style({
-      'curve-style':'taxi','taxi-direction':'downward',
-      'taxi-turn':20,'taxi-turn-min-distance':8
-    });
-  } else {
-    cy.edges(':not([?meta])').style({
-      'curve-style':'unbundled-bezier',
-      'control-point-distances':'data(cpd)',
-      'control-point-weights':[0.5]
-    }).removeStyle('taxi-direction taxi-turn taxi-turn-min-distance');
-  }
+  applyCurrentEdgeStyle(cy.edges(':not([?meta])'));
   cy.endBatch();
   if(_layoutEngine!==prevEngine){rebuild();layout();}
 });
 
 // --- Edge Kind Filter ---
-const _edgeVis=new Map();
-Object.keys(DC).forEach(k=>_edgeVis.set(k,true));
 const efPanel=document.getElementById('efPanel');
 (function buildEdgeFilter(){
   let h='';

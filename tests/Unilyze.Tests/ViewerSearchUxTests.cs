@@ -82,6 +82,51 @@ public sealed class ViewerSearchUxTests
         Assert.False(50 > SearchExpandCap);
     }
 
+    [Fact]
+    public void LazyElements_Synthetic1500Types_ReducesInitialElementCount()
+    {
+        var graph = CreateSyntheticGraph(typeCount: 1500, dependencyCount: 4500, namespaceCount: 60);
+
+        var eagerCount = CountEagerElements(graph);
+        var lazyInitialCount = CountLazyInitialElements(graph);
+
+        Assert.Equal((6122, 122), (eagerCount, lazyInitialCount));
+    }
+
+    [Fact]
+    public void AggregateMetaEdges_RoutesCollapsedEndpointsWithoutDoubleCountingVisibleEdges()
+    {
+        var dependencies = new[]
+        {
+            new ViewerDependency("A::Root.Visible", "A::Child.Hidden"),
+            new ViewerDependency("A::Child.Hidden", "A::Other.Hidden"),
+            new ViewerDependency("A::Root.Visible", "A::Root.OtherVisible")
+        };
+        var owners = new Dictionary<string, string>
+        {
+            ["A::Root.Visible"] = "Root",
+            ["A::Root.OtherVisible"] = "Root",
+            ["A::Child.Hidden"] = "Root.Child",
+            ["A::Other.Hidden"] = "Other"
+        };
+        var visibleTypes = new HashSet<string> { "A::Root.Visible", "A::Root.OtherVisible" };
+        var visibleAncestors = new Dictionary<string, string?>
+        {
+            ["Root.Child"] = "ns:Root.Child",
+            ["Other"] = "ns:Other"
+        };
+
+        var actual = AggregateMetaEdges(dependencies, owners, visibleTypes, visibleAncestors);
+
+        Assert.Equal(
+            new Dictionary<string, int>
+            {
+                ["t:A::Root.Visible>ns:Root.Child"] = 1,
+                ["ns:Root.Child>ns:Other"] = 1
+            },
+            actual);
+    }
+
     static string GenerateSampleHtml()
     {
         var type = new TypeNodeInfo(
@@ -159,8 +204,73 @@ public sealed class ViewerSearchUxTests
         return type.QualifiedName.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
+    static ViewerGraph CreateSyntheticGraph(int typeCount, int dependencyCount, int namespaceCount)
+    {
+        var namespaces = Enumerable.Range(0, namespaceCount)
+            .Select(index => $"Synthetic.Ns{index:00}")
+            .Prepend("Synthetic")
+            .ToArray();
+        var types = Enumerable.Range(0, typeCount)
+            .Select(index => new ViewerGraphType(
+                $"Synthetic.Assembly::Synthetic.Ns{index % namespaceCount:00}.Type{index}",
+                $"Synthetic.Ns{index % namespaceCount:00}"))
+            .ToArray();
+        var dependencies = Enumerable.Range(0, dependencyCount)
+            .Select(index => new ViewerDependency(
+                types[index % typeCount].Id,
+                types[(index * 37 + 17) % typeCount].Id))
+            .ToArray();
+        return new ViewerGraph(namespaces, types, dependencies, "Synthetic");
+    }
+
+    static int CountEagerElements(ViewerGraph graph) =>
+        graph.Namespaces.Count * 2 + graph.Types.Count + graph.Dependencies.Count;
+
+    static int CountLazyInitialElements(ViewerGraph graph)
+    {
+        var initialTypes = graph.Types
+            .Where(type => type.Namespace == graph.InitiallyExpandedNamespace)
+            .Select(type => type.Id)
+            .ToHashSet();
+        var initialEdges = graph.Dependencies.Count(dependency =>
+            initialTypes.Contains(dependency.FromId) && initialTypes.Contains(dependency.ToId));
+        return graph.Namespaces.Count * 2 + initialTypes.Count + initialEdges;
+    }
+
+    static IReadOnlyDictionary<string, int> AggregateMetaEdges(
+        IReadOnlyList<ViewerDependency> dependencies,
+        IReadOnlyDictionary<string, string> owners,
+        ISet<string> visibleTypes,
+        IReadOnlyDictionary<string, string?> visibleAncestors)
+    {
+        var result = new Dictionary<string, int>();
+        foreach (var dependency in dependencies)
+        {
+            if (visibleTypes.Contains(dependency.FromId) && visibleTypes.Contains(dependency.ToId))
+                continue;
+            var source = visibleTypes.Contains(dependency.FromId)
+                ? $"t:{dependency.FromId}"
+                : visibleAncestors.GetValueOrDefault(owners[dependency.FromId]);
+            var target = visibleTypes.Contains(dependency.ToId)
+                ? $"t:{dependency.ToId}"
+                : visibleAncestors.GetValueOrDefault(owners[dependency.ToId]);
+            if (source is null || target is null || source == target)
+                continue;
+            var key = $"{source}>{target}";
+            result[key] = result.GetValueOrDefault(key) + 1;
+        }
+        return result;
+    }
+
     sealed record ViewerSearchType(string Name, string Namespace, string QualifiedName);
     sealed record ViewerSearchMetrics(double? Health, int SmellCount);
     sealed record ViewerSearchFilters(bool LowHealth = false, bool Smells = false, bool Cycles = false);
     sealed record SearchMatchResult(IReadOnlyList<string> TypeKeys, IReadOnlyList<string> NamespacePaths);
+    sealed record ViewerGraph(
+        IReadOnlyList<string> Namespaces,
+        IReadOnlyList<ViewerGraphType> Types,
+        IReadOnlyList<ViewerDependency> Dependencies,
+        string InitiallyExpandedNamespace);
+    sealed record ViewerGraphType(string Id, string Namespace);
+    sealed record ViewerDependency(string FromId, string ToId);
 }
