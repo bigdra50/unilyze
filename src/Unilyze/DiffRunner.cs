@@ -61,10 +61,10 @@ internal static class DiffRunner
 
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateDiffArgs(args);
+        var usageError = CliArgValidation.ValidateDiffArgs(args);
         if (usageError != 0)
             return usageError;
 
@@ -112,7 +112,7 @@ internal static class DiffRunner
             opts.ContainsKey("--changed-only"),
             opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path"),
             requestedLevel,
-            ProgramHelpers.ExtractPositionalArgs(args, ProgramHelpers.DiffValueOptions));
+            CliArgValidationSupport.ExtractPositionalArgs(args, CliArgValidation.DiffValueOptions));
         return 0;
     }
 

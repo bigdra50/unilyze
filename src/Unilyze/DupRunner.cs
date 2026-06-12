@@ -6,10 +6,10 @@ internal static class DupRunner
 {
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateDupArgs(args);
+        var usageError = CliArgValidation.ValidateDupArgs(args);
         if (usageError != 0)
             return usageError;
 

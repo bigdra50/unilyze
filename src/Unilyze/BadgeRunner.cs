@@ -7,10 +7,10 @@ internal static class BadgeRunner
 
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateBadgeArgs(args);
+        var usageError = CliArgValidation.ValidateBadgeArgs(args);
         if (usageError != 0)
             return usageError;
 

@@ -6,7 +6,7 @@ internal static class MetricsRunner
 {
     public static int Run(string[] args)
     {
-        var usageError = ProgramHelpers.ValidateMetricsArgs(args);
+        var usageError = CliArgValidation.ValidateMetricsArgs(args);
         if (usageError != 0)
             return usageError;
 

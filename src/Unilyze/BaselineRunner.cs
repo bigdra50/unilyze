@@ -6,10 +6,10 @@ internal static class BaselineRunner
 
     public static int Run(string[] args)
     {
-        if (args.Length == 0 || ProgramHelpers.IsHelpRequest(args))
+        if (args.Length == 0 || CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateBaselineArgs(args);
+        var usageError = CliArgValidation.ValidateBaselineArgs(args);
         if (usageError != 0)
             return usageError;
 
@@ -17,7 +17,7 @@ internal static class BaselineRunner
         return subcommand switch
         {
             "create" => Create(args[1..]),
-            _ => ProgramHelpers.ReportUnknown("subcommand", subcommand, Subcommands),
+            _ => CliArgValidationSupport.ReportUnknown("subcommand", subcommand, Subcommands),
         };
     }
 

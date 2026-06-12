@@ -27,10 +27,10 @@ internal static class StatuslineRunner
 
     public static int Run(string[] args)
     {
-        if (ProgramHelpers.IsHelpRequest(args))
+        if (CliArgValidationSupport.IsHelpRequest(args))
             return PrintUsage();
 
-        var usageError = ProgramHelpers.ValidateStatuslineArgs(args);
+        var usageError = CliArgValidation.ValidateStatuslineArgs(args);
         if (usageError != 0)
             return usageError;
 

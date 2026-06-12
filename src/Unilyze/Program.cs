@@ -3,7 +3,7 @@ using Unilyze;
 
 if (args.Length >= 1 && !args[0].StartsWith('-'))
 {
-    var topLevelError = ProgramHelpers.ValidateTopLevelCommand(args[0]);
+    var topLevelError = CliArgValidation.ValidateTopLevelCommand(args[0]);
     if (topLevelError != 0)
         return topLevelError;
 }
@@ -47,7 +47,7 @@ if (opts.ContainsKey("-h") || opts.ContainsKey("--help") || (args.Length == 1 &&
 if (opts.ContainsKey("-v") || opts.ContainsKey("--version") || (args.Length == 1 && args[0] is "version"))
     return PrintVersion();
 
-var analyzeUsageError = ProgramHelpers.ValidateAnalyzeOptions(args);
+var analyzeUsageError = CliArgValidation.ValidateAnalyzeOptions(args);
 if (analyzeUsageError != 0)
     return analyzeUsageError;
 if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
