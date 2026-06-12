@@ -15,6 +15,7 @@ internal static class StatuslineRunner
         bool Verbose,
         bool Quiet,
         bool BackgroundRefresh,
+        bool Incremental,
         string Path,
         int RefreshSeconds,
         string? BaselinePath,
@@ -54,6 +55,7 @@ internal static class StatuslineRunner
         var verbose = opts.ContainsKey("--verbose");
         var quiet = opts.ContainsKey("--quiet");
         var backgroundRefresh = opts.ContainsKey("--background-refresh");
+        var incremental = opts.ContainsKey("--incremental");
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
@@ -78,6 +80,7 @@ internal static class StatuslineRunner
             verbose,
             quiet,
             backgroundRefresh,
+            incremental,
             path,
             refreshSeconds,
             baselinePath,
@@ -235,6 +238,9 @@ internal static class StatuslineRunner
             childArgs.Add(request.BaselinePath);
         }
 
+        if (request.Incremental)
+            childArgs.Add("--incremental");
+
         return childArgs;
     }
 
@@ -368,6 +374,8 @@ internal static class StatuslineRunner
             resolveNuget: referenceSettings.ResolveNuget,
             includeGenerated: referenceSettings.IncludeGenerated,
             targetFramework: referenceSettings.TargetFramework);
+            maxParallelism: config.MaxParallelism,
+            incremental: request.Incremental);
 
         var effectiveBaseline = request.BaselinePath ?? config.Baseline;
         var baselineError = ProgramHelpers.TryApplyBaseline(result, fullPath, effectiveBaseline, out result);
@@ -428,6 +436,7 @@ internal static class StatuslineRunner
           --refresh      Cache refresh interval in seconds (default: 60)
           --level        Pin analysis level: syntax, core, full, complete
           --baseline     Suppress known smells from a baseline file in smell counts
+          --incremental  Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
           --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
           --quiet        Suppress info lines on stderr (warnings still shown)
           --background-refresh
@@ -470,10 +479,12 @@ internal static class StatuslineRunner
     static string BuildUsageCacheSection(string tempDir) =>
         $$"""
         Cache:
-          Results are cached in {{tempDir}}unilyze-sl-{hash}.txt
+          Formatted statusline output is cached in {{tempDir}}unilyze-sl-{hash}.txt
           Use --refresh to control cache lifetime (default: 60 seconds)
           With --background-refresh, a missing cache prints nothing (one empty status line
           render) and exits immediately while analysis runs in the background
+          Syntax-level parse cache (--incremental with --level syntax) is stored in
+          <project>/.unilyze/cache/syntax/v1/ (auto-created; .gitignore contains *)
         """;
 
     static int PrintUsage()

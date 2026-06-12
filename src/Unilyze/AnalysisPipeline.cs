@@ -21,15 +21,37 @@ internal static class AnalysisPipeline
         bool resolveNuget = false,
         bool includeGenerated = false,
         string? targetFramework = null)
+        int? maxParallelism = null,
+        bool incremental = false)
     {
         var options = new AnalysisBuildOptions(
             path, prefix, assemblyFilter, excludeDirectories, requestedLevel,
             excludeGeneratedCode, applyAnyDepthExcludes, includeApiSurface, logSink, analysisConfig,
             maxParallelism, resolveNuget, includeGenerated, targetFramework);
+            maxParallelism, incremental);
         return Build(options);
     }
 
     static AnalysisResult Build(AnalysisBuildOptions options)
+    {
+        if (options.Incremental && options.RequestedLevel != AnalysisLevel.Syntax)
+        {
+            options.EffectiveLog.Warning(
+                "--incremental currently accelerates syntax-level analysis only; running full analysis");
+            options = options with { Incremental = false };
+        }
+
+        try
+        {
+            return BuildCore(options);
+        }
+        finally
+        {
+            SyntaxIncrementalState.Current = null;
+        }
+    }
+
+    static AnalysisResult BuildCore(AnalysisBuildOptions options)
     {
         var config = options.EffectiveAnalysisConfig;
         var log = options.EffectiveLog;
@@ -54,8 +76,20 @@ internal static class AnalysisPipeline
         sw.Restart();
 
         log.PhaseStarted("semantic");
-        var (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
-            allTypes, allSyntaxTrees, compile.CompilationResult, options);
+        List<TypeNodeInfo> resolvedTypes;
+        List<TypeDependency> deps;
+        List<TypeMetrics> typeMetrics;
+        IReadOnlyDictionary<string, CouplingInfo> couplingMap;
+        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } collect)
+        {
+            (resolvedTypes, deps, typeMetrics, couplingMap) = SyntaxIncrementalSemanticPhase.Run(
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, collect, discover);
+        }
+        else
+        {
+            (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
+        }
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 
@@ -63,6 +97,13 @@ internal static class AnalysisPipeline
         var (finalMetrics, assemblyInfos, cycles) = AnalysisPipelineAggregation.Run(
             discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
+
+        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
+        {
+            var manifest = SyntaxIncrementalCollector.BuildManifest(
+                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);
+            SyntaxCacheStore.Save(discover.ProjectRoot, manifest);
+        }
 
         var profileField = config.Profile == SmellThresholdProfiles.DefaultProfileName
             ? null

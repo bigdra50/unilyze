@@ -72,6 +72,15 @@ internal static class AnalysisPipelineDiscovery
     public static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypes(
         PipelineDiscoverState discover, AnalysisBuildOptions options)
     {
+        if (options.UseSyntaxIncrementalCache)
+            return CollectTypesIncremental(discover, options);
+
+        return CollectTypesFull(discover, options);
+    }
+
+    static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypesFull(
+        PipelineDiscoverState discover, AnalysisBuildOptions options)
+    {
         var allTypes = new List<TypeNodeInfo>();
         var allTrees = new List<SyntaxTree>();
         foreach (var asm in discover.Targets)
@@ -86,6 +95,14 @@ internal static class AnalysisPipelineDiscovery
         }
 
         return (allTypes, allTrees);
+    }
+
+    static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypesIncremental(
+        PipelineDiscoverState discover, AnalysisBuildOptions options)
+    {
+        var collect = SyntaxIncrementalCollector.Collect(discover, options);
+        SyntaxIncrementalState.Current = collect;
+        return (collect.Types, collect.SyntaxTrees);
     }
 
     public static PipelineCompileState Compile(
@@ -269,4 +286,8 @@ internal static class AnalysisPipelineDiscovery
         merged.AddRange(configExclude);
         return merged;
     }
+
+    internal static IReadOnlyList<string>? MergeExcludeDirectoriesPublic(
+        IReadOnlyList<string>? asmExclude, IReadOnlyList<string>? configExclude)
+        => MergeExcludeDirectories(asmExclude, configExclude);
 }

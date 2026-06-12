@@ -15,6 +15,8 @@ internal sealed record AnalysisBuildOptions(
     bool ResolveNuget = false,
     bool IncludeGenerated = false,
     string? TargetFramework = null)
+    int? MaxParallelism = null,
+    bool Incremental = false)
 {
     static readonly ResolvedAnalysisConfig DefaultAnalysisConfig = new(
         EffectiveSmellThresholds.Default,
@@ -31,4 +33,7 @@ internal sealed record AnalysisBuildOptions(
     public AnalysisLevel EffectiveCap => RequestedLevel ?? AnalysisLevel.Complete;
 
     public int EffectiveMaxParallelism => UnilyzeConfig.ResolveMaxParallelism(MaxParallelism);
+
+    public bool UseSyntaxIncrementalCache =>
+        Incremental && RequestedLevel == AnalysisLevel.Syntax;
 }

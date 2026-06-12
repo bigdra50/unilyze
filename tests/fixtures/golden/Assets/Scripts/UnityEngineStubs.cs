@@ -1,5 +1,8 @@
 namespace UnityEngine;
 
+[AttributeUsage(AttributeTargets.Field)]
+public class SerializeFieldAttribute : Attribute { }
+
 public class MonoBehaviour
 {
     public Transform transform = new();

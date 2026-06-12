@@ -259,7 +259,7 @@ Ca(T) = T を依存先 (To) とするユニーク有向エッジ数
 Ce(T) = T を依存元 (From) とするユニーク有向エッジ数
 ```
 
-入力は `DependencyBuilder.Build` が生成する `TypeDependency` リスト（継承・interface 実装・メンバー型・コンストラクタ/メソッド引数・ジェネリック制約）に加え、解決済みの DI 登録エッジ（VContainer / Zenject）。
+入力は `DependencyBuilder.Build` が生成する `TypeDependency` リスト（継承・interface 実装・メンバー型・コンストラクタ/メソッド引数・ジェネリック制約）に加え、解決済みの DI 登録エッジ（VContainer / Zenject）および Unity シーン/プレハブ/`.asset` YAML から解決した `SerializedReference` エッジ（`[SerializeField]` または public フィールドと Inspector 配線の突合）。
 
 ### カウント規約
 
@@ -276,6 +276,7 @@ Ca / Ce にしきい値ベースのコードスメル判定はない。
 
 - Ca / Ce は依存グラフ上のエッジ数であり、CBO（型宣言 AST からの型参照集合）とは定義が異なる
 - 解析対象外の型への DI 登録はエッジとして接続されず、Ca / Ce に寄与しない
+- `SerializedReference` は Inspector 上の具象型配線を表す。フィールド宣言型（例: 基底クラス）に対する `FieldType` エッジとは別種であり、Ca/Ce/Instability/TypeRank/循環/DfMS には反映されるが CBO（宣言ベース）は変更しない
 
 ## Instability (I)
 

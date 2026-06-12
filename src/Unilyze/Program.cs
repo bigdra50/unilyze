@@ -32,6 +32,8 @@ if (args.Length >= 1 && args[0] == "calibrate")
     return CalibrateRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "triage")
     return TriageRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "mcp")
+    return McpRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -59,6 +61,12 @@ if (ProgramHelpers.HasFlagWithoutValue(args, "--triage"))
 var projectGlobs = ProgramHelpers.ParseMultiValueOption(args, "--projects");
 var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
 var input = opts.GetValueOrDefault("-i") ?? opts.GetValueOrDefault("--input");
+var incremental = opts.ContainsKey("--incremental");
+if (incremental && input != null)
+{
+    Console.Error.WriteLine("--incremental cannot be combined with -i/--input.");
+    return 1;
+}
 var output = opts.GetValueOrDefault("-o") ?? opts.GetValueOrDefault("--output");
 var prefix = opts.GetValueOrDefault("--prefix");
 var assembly = opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly");
@@ -130,6 +138,8 @@ try
             resolveNuget: referenceSettings.ResolveNuget,
             includeGenerated: referenceSettings.IncludeGenerated,
             targetFramework: referenceSettings.TargetFramework);
+            maxParallelism: config.MaxParallelism,
+            incremental: incremental);
 
         var baselinePath = ProgramHelpers.ResolveBaselineOption(opts, config);
         var baselineError = ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
@@ -243,6 +253,7 @@ Options:
       --include-generated
                      Include EmitCompilerGeneratedFiles output (obj/<Config>/<TFM>/generated) in compilation only
       --tfm            Target framework for NuGet/generated-source resolution (default: csproj first TFM)
+      --incremental    Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
       --profile      Built-in smell threshold profile (default: default; unity for Unity role-aware thresholds)
       --no-open      Do not open the generated HTML in a browser
   -v, --version      Show version
@@ -262,6 +273,7 @@ Subcommands:
   baseline        Snapshot and suppress known code smells (run 'unilyze baseline --help')
   calibrate       Derive smell-threshold candidates from analysis snapshots
   triage          Persist per-finding verdicts (run 'unilyze triage --help')
+  mcp             MCP server over stdio for agent integration (run 'unilyze mcp --help')
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds

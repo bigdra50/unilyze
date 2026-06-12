@@ -75,7 +75,7 @@ internal static class QueryRunner
         }
     }
 
-    static AnalysisResult LoadAnalysis(
+    internal static AnalysisResult LoadAnalysis(
         string? input,
         string path,
         IReadOnlyList<string> excludeDirs,
