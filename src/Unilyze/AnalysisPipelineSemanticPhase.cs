@@ -54,7 +54,7 @@ internal static class AnalysisPipelineSemanticPhase
         }
     }
 
-    static void AppendSerializedReferenceDependencies(
+    internal static void AppendSerializedReferenceDependencies(
         List<TypeDependency> deps,
         PipelineDiscoverState discover,
         IReadOnlyList<TypeNodeInfo> allTypes,

@@ -75,16 +75,13 @@ internal static class AnalysisPipeline
         if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } collect)
         {
             (resolvedTypes, deps, typeMetrics, couplingMap) = SyntaxIncrementalSemanticPhase.Run(
-                allTypes, allSyntaxTrees, compile.CompilationResult, options, collect);
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, collect, discover);
         }
         else
         {
             (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
-                allTypes, allSyntaxTrees, compile.CompilationResult, options);
+                allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
         }
-
-        var (resolvedTypes, deps, typeMetrics, couplingMap) = AnalysisPipelineSemanticPhase.Run(
-            allTypes, allSyntaxTrees, compile.CompilationResult, options, discover);
         log.PhaseCompleted("semantic", sw.Elapsed);
         sw.Restart();
 

@@ -14,12 +14,16 @@ internal static class SyntaxIncrementalSemanticPhase
             List<SyntaxTree> allSyntaxTrees,
             CompilationResult compilationResult,
             AnalysisBuildOptions options,
-            SyntaxIncrementalCollectResult collect)
+            SyntaxIncrementalCollectResult collect,
+            PipelineDiscoverState discover)
     {
         allTypes = BaseTypeResolver.ResolveTypeRelationships(allTypes, allSyntaxTrees, compilationResult).ToList();
 
         var deps = DependencyBuilder.Build(allTypes).ToList();
         AppendDiRegistrationDependencies(deps, allSyntaxTrees, compilationResult, allTypes);
+        // Keep incremental runs metric-identical to full runs: scene/prefab
+        // SerializedReference edges (#132) must be appended on this path too.
+        AnalysisPipelineSemanticPhase.AppendSerializedReferenceDependencies(deps, discover, allTypes, options);
 
         var baseMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
