@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>unilyze 改善計画 2026-06 — Interactive Plan Explorer</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2330;
+  --border: #2d3645;
+  --text: #d6dee8;
+  --text-dim: #8b97a6;
+  --accent: #58a6ff;
+  --valid: #3fb950;
+  --revision: #d29922;
+  --critical: #f85149;
+  --mono: "SF Mono", "Cascadia Code", Consolas, monospace;
+  --p0: #58a6ff; --p1: #f78166; --p2: #3fb950; --p3: #d2a8ff;
+  --p4: #f0883e; --p5: #79c0ff; --p6: #ff7b72; --p7: #56d364;
+  --p8: #e3b341; --p9: #bc8cff; --p10: #76e3ea; --p11: #ffa198;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 70px; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 14px; line-height: 1.7;
+}
+a { color: var(--accent); }
+code, .mono { font-family: var(--mono); font-size: 0.92em; }
+
+/* ===== layout ===== */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(13,17,23,0.92); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px; padding: 10px 20px;
+}
+#topbar h1 { font-size: 16px; font-family: var(--mono); white-space: nowrap; }
+#topbar h1 span { color: var(--accent); }
+#topbar .meta { color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+#search {
+  margin-left: auto; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 6px; padding: 6px 12px; width: 260px; font-size: 13px;
+}
+#search:focus { outline: none; border-color: var(--accent); }
+
+#layout { display: flex; max-width: 1500px; margin: 0 auto; padding-top: 56px; }
+#sidenav {
+  position: sticky; top: 56px; align-self: flex-start;
+  width: 210px; flex-shrink: 0; padding: 24px 8px 24px 16px;
+  height: calc(100vh - 56px); overflow-y: auto;
+}
+#sidenav a {
+  display: block; padding: 7px 12px; color: var(--text-dim);
+  text-decoration: none; border-left: 2px solid transparent;
+  font-size: 13px; border-radius: 0 6px 6px 0;
+}
+#sidenav a:hover { color: var(--text); background: var(--surface); }
+#sidenav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--surface); }
+#sidenav .navgroup { margin: 14px 0 4px 12px; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+main { flex: 1; min-width: 0; padding: 24px 28px 120px; }
+
+section { margin-bottom: 56px; }
+h2 {
+  font-size: 21px; margin-bottom: 6px; padding-top: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+h2 .secno { font-family: var(--mono); color: var(--text-dim); font-size: 14px; }
+.seclead { color: var(--text-dim); margin-bottom: 20px; font-size: 13px; }
+
+/* ===== stat cards ===== */
+.statrow { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.stat {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 20px; min-width: 130px;
+}
+.stat .num { font-size: 26px; font-weight: 700; font-family: var(--mono); }
+.stat .lbl { font-size: 12px; color: var(--text-dim); }
+.stat.v-valid .num { color: var(--valid); }
+.stat.v-rev .num { color: var(--revision); }
+
+/* ===== theme cards ===== */
+.theme {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  margin-bottom: 10px; overflow: hidden;
+}
+.theme summary {
+  cursor: pointer; padding: 14px 18px; display: flex; gap: 14px; align-items: baseline;
+  list-style: none; user-select: none;
+}
+.theme summary::-webkit-details-marker { display: none; }
+.theme summary:hover { background: var(--surface2); }
+.theme .tno {
+  font-family: var(--mono); font-weight: 700; color: var(--bg);
+  background: var(--accent); border-radius: 6px; padding: 1px 9px; font-size: 13px; flex-shrink: 0;
+}
+.theme .thead { font-weight: 600; }
+.theme .tbody { padding: 0 18px 16px 56px; color: var(--text-dim); }
+.theme[open] summary .thead { color: var(--accent); }
+
+/* ===== verdict bars ===== */
+.vbar-row { display: grid; grid-template-columns: 190px 1fr 90px; gap: 10px; align-items: center; margin-bottom: 7px; font-size: 12.5px; }
+.vbar-name { text-align: right; color: var(--text-dim); cursor: pointer; }
+.vbar-name:hover { color: var(--accent); }
+.vbar { display: flex; height: 16px; border-radius: 4px; overflow: hidden; background: var(--surface2); }
+.vbar .seg-valid { background: var(--valid); }
+.vbar .seg-rev { background: var(--revision); }
+.vbar-count { color: var(--text-dim); font-family: var(--mono); }
+
+/* ===== matrix ===== */
+#matrix-wrap { display: flex; gap: 8px; }
+#matrix-ylabels { display: grid; grid-template-rows: repeat(3, 130px); width: 70px; flex-shrink: 0; }
+#matrix-ylabels div { display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: var(--text-dim); font-size: 12px; font-weight: 600; }
+#matrix { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 130px); gap: 4px; flex: 1; }
+.mcell {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; overflow-y: auto;
+}
+.mcell.hot { background: linear-gradient(135deg, rgba(63,185,80,0.10), var(--surface)); }
+.mcell.cold { opacity: 0.75; }
+#matrix-xlabels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-left: 78px; margin-top: 6px; }
+#matrix-xlabels div { text-align: center; color: var(--text-dim); font-size: 12px; font-weight: 600; }
+.dot {
+  width: 18px; height: 18px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+  border: 2px solid transparent; transition: transform 0.1s;
+}
+.dot:hover { transform: scale(1.45); z-index: 2; }
+.dot.rev { border-color: var(--revision); border-style: dashed; }
+.dot.dimmed { opacity: 0.12; pointer-events: none; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: var(--text-dim); align-items: center; }
+.legend .li { display: flex; gap: 6px; align-items: center; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+.legend .li:hover { background: var(--surface); }
+.legend .li.off { opacity: 0.35; }
+.legend .sw { width: 12px; height: 12px; border-radius: 50%; }
+
+/* ===== roadmap ===== */
+.qw-lane {
+  background: linear-gradient(135deg, rgba(88,166,255,0.08), var(--surface));
+  border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 20px;
+}
+.qw-lane h3 { font-size: 14px; margin-bottom: 10px; color: var(--accent); }
+.phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 1100px) { .phases { grid-template-columns: 1fr; } }
+.phase { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.phase h3 { font-size: 14px; margin-bottom: 4px; }
+.phase .goal { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+.rmitem {
+  display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border-radius: 7px;
+  font-size: 12.5px; margin-bottom: 3px; cursor: pointer; border: 1px solid transparent;
+}
+.rmitem:hover { background: var(--surface2); border-color: var(--border); }
+.rmitem .ptag {
+  flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; margin-top: 6px;
+}
+.rmitem .linked { color: var(--accent); }
+.rmitem.nolink { cursor: default; }
+
+/* ===== perspective browser ===== */
+#filterbar {
+  position: sticky; top: 56px; z-index: 50;
+  background: rgba(13,17,23,0.95); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px;
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; font-size: 12.5px;
+}
+#filterbar .fgroup { display: flex; gap: 4px; align-items: center; }
+#filterbar .flabel { color: var(--text-dim); margin-right: 2px; }
+.fbtn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 6px; padding: 3px 10px; cursor: pointer; font-size: 12px; font-family: var(--mono);
+}
+.fbtn.on { color: var(--bg); font-weight: 700; }
+.fbtn.on.f-valid { background: var(--valid); border-color: var(--valid); }
+.fbtn.on.f-rev { background: var(--revision); border-color: var(--revision); }
+.fbtn.on.f-eff, .fbtn.on.f-imp { background: var(--accent); border-color: var(--accent); }
+#fcount { margin-left: auto; color: var(--text-dim); font-family: var(--mono); }
+#freset { color: var(--critical); cursor: pointer; background: none; border: none; font-size: 12px; }
+
+.pblock { margin-bottom: 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.pblock > summary {
+  cursor: pointer; padding: 13px 18px; display: flex; align-items: center; gap: 12px;
+  list-style: none; user-select: none; font-weight: 600; font-size: 15px;
+}
+.pblock > summary::-webkit-details-marker { display: none; }
+.pblock > summary:hover { background: var(--surface2); }
+.pblock .pdotlg { width: 13px; height: 13px; border-radius: 50%; flex-shrink: 0; }
+.pblock .pcount { margin-left: auto; font-size: 12px; color: var(--text-dim); font-family: var(--mono); font-weight: 400; }
+.pbody { padding: 4px 18px 18px; }
+.curstate {
+  background: var(--surface2); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0;
+  padding: 12px 16px; font-size: 13px; color: var(--text-dim); margin-bottom: 16px;
+}
+.curstate b { color: var(--text); }
+
+.prop {
+  border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px;
+  background: var(--bg); overflow: hidden; scroll-margin-top: 130px;
+}
+.prop.flash { animation: flash 1.8s ease-out; }
+@keyframes flash { 0%, 40% { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.35); } 100% { box-shadow: none; } }
+.prop-head { padding: 12px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; cursor: pointer; }
+.prop-head:hover { background: var(--surface2); }
+.prop-title { font-weight: 600; font-size: 14px; flex: 1; min-width: 200px; }
+.badge { font-family: var(--mono); font-size: 11px; padding: 2px 9px; border-radius: 10px; font-weight: 700; flex-shrink: 0; }
+.badge.valid { background: rgba(63,185,80,0.15); color: var(--valid); border: 1px solid var(--valid); }
+.badge.rev { background: rgba(210,153,34,0.15); color: var(--revision); border: 1px solid var(--revision); }
+.chip { font-family: var(--mono); font-size: 11px; padding: 2px 8px; border-radius: 5px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); flex-shrink: 0; }
+.chip.imp-high { color: var(--critical); border-color: var(--critical); }
+.chip.imp-medium { color: var(--revision); }
+.prop-body { padding: 0 16px 14px; display: none; }
+.prop.open .prop-body { display: block; }
+.prop-body dl { display: grid; grid-template-columns: 92px 1fr; gap: 7px 14px; font-size: 13px; }
+.prop-body dt { color: var(--text-dim); font-family: var(--mono); font-size: 11.5px; text-align: right; padding-top: 2px; }
+.prop-body dd { min-width: 0; }
+.vnote {
+  margin-top: 10px; background: rgba(210,153,34,0.08); border: 1px solid rgba(210,153,34,0.4);
+  border-radius: 8px; padding: 10px 14px; font-size: 12.5px;
+}
+.vnote .vnt { color: var(--revision); font-weight: 700; font-size: 11px; font-family: var(--mono); display: block; margin-bottom: 4px; }
+.oq { margin-top: 14px; background: var(--surface2); border-radius: 8px; padding: 12px 16px; }
+.oq h4 { font-size: 12px; color: var(--p3); margin-bottom: 6px; font-family: var(--mono); }
+.oq li { margin-left: 18px; font-size: 12.5px; color: var(--text-dim); margin-bottom: 4px; }
+
+/* ===== research ===== */
+.rtopic { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 14px; overflow: hidden; }
+.rtopic > summary { cursor: pointer; padding: 13px 18px; font-weight: 600; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 10px; }
+.rtopic > summary::-webkit-details-marker { display: none; }
+.rtopic > summary:hover { background: var(--surface2); }
+.rtopic > summary .rcount { margin-left: auto; font-size: 12px; color: var(--text-dim); font-family: var(--mono); font-weight: 400; }
+.rbody { padding: 4px 18px 18px; }
+.finding { border-left: 3px solid var(--p5); padding: 8px 14px; margin-bottom: 10px; background: var(--bg); border-radius: 0 8px 8px 0; }
+.finding .src { display: block; margin-top: 4px; font-size: 11.5px; color: var(--text-dim); font-family: var(--mono); word-break: break-all; }
+.impl-h { font-size: 12px; font-family: var(--mono); color: var(--valid); margin: 16px 0 8px; }
+.impl { display: flex; gap: 10px; padding: 8px 12px; background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.25); border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
+.impl .arr { color: var(--valid); font-family: var(--mono); flex-shrink: 0; }
+
+/* ===== risks & gaps ===== */
+.risk { display: flex; gap: 12px; padding: 12px 16px; border: 1px solid var(--border); border-left: 3px solid var(--critical); border-radius: 8px; background: var(--surface); margin-bottom: 10px; font-size: 13px; }
+.risk .rno { font-family: var(--mono); color: var(--critical); font-weight: 700; flex-shrink: 0; }
+.gap { display: flex; gap: 12px; padding: 12px 16px; border: 1px solid rgba(210,168,255,0.35); border-left: 3px solid var(--p3); border-radius: 8px; background: var(--surface); margin-bottom: 10px; font-size: 13px; }
+.gap .gno { font-family: var(--mono); color: var(--p3); font-weight: 700; flex-shrink: 0; }
+
+/* ===== drawer ===== */
+#drawer {
+  position: fixed; top: 0; right: -520px; width: 500px; max-width: 92vw; height: 100vh;
+  background: var(--surface); border-left: 1px solid var(--border); z-index: 200;
+  transition: right 0.22s ease; overflow-y: auto; padding: 24px; box-shadow: -8px 0 30px rgba(0,0,0,0.5);
+}
+#drawer.open { right: 0; }
+#drawer-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; }
+#drawer-close:hover { color: var(--text); }
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
+#overlay.show { display: block; }
+
+.hidden { display: none !important; }
+.searchdim { opacity: 0.25; }
+mark { background: rgba(88,166,255,0.35); color: inherit; border-radius: 2px; }
+.expandctl { font-size: 12px; color: var(--accent); cursor: pointer; background: none; border: none; margin-left: 8px; }
+footer { color: var(--text-dim); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1><span>unilyze</span> 改善計画 2026-06</h1>
+  <span class="meta">12観点 × 検証済み提案 + 研究5トピック | 生成: マルチエージェントワークフロー (31 agents)</span>
+  <input id="search" type="search" placeholder="全文検索 (提案・研究・リスク…)">
+</div>
+
+<div id="layout">
+<nav id="sidenav">
+  <div class="navgroup">Plan</div>
+  <a href="#overview">概要・戦略テーマ</a>
+  <a href="#matrix-sec">優先度マトリクス</a>
+  <a href="#roadmap">ロードマップ</a>
+  <div class="navgroup">Detail</div>
+  <a href="#browser">観点別 提案ブラウザ</a>
+  <a href="#research">研究知見</a>
+  <a href="#risks">リスク</a>
+  <a href="#gaps">抜け漏れ批評</a>
+</nav>
+
+<main>
+  <section id="overview">
+    <h2><span class="secno">01</span>概要・戦略テーマ</h2>
+    <p class="seclead">
+      12観点を並列エージェントが深掘りし、別の検証エージェントが全提案を実コードと突合した結果。
+      already-done / infeasible で落ちた提案は0件。約3割が needs-revision（前提の修正付きで採用可）。
+    </p>
+    <div class="statrow" id="stats"></div>
+    <h3 style="font-size:15px; margin:18px 0 10px;">戦略テーマ（クリックで展開）</h3>
+    <div id="themes"></div>
+    <h3 style="font-size:15px; margin:24px 0 10px;">観点別 検証結果（バーをクリックで該当観点へ）</h3>
+    <div id="vbars"></div>
+    <div class="legend">
+      <span class="li"><span class="sw" style="background:var(--valid)"></span>valid（コード確認済みで妥当）</span>
+      <span class="li"><span class="sw" style="background:var(--revision)"></span>needs-revision（方向は良いが前提修正あり）</span>
+    </div>
+  </section>
+
+  <section id="matrix-sec">
+    <h2><span class="secno">02</span>優先度マトリクス <span style="font-size:12px; color:var(--text-dim); font-weight:400;">effort × impact</span></h2>
+    <p class="seclead">
+      全提案を工数（S=半日以下 / M=1〜3日 / L=1〜2週 / XL=それ以上）× インパクトで配置。
+      左上（低工数×高インパクト）が最優先。点クリックで詳細、破線枠は needs-revision。凡例クリックで観点を絞り込み。
+    </p>
+    <div id="matrix-wrap">
+      <div id="matrix-ylabels"><div>high</div><div>medium</div><div>low</div></div>
+      <div id="matrix"></div>
+    </div>
+    <div id="matrix-xlabels"><div>S（半日以下）</div><div>M（1〜3日）</div><div>L（1〜2週）</div><div>XL</div></div>
+    <div class="legend" id="mlegend"></div>
+  </section>
+
+  <section id="roadmap">
+    <h2><span class="secno">03</span>ロードマップ</h2>
+    <p class="seclead">統合エージェントが依存関係を考慮して配列した3フェーズ。項目クリックで該当提案の詳細へジャンプ。</p>
+    <div class="qw-lane">
+      <h3>⚡ クイックウィン（effort S × impact medium+）</h3>
+      <div id="quickwins"></div>
+    </div>
+    <div class="phases" id="phases"></div>
+  </section>
+
+  <section id="browser">
+    <h2><span class="secno">04</span>観点別 提案ブラウザ
+      <button class="expandctl" id="expand-all">すべて展開</button>
+      <button class="expandctl" id="collapse-all">すべて閉じる</button>
+    </h2>
+    <p class="seclead">全提案の what / why / evidence / 検証ノートの完全版。フィルタとトップバーの全文検索が効く。</p>
+    <div id="filterbar">
+      <div class="fgroup"><span class="flabel">verdict:</span>
+        <button class="fbtn f-valid" data-f="verdict" data-v="valid">valid</button>
+        <button class="fbtn f-rev" data-f="verdict" data-v="needs-revision">needs-revision</button>
+      </div>
+      <div class="fgroup"><span class="flabel">effort:</span>
+        <button class="fbtn f-eff" data-f="effort" data-v="S">S</button>
+        <button class="fbtn f-eff" data-f="effort" data-v="M">M</button>
+        <button class="fbtn f-eff" data-f="effort" data-v="L">L</button>
+        <button class="fbtn f-eff" data-f="effort" data-v="XL">XL</button>
+      </div>
+      <div class="fgroup"><span class="flabel">impact:</span>
+        <button class="fbtn f-imp" data-f="impact" data-v="high">high</button>
+        <button class="fbtn f-imp" data-f="impact" data-v="medium">medium</button>
+        <button class="fbtn f-imp" data-f="impact" data-v="low">low</button>
+      </div>
+      <button id="freset">× クリア</button>
+      <span id="fcount"></span>
+    </div>
+    <div id="perspectives"></div>
+  </section>
+
+  <section id="research">
+    <h2><span class="secno">05</span>研究知見（コア分析の科学的根拠）</h2>
+    <p class="seclead">
+      5トピックのリサーチエージェントが一次情報（論文・公式ドキュメント）を調査。
+      青枠 = 研究知見（出典付き）、緑枠 = unilyze への具体的適用提案。
+    </p>
+    <div id="research-list"></div>
+  </section>
+
+  <section id="risks">
+    <h2><span class="secno">06</span>リスク</h2>
+    <p class="seclead">計画遂行上のリスク。統合エージェントが提案間の衝突・依存から抽出。</p>
+    <div id="risk-list"></div>
+  </section>
+
+  <section id="gaps">
+    <h2><span class="secno">07</span>抜け漏れ批評（completeness critic）</h2>
+    <p class="seclead">
+      批評専任エージェントによる「この計画に欠けているもの」の指摘。
+      計画本体には未収載。取り込み要否はユーザー判断待ち。
+    </p>
+    <div id="gap-list"></div>
+    <footer>
+      データソース: tasks/improvement-plan.md（全文） / マルチエージェントワークフロー wf_f043ec45 (2026-06-10)。
+      本ページは構造化データから機械生成されており、計画内容の省略はない。
+    </footer>
+  </section>
+</main>
+</div>
+
+<div id="overlay"></div>
+<aside id="drawer">
+  <button id="drawer-close">×</button>
+  <div id="drawer-content"></div>
+</aside>
+
+<script id="plan-data" type="application/json">__DATA_JSON__</script>
+<script>
+const DATA = JSON.parse(document.getElementById('plan-data').textContent);
+const P = DATA.perspectives;
+const PCOLORS = ['--p0','--p1','--p2','--p3','--p4','--p5','--p6','--p7','--p8','--p9','--p10','--p11']
+  .map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s)）」]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+const pcolor = i => PCOLORS[i % PCOLORS.length];
+
+// flatten proposals with back-references
+const ALL = [];
+P.forEach((p, pi) => p.proposals.forEach((pr, j) => ALL.push({ ...pr, pi, j, pname: p.name, id: `prop-${pi}-${j}` })));
+
+// ===== stats =====
+const nValid = ALL.filter(x => x.verdict === 'valid').length;
+const nRev = ALL.filter(x => x.verdict === 'needs-revision').length;
+document.getElementById('stats').innerHTML = [
+  { n: P.length, l: '観点' },
+  { n: ALL.length, l: '提案（全件掲載）' },
+  { n: nValid, l: 'valid', c: 'v-valid' },
+  { n: nRev, l: 'needs-revision', c: 'v-rev' },
+  { n: DATA.research.length, l: '研究トピック' },
+  { n: DATA.research.reduce((a, r) => a + r.findings.length, 0), l: '研究知見（出典付き）' },
+  { n: DATA.roadmap.risks.length, l: 'リスク' },
+  { n: DATA.gaps.length, l: '抜け漏れ指摘' },
+].map(s => `<div class="stat ${s.c || ''}"><div class="num">${s.n}</div><div class="lbl">${s.l}</div></div>`).join('');
+
+// ===== themes =====
+document.getElementById('themes').innerHTML = DATA.roadmap.themes.map((t, i) => {
+  const head = t.split(/[:：]/)[0];
+  const body = t.slice(head.length).replace(/^[:：]\s*/, '');
+  return `<details class="theme"><summary><span class="tno">T${i + 1}</span><span class="thead">${esc(head)}</span></summary><div class="tbody">${esc(body || t)}</div></details>`;
+}).join('');
+
+// ===== verdict bars =====
+document.getElementById('vbars').innerHTML = P.map((p, pi) => {
+  const v = p.proposals.filter(x => x.verdict === 'valid').length;
+  const r = p.proposals.length - v;
+  const total = p.proposals.length;
+  return `<div class="vbar-row">
+    <div class="vbar-name" onclick="openPerspective(${pi})">●&nbsp;${esc(p.name)}</div>
+    <div class="vbar"><div class="seg-valid" style="width:${v / total * 100}%"></div><div class="seg-rev" style="width:${r / total * 100}%"></div></div>
+    <div class="vbar-count">${v}v / ${r}nr</div>
+  </div>`.replace('●', `<span style="color:${pcolor(pi)}">●</span>`);
+}).join('');
+
+// ===== matrix =====
+const EFFORTS = ['S','M','L','XL'], IMPACTS = ['high','medium','low'];
+const mEl = document.getElementById('matrix');
+IMPACTS.forEach(imp => EFFORTS.forEach(eff => {
+  const cell = document.createElement('div');
+  cell.className = 'mcell' + (imp === 'high' && (eff === 'S' || eff === 'M') ? ' hot' : '') + (imp === 'low' && (eff === 'L' || eff === 'XL') ? ' cold' : '');
+  cell.dataset.eff = eff; cell.dataset.imp = imp;
+  mEl.appendChild(cell);
+}));
+ALL.forEach(pr => {
+  const cell = mEl.querySelector(`[data-eff="${pr.effort}"][data-imp="${pr.impact}"]`);
+  if (!cell) return;
+  const d = document.createElement('div');
+  d.className = 'dot' + (pr.verdict === 'needs-revision' ? ' rev' : '');
+  d.style.background = pcolor(pr.pi);
+  d.dataset.pi = pr.pi;
+  d.title = `[${pr.pname}] ${pr.title} (${pr.effort}/${pr.impact}/${pr.verdict})`;
+  d.onclick = () => openDrawer(pr);
+  cell.appendChild(d);
+});
+// matrix legend = perspective filter
+const legendState = new Set();
+document.getElementById('mlegend').innerHTML = P.map((p, pi) =>
+  `<span class="li" data-pi="${pi}"><span class="sw" style="background:${pcolor(pi)}"></span>${esc(p.name)}</span>`).join('');
+document.querySelectorAll('#mlegend .li').forEach(li => li.onclick = () => {
+  const pi = +li.dataset.pi;
+  legendState.has(pi) ? legendState.delete(pi) : legendState.add(pi);
+  document.querySelectorAll('#mlegend .li').forEach(l =>
+    l.classList.toggle('off', legendState.size > 0 && !legendState.has(+l.dataset.pi)));
+  document.querySelectorAll('.dot').forEach(d =>
+    d.classList.toggle('dimmed', legendState.size > 0 && !legendState.has(+d.dataset.pi)));
+});
+
+// ===== roadmap =====
+function bigrams(s) {
+  const set = new Set();
+  for (let i = 0; i < s.length - 1; i++) set.add(s.slice(i, i + 2));
+  return set;
+}
+function dice(a, b) {
+  const A = bigrams(a), B = bigrams(b);
+  if (!A.size || !B.size) return 0;
+  let hit = 0;
+  A.forEach(g => { if (B.has(g)) hit++; });
+  return 2 * hit / (A.size + B.size);
+}
+function findProposal(itemText) {
+  const m = itemText.match(/^(.+?)[:：]\s*([\s\S]+)$/);
+  if (!m) return null;
+  const [, pname, rest] = m;
+  // 「CLI UX/エージェント連携」のような複合観点名は最初の一致を採用
+  const persp = P.findIndex(p => pname.includes(p.name) || p.name.includes(pname.trim()));
+  if (persp < 0) return null;
+  const restCore = rest.replace(/[（(].*$/, '').trim();
+  let best = null, bestScore = 0;
+  P[persp].proposals.forEach((pr, j) => {
+    const s = dice(pr.title, restCore);
+    if (s > bestScore) { bestScore = s; best = `prop-${persp}-${j}`; }
+  });
+  return bestScore >= 0.35 ? { id: best, pi: persp } : null;
+}
+function rmItemHtml(item) {
+  const hit = findProposal(item);
+  const m = item.match(/^(.+?)[:：]\s*([\s\S]+)$/);
+  const pi = m ? P.findIndex(p => p.name === m[1].trim()) : -1;
+  const dotColor = pi >= 0 ? pcolor(pi) : 'var(--border)';
+  const label = m ? `<span style="color:var(--text-dim)">${esc(m[1])}:</span> <span class="${hit ? 'linked' : ''}">${esc(m[2])}</span>` : esc(item);
+  const click = hit ? `onclick="jumpTo('${hit.id}')"` : '';
+  return `<div class="rmitem ${hit ? '' : 'nolink'}" ${click}><span class="ptag" style="background:${dotColor}"></span><span>${label}</span></div>`;
+}
+document.getElementById('quickwins').innerHTML = DATA.roadmap.quickWins.map(rmItemHtml).join('');
+document.getElementById('phases').innerHTML = DATA.roadmap.phases.map(ph => `
+  <div class="phase">
+    <h3>${esc(ph.name)}</h3>
+    <div class="goal">${esc(ph.goal)}</div>
+    ${ph.items.map(rmItemHtml).join('')}
+  </div>`).join('');
+
+// ===== perspective browser =====
+function propHtml(pr) {
+  const vb = pr.verdict === 'valid'
+    ? '<span class="badge valid">✓ valid</span>'
+    : '<span class="badge rev">△ needs-revision</span>';
+  return `<div class="prop" id="${pr.id}" data-verdict="${pr.verdict}" data-effort="${pr.effort}" data-impact="${pr.impact}">
+    <div class="prop-head" onclick="this.parentElement.classList.toggle('open')">
+      <span class="prop-title">${esc(pr.title)}</span>
+      ${vb}
+      <span class="chip">effort ${pr.effort}</span>
+      <span class="chip imp-${pr.impact}">impact ${pr.impact}</span>
+    </div>
+    <div class="prop-body">
+      <dl>
+        <dt>what</dt><dd>${esc(pr.what)}</dd>
+        <dt>why</dt><dd>${esc(pr.why)}</dd>
+        <dt>evidence</dt><dd class="mono" style="font-size:12px">${linkify(pr.evidence || '-')}</dd>
+      </dl>
+      ${pr.verdictNote ? `<div class="vnote"><span class="vnt">検証エージェントのノート（着手前にこの修正を織り込むこと）</span>${esc(pr.verdictNote)}</div>` : ''}
+    </div>
+  </div>`;
+}
+document.getElementById('perspectives').innerHTML = P.map((p, pi) => `
+  <details class="pblock" id="pblock-${pi}" ${pi === 0 ? 'open' : ''}>
+    <summary><span class="pdotlg" style="background:${pcolor(pi)}"></span>${esc(p.name)}
+      <span class="pcount">${p.proposals.length}件</span></summary>
+    <div class="pbody">
+      <div class="curstate"><b>現状:</b> ${esc(p.currentState)}</div>
+      ${p.proposals.map((pr, j) => propHtml({ ...pr, id: `prop-${pi}-${j}` })).join('')}
+      ${(p.openQuestions || []).length ? `<div class="oq"><h4>OPEN QUESTIONS（ユーザー判断待ち）</h4><ul>${p.openQuestions.map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>` : ''}
+    </div>
+  </details>`).join('');
+
+// ===== research =====
+document.getElementById('research-list').innerHTML = DATA.research.map(r => `
+  <details class="rtopic" open>
+    <summary>${esc(r.topic)}<span class="rcount">${r.findings.length}知見 → ${r.implications.length}適用</span></summary>
+    <div class="rbody">
+      ${r.findings.map(f => `<div class="finding">${esc(f.claim)}<span class="src">📄 ${linkify(f.source)}${f.year && !f.source.includes(f.year) ? ` (${esc(f.year)})` : ''}</span></div>`).join('')}
+      <div class="impl-h">▼ unilyze への適用提案</div>
+      ${r.implications.map(im => `<div class="impl"><span class="arr">→</span><span>${esc(im)}</span></div>`).join('')}
+    </div>
+  </details>`).join('');
+
+// ===== risks & gaps =====
+document.getElementById('risk-list').innerHTML = DATA.roadmap.risks.map((r, i) => {
+  const head = r.split(/[:：]/)[0];
+  const body = r.slice(head.length).replace(/^[:：]\s*/, '');
+  return `<div class="risk"><span class="rno">R${i + 1}</span><span><b>${esc(head)}</b>${body ? '： ' + esc(body) : ''}</span></div>`;
+}).join('');
+document.getElementById('gap-list').innerHTML = DATA.gaps.map((g, i) =>
+  `<div class="gap"><span class="gno">G${i + 1}</span><span>${esc(g)}</span></div>`).join('');
+
+// ===== drawer =====
+function openDrawer(pr) {
+  document.getElementById('drawer-content').innerHTML = `
+    <div style="margin-bottom:8px"><span class="chip" style="border-color:${pcolor(pr.pi)};color:${pcolor(pr.pi)}">${esc(pr.pname)}</span></div>
+    <h3 style="font-size:17px;margin-bottom:12px">${esc(pr.title)}</h3>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      ${pr.verdict === 'valid' ? '<span class="badge valid">✓ valid</span>' : '<span class="badge rev">△ needs-revision</span>'}
+      <span class="chip">effort ${pr.effort}</span><span class="chip imp-${pr.impact}">impact ${pr.impact}</span>
+    </div>
+    <dl style="display:grid;grid-template-columns:80px 1fr;gap:8px 12px;font-size:13px">
+      <dt style="color:var(--text-dim);text-align:right" class="mono">what</dt><dd>${esc(pr.what)}</dd>
+      <dt style="color:var(--text-dim);text-align:right" class="mono">why</dt><dd>${esc(pr.why)}</dd>
+      <dt style="color:var(--text-dim);text-align:right" class="mono">evidence</dt><dd class="mono" style="font-size:12px">${linkify(pr.evidence || '-')}</dd>
+    </dl>
+    ${pr.verdictNote ? `<div class="vnote" style="margin-top:14px"><span class="vnt">検証ノート</span>${esc(pr.verdictNote)}</div>` : ''}
+    <p style="margin-top:18px"><a href="javascript:void(0)" onclick="closeDrawer();jumpTo('${pr.id}')">→ 観点別ブラウザで開く</a></p>`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+document.getElementById('drawer-close').onclick = closeDrawer;
+document.getElementById('overlay').onclick = closeDrawer;
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+// ===== jump / open helpers =====
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const block = el.closest('.pblock');
+  if (block) block.open = true;
+  el.classList.add('open');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+function openPerspective(pi) {
+  const block = document.getElementById(`pblock-${pi}`);
+  block.open = true;
+  block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== filters =====
+const filters = { verdict: new Set(), effort: new Set(), impact: new Set() };
+document.querySelectorAll('.fbtn').forEach(b => b.onclick = () => {
+  const set = filters[b.dataset.f];
+  set.has(b.dataset.v) ? set.delete(b.dataset.v) : set.add(b.dataset.v);
+  b.classList.toggle('on');
+  applyFilters();
+});
+document.getElementById('freset').onclick = () => {
+  Object.values(filters).forEach(s => s.clear());
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('on'));
+  document.getElementById('search').value = '';
+  applyFilters();
+};
+function applyFilters() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  let visible = 0;
+  document.querySelectorAll('.prop').forEach(el => {
+    const okV = !filters.verdict.size || filters.verdict.has(el.dataset.verdict);
+    const okE = !filters.effort.size || filters.effort.has(el.dataset.effort);
+    const okI = !filters.impact.size || filters.impact.has(el.dataset.impact);
+    const okQ = !q || el.textContent.toLowerCase().includes(q);
+    const ok = okV && okE && okI && okQ;
+    el.classList.toggle('hidden', !ok);
+    if (ok) visible++;
+  });
+  document.querySelectorAll('.pblock').forEach(block => {
+    const any = block.querySelectorAll('.prop:not(.hidden)').length > 0;
+    block.classList.toggle('hidden', !any);
+    if ((q || filters.verdict.size || filters.effort.size || filters.impact.size) && any) block.open = true;
+  });
+  document.getElementById('fcount').textContent = `${visible} / ${ALL.length} 件表示`;
+  // search also dims non-matching research/risks/gaps
+  document.querySelectorAll('.finding, .impl, .risk, .gap, .rmitem').forEach(el => {
+    el.classList.toggle('searchdim', q && !el.textContent.toLowerCase().includes(q));
+  });
+}
+document.getElementById('search').addEventListener('input', applyFilters);
+applyFilters();
+
+// expand/collapse all
+document.getElementById('expand-all').onclick = () => {
+  document.querySelectorAll('.pblock').forEach(b => b.open = true);
+  document.querySelectorAll('.prop').forEach(p => p.classList.add('open'));
+};
+document.getElementById('collapse-all').onclick = () => {
+  document.querySelectorAll('.pblock').forEach(b => b.open = false);
+  document.querySelectorAll('.prop').forEach(p => p.classList.remove('open'));
+};
+
+// ===== scroll spy =====
+const navLinks = [...document.querySelectorAll('#sidenav a')];
+const sections = navLinks.map(a => document.querySelector(a.getAttribute('href')));
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => s && spy.observe(s));
+
+// JS描画完了後にURLハッシュへスクロール（直リンク対応）
+// ブラウザのスクロール位置復元に上書きされないよう manual + instant で実行
+if (location.hash) {
+  const t = document.querySelector(location.hash);
+  if (t) {
+    history.scrollRestoration = 'manual';
+    setTimeout(() => t.scrollIntoView({ behavior: 'instant', block: 'start' }), 120);
+  }
+}
+</script>
+</body>
+</html>

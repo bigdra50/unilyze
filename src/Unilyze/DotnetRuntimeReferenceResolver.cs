@@ -47,7 +47,15 @@ public static class DotnetRuntimeReferenceResolver
 
         var coreLib = typeof(object).Assembly.Location;
         if (string.IsNullOrEmpty(coreLib))
+        {
+            // Single-file bundles embed framework assemblies; without self-extract
+            // there is nothing on disk to reference. Say so instead of silently
+            // degrading semantic analysis for general C# projects.
+            Console.Error.WriteLine(
+                "Warning: runtime reference assemblies could not be located " +
+                "(single-file binary without self-extract?); semantic analysis may be reduced.");
             return paths;
+        }
 
         var runtimeDir = Path.GetDirectoryName(coreLib);
         if (runtimeDir is null || !Directory.Exists(runtimeDir))
