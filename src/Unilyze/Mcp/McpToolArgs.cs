@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Mcp;
 
 internal sealed class McpToolArgs
 {

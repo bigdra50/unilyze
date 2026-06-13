@@ -1,7 +1,16 @@
+using Unilyze.Query;
+using Unilyze.Findings;
+using Unilyze.Diff;
+using Unilyze.History;
+using Unilyze.Output;
+using Unilyze.Config;
+using Unilyze.Metrics;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
 using System.Text;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Mcp;
 
 internal sealed class McpToolHandlers
 {

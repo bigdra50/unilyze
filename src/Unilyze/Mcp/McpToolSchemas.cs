@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace Unilyze;
+namespace Unilyze.Mcp;
 
 internal static class McpToolSchemas
 {

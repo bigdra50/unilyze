@@ -1,6 +1,12 @@
+using Unilyze.Discovery;
+using Unilyze.Output;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Mcp;
 
 internal static class McpAnalyzeSummary
 {

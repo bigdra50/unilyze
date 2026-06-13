@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Unilyze;
+namespace Unilyze.Mcp;
 
 internal static class McpStdioServer
 {
