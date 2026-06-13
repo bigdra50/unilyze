@@ -75,6 +75,17 @@
   var textEl = document.getElementById('ssText');
   var genEl = document.getElementById('ssGen');
   var timeEl = document.getElementById('ssTime');
+  var staleEl = document.getElementById('staleBanner');
+
+  function setStale(show, message) {
+    if (!staleEl) return;
+    if (show) {
+      staleEl.textContent = message;
+      staleEl.classList.remove('hidden');
+    } else {
+      staleEl.classList.add('hidden');
+    }
+  }
 
   function setConnection(connected) {
     if (!dotEl) return;
@@ -99,10 +110,13 @@
       dotEl.className = 'ss-dot ss-failed';
       if (textEl) textEl.textContent = 'analysis failed — showing stale result';
       if (timeEl) timeEl.textContent = state.lastError ? (' · ' + state.lastError) : '';
+      setStale(true, '⚠ Analysis failed — showing the last good result'
+        + (state.lastError ? (' · ' + state.lastError) : ''));
       return;
     } else {
       dotEl.className = 'ss-dot ss-ready';
       if (textEl) textEl.textContent = 'live';
+      setStale(false);
       if (state.metrics) {
         console.info('[unilyze] gen ' + state.generation
           + ': analysis ' + Math.round(state.metrics.analysisMillis) + 'ms'

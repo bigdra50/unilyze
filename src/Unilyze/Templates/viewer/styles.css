@@ -344,3 +344,12 @@ body.offline-mode .panel{
 .serve-status .ss-dot.ss-reconnect{background:#6e7681;animation:ss-pulse 1s ease-in-out infinite}
 .serve-status .ss-gen{color:var(--text)}
 @keyframes ss-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* --- serve: stale-result banner over the retained snapshot --- */
+.stale-banner{
+  position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:40;
+  background:#3d1d1f;border:1px solid #f97583;color:#ffb3b8;border-radius:6px;
+  padding:6px 14px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.4);
+  max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.stale-banner.hidden{display:none}
