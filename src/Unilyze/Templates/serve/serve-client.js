@@ -1,0 +1,126 @@
+// unilyze serve client: ETag long-polling over fetch (no SSE/WebSocket — EventSource
+// cannot send Authorization). Reads the per-start token from the page, applies each new
+// full snapshot through the viewer's window.unilyzeApplySnapshot (no reload), and surfaces
+// the analyzing / ready / failed (stale) state in the status bar.
+(function () {
+  'use strict';
+
+  // serve runs ELK on the main thread (CSP-friendly, no cross-origin blob worker).
+  window.__UNILYZE_ELK_MAIN_THREAD__ = true;
+
+  var tokenMeta = document.querySelector('meta[name="unilyze-token"]');
+  var token = tokenMeta ? tokenMeta.getAttribute('content') : '';
+  var authHeaders = { 'Authorization': 'Bearer ' + token };
+
+  var etag = null;
+  var generation = -1;
+  var aborter = null;
+  var stopped = false;
+
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  async function whenViewerReady() {
+    while (typeof window.unilyzeApplySnapshot !== 'function') {
+      await sleep(30);
+    }
+  }
+
+  async function fetchSnapshot() {
+    var headers = Object.assign({}, authHeaders);
+    if (etag) headers['If-None-Match'] = etag;
+    var res = await fetch('/api/snapshot', { headers: headers });
+    if (res.status === 304) return false; // unchanged
+    if (res.status === 503) return false;  // no snapshot yet
+    if (!res.ok) throw new Error('snapshot HTTP ' + res.status);
+    etag = res.headers.get('ETag') || etag;
+    var data = await res.json();
+    window.unilyzeApplySnapshot(data);
+    return true;
+  }
+
+  async function pollLoop() {
+    while (!stopped) {
+      aborter = new AbortController();
+      var state;
+      try {
+        var res = await fetch('/api/state?after=' + generation, {
+          headers: authHeaders,
+          signal: aborter.signal
+        });
+        if (!res.ok) { setConnection(false); await sleep(1000); continue; }
+        state = await res.json();
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+        setConnection(false);
+        await sleep(1000);
+        continue;
+      }
+      generation = state.generation;
+      updateStatus(state);
+      if (state.snapshotGeneration != null && state.snapshotEtag !== etag) {
+        try { await fetchSnapshot(); } catch (e) { /* keep the prior snapshot */ }
+      }
+    }
+  }
+
+  // --- Status bar ---
+  var dotEl = document.getElementById('ssDot');
+  var textEl = document.getElementById('ssText');
+  var genEl = document.getElementById('ssGen');
+  var timeEl = document.getElementById('ssTime');
+
+  function setConnection(connected) {
+    if (!dotEl) return;
+    if (!connected) {
+      dotEl.className = 'ss-dot ss-reconnect';
+      if (textEl) textEl.textContent = 'reconnecting…';
+    }
+  }
+
+  function formatTime(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleTimeString(); } catch (e) { return ''; }
+  }
+
+  function updateStatus(state) {
+    if (!dotEl) return;
+    if (genEl) genEl.textContent = 'gen ' + state.generation;
+    if (state.phase === 'analyzing') {
+      dotEl.className = 'ss-dot ss-analyzing';
+      if (textEl) textEl.textContent = 'analyzing…';
+    } else if (state.phase === 'failed') {
+      dotEl.className = 'ss-dot ss-failed';
+      if (textEl) textEl.textContent = 'analysis failed — showing stale result';
+      if (timeEl) timeEl.textContent = state.lastError ? (' · ' + state.lastError) : '';
+      return;
+    } else {
+      dotEl.className = 'ss-dot ss-ready';
+      if (textEl) textEl.textContent = 'live';
+    }
+    if (timeEl) {
+      var t = formatTime(state.lastSuccessUtc);
+      timeEl.textContent = t ? (' · updated ' + t) : '';
+    }
+  }
+
+  // Read the source body for a fileId (opaque) and return {path, text}. Used by the
+  // in-browser read-only source view. The server enforces the allowlist.
+  window.unilyzeFetchSource = async function (fileId) {
+    var res = await fetch('/api/source?fileId=' + encodeURIComponent(fileId), { headers: authHeaders });
+    if (!res.ok) throw new Error('source HTTP ' + res.status);
+    var path = res.headers.get('X-Unilyze-Source-Path') || '';
+    var text = await res.text();
+    return { path: path, text: text };
+  };
+
+  window.addEventListener('beforeunload', function () {
+    stopped = true;
+    if (aborter) aborter.abort();
+  });
+
+  (async function () {
+    await whenViewerReady();
+    try { await fetchSnapshot(); } catch (e) { /* poll loop will retry */ }
+    pollLoop();
+  })();
+})();

@@ -24,11 +24,13 @@ internal sealed class ServeApp
         server.Start();
         var url = server.Url;
 
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(_options.Path);
+        var title = Path.GetFileName(projectRoot.TrimEnd('/', '\\'));
+        if (string.IsNullOrEmpty(title)) title = "Unity Project";
+
         var auth = new ServeAuth(server.Port);
         var store = new SnapshotStore();
-        var handler = new ServeHttpHandler(auth, store);
-
-        var projectRoot = ProgramHelpers.ResolveProjectRoot(_options.Path);
+        var handler = new ServeHttpHandler(auth, store, title);
         var builder = new SnapshotBuilder(_options);
         using var coordinator = new AnalysisCoordinator(store, builder.Build);
         using var watcher = new ServeChangeWatcher(projectRoot, coordinator.RequestAnalysis);

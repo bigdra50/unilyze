@@ -13,13 +13,22 @@ internal sealed class ServeHttpHandler
 {
     static readonly TimeSpan LongPollTimeout = TimeSpan.FromSeconds(25);
 
+    // default-src 'none' denies everything not explicitly allowed; scripts/vendor/styles are
+    // same-origin; style stays 'unsafe-inline' until the viewer's inline style attrs are removed.
+    const string ContentSecurityPolicy =
+        "default-src 'none'; script-src 'self'; connect-src 'self'; worker-src 'self'; "
+        + "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; "
+        + "base-uri 'none'; form-action 'none'";
+
     readonly ServeAuth _auth;
     readonly SnapshotStore _store;
+    readonly string _title;
 
-    public ServeHttpHandler(ServeAuth auth, SnapshotStore store)
+    public ServeHttpHandler(ServeAuth auth, SnapshotStore store, string title)
     {
         _auth = auth;
         _store = store;
+        _title = title;
     }
 
     public void Handle(HttpListenerContext context)
@@ -48,6 +57,15 @@ internal sealed class ServeHttpHandler
             return;
         }
 
+        // Static assets carry no secrets and are loaded via <script src>/<link>, which cannot
+        // attach an Authorization header — so they are reachable without the bearer token.
+        if (path.StartsWith("/static/", StringComparison.Ordinal))
+        {
+            if (!ServeStaticAssets.TryHandle(context, path))
+                WriteStatus(context, 404, "Not found");
+            return;
+        }
+
         if (path.StartsWith("/api/", StringComparison.Ordinal))
         {
             if (!_auth.IsAuthorized(request))
@@ -65,16 +83,31 @@ internal sealed class ServeHttpHandler
 
     void HandleIndex(HttpListenerContext context)
     {
-        var html = BuildBootstrapHtml();
+        var html = BuildIndexHtml();
         var body = Encoding.UTF8.GetBytes(html);
         var response = context.Response;
         response.StatusCode = 200;
         response.ContentType = "text/html; charset=utf-8";
         response.Headers["Cache-Control"] = "no-store";
         response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["Content-Security-Policy"] = ContentSecurityPolicy;
+        response.Headers["Referrer-Policy"] = "no-referrer";
         response.ContentLength64 = body.Length;
         response.OutputStream.Write(body, 0, body.Length);
         response.OutputStream.Close();
+    }
+
+    string BuildIndexHtml() =>
+        LoadResource("Unilyze.Templates.serve.index.html")
+            .Replace("__TOKEN__", _auth.Token)
+            .Replace("__TITLE__", WebUtility.HtmlEncode(_title));
+
+    static string LoadResource(string resourceName)
+    {
+        using var stream = typeof(ServeHttpHandler).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Embedded resource not found: {resourceName}");
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
     }
 
     void HandleApi(HttpListenerContext context, string path)
@@ -137,30 +170,6 @@ internal sealed class ServeHttpHandler
 
     static long ParseAfter(string? raw) =>
         long.TryParse(raw, out var value) ? value : -1;
-
-    string BuildBootstrapHtml() =>
-        "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">"
-        + "<title>unilyze serve</title>"
-        + $"<script>window.__UNILYZE_TOKEN__={JsonStringLiteral(_auth.Token)};</script>"
-        + "</head><body><p>unilyze serve is starting.</p></body></html>";
-
-    static string JsonStringLiteral(string value)
-    {
-        var sb = new StringBuilder("\"");
-        foreach (var c in value)
-        {
-            switch (c)
-            {
-                case '"': sb.Append("\\\""); break;
-                case '\\': sb.Append("\\\\"); break;
-                case '<': sb.Append("\\u003c"); break;
-                case '>': sb.Append("\\u003e"); break;
-                case '&': sb.Append("\\u0026"); break;
-                default: sb.Append(c); break;
-            }
-        }
-        return sb.Append('"').ToString();
-    }
 
     static void WriteJson(HttpListenerContext context, int status, string json)
     {
