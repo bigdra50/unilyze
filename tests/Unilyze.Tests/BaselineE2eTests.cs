@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -188,21 +189,12 @@ internal static class CliE2eTestsHelper
         var psi = new ProcessStartInfo
         {
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(120_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 120_000);
     }
 
     internal static (int ExitCode, string StdOut, string StdErr) RunWithInput(string stdin, params string[] args)
@@ -210,24 +202,12 @@ internal static class CliE2eTestsHelper
         var psi = new ProcessStartInfo
         {
             FileName = DotnetHostPath,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        proc.StandardInput.Write(stdin);
-        proc.StandardInput.Close();
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(120_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.RunWithStdin(psi, stdin, 120_000);
     }
 
     static string ResolveCurrentTargetFramework()
