@@ -1,5 +1,7 @@
 using System.Text;
-using Unilyze;
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Output;
 
 const string StartMarker = "<!-- docsgen:start -->";
 const string EndMarker = "<!-- docsgen:end -->";
