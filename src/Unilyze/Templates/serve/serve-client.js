@@ -148,7 +148,8 @@
 
   (async function () {
     await whenViewerReady();
-    try { await fetchSnapshot(); } catch (e) { /* poll loop will retry */ }
+    // The poll loop fetches the snapshot once /api/state reports one exists, so we never
+    // request /api/snapshot before the first analysis completes (avoids a 503).
     pollLoop();
   })();
 })();
