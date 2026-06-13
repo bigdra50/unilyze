@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.DI;
 
 using Microsoft.CodeAnalysis;
 

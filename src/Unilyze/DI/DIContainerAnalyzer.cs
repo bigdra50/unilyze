@@ -1,10 +1,10 @@
-namespace Unilyze;
+namespace Unilyze.DI;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-public sealed record DIRegistration(
+internal sealed record DIRegistration(
     string ServiceType,
     string ImplementationType,
     string ContainerType,
@@ -14,7 +14,7 @@ public sealed record DIRegistration(
     string? ServiceTypeQualified = null,
     string? ImplementationTypeQualified = null);
 
-public static class DIContainerAnalyzer
+internal static class DIContainerAnalyzer
 {
     public static IReadOnlyList<DIRegistration> Analyze(
         IReadOnlyList<SyntaxTree> syntaxTrees,

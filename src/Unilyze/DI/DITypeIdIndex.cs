@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.DI;
 
 // Resolves DI registration endpoint names to TypeIds within the analyzed set.
 // Qualified-name keys ("Namespace.Outer.Inner") take precedence; simple-name keys

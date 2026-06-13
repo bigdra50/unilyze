@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.DI;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
