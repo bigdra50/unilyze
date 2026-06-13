@@ -1,6 +1,8 @@
+using Unilyze.Config;
+using Unilyze.Cli;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Runners;
 
 internal static class MetricsRunner
 {

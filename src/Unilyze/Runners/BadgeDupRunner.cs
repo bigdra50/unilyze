@@ -1,4 +1,7 @@
-namespace Unilyze;
+using Unilyze.Dup;
+using Unilyze.Output;
+using Unilyze.Config;
+namespace Unilyze.Runners;
 
 internal static class BadgeDupRunner
 {

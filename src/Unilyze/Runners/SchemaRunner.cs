@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Cli;
+namespace Unilyze.Runners;
 
 internal static class SchemaRunner
 {

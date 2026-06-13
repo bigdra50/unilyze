@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Runners;
 
 internal static class MultiProjectRunner
 {

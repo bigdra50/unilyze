@@ -1,6 +1,9 @@
+using Unilyze.Dup;
+using Unilyze.Config;
+using Unilyze.Cli;
 using System.Globalization;
 
-namespace Unilyze;
+namespace Unilyze.Runners;
 
 internal static class DupRunner
 {

@@ -1,6 +1,12 @@
+using Unilyze.History;
+using Unilyze.Output;
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Runners;
 
 internal static class TrendRunner
 {

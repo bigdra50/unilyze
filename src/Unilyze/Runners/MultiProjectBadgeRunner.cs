@@ -1,4 +1,9 @@
-namespace Unilyze;
+using Unilyze.Discovery;
+using Unilyze.Output;
+using Unilyze.Config;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
+namespace Unilyze.Runners;
 
 internal static class MultiProjectBadgeRunner
 {
