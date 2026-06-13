@@ -1,6 +1,10 @@
+using Unilyze.Discovery;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class StatuslineFormatter
 {

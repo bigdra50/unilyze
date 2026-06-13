@@ -1,9 +1,13 @@
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
-public static class SarifFormatter
+internal static class SarifFormatter
 {
     const string SchemaUri = "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json";
     const string ToolName = "unilyze";

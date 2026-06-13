@@ -1,7 +1,8 @@
+using Unilyze.Diff;
 using System.Globalization;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class MarkdownDiffFormatter
 {

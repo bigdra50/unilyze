@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class HtmlTemplate
 {

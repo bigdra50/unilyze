@@ -1,6 +1,7 @@
+using Unilyze.History;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class TrendChartSeries
 {

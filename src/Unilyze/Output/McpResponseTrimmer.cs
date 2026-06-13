@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Mcp;
+namespace Unilyze.Output;
 
 internal static class McpResponseTrimmer
 {

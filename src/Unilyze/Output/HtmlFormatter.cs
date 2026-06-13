@@ -1,8 +1,8 @@
 using System.Net;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
-public static class HtmlFormatter
+internal static class HtmlFormatter
 {
     public static string Generate(string analysisJson, string projectPath) =>
         Render(analysisJson, diffJson: "null", projectPath);

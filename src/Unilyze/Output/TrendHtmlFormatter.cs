@@ -1,9 +1,13 @@
+using Unilyze.History;
+using Unilyze.Config;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
 using System.Net;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
-public static class TrendHtmlFormatter
+internal static class TrendHtmlFormatter
 {
     static readonly string Template = LoadTemplate();
 

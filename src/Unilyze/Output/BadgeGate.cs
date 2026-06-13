@@ -1,6 +1,7 @@
+using Unilyze.Runners;
 using System.Globalization;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal enum GateOutcome { Pass, Fail, UsageError }
 

@@ -1,7 +1,10 @@
+using Unilyze.History;
+using Unilyze.Config;
+using Unilyze.Cli;
 using System.Globalization;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class TrendChartRenderer
 {

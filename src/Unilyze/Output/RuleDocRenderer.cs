@@ -1,8 +1,10 @@
+using Unilyze.Config;
+using Unilyze.Detectors;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
-public static class RuleDocRenderer
+internal static class RuleDocRenderer
 {
     public static string Render(string ruleId)
     {

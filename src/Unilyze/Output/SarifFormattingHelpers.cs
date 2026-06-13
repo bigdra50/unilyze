@@ -1,8 +1,12 @@
+using Unilyze.Findings;
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 static class SarifFormattingHelpers
 {

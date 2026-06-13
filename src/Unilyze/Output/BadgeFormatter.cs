@@ -1,8 +1,9 @@
+using Unilyze.Discovery;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 // AnalysisLevel is an extra, non-standard field. shields.io ignores unknown keys in endpoint
 // JSON, so it is safe to surface the analysis depth alongside the standard badge fields (issue 16).

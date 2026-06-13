@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Unilyze;
+namespace Unilyze.Output;
 
 internal static class BadgeDupGate
 {
