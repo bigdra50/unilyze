@@ -142,7 +142,7 @@ public sealed class StatuslineFormatterTests
         Assert.Contains("8.5", output);        // min health
         Assert.Contains("W:9.2", output);
         Assert.Contains("T:7.8", output);
-        Assert.Contains("MI:75", output);
+        Assert.DoesNotContain("MI:", output);
         Assert.Contains("87smells", output);
         Assert.Contains("\U0001f5345", output); // 🔴5
         Assert.Contains("\U0001f4e610", output); // 📦10
@@ -167,9 +167,21 @@ public sealed class StatuslineFormatterTests
         var output = StatuslineFormatter.Format(summary);
 
         Assert.Contains("\x1b[31mCH:3.2", output);  // Red for health
-        Assert.Contains("\x1b[31mMI:40", output);    // Red for MI
         Assert.Contains("\U0001f53415", output);      // 🔴15
         Assert.Contains("\u267b3", output);            // ♻3 cyclic
+    }
+
+    [Theory]
+    [InlineData(80.0, "\x1b[32mMI:80")]
+    [InlineData(60.0, "\x1b[33mMI:60")]
+    [InlineData(59.9, "\x1b[31mMI:60")]
+    public void Format_ShowMi_AppendsMiWithThresholdColor(double mi, string expected)
+    {
+        var summary = new StatuslineFormatter.Summary(8.0, 7.0, 0, 0, 1, mi, 0, 0);
+
+        var output = StatuslineFormatter.Format(summary, showMi: true);
+
+        Assert.Contains(expected, output);
     }
 
     [Fact]

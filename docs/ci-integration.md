@@ -10,7 +10,7 @@ unilyze runs at **SyntaxOnly** in CI when no Unity installation is present (no U
 
 ```bash
 unilyze badge -p ~/MyUnityProject                  # code health (default)
-unilyze badge -p ~/MyUnityProject --metric mi      # maintainability index
+unilyze badge -p ~/MyUnityProject --metric mi      # reference maintainability metric
 unilyze badge -p ~/MyUnityProject --metric smells  # code smell count
 unilyze badge -p ~/MyUnityProject --format svg -o .github/badges/codehealth.svg
 ```
@@ -18,7 +18,7 @@ unilyze badge -p ~/MyUnityProject --format svg -o .github/badges/codehealth.svg
 | Metric | Label | Message | Color |
 |--------|-------|---------|-------|
 | `codehealth` | `code health` | `avg / min` (e.g. `9.2 / 6.1`) | by min: green ≥8.0, yellow ≥5.0, red below |
-| `mi` | `maintainability` | average MI (method-bearing types) | green ≥80, yellow ≥60, red below |
+| `mi` (reference metric) | `maintainability` | average MI (method-bearing types) | green ≥80, yellow ≥60, red below |
 | `smells` | `smells` | warning count | red if critical > 0, yellow if warnings > 0, green if 0 |
 
 Use `--baseline <file>` to suppress known smells before computing badge values (pair with `unilyze baseline create`).
@@ -43,6 +43,9 @@ unilyze badge --metric mi --fail-under 70          # fail if average MI < 70
 unilyze badge --metric smells --fail-over 5        # fail if warnings > 5 (or any critical)
 unilyze badge --metric energy --fail-over 1.0      # fail if Unity hot-path smell density > 1.0
 ```
+
+Use `codehealth` for new quality gates.
+The `mi` gate remains available as a reference metric for compatibility with existing workflows.
 
 | Flag | Valid metrics | Fails when |
 |------|---------------|-----------|

@@ -23,6 +23,10 @@ public sealed class StatuslineHelpTests
         Assert.Contains("--background-refresh", help);
         Assert.Contains("--incremental", help);
         Assert.Contains("--codehealth-v1", help);
+        Assert.Contains("--show-mi", help);
+        Assert.Contains("With --show-mi:", help);
+        Assert.DoesNotContain("T:7.8 MI:", help);
+        Assert.DoesNotContain("MI:<n>         = Average Maintainability Index (integer), always shown", help);
         Assert.Contains(".unilyze/cache", help);
     }
 }

@@ -396,7 +396,7 @@ public sealed class CliE2eTests : IDisposable
     {
         WriteSimpleProject();
         var cachePath = ResolveStatuslineCachePath(_tempDir);
-        const string staleContent = "CH:STALE/1.0 MI:0 0smells";
+        const string staleContent = "CH:STALE/1.0 0smells";
         File.WriteAllText(cachePath, staleContent);
         File.SetLastWriteTimeUtc(cachePath, DateTime.UtcNow.AddHours(-2));
 
@@ -824,6 +824,52 @@ public sealed class CliE2eTests : IDisposable
         var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.Contains("CH:", stdout);
+        Assert.DoesNotContain("MI:", stdout);
+    }
+
+    [Fact]
+    public void Statusline_ShowMi_OutputsMaintainabilityIndex()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--show-mi");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("MI:", stdout);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_ShowMiAndDefaultUseSeparateCaches()
+    {
+        WriteSimpleProject();
+        var defaultCachePath = ResolveStatuslineCachePath(_tempDir);
+        var showMiCachePath = ResolveStatuslineCachePath(_tempDir, showMi: true);
+        TryDeleteStatuslineCache(defaultCachePath);
+        TryDeleteStatuslineCache(showMiCachePath);
+
+        var (defaultColdExit, defaultColdOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        var (showMiColdExit, showMiColdOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600", "--show-mi");
+
+        Assert.Equal(0, defaultColdExit);
+        Assert.Equal(0, showMiColdExit);
+        Assert.Empty(defaultColdOutput);
+        Assert.Empty(showMiColdOutput);
+
+        WaitForStatuslineCache(defaultCachePath, output => output.Contains("CH:") && !output.Contains("MI:"));
+        WaitForStatuslineCache(showMiCachePath, output => output.Contains("MI:"));
+
+        var (defaultWarmExit, defaultWarmOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        var (showMiWarmExit, showMiWarmOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600", "--show-mi");
+        var (_, defaultAgainOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+
+        Assert.Equal(0, defaultWarmExit);
+        Assert.Equal(0, showMiWarmExit);
+        Assert.DoesNotContain("MI:", defaultWarmOutput);
+        Assert.Contains("MI:", showMiWarmOutput);
+        Assert.DoesNotContain("MI:", defaultAgainOutput);
     }
 
     [Fact]
@@ -1810,10 +1856,18 @@ public sealed class CliE2eTests : IDisposable
             """);
     }
 
-    private static string ResolveStatuslineCachePath(string projectPath)
+    private static string ResolveStatuslineCachePath(
+        string projectPath,
+        bool useCodeHealthV1 = false,
+        bool showMi = false)
     {
         var fullPath = ProgramHelpers.ResolveProjectRoot(projectPath);
-        var hash = ComputeStatuslineCacheHash(fullPath);
+        var cacheKey = fullPath;
+        if (useCodeHealthV1)
+            cacheKey += "\0codehealth-v1";
+        if (showMi)
+            cacheKey += "\0show-mi";
+        var hash = ComputeStatuslineCacheHash(cacheKey);
         return Path.Combine(Path.GetTempPath(), $"unilyze-sl-{hash}.txt");
     }
 
@@ -1834,6 +1888,20 @@ public sealed class CliE2eTests : IDisposable
         {
             // Best-effort cleanup for isolated E2E runs.
         }
+    }
+
+    private static void WaitForStatuslineCache(string cachePath, Func<string, bool> predicate)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.Exists(cachePath) && predicate(File.ReadAllText(cachePath)))
+                return;
+            Thread.Sleep(250);
+        }
+
+        var content = File.Exists(cachePath) ? File.ReadAllText(cachePath) : "<missing>";
+        Assert.Fail($"Expected matching statusline cache at {cachePath}. Actual: {content}");
     }
 
     private void WriteCsprojWithValidReference()

@@ -367,7 +367,7 @@ MinMaintainabilityIndex     = 型内メソッド MI の最小（小数第 1 位�
 
 定数: `SmellThresholds.LowMaintainabilityMiWarning`
 
-badge / statusline の色分け（参考）: green >= 80, yellow >= 60, red < 60（`BadgeFormatter.cs` / `StatuslineFormatter.cs`）
+badge / statusline（`--show-mi`）の色分け（参考）: green >= 80, yellow >= 60, red < 60（`BadgeFormatter.cs` / `StatuslineFormatter.cs`）
 
 ### 注意点
 
@@ -382,7 +382,7 @@ MI は 1992 年の Visual Basic コードに対する回帰分析から得られ
 - Arie van Deursen "Think Twice Before Using the Maintainability Index" (https://avandeursen.com/2014/08/29/think-twice-before-using-the-maintainability-index/)
 - Borg et al. "Ghost Echoes Revealed: Benchmarking Maintainability Metrics and Machine Learning Predictions Against Human Assessments" (ICSME 2024, arXiv:2408.10754)
 
-後者を含む近年の評価では、MI を含む古典的メトリクスは人間の保守性評価との一致が弱いことが示されている。unilyze では MI を参考値として出力するが、単独の品質ゲート指標としては推奨しない。Phase 3 では CodeHealth を主指標に一本化し、MI は後方互換または補助表示に縮退する方針である。
+後者を含む近年の評価では、MI を含む古典的メトリクスは人間の保守性評価との一致が弱いことが示されている。unilyze では CodeHealth を既定の単一サーフェスメトリクスとし、MI は参考値として扱う。MI の計算と JSON 出力は、既存コンシューマーおよび公式 Metrics エンジンとの互換性検証のために維持する。
 
 ## TypeRank
 

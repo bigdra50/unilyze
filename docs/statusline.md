@@ -5,7 +5,7 @@
 Example output:
 
 ```
-CH:9.8/5.9 W:9.4 T:7.2 MI:52 111smells 🔴1 📦66
+CH:9.8/5.9 W:9.4 T:7.2 111smells 🔴1 📦66
 ```
 
 ## Legend
@@ -15,7 +15,6 @@ CH:9.8/5.9 W:9.4 T:7.2 MI:52 111smells 🔴1 📦66
 | `CH:avg/min` | Average and minimum Code Health (1.0–10.0) |
 | `W:n` | LoC-weighted average Code Health |
 | `T:n` | Worst-decile average Code Health |
-| `MI:n` | Average Maintainability Index over method-bearing types (green ≥80, yellow ≥60, red <60) |
 | `Nsmells` | Warning-level code smells |
 | `🔴N` | Critical-level code smells (hidden if 0) |
 | `📦N` | Boxing allocations (hidden if 0) |
@@ -23,7 +22,18 @@ CH:9.8/5.9 W:9.4 T:7.2 MI:52 111smells 🔴1 📦66
 | `[level]` | Analysis level marker, shown only below `Complete` (`[syntax]` / `[core]` / `[full]`) |
 
 Code Health color follows the LoC-weighted category: green ≥9.0, yellow ≥4.0, red <4.0.
-MI is green ≥80, yellow ≥60, red <60; warnings are yellow; criticals and cycles are red; boxing is cyan.
+Warnings are yellow; criticals and cycles are red; boxing is cyan.
+
+### Optional MI reference metric
+
+Pass `--show-mi` to append `MI:n`, the average Maintainability Index over method-bearing types:
+
+```
+CH:9.8/5.9 W:9.4 T:7.2 MI:52 111smells 🔴1 📦66
+```
+
+MI is a reference metric and is not part of the default statusline contract.
+Its color is green ≥80, yellow ≥60, red <60.
 
 ## Claude Code setup
 
@@ -52,6 +62,7 @@ The `statusline` subcommand reads `.unilyze.json` and global config automaticall
 | `--level` | Pin analysis level: `syntax`, `core`, `full`, `complete` |
 | `--baseline` | Suppress known smells from a baseline file in counts |
 | `--codehealth-v1` | Display legacy CodeHealth v1 during the one-release migration window |
+| `--show-mi` | Append the reference Maintainability Index metric |
 | `--background-refresh` | Non-blocking refresh (recommended for status bars) |
 | `--verbose` / `--quiet` | Stderr diagnostics |
 
