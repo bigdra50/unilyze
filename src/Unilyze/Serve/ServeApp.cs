@@ -26,7 +26,7 @@ internal sealed class ServeApp
 
         var auth = new ServeAuth(server.Port);
         var store = new SnapshotStore();
-        var handler = new ServeHttpHandler(auth);
+        var handler = new ServeHttpHandler(auth, store);
 
         var projectRoot = ProgramHelpers.ResolveProjectRoot(_options.Path);
         var builder = new SnapshotBuilder(_options);

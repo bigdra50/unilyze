@@ -11,9 +11,16 @@ namespace Unilyze.Serve;
 /// </summary>
 internal sealed class ServeHttpHandler
 {
-    readonly ServeAuth _auth;
+    static readonly TimeSpan LongPollTimeout = TimeSpan.FromSeconds(25);
 
-    public ServeHttpHandler(ServeAuth auth) => _auth = auth;
+    readonly ServeAuth _auth;
+    readonly SnapshotStore _store;
+
+    public ServeHttpHandler(ServeAuth auth, SnapshotStore store)
+    {
+        _auth = auth;
+        _store = store;
+    }
 
     public void Handle(HttpListenerContext context)
     {
@@ -72,10 +79,64 @@ internal sealed class ServeHttpHandler
 
     void HandleApi(HttpListenerContext context, string path)
     {
-        // Concrete endpoints (/api/state, /api/snapshot, /api/source, /api/metrics) are
-        // added by later issues; until then an authorized unknown API path is a 404.
-        WriteStatus(context, 404, "Not found");
+        if (!string.Equals(context.Request.HttpMethod, "GET", StringComparison.Ordinal))
+        {
+            WriteStatus(context, 405, "Method not allowed");
+            return;
+        }
+
+        switch (path)
+        {
+            case "/api/state":
+                HandleState(context);
+                break;
+            case "/api/snapshot":
+                HandleSnapshot(context);
+                break;
+            default:
+                WriteStatus(context, 404, "Not found");
+                break;
+        }
     }
+
+    void HandleState(HttpListenerContext context)
+    {
+        var after = ParseAfter(context.Request.QueryString["after"]);
+        var state = _store.WaitForChange(after, LongPollTimeout);
+        WriteJson(context, 200, ServeStateJson.Build(state));
+    }
+
+    void HandleSnapshot(HttpListenerContext context)
+    {
+        var snapshot = _store.Current;
+        if (snapshot is null)
+        {
+            WriteStatus(context, 503, "No snapshot yet");
+            return;
+        }
+
+        var ifNoneMatch = context.Request.Headers["If-None-Match"];
+        var response = context.Response;
+        response.Headers["ETag"] = snapshot.ETag;
+        response.Headers["Cache-Control"] = "no-store";
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        if (ifNoneMatch is not null && string.Equals(ifNoneMatch, snapshot.ETag, StringComparison.Ordinal))
+        {
+            response.StatusCode = 304;
+            response.OutputStream.Close();
+            return;
+        }
+
+        response.StatusCode = 200;
+        response.ContentType = "application/json; charset=utf-8";
+        response.ContentLength64 = snapshot.JsonBytes.Length;
+        response.OutputStream.Write(snapshot.JsonBytes, 0, snapshot.JsonBytes.Length);
+        response.OutputStream.Close();
+    }
+
+    static long ParseAfter(string? raw) =>
+        long.TryParse(raw, out var value) ? value : -1;
 
     string BuildBootstrapHtml() =>
         "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">"
@@ -99,6 +160,19 @@ internal sealed class ServeHttpHandler
             }
         }
         return sb.Append('"').ToString();
+    }
+
+    static void WriteJson(HttpListenerContext context, int status, string json)
+    {
+        var body = Encoding.UTF8.GetBytes(json);
+        var response = context.Response;
+        response.StatusCode = status;
+        response.ContentType = "application/json; charset=utf-8";
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["Cache-Control"] = "no-store";
+        response.ContentLength64 = body.Length;
+        response.OutputStream.Write(body, 0, body.Length);
+        response.OutputStream.Close();
     }
 
     static void WriteStatus(HttpListenerContext context, int status, string message)
