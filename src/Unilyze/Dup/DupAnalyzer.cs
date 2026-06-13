@@ -1,4 +1,7 @@
-namespace Unilyze;
+using Unilyze.Config;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
+namespace Unilyze.Dup;
 
 internal static class DupAnalyzer
 {

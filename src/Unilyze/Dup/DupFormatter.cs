@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Dup;
 
 internal static class DupFormatter
 {

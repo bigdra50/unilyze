@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Dup;
 
 internal readonly record struct NormalizedToken(string Text, int StartLine, int EndLine);
 

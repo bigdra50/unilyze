@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Dup;
 
 internal static class CloneRollingHash
 {

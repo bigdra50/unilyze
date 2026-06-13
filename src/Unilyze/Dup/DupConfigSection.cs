@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Dup;
 
 internal sealed record DupConfigSection(
     [property: JsonPropertyName("minTokens")]
