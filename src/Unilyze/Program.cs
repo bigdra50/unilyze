@@ -43,6 +43,8 @@ if (args.Length >= 1 && args[0] == "triage")
     return TriageRunner.Run(args[1..]);
 if (args.Length >= 1 && args[0] == "mcp")
     return McpRunner.Run(args[1..]);
+if (args.Length >= 1 && args[0] == "serve")
+    return ServeRunner.Run(args[1..]);
 
 var opts = ProgramHelpers.ParseOptions(args);
 
@@ -232,6 +234,7 @@ Usage:
   unilyze dup                              Detect duplicated code (token-normalized clone detection)
   unilyze query --worst 5 -i snapshot.json Per-type evidence packs for agent grounding
   unilyze trend <dir-of-jsons>             Show quality trend across multiple snapshots
+  unilyze serve -p <path>                  Serve a live viewer that re-analyzes on source change
   unilyze -p <path>                        Analyze project and open in browser
   unilyze -p <path> --no-open              Analyze project and write HTML/JSON without opening a browser
   unilyze -p <path> -o graph.html          Save HTML viewer (+ JSON) to file
@@ -284,6 +287,7 @@ Subcommands:
   dup             Detect duplicated code (run 'unilyze dup --help')
   triage          Persist per-finding verdicts (run 'unilyze triage --help')
   mcp             MCP server over stdio for agent integration (run 'unilyze mcp --help')
+  serve           Live code-quality viewer over a loopback HTTP server (run 'unilyze serve --help')
   badge           Output shields.io endpoint badge JSON
   config          Manage configuration (run 'unilyze config --help' for details)
   metrics         Show metric definitions and code smell thresholds

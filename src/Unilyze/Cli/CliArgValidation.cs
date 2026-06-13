@@ -7,7 +7,7 @@ internal static class CliArgValidation
         "diff", "hotspot", "dup", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
         "baseline", "calibrate", "triage", "skills", "help", "version",
         "diff", "hotspot", "query", "trend", "metrics", "schema", "statusline", "badge", "config",
-        "baseline", "calibrate", "triage", "mcp", "skills", "help", "version",
+        "baseline", "calibrate", "triage", "mcp", "serve", "skills", "help", "version",
     ];
 
     static readonly HashSet<string> AnalyzeValueOptions = new(StringComparer.Ordinal)
@@ -144,6 +144,17 @@ internal static class CliArgValidation
         "-h", "--help",
     };
 
+    static readonly HashSet<string> ServeValueOptions = new(StringComparer.Ordinal)
+    {
+        "-p", "--path", "--port", "--level", "--profile", "--exclude-dir", "-a", "--assembly",
+        "--prefix", "--tfm",
+    };
+
+    static readonly HashSet<string> ServeBooleanOptions = new(StringComparer.Ordinal)
+    {
+        "-h", "--help", "--no-open", "--resolve-nuget", "--include-generated",
+    };
+
     static readonly HashSet<string> BaselineCreateValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "-o", "--output", "--level",
@@ -217,6 +228,9 @@ internal static class CliArgValidation
 
     public static int ValidateMcpArgs(string[] args) =>
         CliArgValidationSupport.ValidateOptionsAndPositionals(args, NoValueOptions, McpBooleanOptions, "mcp");
+
+    public static int ValidateServeArgs(string[] args) =>
+        CliArgValidationSupport.ValidateOptionsAndPositionals(args, ServeValueOptions, ServeBooleanOptions, "serve");
 
     public static int ValidateBaselineArgs(string[] args)
     {
