@@ -174,7 +174,7 @@ jobs:
           fi
 
           "$binary" skills list
-          "$binary" badge -p src/Unilyze --metric codehealth --fail-under 8.0
+          "$binary" badge -p src/Unilyze --metric codehealth --fail-under 6.6
           "$binary" -p src/Unilyze -f json -o ./artifacts/self-contained.json
           dotnet run --project src/Unilyze -c Release -f net10.0 -- \
             -p src/Unilyze -f json -o ./artifacts/dotnet-hosted.json

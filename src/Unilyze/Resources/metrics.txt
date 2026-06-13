@@ -39,9 +39,10 @@ Metrics (per assembly):
   H        Relational Cohesion = (R + 1) / N. Internal relationship density.
 
 CodeHealth (per type, 1.0 - 10.0, higher is better):
-  Weighted score from 6 factors:
-    avgCogCC (25%), maxCogCC (20%), lineCount (15%),
-    methodCount (10%), maxNestingDepth (15%), excessiveParamMethods (15%).
+  v2 = clamp(10 - complexityPenalty - sizePenalty - interfacePenalty, 1, 10).
+  Correlated inputs share an axis via max(), so they are not double-counted.
+  Categories: healthy >= 9, warning >= 4 and < 9, alert < 4.
+  codeHealthV1 preserves the legacy six-factor weighted score for one release.
 
 {{SMELL_THRESHOLDS}}
 

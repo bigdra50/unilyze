@@ -16,6 +16,7 @@ internal static class DiffRunner
         bool FailOnRegression,
         bool FailOnVersionMismatch,
         bool ChangedOnly,
+        bool UseCodeHealthV1,
         double? FailOnDeltaBelow);
 
     private sealed record DiffSummaries(
@@ -52,6 +53,7 @@ internal static class DiffRunner
         bool FailOnRegression,
         bool FailOnVersionMismatch,
         bool ChangedOnly,
+        bool UseCodeHealthV1,
         double? FailOnDeltaBelow,
         string? PathOverride,
         AnalysisLevel? RequestedLevel,
@@ -127,6 +129,7 @@ internal static class DiffRunner
             opts.ContainsKey("--fail-on-regression"),
             opts.ContainsKey("--fail-on-version-mismatch"),
             opts.ContainsKey("--changed-only"),
+            opts.ContainsKey("--codehealth-v1"),
             failOnDeltaBelow,
             opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path"),
             requestedLevel,
@@ -196,6 +199,7 @@ internal static class DiffRunner
     static DiffRunOptions ToDiffRunOptions(DiffCliInput input) =>
         new(null, null, "", null, input.Output, input.Format, input.NoOpen,
             input.FailOnRegression, input.FailOnVersionMismatch, input.ChangedOnly,
+            input.UseCodeHealthV1,
             input.FailOnDeltaBelow);
 
     static int ExecuteBaseRefDiff(DiffCliInput input)
@@ -350,6 +354,9 @@ internal static class DiffRunner
         WarnIfReferenceOptionsDiffer(before, after);
 
         var versionExit = EvaluateVersionMismatch(before, after, options.FailOnVersionMismatch);
+
+        before = CodeHealthVersionSelector.Select(before, options.UseCodeHealthV1);
+        after = CodeHealthVersionSelector.Select(after, options.UseCodeHealthV1);
 
         var diff = DiffCalculator.Compare(before, after);
         var diffJson = JsonSerializer.Serialize(diff, AnalysisJsonContext.Default.DiffResult);
@@ -587,6 +594,7 @@ internal static class DiffRunner
               unilyze diff <before.json> <after.json> -f markdown       Output GFM markdown to stdout (CI / PR comments)
               unilyze diff <before.json> <after.json> --fail-on-regression  Exit 2 if quality regressed (CI gate)
               unilyze diff <before.json> <after.json> --fail-on-version-mismatch  Exit 2 if metricsVersion differs
+              unilyze diff <before.json> <after.json> --codehealth-v1            Compare legacy CodeHealth v1
               unilyze diff <before.json> <after.json> --changed-only             Omit unchanged types from JSON output
               unilyze diff <before.json> <after.json> --fail-on-delta-below 0.8 Exit 2 if deltaScore is below 0.8
               unilyze diff --base-ref <git-ref> <after.json>            Analyze base ref in a temp worktree and diff
@@ -600,6 +608,7 @@ internal static class DiffRunner
                   --no-open            When generating HTML, do not auto-open in browser
                   --fail-on-regression Exit 2 when avg/min CodeHealth dropped or smells (warning/critical) increased
                   --fail-on-version-mismatch Exit 2 when metricsVersion differs between snapshots
+                  --codehealth-v1           Use codeHealthV1 for score deltas and regression gates
                   --changed-only       Omit unchanged types from JSON output (summary counts preserved)
                   --fail-on-delta-below Exit 2 when deltaScore is below the given value (0..1)
               -h, --help               Show this help

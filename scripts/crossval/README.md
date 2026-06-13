@@ -30,8 +30,8 @@ unilyze aggregates (excluding constructors, operators, and property accessors co
 only on the official side). `boolAmpOr` counts boolean-typed `&` / `|` operands via
 semantic model (same rule as unilyze Complete analysis).
 
-Exclude source-generated `JsonSerializerContext` partials (`AnalysisJsonContext`,
-`BadgeJsonContext`) when matching types: the official engine sees the generated
+Exclude source-generated `JsonSerializerContext` partials (types ending in
+`JsonContext`) when matching types: the official engine sees the generated
 members, unilyze's source-level view does not. Also exclude compiler `Program`
 (top-level statements compile to `Program.<Main>$`, which unilyze does not model as a type).
 

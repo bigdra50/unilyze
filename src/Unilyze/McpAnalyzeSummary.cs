@@ -17,7 +17,13 @@ internal static class McpAnalyzeSummary
         sb.AppendLine(
             $"Types: {summary.TypeCount} | Assemblies: {result.Assemblies.Count}");
         sb.AppendLine(
-            $"Code Health: avg {summary.AverageCodeHealth:F1} / min {summary.MinCodeHealth:F1}");
+            $"Code Health: avg {summary.AverageCodeHealth:F1} / min {summary.MinCodeHealth:F1}"
+            + $" / LoC-weighted {summary.LocWeightedAverageCodeHealth:F1}"
+            + $" / worst-decile {summary.WorstDecileCodeHealth:F1}");
+        var categories = CountCategories(result);
+        sb.AppendLine(
+            $"Code Health categories: {categories.Healthy} healthy, "
+            + $"{categories.Warning} warning, {categories.Alert} alert");
         sb.AppendLine(
             $"Smells: {smells.Warning} warning, {smells.Critical} critical, {smells.Informational} informational");
         if (result.AnalysisLevel is not null)
@@ -57,5 +63,21 @@ internal static class McpAnalyzeSummary
         }
 
         return new SmellCounts(warning, critical, informational);
+    }
+
+    static (int Healthy, int Warning, int Alert) CountCategories(AnalysisResult result)
+    {
+        var categories = (Healthy: 0, Warning: 0, Alert: 0);
+        foreach (var type in result.TypeMetrics ?? [])
+        {
+            switch (type.CodeHealthCategory ?? CodeHealthCalculator.Classify(type.CodeHealth))
+            {
+                case "healthy": categories.Healthy++; break;
+                case "warning": categories.Warning++; break;
+                case "alert": categories.Alert++; break;
+            }
+        }
+
+        return categories;
     }
 }

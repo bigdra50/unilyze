@@ -8,6 +8,8 @@ public sealed class StatuslineHelpTests
         var help = StatuslineRunner.BuildUsageText();
 
         Assert.Contains("CH", help);
+        Assert.Contains("W:", help);
+        Assert.Contains("T:", help);
         Assert.Contains("MI", help);
         Assert.Contains("smells", help);
         Assert.Contains("\U0001f534", help); // 🔴
@@ -20,6 +22,7 @@ public sealed class StatuslineHelpTests
         Assert.Contains("--quiet", help);
         Assert.Contains("--background-refresh", help);
         Assert.Contains("--incremental", help);
+        Assert.Contains("--codehealth-v1", help);
         Assert.Contains(".unilyze/cache", help);
     }
 }
