@@ -1,7 +1,10 @@
+using Unilyze.Discovery;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Unilyze;
+namespace Unilyze.Incremental;
 
 internal static class SyntaxIncrementalCollector
 {

@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Incremental;
 
 internal static class SyntaxIncrementalState
 {

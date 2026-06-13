@@ -1,6 +1,9 @@
+using Unilyze.DI;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using Microsoft.CodeAnalysis;
 
-namespace Unilyze;
+namespace Unilyze.Incremental;
 
 internal static class SyntaxIncrementalSemanticPhase
 {

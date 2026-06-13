@@ -1,6 +1,8 @@
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Incremental;
 
 internal static class SyntaxCacheStore
 {

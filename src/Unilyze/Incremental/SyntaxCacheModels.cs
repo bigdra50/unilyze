@@ -1,7 +1,10 @@
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis;
 
-namespace Unilyze;
+namespace Unilyze.Incremental;
 
 internal sealed record SyntaxCacheManifest(
     int SchemaVersion,
