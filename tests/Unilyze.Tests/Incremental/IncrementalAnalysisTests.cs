@@ -159,14 +159,19 @@ public sealed class IncrementalAnalysisTests : IDisposable
         if (Directory.Exists(cacheDir))
             Directory.Delete(cacheDir, true);
 
-        var coldMs = MeasureRun(repoRoot, incremental: false);
-        var firstIncrementalMs = MeasureRun(repoRoot, incremental: true);
-        var warmMs = MeasureRun(repoRoot, incremental: true);
+        var args = new[]
+        {
+            "-p", repoRoot, "--level", "syntax", "-f", "json", "--incremental"
+        };
+        var (coldExitCode, _, coldStderr) = Run(args);
+        Assert.True(coldExitCode == 0,
+            $"Cold incremental analysis exited with code {coldExitCode}. stderr:{Environment.NewLine}{coldStderr}");
 
-        Assert.True(warmMs <= firstIncrementalMs,
-            $"Expected warm ({warmMs}ms) <= first incremental ({firstIncrementalMs}ms)");
-        Assert.True(warmMs < coldMs,
-            $"Expected warm ({warmMs}ms) < cold full ({coldMs}ms)");
+        var (warmExitCode, _, warmStderr) = Run(args);
+        Assert.True(warmExitCode == 0,
+            $"Warm incremental analysis exited with code {warmExitCode}. stderr:{Environment.NewLine}{warmStderr}");
+        Assert.Contains("[incremental] cache hit:", warmStderr);
+        Assert.DoesNotContain("[incremental] re-parsed:", warmStderr);
     }
 
     void WriteInitialProject()
@@ -267,22 +272,6 @@ public sealed class IncrementalAnalysisTests : IDisposable
         var (exitCode, stdout, stderr) = Run(args.ToArray());
         Assert.Equal(0, exitCode);
         return stdout;
-    }
-
-    static long MeasureRun(string projectRoot, bool incremental)
-    {
-        var args = new List<string>
-        {
-            "-p", projectRoot, "--level", "syntax", "-f", "json", "-o", Path.GetTempFileName()
-        };
-        if (incremental)
-            args.Add("--incremental");
-
-        var sw = Stopwatch.StartNew();
-        var (exitCode, _, _) = Run(args.ToArray());
-        sw.Stop();
-        Assert.Equal(0, exitCode);
-        return sw.ElapsedMilliseconds;
     }
 
     static string Normalize(string json)
