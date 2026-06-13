@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    # Belt-and-suspenders: caps the entire job at 20m so a deadlocked process
+    # that bypasses blame-hang still fails fast instead of consuming 6h.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
