@@ -1456,7 +1456,10 @@ function rebuildBadges(){
     // Phase 3: render
     items.forEach(bd=>{
       const isCluster=bd.count>1;
-      if(!isCluster&&!badgeLodVisible(bd.score, zoom)) return;
+      // LOD-hide healthy badges only when there is real clutter to reduce. Sparse views
+      // (<=3 badges, e.g. the collapsed root) are not clustered, so hiding them by LOD would
+      // make badges vanish entirely below zoom 0.5 with no fallback — keep them visible.
+      if(!isCluster&&raw.length>3&&!badgeLodVisible(bd.score, zoom)) return;
 
       const b=document.createElement('div');
       b.className=isCluster?'hb hb-cluster':(bd.isNs?'hb hb-ns':'hb');
