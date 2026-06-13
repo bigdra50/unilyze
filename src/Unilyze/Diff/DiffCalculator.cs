@@ -1,6 +1,9 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
+namespace Unilyze.Diff;
 
-public static class DiffCalculator
+internal static class DiffCalculator
 {
     private sealed record DeltaScoreCalculation(double Score, int LowRiskCount, int HighRiskCount);
 

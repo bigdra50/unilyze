@@ -1,6 +1,7 @@
+using Unilyze.Output;
 using System.Globalization;
 
-namespace Unilyze;
+namespace Unilyze.Diff;
 
 internal sealed record DiffGateResult(bool HasRegression, string? Reason);
 
