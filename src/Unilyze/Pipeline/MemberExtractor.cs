@@ -1,7 +1,8 @@
+using Unilyze.Metrics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class MemberExtractor
 {

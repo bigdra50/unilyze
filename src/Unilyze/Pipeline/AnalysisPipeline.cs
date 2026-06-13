@@ -1,6 +1,13 @@
+using Unilyze.Findings;
+using Unilyze.Discovery;
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Incremental;
+using Unilyze.Cli;
 using System.Diagnostics;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class AnalysisPipeline
 {

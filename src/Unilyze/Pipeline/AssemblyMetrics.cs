@@ -1,6 +1,8 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+namespace Unilyze.Pipeline;
 
-public sealed record AssemblyMetrics(
+internal sealed record AssemblyMetrics(
     string AssemblyName,
     int TypeCount,
     int ClassCount,

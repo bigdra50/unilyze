@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 // Lookup tables from syntax trees, shared by BaseTypeResolver and SemanticEnricher.
 internal static class SyntaxLookups

@@ -1,18 +1,23 @@
+using Unilyze.DI;
+using Unilyze.Discovery;
+using Unilyze.Config;
+using Unilyze.Metrics;
+using Unilyze.Incremental;
 using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
-public sealed record TypeDependency(
+internal sealed record TypeDependency(
     string FromType,
     string ToType,
     DependencyKind Kind,
     string? FromTypeId = null,
     string? ToTypeId = null);
 
-public enum DependencyKind
+internal enum DependencyKind
 {
     Inheritance,
     InterfaceImpl,
@@ -27,13 +32,13 @@ public enum DependencyKind
     SerializedReference
 }
 
-public sealed record ParameterInfo(string Name, string Type);
+internal sealed record ParameterInfo(string Name, string Type);
 
-public sealed record AttributeInfo(string Name, IReadOnlyDictionary<string, string>? Arguments);
+internal sealed record AttributeInfo(string Name, IReadOnlyDictionary<string, string>? Arguments);
 
-public sealed record GenericConstraintInfo(string TypeParameter, IReadOnlyList<string> Constraints);
+internal sealed record GenericConstraintInfo(string TypeParameter, IReadOnlyList<string> Constraints);
 
-public sealed record TypeNodeInfo(
+internal sealed record TypeNodeInfo(
     string Name,
     string Namespace,
     string Kind,
@@ -54,7 +59,7 @@ public sealed record TypeNodeInfo(
     string? TypeId = null,
     TypeRole? Role = null);
 
-public sealed record MemberInfo(
+internal sealed record MemberInfo(
     string Name,
     string Type,
     string MemberKind,
@@ -71,11 +76,11 @@ public sealed record MemberInfo(
     double? HalsteadEffort = null,
     double? HalsteadEstimatedBugs = null);
 
-public sealed record AnalyzeDirectoryResult(
+internal sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
     IReadOnlyList<SyntaxTree> SyntaxTrees);
 
-public static class TypeAnalyzer
+internal static class TypeAnalyzer
 {
     public static IReadOnlyList<TypeNodeInfo> AnalyzeDirectory(string directory, string assemblyName)
         => AnalyzeDirectoryWithTrees(directory, assemblyName).Types;

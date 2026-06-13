@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal sealed class AssemblyAggregationIndex
 {

@@ -1,6 +1,6 @@
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
-public sealed record TypeApiSurface(
+internal sealed record TypeApiSurface(
     string TypeId,
     string QualifiedName,
     bool HasDocComment,

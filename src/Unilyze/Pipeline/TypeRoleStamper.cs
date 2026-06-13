@@ -1,8 +1,10 @@
+using Unilyze.Unity;
+using Unilyze.Detectors;
 using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class TypeRoleStamper
 {

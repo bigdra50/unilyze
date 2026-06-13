@@ -1,4 +1,7 @@
-namespace Unilyze;
+using Unilyze.Discovery;
+using Unilyze.Config;
+using Unilyze.Detectors;
+namespace Unilyze.Pipeline;
 
 internal sealed record AnalysisBuildOptions(
     string Path,

@@ -1,13 +1,14 @@
+using Unilyze.Discovery;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
-public sealed record CompilationResult(
+internal sealed record CompilationResult(
     CSharpCompilation? Compilation,
     AnalysisLevel Level);
 
-public static class CompilationFactory
+internal static class CompilationFactory
 {
     public static CompilationResult Create(
         ResolvedDlls resolved,

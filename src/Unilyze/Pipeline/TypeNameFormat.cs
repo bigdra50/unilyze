@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class TypeNameFormat
 {

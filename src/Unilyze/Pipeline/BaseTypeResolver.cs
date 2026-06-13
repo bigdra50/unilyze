@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 // Resolves base types and interfaces semantically (e.g. distinguishing interfaces
 // from base classes in the base list) before metrics enrichment.

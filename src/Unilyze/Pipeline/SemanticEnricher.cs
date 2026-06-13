@@ -1,9 +1,13 @@
+using Unilyze.Unity;
+using Unilyze.Config;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class SemanticEnricher
 {

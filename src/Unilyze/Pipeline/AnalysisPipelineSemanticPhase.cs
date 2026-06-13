@@ -1,7 +1,12 @@
+using Unilyze.DI;
+using Unilyze.Unity;
+using Unilyze.Discovery;
+using Unilyze.Metrics;
+using Unilyze.Cli;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal static class AnalysisPipelineSemanticPhase
 {

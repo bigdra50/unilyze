@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Discovery;
+namespace Unilyze.Pipeline;
 
 // Parsing and presentation for the --level option (issue 17).
 // CLI tokens (syntax|core|full|complete) map to the AnalysisLevel enum.

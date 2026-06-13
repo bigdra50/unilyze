@@ -1,9 +1,15 @@
+using Unilyze.Query;
+using Unilyze.Diff;
+using Unilyze.History;
+using Unilyze.Discovery;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
-public sealed record AnalysisResult(
+internal sealed record AnalysisResult(
     string ProjectPath,
     DateTimeOffset AnalyzedAt,
     IReadOnlyList<AssemblyInfo> Assemblies,
@@ -30,7 +36,7 @@ public sealed record AnalysisResult(
     public const int CurrentMetricsVersion = 4;
 }
 
-public sealed record AssemblyInfo(
+internal sealed record AssemblyInfo(
     string Name,
     string Directory,
     IReadOnlyList<string> References,

@@ -1,7 +1,10 @@
+using Unilyze.Discovery;
+using Unilyze.Incremental;
+using Unilyze.Cli;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Unilyze;
+namespace Unilyze.Pipeline;
 
 internal sealed record PipelineDiscoverState(
     IReadOnlyList<AsmdefInfo> Targets,
