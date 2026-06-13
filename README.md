@@ -21,7 +21,7 @@ Documentation: <https://bigdra50.github.io/unilyze/>
 - No .NET installation is required for Homebrew, Scoop, or direct-download binaries
 - The `dotnet tool` channel requires .NET 8.0 or later
 
-**.NET version support policy:** Supported runtimes are the current LTS and the previous LTS (until its EOL). As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+**.NET version support policy:** The `dotnet tool` channel targets every TFM from the oldest supported LTS up to the latest LTS, with no gaps. EOL is not an exclusion criterion; the floor LTS is raised only once it reaches EOL. As of 2026-06, supported TFMs are `net8.0`, `net9.0`, and `net10.0`.
 
 ## Quick Start
 

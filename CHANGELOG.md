@@ -11,6 +11,10 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+### Changed
+
+- Re-added `net9.0` as a supported target framework alongside `net8.0` and `net10.0`, reversing the 0.4.0 drop. The .NET version support policy now targets every TFM from the oldest supported LTS up to the latest LTS with no gaps; EOL is no longer an exclusion criterion, and the floor LTS is raised only once it reaches EOL ([#43](https://github.com/bigdra50/unilyze/issues/43)). **Global-tool impact:** the tool again runs on a .NET 9 runtime.
+
 ## [0.4.1] - 2026-06-13
 
 ### Added

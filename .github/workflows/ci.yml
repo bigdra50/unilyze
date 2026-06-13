@@ -21,6 +21,9 @@ jobs:
             dotnet-version: 8.0.x
             framework: net8.0
           - os: ubuntu-latest
+            dotnet-version: 9.0.x
+            framework: net9.0
+          - os: ubuntu-latest
             dotnet-version: 10.0.x
             framework: net10.0
           - os: windows-latest
@@ -67,7 +70,7 @@ jobs:
       - name: Build
         run: dotnet build src/Unilyze/Unilyze.csproj -c Release --no-restore
 
-      # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net10.0).
+      # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net9.0;net10.0).
       # Path and Release/net10.0 match .github/workflows/badges.yml; runtime references enable Complete analysis.
       - name: CodeHealth gate
         run: |

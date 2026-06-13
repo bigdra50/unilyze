@@ -7,9 +7,9 @@ For installation and usage, see [README.md](README.md).
 
 - unilyze supports `.NET 8.0 or later`
 - A single latest SDK is sufficient for daily development. Current standard: `.NET SDK 10.0.103`
-- Install `net8.0;net10.0` runtimes only when running the full local test matrix
+- Install `net8.0;net9.0;net10.0` runtimes only when running the full local test matrix
 
-CI matrix: `net8.0;net10.0`.
+CI matrix: `net8.0;net9.0;net10.0`.
 
 ### Documentation site generator
 
@@ -17,7 +17,7 @@ The GitHub Pages site uses mkdocs-material so documentation remains plain Markdo
 
 ### .NET version support policy
 
-Supported runtimes are the **current LTS** and the **previous LTS** (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.
+Supported runtimes are **every TFM from the oldest supported LTS up to the latest LTS**, with no gaps. EOL is not an exclusion criterion, so STS releases between the LTS floor and the latest LTS stay supported even after their own EOL; the floor LTS is raised only once it reaches EOL. As of 2026-06, supported TFMs are `net8.0`, `net9.0`, and `net10.0`.
 
 ### TFM and Roslyn maintenance
 
@@ -86,9 +86,10 @@ Running the following is normally sufficient:
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net10.0 --no-restore -v minimal
 ```
 
-Run `net8.0` additionally only for local compatibility checks:
+Run `net8.0` and `net9.0` additionally only for local compatibility checks:
 
 ```bash
+dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net9.0 --no-restore -v minimal
 dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f net8.0 --no-restore -v minimal
 ```
 
@@ -306,8 +307,8 @@ Related files:
 
 ## Release Checklist
 
-1. Green `dotnet test` on `net8.0` / `net10.0`
-2. Green CI matrix on `net8.0` / `net10.0`
+1. Green `dotnet test` on `net8.0` / `net9.0` / `net10.0`
+2. Green CI matrix on `net8.0` / `net9.0` / `net10.0`
 3. Pass pack/install smoke
 4. Confirm README / docs / package metadata match the implementation
 5. Confirm HTML fallback and `--no-open` are not broken
