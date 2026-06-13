@@ -308,3 +308,39 @@ body.offline-mode .panel{
 .diff-section .dline .dn{color:var(--dim);min-width:140px;flex-shrink:0;font-size:10px}
 .diff-section .dline .dv{color:var(--text)}
 .diff-section .dline .da{color:var(--dim);font-size:10px}
+/* --- serve: read-only source panel (only present in the live serve viewer) --- */
+.source-panel{
+  position:absolute;top:0;right:0;width:46%;max-width:760px;height:100%;
+  background:var(--surface);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:30;box-shadow:-8px 0 24px rgba(0,0,0,.4)
+}
+.source-panel.hidden{display:none}
+.source-header{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--border);background:var(--bg)
+}
+.source-path{flex:1;font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variation-settings:'MONO' 1}
+.source-body{
+  flex:1;margin:0;padding:12px;overflow:auto;font-size:12px;line-height:16px;
+  color:var(--text);background:var(--bg);white-space:pre;tab-size:4;
+  font-family:"Cascadia Code","Fira Code","Consolas",monospace
+}
+.src-btn{
+  background:var(--bg);border:1px solid var(--accent);border-radius:5px;
+  padding:3px 9px;color:var(--accent);font-family:var(--font);font-size:11px;cursor:pointer
+}
+.src-btn:hover{background:var(--accent);color:var(--bg)}
+
+/* --- serve: live status bar --- */
+.serve-status{
+  display:flex;align-items:center;gap:8px;padding:3px 12px;font-size:11px;
+  color:var(--dim);background:var(--surface);border-bottom:1px solid var(--border);
+  font-variation-settings:'MONO' 1
+}
+.serve-status .ss-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0}
+.serve-status .ss-dot.ss-ready{background:#56d364}
+.serve-status .ss-dot.ss-analyzing{background:#e3b341;animation:ss-pulse 1s ease-in-out infinite}
+.serve-status .ss-dot.ss-failed{background:#f97583}
+.serve-status .ss-dot.ss-reconnect{background:#6e7681;animation:ss-pulse 1s ease-in-out infinite}
+.serve-status .ss-gen{color:var(--text)}
+@keyframes ss-pulse{0%,100%{opacity:1}50%{opacity:.3}}

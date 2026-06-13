@@ -1614,6 +1614,10 @@ cy.on('tap','node[nodeType="type"]',e=>{
   h+=esc(t.name)+'</h2>';
   h+='<div class="meta">'+esc(t.kind)+' &middot; '+esc(t.assembly)+'</div>';
   if(t.namespace)h+='<div class="meta">'+esc(t.namespace)+'</div>';
+  // serve mode exposes an opaque fileId in t.filePath; offer in-browser read-only source.
+  if(typeof window.unilyzeFetchSource==='function'&&t.filePath){
+    h+='<div class="meta"><button class="src-btn" data-fileid="'+escAttr(t.filePath)+'" data-line="'+(t.startLine||1)+'">View source</button></div>';
+  }
 
   if(mx){
     const hcol=healthColor(mx.codeHealth);
@@ -1733,6 +1737,35 @@ cy.on('tap','node[nodeType="namespace"],node[nodeType="compound"]',e=>{
 
 cy.on('tap',e=>{if(e.target===cy)dp.classList.add('hidden')});
 document.getElementById('cls').onclick=()=>dp.classList.add('hidden');
+
+// --- In-browser read-only source view (serve mode only) ---
+// The body is rendered with textContent ONLY (never innerHTML) and the server supplies
+// content via the fileId allowlist, so no markup or absolute path reaches the DOM.
+const _sp=document.getElementById('sp');
+const _spBody=document.getElementById('spBody');
+const _spPath=document.getElementById('spPath');
+async function openSource(fileId,startLine){
+  if(!_sp||typeof window.unilyzeFetchSource!=='function') return;
+  try{
+    const r=await window.unilyzeFetchSource(fileId);
+    if(_spPath) _spPath.textContent=r.path||'';
+    if(_spBody){
+      _spBody.textContent=r.text;
+      _sp.classList.remove('hidden');
+      const ln=Math.max(1,(startLine|0)||1);
+      const lh=parseFloat(getComputedStyle(_spBody).lineHeight)||16;
+      _spBody.scrollTop=(ln-1)*lh;
+    }
+  }catch(err){
+    if(_spBody){ _spBody.textContent='Failed to load source: '+err.message; _sp.classList.remove('hidden'); }
+  }
+}
+if(dc) dc.addEventListener('click',e=>{
+  const b=e.target.closest('.src-btn');
+  if(b) openSource(b.dataset.fileid, parseInt(b.dataset.line,10));
+});
+const _spClose=document.getElementById('spClose');
+if(_spClose) _spClose.onclick=()=>{ if(_sp) _sp.classList.add('hidden'); };
 
 // --- Search UX (#75): helpers shared with offline keyboard handling ---
 const SEARCH_EXPAND_CAP=50;

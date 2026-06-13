@@ -126,6 +126,9 @@ internal sealed class ServeHttpHandler
             case "/api/snapshot":
                 HandleSnapshot(context);
                 break;
+            case "/api/source":
+                HandleSource(context);
+                break;
             default:
                 WriteStatus(context, 404, "Not found");
                 break;
@@ -165,6 +168,55 @@ internal sealed class ServeHttpHandler
         response.ContentType = "application/json; charset=utf-8";
         response.ContentLength64 = snapshot.JsonBytes.Length;
         response.OutputStream.Write(snapshot.JsonBytes, 0, snapshot.JsonBytes.Length);
+        response.OutputStream.Close();
+    }
+
+    void HandleSource(HttpListenerContext context)
+    {
+        var snapshot = _store.Current;
+        if (snapshot is null)
+        {
+            WriteStatus(context, 503, "No snapshot yet");
+            return;
+        }
+
+        var fileId = context.Request.QueryString["fileId"];
+        if (string.IsNullOrEmpty(fileId))
+        {
+            WriteStatus(context, 400, "Missing fileId");
+            return;
+        }
+
+        // Exact-match allowlist only: the API never accepts a raw path, and a fileId not in
+        // the current snapshot's allowlist is rejected (no StartsWith, no path traversal).
+        if (!snapshot.Content.FileIdToAbsolutePath.TryGetValue(fileId, out var absolutePath))
+        {
+            WriteStatus(context, 404, "Unknown fileId");
+            return;
+        }
+
+        string text;
+        try
+        {
+            text = File.ReadAllText(absolutePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException)
+        {
+            WriteStatus(context, 404, "Source unavailable");
+            return;
+        }
+
+        var displayPath = snapshot.Content.FileIdToDisplayPath.GetValueOrDefault(fileId, fileId);
+        var body = Encoding.UTF8.GetBytes(text);
+        var response = context.Response;
+        response.StatusCode = 200;
+        response.ContentType = "text/plain; charset=utf-8";
+        response.Headers["X-Content-Type-Options"] = "nosniff";
+        response.Headers["Cache-Control"] = "no-store";
+        // Relative display name only; the absolute path never reaches the client.
+        response.Headers["X-Unilyze-Source-Path"] = displayPath;
+        response.ContentLength64 = body.Length;
+        response.OutputStream.Write(body, 0, body.Length);
         response.OutputStream.Close();
     }
 
