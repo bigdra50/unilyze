@@ -223,22 +223,31 @@ The accepted tradeoff is a larger download in exchange for an installation path 
 
 The tracked files [packaging/unilyze.rb](packaging/unilyze.rb) and [packaging/unilyze.json](packaging/unilyze.json) contain release placeholders.
 The release workflow replaces the version and SHA256 placeholders, validates the rendered files, and attaches `unilyze.rb` and `unilyze.json` to the GitHub Release.
+Both distribution channels are then updated automatically — no per-release manual copy is required.
 
-Create the Homebrew tap once:
+Scoop installs from `https://github.com/bigdra50/unilyze/releases/latest/download/unilyze.json`.
+That URL always redirects to the newest release asset, so the rendered manifest attached to each Release is served without any commit back to this repository.
 
-1. Create the public repository `bigdra50/homebrew-tap`.
-2. Create a `Formula/` directory in that repository.
-3. Copy the rendered release asset to `Formula/unilyze.rb`.
-4. Commit and push the formula in the tap repository.
+Homebrew installs from the tap repository `bigdra50/homebrew-tap`.
+The release workflow's `Update Homebrew tap` step pushes the rendered `Formula/unilyze.rb` to that repository over SSH using a deploy key, when the `HOMEBREW_TAP_DEPLOY_KEY` secret is set.
+If the secret is absent, the step logs a warning and skips the push; the rendered formula is still attached to the Release.
 
-For every release:
+A deploy key is scoped to the single tap repository and is not tied to any user account, which is why it is preferred over a personal access token here.
 
-1. Download the rendered `unilyze.rb` and `unilyze.json` assets from the GitHub Release.
-2. Replace `Formula/unilyze.rb` in `bigdra50/homebrew-tap`.
-3. Replace `packaging/unilyze.json` in this repository with the rendered manifest so its raw GitHub URL is installable by Scoop.
-4. Verify `brew install bigdra50/tap/unilyze` and the documented Scoop install command on machines without .NET.
+One-time setup (already provisioned):
 
-Automating the tap update with a cross-repository personal access token is intentionally deferred.
+1. The public repository `bigdra50/homebrew-tap` exists with `Formula/unilyze.rb`.
+2. An Ed25519 deploy key with write access is registered on `bigdra50/homebrew-tap` (Settings → Deploy keys).
+3. Its private key is stored as the `HOMEBREW_TAP_DEPLOY_KEY` secret on this repository.
+
+To rotate the key:
+
+```bash
+ssh-keygen -t ed25519 -N "" -C "unilyze-tap-deploy" -f ./tap_deploy_key
+gh repo deploy-key add ./tap_deploy_key.pub -R bigdra50/homebrew-tap --title "unilyze-release-push" --allow-write
+gh secret set HOMEBREW_TAP_DEPLOY_KEY -R bigdra50/unilyze < ./tap_deploy_key
+rm ./tap_deploy_key ./tap_deploy_key.pub
+```
 
 ## Current Implementation Notes
 
@@ -305,8 +314,7 @@ Related files:
 6. Apply the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
 7. If you changed a metric-calculation file, verify the `metricsVersion` bump (`AnalysisResult.CurrentMetricsVersion`) and CHANGELOG `[metrics]` entry
 8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into a new `## [X.Y.Z]` section and set the release date). The publish workflow fails if this section is missing for the tagged version.
-9. After the release workflow completes, copy the rendered `unilyze.rb` to `bigdra50/homebrew-tap/Formula/unilyze.rb`
-10. Replace `packaging/unilyze.json` with the rendered release asset and verify Homebrew and Scoop installation without .NET
+9. After the release workflow completes, verify `brew install bigdra50/tap/unilyze` and the Scoop install command on a machine without .NET. The Homebrew tap push and the Scoop manifest URL are automated (see [Homebrew tap and Scoop manifest](#homebrew-tap-and-scoop-manifest)); no manual copy is required
 
 ## NuGet Publish
 
@@ -334,7 +342,7 @@ Publish procedure:
 3. Create and push a semver tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
 4. The `Publish NuGet` workflow runs `net10.0` test, pack, release smoke, `dotnet nuget push`, and creates a GitHub Release whose body is the matching `CHANGELOG.md` section
 5. Four matrix jobs publish and archive self-contained binaries, recording binary and archive sizes in their job summaries
-6. The release-assets job creates `SHA256SUMS`, renders the Homebrew formula and Scoop manifest, and uploads all assets to the GitHub Release
+6. The release-assets job creates `SHA256SUMS`, renders the Homebrew formula and Scoop manifest, uploads all assets to the GitHub Release, and pushes the rendered formula to `bigdra50/homebrew-tap` over SSH when `HOMEBREW_TAP_DEPLOY_KEY` is set
 
 Dry-run (no NuGet push, no GitHub Release upload): manually trigger the `Publish NuGet` workflow from Actions (`workflow_dispatch`).
 The dry-run still builds all four binaries, runs the Linux bundle smoke, generates checksums, and validates the rendered package files.

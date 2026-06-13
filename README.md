@@ -38,7 +38,7 @@ Install a self-contained binary without .NET:
 brew install bigdra50/tap/unilyze
 
 # Windows
-scoop install https://raw.githubusercontent.com/bigdra50/unilyze/main/packaging/unilyze.json
+scoop install https://github.com/bigdra50/unilyze/releases/latest/download/unilyze.json
 ```
 
 Release archives for `osx-arm64`, `osx-x64`, `linux-x64`, and `win-x64` are also available from [GitHub Releases](https://github.com/bigdra50/unilyze/releases).
