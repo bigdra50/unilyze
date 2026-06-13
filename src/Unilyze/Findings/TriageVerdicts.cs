@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Findings;
 
 internal static class TriageVerdicts
 {

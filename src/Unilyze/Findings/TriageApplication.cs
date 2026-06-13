@@ -1,6 +1,8 @@
+using Unilyze.Config;
+using Unilyze.Pipeline;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Findings;
 
 internal static class TriageApplication
 {

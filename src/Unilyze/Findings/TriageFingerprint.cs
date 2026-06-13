@@ -1,7 +1,10 @@
+using Unilyze.Metrics;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Findings;
 
 internal sealed record TriageEntry(
     [property: JsonPropertyName("id")] string Id,
