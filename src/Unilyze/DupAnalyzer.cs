@@ -3,6 +3,7 @@ namespace Unilyze;
 internal static class DupAnalyzer
 {
     public const int DefaultMinTokens = 100;
+    public const int MetricsVersion = 3;
 
     public static CloneReport Analyze(DupAnalysisOptions options)
     {
@@ -28,7 +29,7 @@ internal static class DupAnalyzer
         return new CloneReport(
             projectRoot,
             toolVersion,
-            AnalysisResult.CurrentMetricsVersion,
+            MetricsVersion,
             summary,
             classes);
     }

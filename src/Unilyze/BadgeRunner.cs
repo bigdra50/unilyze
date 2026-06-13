@@ -27,6 +27,7 @@ internal static class BadgeRunner
         var failUnder = opts.GetValueOrDefault("--fail-under");
         var failOver = opts.GetValueOrDefault("--fail-over");
         var baselinePath = opts.GetValueOrDefault("--baseline");
+        var useCodeHealthV1 = opts.ContainsKey("--codehealth-v1");
 
         if (ProgramHelpers.HasFlagWithoutValue(args, "--baseline"))
         {
@@ -100,7 +101,14 @@ internal static class BadgeRunner
             else
             {
                 var standard = BadgeStandardRunner.TryAnalyze(
-                    fullPath, config, opts, metric, requestedLevel, baselinePath, out var standardExit);
+                    fullPath,
+                    config,
+                    opts,
+                    metric,
+                    requestedLevel,
+                    baselinePath,
+                    useCodeHealthV1,
+                    out var standardExit);
                 if (standard is null)
                     return standardExit;
                 badge = standard.Badge;
@@ -151,13 +159,14 @@ internal static class BadgeRunner
               unilyze badge                                    Analyze current directory
               unilyze badge -p <path>                          Analyze specified project
               unilyze badge -p <path> --metric codehealth      Code health badge (default)
-              unilyze badge -p <path> --metric mi              Maintainability index badge
+              unilyze badge -p <path> --metric mi              (reference metric — see docs/metrics.md)
               unilyze badge -p <path> --metric smells          Code smells badge
               unilyze badge -p <path> --metric energy          Energy pressure proxy badge
               unilyze badge -p <path> --metric dup             Duplication badge
               unilyze badge -p <path> -o badge.json            Write JSON to file
               unilyze badge -p <path> --format svg -o codehealth.svg   SVG badge (works in private repos via relative path)
               unilyze badge --metric codehealth --fail-under 7  Exit 2 if min CodeHealth < 7 (CI gate)
+              unilyze badge --metric codehealth --codehealth-v1    Display and gate with legacy CodeHealth v1
               unilyze badge --metric mi --fail-under 70         Exit 2 if average MI < 70
               unilyze badge --metric smells --fail-over 5       Exit 2 if warnings > 5 (or any critical)
               unilyze badge --metric energy --fail-over 1.0     Exit 2 if hot-path smell density > 1.0
@@ -179,6 +188,7 @@ internal static class BadgeRunner
                              Quality gate for energy: fail if hot-path smell density is above threshold
                              Quality gate for dup: fail if duplication percent above threshold
               --baseline     Suppress known smells from a baseline file before gating
+              --codehealth-v1 Use legacy CodeHealth v1 for codehealth display and gates
               -h, --help     Show this help
 
             Exit codes:

@@ -11,6 +11,7 @@ internal static class BadgeStandardRunner
         BadgeMetric metric,
         AnalysisLevel? requestedLevel,
         string? baselinePath,
+        bool useCodeHealthV1,
         out int exitCode)
     {
         exitCode = 0;
@@ -39,7 +40,7 @@ internal static class BadgeStandardRunner
         }
 
         var excludeBaselined = effectiveBaseline is not null;
-        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
+        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined, useCodeHealthV1);
         return new Result(BadgeFormatter.Build(metric, summary), summary);
     }
 }

@@ -16,6 +16,8 @@ internal static class StatuslineRunner
         bool Quiet,
         bool BackgroundRefresh,
         bool Incremental,
+        bool UseCodeHealthV1,
+        bool ShowMi,
         string Path,
         int RefreshSeconds,
         string? BaselinePath,
@@ -41,7 +43,7 @@ internal static class StatuslineRunner
         if (!TryResolveFullPath(request.Path, request.Verbose, out var fullPath))
             return 1;
 
-        var paths = CreateCachePaths(fullPath);
+        var paths = CreateCachePaths(fullPath, request.UseCodeHealthV1, request.ShowMi);
 
         return request.BackgroundRefresh
             ? RunBackgroundRefresh(fullPath, request, paths.TxtPath)
@@ -56,6 +58,8 @@ internal static class StatuslineRunner
         var quiet = opts.ContainsKey("--quiet");
         var backgroundRefresh = opts.ContainsKey("--background-refresh");
         var incremental = opts.ContainsKey("--incremental");
+        var useCodeHealthV1 = opts.ContainsKey("--codehealth-v1");
+        var showMi = opts.ContainsKey("--show-mi");
 
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var refreshStr = opts.GetValueOrDefault("--refresh") ?? DefaultRefreshSeconds.ToString();
@@ -81,6 +85,8 @@ internal static class StatuslineRunner
             quiet,
             backgroundRefresh,
             incremental,
+            useCodeHealthV1,
+            showMi,
             path,
             refreshSeconds,
             baselinePath,
@@ -104,9 +110,14 @@ internal static class StatuslineRunner
         }
     }
 
-    static StatuslineCachePaths CreateCachePaths(string fullPath)
+    static StatuslineCachePaths CreateCachePaths(string fullPath, bool useCodeHealthV1, bool showMi)
     {
-        var cacheHash = ComputePathHash(fullPath);
+        var cacheKey = fullPath;
+        if (useCodeHealthV1)
+            cacheKey += "\0codehealth-v1";
+        if (showMi)
+            cacheKey += "\0show-mi";
+        var cacheHash = ComputePathHash(cacheKey);
         var cacheDir = Path.GetTempPath();
         return new StatuslineCachePaths(
             Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.txt"),
@@ -241,6 +252,12 @@ internal static class StatuslineRunner
         if (request.Incremental)
             childArgs.Add("--incremental");
 
+        if (request.UseCodeHealthV1)
+            childArgs.Add("--codehealth-v1");
+
+        if (request.ShowMi)
+            childArgs.Add("--show-mi");
+
         return childArgs;
     }
 
@@ -266,9 +283,31 @@ internal static class StatuslineRunner
         {
             try
             {
-                await proc.StandardOutput.ReadToEndAsync();
-                await proc.StandardError.ReadToEndAsync();
-                await proc.WaitForExitAsync();
+                var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+                var stderrTask = proc.StandardError.ReadToEndAsync();
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+                try
+                {
+                    await proc.WaitForExitAsync(cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    try
+                    {
+                        proc.Kill(entireProcessTree: true);
+                    }
+                    catch
+                    {
+                        // Best-effort termination for background process.
+                    }
+                }
+
+                await Task.WhenAll(stdoutTask, stderrTask);
+            }
+            catch
+            {
+                // Background drain: swallow all exceptions to avoid unobserved task faults.
             }
             finally
             {
@@ -355,7 +394,11 @@ internal static class StatuslineRunner
         if (built is null)
             return 1;
 
-        var formatted = FormatStatusline(built.Value.Result, built.Value.ExcludeBaselined);
+        var formatted = FormatStatusline(
+            built.Value.Result,
+            built.Value.ExcludeBaselined,
+            request.UseCodeHealthV1,
+            request.ShowMi);
         File.WriteAllText(cacheTxtPath, formatted);
         Console.Write(formatted);
         return 0;
@@ -391,10 +434,14 @@ internal static class StatuslineRunner
         return triageError is 1 ? null : (result, effectiveBaseline is not null);
     }
 
-    static string FormatStatusline(AnalysisResult result, bool excludeBaselined)
+    static string FormatStatusline(
+        AnalysisResult result,
+        bool excludeBaselined,
+        bool useCodeHealthV1,
+        bool showMi)
     {
-        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined);
-        return StatuslineFormatter.Format(summary);
+        var summary = StatuslineFormatter.ComputeSummary(result, excludeBaselined, useCodeHealthV1);
+        return StatuslineFormatter.Format(summary, showMi);
     }
 
     static string ComputePathHash(string path)
@@ -441,6 +488,9 @@ internal static class StatuslineRunner
           --level        Pin analysis level: syntax, core, full, complete
           --baseline     Suppress known smells from a baseline file in smell counts
           --incremental  Reuse syntax-level parse cache in <project>/.unilyze/cache/ (requires --level syntax)
+          --codehealth-v1
+                         Display legacy CodeHealth v1 during the one-release migration window
+          --show-mi      Append the reference Maintainability Index metric to the output
           --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
           --quiet        Suppress info lines on stderr (warnings still shown)
           --background-refresh
@@ -457,27 +507,31 @@ internal static class StatuslineRunner
 
     static string BuildUsageOutputSection() =>
         """
-        Output format: CH:9.4/3.2 MI:72 87smells 🔴5 📦12 ♻3 [core]
+        Output format: CH:9.4/3.2 W:9.1 T:7.8 87smells 🔴5 📦12 ♻3 [core]
           CH:<avg>/<min> = Code Health average and minimum (1.0-10.0), always shown
-          MI:<n>         = Average Maintainability Index (integer), always shown
           <n>smells      = Warning code smells count, always shown
           🔴<n>          = Critical code smells count (hidden if 0)
           📦<n>          = Boxing allocation count (hidden if 0)
           ♻<n>           = Cyclic dependency count (hidden if 0)
           [level]        = Analysis level marker, shown only below Complete
                            ([syntax] / [core] / [full])
+
+        With --show-mi:
+          MI:<n>         = Average Maintainability Index (integer reference metric)
         """;
 
     static string BuildUsageColorSection() =>
         """
         Color coding:
           Code Health (avg and min): green (>=8.0), yellow (>=5.0), red (<5.0)
-          Maintainability Index: green (>=80), yellow (>=60), red (<60)
           Warnings (smells): yellow
           Criticals: red
           Boxing: cyan
           Cyclic dependencies: red
           Level marker: yellow
+
+        With --show-mi:
+          Maintainability Index: green (>=80), yellow (>=60), red (<60)
         """;
 
     static string BuildUsageCacheSection(string tempDir) =>

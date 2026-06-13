@@ -51,4 +51,5 @@ internal readonly record struct BadgeSetup(
     string? FailUnder,
     string? FailOver,
     string? BaselinePath,
+    bool UseCodeHealthV1,
     string MetricSlug);

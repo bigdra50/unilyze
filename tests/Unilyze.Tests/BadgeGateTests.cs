@@ -22,8 +22,8 @@ public sealed class BadgeGateTests
             0,
             0,
             miBearingCount,
-            hotPathSmells,
-            hotPathMethods);
+            HotPathSmellCount: hotPathSmells,
+            HotPathMethodCount: hotPathMethods);
 
     [Fact]
     public void Evaluate_NoGateFlags_Passes()

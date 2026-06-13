@@ -37,7 +37,9 @@ public sealed record TypeEvidenceMetrics(
     int MaxCognitiveComplexity,
     int? BoxingCount,
     int? ClosureCaptureCount,
-    int? ParamsAllocationCount);
+    int? ParamsAllocationCount,
+    string? CodeHealthCategory = null,
+    double? CodeHealthV1 = null);
 
 public sealed record TypeEvidenceSmell(
     CodeSmellKind Kind,

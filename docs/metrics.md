@@ -367,7 +367,7 @@ Types without methods are not MI targets. Project average (statusline / badge) u
 
 Constant: `SmellThresholds.LowMaintainabilityMiWarning`
 
-badge / statusline color bands (reference): green >= 80, yellow >= 60, red < 60 (`BadgeFormatter.cs` / `StatuslineFormatter.cs`)
+badge / statusline (`--show-mi`) color bands (reference): green >= 80, yellow >= 60, red < 60 (`BadgeFormatter.cs` / `StatuslineFormatter.cs`)
 
 ### Notes
 
@@ -382,7 +382,7 @@ MI relies on fixed coefficients (171, 5.2, 0.23, 16.2) from a 1992 regression on
 - Arie van Deursen "Think Twice Before Using the Maintainability Index" (https://avandeursen.com/2014/08/29/think-twice-before-using-the-maintainability-index/)
 - Borg et al. "Ghost Echoes Revealed: Benchmarking Maintainability Metrics and Machine Learning Predictions Against Human Assessments" (ICSME 2024, arXiv:2408.10754)
 
-Recent evaluations, including the latter, show that classical metrics including MI correlate weakly with human maintainability assessments. unilyze outputs MI as a reference value but does not recommend it as a standalone quality-gate metric. Phase 3 consolidates on CodeHealth as the primary indicator; MI is scaled back to backward compatibility or supplementary display.
+Recent evaluations, including the latter, show that classical metrics including MI correlate weakly with human maintainability assessments. unilyze uses CodeHealth as the single default surface metric and treats MI as a reference value. MI computation and JSON output are retained for existing consumers and compatibility verification against the official Metrics engine.
 
 ## TypeRank
 
@@ -485,16 +485,82 @@ burstCoverage = covered / eligible
 
 Proprietary metric. Type-level score (1.0 - 10.0).
 
-### Weighting
+### v2 definition
 
-| Element | Weight |
-|------|------|
-| Average CogCC | 25% |
-| Max CogCC | 20% |
-| Line count | 15% |
-| Method count | 10% |
-| Max nesting depth | 15% |
-| Excessive parameter count | 15% |
+CodeHealth v2 uses a non-compensatory piecewise penalty scheme in which favorable factors cannot offset severely degraded factors.
+Each input is converted to a non-negative penalty, and the final value is calculated using the following formula.
+
+```text
+complexity = max(maxCogCCPenalty, maxNestingPenalty)
+size = max(lineCountPenalty, methodCountPenalty)
+interface = excessiveParameterMethodCountPenalty
+
+codeHealth = clamp(10 - complexity - size - interface, 1, 10)
+```
+
+Taking the `max` within each axis avoids double-counting due to collinearity observed in Phase 6.
+`avgCogCC` had Spearman ρ = 0.98 with `maxCogCC`, nesting had ρ = 0.94-0.96 with CogCC, and lineCount had ρ = 0.75 with methodCount.
+
+Each penalty is 0 at or below the safe upper bound, increases to 25% of its maximum from safe to warning, and increases to its maximum from warning to alert.
+It saturates at alert and above.
+
+| Axis | Input | safe | warning | alert | Maximum penalty |
+|----|------|-----:|--------:|------:|-----------------:|
+| complexity | maxCogCC | 16 | 19 | 24 | 4.0 |
+| complexity | maxNestingDepth | 3 | 4 | 5 | 4.0 |
+| size | lineCount | 272 | 391 | 878 | 3.0 |
+| size | methodCount | 11 | 16 | 34 | 3.0 |
+| interface | excessiveParameterMethodCount | 0 | 1 | 2 | 2.0 |
+
+The thresholds were calibrated from 1,456 types across five Phase 6 projects using the same Alves method as `ThresholdCalibrator`, with LoC weighting and equal system weighting.
+For size, P70/P80/P90 are used directly.
+For complexity, residual P70/P80/P90 = 1.166/4.028/9.453 from `maxCogCC = -18.908071 + 5.968062 * ln(LOC + 1)` were projected onto the reference LOC 272, yielding 16/19/24.
+Because directly subtracting the residual at runtime could improve the score as LOC increases, it is projected onto fixed thresholds that preserve monotonicity.
+Integer metrics whose quantiles are equal are widened to the next integer to preserve the warning band.
+
+v2 has the following invariants.
+
+- The score is 10.0 when all inputs are in the safe band.
+- The score is 1.0 when all axes are saturated.
+- Increasing any input never increases the score.
+- If any one axis is saturated, the score is below 9.0 even when the others are safe.
+
+### Categories
+
+| category | Range |
+|----------|------|
+| `healthy` | 9.0 or higher |
+| `warning` | 4.0 or higher and below 9.0 |
+| `alert` | below 4.0 |
+
+Output in lowercase in JSON at `typeMetrics[].codeHealthCategory`.
+`highComplexityTypeCount` equals the number of `alert` types.
+
+### Project aggregation
+
+- `averageCodeHealth`: simple mean across types.
+- `minCodeHealth`: minimum value. `badge --fail-under` continues to evaluate this value.
+- `locWeightedAverageCodeHealth`: `sum(codeHealth * lineCount) / sum(lineCount)`.
+- `worstDecileCodeHealth`: mean of the bottom 10% of scores. Includes at least one type.
+
+badge and statusline display the simple mean, minimum, LoC-weighted mean, and bottom-decile mean.
+Colors follow the category boundaries of the LoC-weighted mean.
+
+### v1 migration compatibility
+
+The v2 introduction release also outputs the old value in `typeMetrics[].codeHealthV1`.
+`--codehealth-v1` for badge, statusline, and diff switches display and gating to the v1 value.
+This field and flag will be removed in the first minor release after the v2 introduction.
+
+| Item | v1 | v2 |
+|------|----|----|
+| Composition | linear weighted sum of 6 factors | sum of saturating piecewise penalties |
+| CogCC | avg 25% + max 20% | residual-calibrated thresholds for max; avg excluded |
+| nesting | independent 15% | max within the complexity axis |
+| size | LOC 15% + methods 10% | max within the size axis |
+| interface | linear score of 15% | saturating penalty with a maximum of 2.0 |
+| Severe-factor compensation | possible | not possible |
+| Categories | none | healthy / warning / alert |
 
 ## Code Smell
 
