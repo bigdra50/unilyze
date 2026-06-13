@@ -25,10 +25,20 @@ internal sealed class ServeApp
         var url = server.Url;
 
         var auth = new ServeAuth(server.Port);
+        var store = new SnapshotStore();
         var handler = new ServeHttpHandler(auth);
 
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(_options.Path);
+        var builder = new SnapshotBuilder(_options);
+        using var coordinator = new AnalysisCoordinator(store, builder.Build);
+        using var watcher = new ServeChangeWatcher(projectRoot, coordinator.RequestAnalysis);
+
         Console.Error.WriteLine($"unilyze serve listening on {url}");
+        Console.Error.WriteLine($"Watching {projectRoot}");
         Console.Error.WriteLine("Press Ctrl-C to stop.");
+
+        coordinator.Start();
+        watcher.Start();
 
         if (!_options.NoOpen)
             ProgramHelpers.TryOpenInBrowser(url);
