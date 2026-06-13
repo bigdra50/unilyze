@@ -11,6 +11,8 @@ internal sealed class AnalysisCoordinator : IDisposable
     readonly SnapshotStore _store;
     readonly Func<ServeSnapshotContent> _build;
     readonly TimeSpan _debounce;
+    readonly Action<ServeSnapshot>? _onPublished;
+    readonly Action<string>? _onFailed;
     readonly AutoResetEvent _wake = new(false);
     readonly CancellationTokenSource _cts = new();
     Thread? _worker;
@@ -18,11 +20,15 @@ internal sealed class AnalysisCoordinator : IDisposable
     public AnalysisCoordinator(
         SnapshotStore store,
         Func<ServeSnapshotContent> build,
-        TimeSpan? debounce = null)
+        TimeSpan? debounce = null,
+        Action<ServeSnapshot>? onPublished = null,
+        Action<string>? onFailed = null)
     {
         _store = store;
         _build = build;
         _debounce = debounce ?? TimeSpan.FromMilliseconds(300);
+        _onPublished = onPublished;
+        _onFailed = onFailed;
     }
 
     /// <summary>Starts the worker and requests an immediate first analysis.</summary>
@@ -61,12 +67,14 @@ internal sealed class AnalysisCoordinator : IDisposable
         try
         {
             var content = _build();
-            _store.PublishSuccess(content);
+            var snapshot = _store.PublishSuccess(content);
+            _onPublished?.Invoke(snapshot);
         }
         catch (Exception ex)
         {
             // Keep the previous snapshot; surface the failure as stale state.
             _store.PublishFailure(ex.Message);
+            _onFailed?.Invoke(ex.Message);
         }
     }
 

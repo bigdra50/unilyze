@@ -8,6 +8,13 @@
   // serve runs ELK on the main thread (CSP-friendly, no cross-origin blob worker).
   window.__UNILYZE_ELK_MAIN_THREAD__ = true;
 
+  // Measurement point (#199): browser-side derived-state + layout apply time per generation.
+  var lastApplyMs = null;
+  window.__unilyzeOnApply = function (ms) {
+    lastApplyMs = ms;
+    console.info('[unilyze] browser apply ' + ms.toFixed(1) + 'ms');
+  };
+
   var tokenMeta = document.querySelector('meta[name="unilyze-token"]');
   var token = tokenMeta ? tokenMeta.getAttribute('content') : '';
   var authHeaders = { 'Authorization': 'Bearer ' + token };
@@ -96,10 +103,17 @@
     } else {
       dotEl.className = 'ss-dot ss-ready';
       if (textEl) textEl.textContent = 'live';
+      if (state.metrics) {
+        console.info('[unilyze] gen ' + state.generation
+          + ': analysis ' + Math.round(state.metrics.analysisMillis) + 'ms'
+          + ', json ' + state.metrics.jsonSizeBytes + ' bytes'
+          + (lastApplyMs != null ? (', apply ' + lastApplyMs.toFixed(1) + 'ms') : ''));
+      }
     }
     if (timeEl) {
       var t = formatTime(state.lastSuccessUtc);
-      timeEl.textContent = t ? (' · updated ' + t) : '';
+      var applyNote = lastApplyMs != null ? (' · apply ' + lastApplyMs.toFixed(0) + 'ms') : '';
+      timeEl.textContent = (t ? (' · updated ' + t) : '') + applyNote;
     }
   }
 

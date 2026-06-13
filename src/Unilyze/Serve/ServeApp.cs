@@ -32,7 +32,13 @@ internal sealed class ServeApp
         var store = new SnapshotStore();
         var handler = new ServeHttpHandler(auth, store, title);
         var builder = new SnapshotBuilder(_options);
-        using var coordinator = new AnalysisCoordinator(store, builder.Build);
+        using var coordinator = new AnalysisCoordinator(
+            store,
+            builder.Build,
+            onPublished: snapshot => Console.Error.WriteLine(
+                $"gen {snapshot.Generation}: analysis {snapshot.Content.Metrics.AnalysisMillis:F0}ms, "
+                + $"json {snapshot.Content.Metrics.JsonSizeBytes} bytes"),
+            onFailed: error => Console.Error.WriteLine($"analysis failed (snapshot kept stale): {error}"));
         using var watcher = new ServeChangeWatcher(projectRoot, coordinator.RequestAnalysis);
 
         Console.Error.WriteLine($"unilyze serve listening on {url}");

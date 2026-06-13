@@ -129,6 +129,10 @@ internal sealed class ServeHttpHandler
             case "/api/source":
                 HandleSource(context);
                 break;
+            case "/api/metrics":
+                // Loopback + authed view of the latest measurements (analysis time, JSON size).
+                WriteJson(context, 200, ServeStateJson.Build(_store.GetState()));
+                break;
             default:
                 WriteStatus(context, 404, "Not found");
                 break;
