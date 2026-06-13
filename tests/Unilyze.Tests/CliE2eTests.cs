@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -34,21 +35,12 @@ public sealed class CliE2eTests : IDisposable
         {
             // Reuse the SDK-selected host to avoid apphost/runtime lookup mismatches in CI and local dev.
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(60_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 60_000);
     }
 
     private static string ResolveCurrentTargetFramework()
