@@ -21,6 +21,7 @@ internal static class ServeStaticAssets
         ["/static/vendor/cytoscape.min.js"] = new("Unilyze.Templates.vendor.cytoscape.min.js", "text/javascript; charset=utf-8", false),
         ["/static/vendor/dagre.min.js"] = new("Unilyze.Templates.vendor.dagre.min.js", "text/javascript; charset=utf-8", false),
         ["/static/vendor/cytoscape-dagre.js"] = new("Unilyze.Templates.vendor.cytoscape-dagre.js", "text/javascript; charset=utf-8", false),
+        ["/static/vendor/elk.bundled.js"] = new("Unilyze.Templates.vendor.elk.bundled.js", "text/javascript; charset=utf-8", false),
     };
 
     public static bool TryHandle(HttpListenerContext context, string path)

@@ -41,6 +41,8 @@
     <EmbeddedResource Include="Templates\vendor\dagre.min.js" LogicalName="Unilyze.Templates.vendor.dagre.min.js" />
     <!-- cytoscape-dagre.js v2.5.0 SHA256 bf70fe402991dcbff33e05a7e4a5271c78020bb75e85d1c80ab7538e4157112e MIT -->
     <EmbeddedResource Include="Templates\vendor\cytoscape-dagre.js" LogicalName="Unilyze.Templates.vendor.cytoscape-dagre.js" />
+    <!-- elk.bundled.js (elkjs) v0.9.3 SHA256 b0745abd7f23cd91690a1587e377edbe19fd7233c783300290936720546216d4 EPL-2.0; serve-only same-origin ELK (main-thread, CSP-compatible) -->
+    <EmbeddedResource Include="Templates\vendor\elk.bundled.js" LogicalName="Unilyze.Templates.vendor.elk.bundled.js" />
     <EmbeddedResource Include="Resources\*.txt" LogicalName="Unilyze.Resources.%(Filename)%(Extension)" />
   </ItemGroup>
   <ItemGroup>

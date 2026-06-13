@@ -82,15 +82,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
+elkjs 0.9.3
+-----------
+Homepage: https://github.com/kieler/elkjs
+SHA256 (elk.bundled.js): b0745abd7f23cd91690a1587e377edbe19fd7233c783300290936720546216d4
+Copyright (c) the elkjs / Eclipse Layout Kernel contributors
+
+Licensed under the Eclipse Public License 2.0 (EPL-2.0). elk.bundled.js is
+embedded as a same-origin resource and served by `unilyze serve` (it runs on the
+main thread, so no blob worker or external CDN script is used). The full EPL-2.0
+license text is reproduced below; source is available at the homepage above.
+
+The static `analyze -f html` viewer instead loads elkjs from unpkg.com at runtime
+(see "CDN-Only Dependencies" below) and is not affected by this embedding.
+
+# Eclipse Public License - v 2.0
+
+THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC
+LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
+CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.
+
+The complete Eclipse Public License 2.0 is available at:
+https://www.eclipse.org/legal/epl-2.0/ and is distributed with the elkjs source
+package as LICENSE.md.
+
+
 CDN-Only Dependencies (not redistributed)
 -----------------------------------------
 
-The HTML viewer loads the following libraries from unpkg.com at runtime. They are
-NOT bundled in the unilyze package or embedded in generated HTML output.
+The static HTML viewer (`analyze -f html`) loads the following libraries from
+unpkg.com at runtime. They are NOT bundled in the static single-file HTML output.
 
 - elkjs 0.9.3 (EPL-2.0) — https://github.com/kieler/elkjs
+  (The serve viewer embeds elk.bundled.js instead; see the elkjs entry above.)
 
-When ELK layout is unavailable (e.g. offline), the viewer falls back to the
-bundled dagre layout. If elkjs were embedded in a future release, its EPL-2.0
-copyright notice and full license text would need to be retained per the
-Eclipse Public License 2.0 terms.
+When ELK layout is unavailable (e.g. offline), the static viewer falls back to the
+bundled dagre layout.
