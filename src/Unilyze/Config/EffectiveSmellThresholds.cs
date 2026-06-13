@@ -1,12 +1,12 @@
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
 /// <summary>
 /// Effective code-smell detection thresholds for a single analysis run.
 /// Defaults come from <see cref="SmellThresholds"/>; per-smell overrides from config are applied on top.
 /// </summary>
-public sealed record EffectiveSmellThresholds(
+internal sealed record EffectiveSmellThresholds(
     int GodClassLinesWarning,
     int GodClassMethodsWarning,
     int GodClassLinesCritical,

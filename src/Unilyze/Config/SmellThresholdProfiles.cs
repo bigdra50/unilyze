@@ -1,13 +1,15 @@
+using Unilyze.Detectors;
+using Unilyze.Pipeline;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
 /// <summary>
 /// Built-in smell-threshold profiles keyed by <see cref="TypeRole"/>.
 /// Provisional unity values are literature-derived (SATT SCAM 2016; Alves ICSM 2010);
 /// final per-role calibration is expected from <c>unilyze calibrate</c>.
 /// </summary>
-public static class SmellThresholdProfiles
+internal static class SmellThresholdProfiles
 {
     public const string DefaultProfileName = "default";
     public const string UnityProfileName = "unity";

@@ -1,12 +1,14 @@
+using Unilyze.Detectors;
+using Unilyze.Metrics;
 using System.Text;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
 /// <summary>
 /// Single source of truth for code-smell detection thresholds.
 /// Consumed by detectors, CLI metrics output, SARIF rule metadata, and docs drift tests.
 /// </summary>
-public static class SmellThresholds
+internal static class SmellThresholds
 {
     public const int GodClassLinesWarning = 500;
     public const int GodClassMethodsWarning = 20;

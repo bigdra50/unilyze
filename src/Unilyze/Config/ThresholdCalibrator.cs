@@ -1,10 +1,13 @@
-namespace Unilyze;
+using Unilyze.Metrics;
+using Unilyze.Cli;
+using Unilyze.Pipeline;
+namespace Unilyze.Config;
 
 /// <summary>
 /// Derives smell-threshold candidates from pooled analysis snapshots using the
 /// Alves, Ypma &amp; Visser (ICSM 2010) weighted-percentile procedure.
 /// </summary>
-public static class ThresholdCalibrator
+internal static class ThresholdCalibrator
 {
     public const string Methodology =
         "Alves, Ypma & Visser (ICSM 2010): LOC-weighted method metrics pooled with equal per-system weight; "

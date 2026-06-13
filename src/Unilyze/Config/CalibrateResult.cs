@@ -1,8 +1,9 @@
+using Unilyze.Metrics;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
-public sealed record CalibrateResult(
+internal sealed record CalibrateResult(
     string Methodology,
     int MetricsVersion,
     string ToolVersion,
@@ -11,20 +12,20 @@ public sealed record CalibrateResult(
     CalibrateMetricsBlock Metrics,
     CalibrateUnilyzeConfigFragment UnilyzeConfigFragment);
 
-public sealed record CalibrateSourceInfo(
+internal sealed record CalibrateSourceInfo(
     string FileName,
     string ProjectPath,
     int MethodCount,
     int TypeCount,
     int TotalMethodLoc);
 
-public sealed record CalibrateRiskCategories(
+internal sealed record CalibrateRiskCategories(
     string Low,
     string Moderate,
     string High,
     string VeryHigh);
 
-public sealed record CalibrateMetricsBlock(
+internal sealed record CalibrateMetricsBlock(
     CalibrateMetricThresholds MethodLines,
     CalibrateMetricThresholds CyclomaticComplexity,
     CalibrateMetricThresholds CognitiveComplexity,
@@ -33,24 +34,24 @@ public sealed record CalibrateMetricsBlock(
     CalibrateMetricThresholds MethodsPerType,
     CalibrateMetricThresholds TypeLines);
 
-public sealed record CalibrateMetricThresholds(
+internal sealed record CalibrateMetricThresholds(
     string Unit,
     IReadOnlyList<double> Percentiles,
     IReadOnlyList<int> PercentileLevels,
     CalibrateRiskBands RiskBands);
 
-public sealed record CalibrateParameterThresholds(
+internal sealed record CalibrateParameterThresholds(
     string Unit,
     IReadOnlyList<double> Percentiles,
     IReadOnlyList<int> PercentileLevels,
     CalibrateRiskBands RiskBands);
 
-public sealed record CalibrateRiskBands(
+internal sealed record CalibrateRiskBands(
     double LowUpper,
     double ModerateUpper,
     double HighUpper);
 
-public sealed record CalibrateUnilyzeConfigFragment(
+internal sealed record CalibrateUnilyzeConfigFragment(
     IReadOnlyDictionary<string, IReadOnlyDictionary<string, int>> Smells);
 
 [JsonSourceGenerationOptions(

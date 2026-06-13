@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
 internal readonly record struct ReferenceAnalysisSettings(
     [property: JsonPropertyName("resolveNuget")] bool ResolveNuget = false,

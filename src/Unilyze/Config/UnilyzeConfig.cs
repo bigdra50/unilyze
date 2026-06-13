@@ -1,7 +1,12 @@
+using Unilyze.Dup;
+using Unilyze.Discovery;
+using Unilyze.Output;
+using Unilyze.Detectors;
+using Unilyze.Pipeline;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Unilyze;
+namespace Unilyze.Config;
 
 internal readonly record struct ResolvedAnalysisConfig(
     EffectiveSmellThresholds Thresholds,
