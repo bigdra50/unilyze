@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -34,21 +35,12 @@ public sealed class CliE2eTests : IDisposable
         {
             // Reuse the SDK-selected host to avoid apphost/runtime lookup mismatches in CI and local dev.
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(60_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 60_000);
     }
 
     private static string ResolveCurrentTargetFramework()
@@ -1683,9 +1675,24 @@ public sealed class CliE2eTests : IDisposable
         };
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        proc.WaitForExit(30_000);
-        return stdout;
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
+        {
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException("git worktree list timed out");
+        }
+
+        _ = stderrTask.GetAwaiter().GetResult();
+        return stdoutTask.GetAwaiter().GetResult();
     }
 
     private static void RunGit(string workingDirectory, params string[] args)
@@ -1704,12 +1711,26 @@ public sealed class CliE2eTests : IDisposable
 
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        proc.WaitForExit(30_000);
-        if (proc.ExitCode != 0)
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
         {
-            var stderr = proc.StandardError.ReadToEnd();
-            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException($"git {string.Join(' ', args)} timed out");
         }
+
+        _ = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
+        if (proc.ExitCode != 0)
+            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
     }
 
     private string WriteMonorepoFixture()

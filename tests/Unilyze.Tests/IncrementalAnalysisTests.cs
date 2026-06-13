@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -76,7 +77,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
     }
 
     [Fact]
-    public void ConcurrentIncrementalRuns_DoNotCorruptCache()
+    public async Task ConcurrentIncrementalRuns_DoNotCorruptCache()
     {
         Analyze(fullIncremental: true);
 
@@ -98,14 +99,56 @@ public sealed class IncrementalAnalysisTests : IDisposable
 
         using var first = Process.Start(psi)!;
         using var second = Process.Start(psi)!;
-        first.WaitForExit(120_000);
-        second.WaitForExit(120_000);
+        var firstStdoutTask = first.StandardOutput.ReadToEndAsync();
+        var firstStderrTask = first.StandardError.ReadToEndAsync();
+        var secondStdoutTask = second.StandardOutput.ReadToEndAsync();
+        var secondStderrTask = second.StandardError.ReadToEndAsync();
+
+        var (_, firstStderr) = await WaitForExit(first, firstStdoutTask, firstStderrTask, "first");
+        var (_, secondStderr) = await WaitForExit(second, secondStdoutTask, secondStderrTask, "second");
+        if (first.ExitCode != 0)
+            Assert.Fail($"First incremental analysis exited with code {first.ExitCode}. stderr:{Environment.NewLine}{firstStderr}");
+        if (second.ExitCode != 0)
+            Assert.Fail($"Second incremental analysis exited with code {second.ExitCode}. stderr:{Environment.NewLine}{secondStderr}");
         Assert.Equal(0, first.ExitCode);
         Assert.Equal(0, second.ExitCode);
 
         var full = Analyze(fullIncremental: false);
         var warm = Analyze(fullIncremental: true);
         Assert.Equal(Normalize(full), Normalize(warm));
+    }
+
+    static async Task<(string StdOut, string StdErr)> WaitForExit(
+        Process process,
+        Task<string> stdoutTask,
+        Task<string> stderrTask,
+        string processName)
+    {
+        if (!process.WaitForExit(120_000))
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup; the timeout assertion below must still report diagnostics.
+            }
+
+            string stderr;
+            try
+            {
+                stderr = await stderrTask.WaitAsync(TimeSpan.FromSeconds(5));
+            }
+            catch (TimeoutException)
+            {
+                stderr = "<stderr drain did not complete after termination>";
+            }
+
+            Assert.Fail($"{processName} incremental analysis timed out. stderr:{Environment.NewLine}{stderr}");
+        }
+
+        return (await stdoutTask, await stderrTask);
     }
 
     [Fact]
@@ -256,20 +299,12 @@ public sealed class IncrementalAnalysisTests : IDisposable
         var psi = new ProcessStartInfo
         {
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException("Failed to start CLI");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(120_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 120_000);
     }
 
     static string ResolveCurrentTargetFramework()

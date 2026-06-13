@@ -284,12 +284,34 @@ internal static class SonarCogCCHelper
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
+            CreateNoWindow = true,
         };
 
         using var process = System.Diagnostics.Process.Start(psi)!;
-        var stdout = await process.StandardOutput.ReadToEndAsync();
-        var stderr = await process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMinutes(2));
+        try
+        {
+            await Task.Run(() => process.WaitForExitAsync(cts.Token), cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort termination.
+            }
+            throw new TimeoutException($"dotnet {arguments} timed out after 120 s in {workDir}");
+        }
+
+        await Task.WhenAll(stdoutTask, stderrTask);
+        var stdout = stdoutTask.Result;
+        var stderr = stderrTask.Result;
         var output = stdout + "\n" + stderr;
         if (process.ExitCode != 0)
             throw new InvalidOperationException($"dotnet {arguments} failed in {workDir} (exit {process.ExitCode})\n{output}");

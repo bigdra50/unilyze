@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -48,21 +49,12 @@ internal static class GoldenCorpusTestSupport
         var psi = new ProcessStartInfo
         {
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var process = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        var stdout = process.StandardOutput.ReadToEnd();
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit(120_000);
-        return (process.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 120_000);
     }
 
     static void NormalizePaths(JsonNode? node, string fixtureRoot, string assetsDir)

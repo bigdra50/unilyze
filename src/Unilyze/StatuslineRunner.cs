@@ -266,9 +266,31 @@ internal static class StatuslineRunner
         {
             try
             {
-                await proc.StandardOutput.ReadToEndAsync();
-                await proc.StandardError.ReadToEndAsync();
-                await proc.WaitForExitAsync();
+                var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+                var stderrTask = proc.StandardError.ReadToEndAsync();
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+                try
+                {
+                    await proc.WaitForExitAsync(cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    try
+                    {
+                        proc.Kill(entireProcessTree: true);
+                    }
+                    catch
+                    {
+                        // Best-effort termination for background process.
+                    }
+                }
+
+                await Task.WhenAll(stdoutTask, stderrTask);
+            }
+            catch
+            {
+                // Background drain: swallow all exceptions to avoid unobserved task faults.
             }
             finally
             {
