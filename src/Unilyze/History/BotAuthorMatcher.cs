@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Unilyze;
+namespace Unilyze.History;
 
 internal sealed class BotAuthorMatcher
 {

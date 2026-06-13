@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.History;
 
 internal static class HotspotChurnAggregator
 {

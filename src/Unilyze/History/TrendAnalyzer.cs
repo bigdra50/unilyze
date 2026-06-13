@@ -1,8 +1,11 @@
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.History;
 
-public sealed record TrendSnapshot(
+internal sealed record TrendSnapshot(
     DateTimeOffset AnalyzedAt,
     string ProjectPath,
     int TypeCount,
@@ -19,16 +22,16 @@ public sealed record TrendSnapshot(
     int HotPathSmellCount = 0,
     int HotPathMethodCount = 0);
 
-public sealed record TrendSummary(
+internal sealed record TrendSummary(
     int SnapshotCount,
     double CodeHealthDelta,
     int CodeSmellDelta);
 
-public sealed record TrendResult(
+internal sealed record TrendResult(
     IReadOnlyList<TrendSnapshot> Snapshots,
     TrendSummary Summary);
 
-public static class TrendAnalyzer
+internal static class TrendAnalyzer
 {
     public static TrendSnapshot ToSnapshot(AnalysisResult result) =>
         ToSnapshot(result, sourceFile: null);

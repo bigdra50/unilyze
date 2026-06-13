@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Unilyze;
+namespace Unilyze.History;
 
 internal sealed class GitWorktreeException(string message) : Exception(message);
 

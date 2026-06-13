@@ -1,15 +1,16 @@
-namespace Unilyze;
+using Unilyze.Metrics;
+namespace Unilyze.History;
 
-public sealed record FileChangeFrequency(string RelativePath, int ChangeCount, double WeightedChurn = 0);
+internal sealed record FileChangeFrequency(string RelativePath, int ChangeCount, double WeightedChurn = 0);
 
-public sealed record GitCommitRecord(
+internal sealed record GitCommitRecord(
     string Hash,
     string AuthorName,
     string AuthorEmail,
     long TimestampUnix,
     IReadOnlyList<string> ChangedFiles);
 
-public sealed record TypeHotspot(
+internal sealed record TypeHotspot(
     string TypeName,
     string Namespace,
     string Assembly,
@@ -21,7 +22,7 @@ public sealed record TypeHotspot(
     int MaxCognitiveComplexity,
     double HotspotScore);
 
-public sealed record MethodHotspot(
+internal sealed record MethodHotspot(
     string MethodName,
     string TypeName,
     string? Namespace,
@@ -32,7 +33,7 @@ public sealed record MethodHotspot(
     int CognitiveComplexity,
     double HotspotScore);
 
-public sealed record HotspotResult(
+internal sealed record HotspotResult(
     string ProjectPath,
     string Since,
     int TopN,
@@ -42,7 +43,7 @@ public sealed record HotspotResult(
     string? HalfLife = null,
     IReadOnlyList<MethodHotspot>? MethodHotspots = null);
 
-public static class HotspotAnalyzer
+internal static class HotspotAnalyzer
 {
     internal static IReadOnlyList<GitCommitRecord> ParseCommitLog(string gitLogOutput) =>
         HotspotCommitParser.ParseCommitLog(gitLogOutput);

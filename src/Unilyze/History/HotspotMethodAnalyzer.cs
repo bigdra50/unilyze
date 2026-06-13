@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Metrics;
+namespace Unilyze.History;
 
 internal static class HotspotMethodAnalyzer
 {

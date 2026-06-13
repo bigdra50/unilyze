@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.History;
 
 internal sealed record HotspotAnalysisContext(
     string ProjectPath,
