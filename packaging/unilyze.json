@@ -1,5 +1,5 @@
 {
-  "_comment": "Release automation replaces __VERSION__ and __WIN_X64_SHA256__. After publishing, copy the rendered release asset back to packaging/unilyze.json so the raw GitHub URL remains installable.",
+  "_comment": "Release automation renders the version and Windows SHA256 placeholders and attaches this manifest to each GitHub Release. The Scoop install URL points at releases/latest/download/unilyze.json, so no copy-back to this file is required.",
   "version": "__VERSION__",
   "description": "Static analyzer for Unity and general C# projects",
   "homepage": "https://github.com/bigdra50/unilyze",

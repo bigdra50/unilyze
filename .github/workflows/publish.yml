@@ -259,3 +259,33 @@ jobs:
             artifacts/release/unilyze.rb \
             artifacts/release/unilyze.json \
             --clobber
+
+      - name: Update Homebrew tap
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          if [[ -z "${HOMEBREW_TAP_DEPLOY_KEY}" ]]; then
+            echo "::warning::HOMEBREW_TAP_DEPLOY_KEY secret is not set; skipping Homebrew tap update."
+            exit 0
+          fi
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "${HOMEBREW_TAP_DEPLOY_KEY}" > "$HOME/.ssh/tap_deploy_key"
+          chmod 600 "$HOME/.ssh/tap_deploy_key"
+          ssh-keyscan -t ed25519 github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/tap_deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+          git clone --depth 1 git@github.com:bigdra50/homebrew-tap.git tap
+          mkdir -p tap/Formula
+          cp artifacts/release/unilyze.rb tap/Formula/unilyze.rb
+          cd tap
+          if git diff --quiet -- Formula/unilyze.rb; then
+            echo "Formula already up to date for ${VERSION}."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/unilyze.rb
+          git commit -m "unilyze ${VERSION}"
+          git push

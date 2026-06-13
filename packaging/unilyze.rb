@@ -1,6 +1,6 @@
-# Release automation replaces the __...__ placeholders and attaches the rendered
-# formula to each GitHub Release. Copy that rendered file to
-# bigdra50/homebrew-tap/Formula/unilyze.rb after publishing a tag.
+# Release automation renders the placeholders below, attaches the rendered
+# formula to each GitHub Release, and pushes it to
+# bigdra50/homebrew-tap (Formula/unilyze.rb) when HOMEBREW_TAP_TOKEN is set.
 class Unilyze < Formula
   desc "Static analyzer for Unity and general C# projects"
   homepage "https://github.com/bigdra50/unilyze"
