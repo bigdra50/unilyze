@@ -1,0 +1,13 @@
+{
+  "name": "unilyze-viewer-screenshots",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Playwright smoke + screenshot capture for the unilyze serve viewer (CI gate + visual review artifacts).",
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.56.1"
+  }
+}

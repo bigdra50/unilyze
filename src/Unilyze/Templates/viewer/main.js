@@ -1007,6 +1007,8 @@ cy = cytoscape({
   layout:{name:'preset'},
   wheelSensitivity:.3,minZoom:.08,maxZoom:5
 });
+// Expose the instance for end-to-end screenshot tests (harmless in normal use).
+window.unilyzeCy = cy;
 
 // --- Middle-button pan ---
 {
