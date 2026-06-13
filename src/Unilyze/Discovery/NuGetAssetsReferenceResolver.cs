@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Discovery;
 
 internal static class NuGetAssetsReferenceResolver
 {

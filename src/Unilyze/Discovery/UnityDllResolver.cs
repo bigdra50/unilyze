@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
-public enum AnalysisLevel
+internal enum AnalysisLevel
 {
     Syntax,
     Core,
@@ -10,11 +10,11 @@ public enum AnalysisLevel
     Complete
 }
 
-public sealed record ResolvedDlls(
+internal sealed record ResolvedDlls(
     AnalysisLevel Level,
     IReadOnlyList<string> Paths);
 
-public static class UnityDllResolver
+internal static class UnityDllResolver
 {
     // maxLevel caps DLL collection so the resolved level is pinned deterministically.
     // SyntaxOnly cap short-circuits before any DLL discovery.

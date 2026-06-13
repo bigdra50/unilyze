@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
 internal static class TargetFrameworkSelector
 {

@@ -1,8 +1,8 @@
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
-public sealed record AsmdefInfo(
+internal sealed record AsmdefInfo(
     string Name,
     string Directory,
     IReadOnlyList<string> References,

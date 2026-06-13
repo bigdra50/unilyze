@@ -1,7 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
 internal static class GeneratedSourcesResolver
 {

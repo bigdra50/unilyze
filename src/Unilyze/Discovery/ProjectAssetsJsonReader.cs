@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
 internal static class ProjectAssetsJsonReader
 {

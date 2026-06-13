@@ -1,6 +1,6 @@
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
-public static class DotnetRuntimeReferenceResolver
+internal static class DotnetRuntimeReferenceResolver
 {
     // maxLevel caps reference collection so the resolved level is pinned deterministically.
     public static ResolvedDlls Resolve(AnalysisLevel maxLevel = AnalysisLevel.Complete)

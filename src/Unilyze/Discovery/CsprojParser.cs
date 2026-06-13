@@ -1,15 +1,15 @@
 using System.Xml.Linq;
 
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
-public sealed record CsprojInfo(
+internal sealed record CsprojInfo(
     IReadOnlyList<string> ReferencePaths,
     IReadOnlyList<string> ProjectReferences,
     IReadOnlyList<string> DefineConstants,
     string? LangVersion,
     IReadOnlyList<string> TargetFrameworks);
 
-public static class CsprojParser
+internal static class CsprojParser
 {
     public static CsprojInfo? TryParse(string csprojPath)
     {

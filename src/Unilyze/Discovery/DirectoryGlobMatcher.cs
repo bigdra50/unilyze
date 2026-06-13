@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Discovery;
 
 /// <summary>
 /// Internal directory glob matcher supporting <c>*</c> and <c>**</c> segments.
