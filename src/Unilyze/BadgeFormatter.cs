@@ -43,12 +43,18 @@ internal static class BadgeFormatter
         {
             BadgeMetric.CodeHealth => new ShieldsBadge(
                 1,
-                label,
-                string.Format(CultureInfo.InvariantCulture, "{0:F1} / {1:F1}", s.AverageCodeHealth, s.MinCodeHealth),
-                s.MinCodeHealth switch
+                s.UsesCodeHealthV1 ? "code health v1" : label,
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    "{0:F1} / {1:F1} / w{2:F1} / t{3:F1}",
+                    s.AverageCodeHealth,
+                    s.MinCodeHealth,
+                    s.EffectiveLocWeightedAverageCodeHealth,
+                    s.EffectiveWorstDecileCodeHealth),
+                s.EffectiveLocWeightedAverageCodeHealth switch
                 {
-                    >= 8.0 => "brightgreen",
-                    >= 5.0 => "yellow",
+                    >= 9.0 => "brightgreen",
+                    >= 4.0 => "yellow",
                     _ => "red"
                 },
                 s.AnalysisLevel),

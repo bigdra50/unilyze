@@ -1,114 +1,166 @@
 namespace Unilyze.Tests;
 
-public class CodeHealthCalculatorTests
+public sealed class CodeHealthCalculatorTests
 {
-    // --- Interpolate boundary tests ---
-
     [Fact]
-    public void Interpolate_BelowLow10_Returns10()
+    public void CalculateHealthScore_AllFactorsSafe_Returns10()
     {
-        Assert.Equal(10.0, CodeHealthCalculator.Interpolate(0, 5, 10, 15, 25));
+        var actual = CodeHealthCalculator.CalculateHealthScore(
+            avgCc: 0,
+            maxCc: 0,
+            lineCount: 0,
+            methodCount: 0,
+            maxNesting: 0,
+            excessiveParams: 0);
+
+        Assert.Equal(10.0, actual);
     }
 
     [Fact]
-    public void Interpolate_AtLow10_Returns10()
+    public void CalculateHealthScore_AllFactorsSaturated_Returns1()
     {
-        Assert.Equal(10.0, CodeHealthCalculator.Interpolate(5, 5, 10, 15, 25));
+        var actual = CodeHealthCalculator.CalculateHealthScore(
+            avgCc: 100,
+            maxCc: 100,
+            lineCount: 10000,
+            methodCount: 100,
+            maxNesting: 20,
+            excessiveParams: 20);
+
+        Assert.Equal(1.0, actual);
     }
 
-    [Fact]
-    public void Interpolate_AtLow5_Returns5()
+    [Theory]
+    [InlineData("avgCogCc")]
+    [InlineData("maxCogCc")]
+    [InlineData("lineCount")]
+    [InlineData("methodCount")]
+    [InlineData("maxNesting")]
+    [InlineData("excessiveParams")]
+    public void CalculateHealthScore_IncreasingAnyInput_DoesNotImproveScore(string factor)
     {
-        Assert.Equal(5.0, CodeHealthCalculator.Interpolate(10, 5, 10, 15, 25));
-    }
-
-    [Fact]
-    public void Interpolate_AtHigh1_Returns1()
-    {
-        Assert.Equal(1.0, CodeHealthCalculator.Interpolate(25, 5, 10, 15, 25));
-    }
-
-    [Fact]
-    public void Interpolate_AboveHigh1_Returns1()
-    {
-        Assert.Equal(1.0, CodeHealthCalculator.Interpolate(100, 5, 10, 15, 25));
-    }
-
-    [Fact]
-    public void Interpolate_MidpointLow10ToLow5_Returns7_5()
-    {
-        Assert.Equal(7.5, CodeHealthCalculator.Interpolate(7.5, 5, 10, 15, 25));
-    }
-
-    [Fact]
-    public void Interpolate_MidpointLow5ToHigh1_Returns3()
-    {
-        // midpoint of [10,25] = 17.5, score = 5 - (7.5/15)*4 = 5 - 2 = 3
-        Assert.Equal(3.0, CodeHealthCalculator.Interpolate(17.5, 5, 10, 15, 25));
-    }
-
-    [Fact]
-    public void Interpolate_MonotonicallyDecreasing()
-    {
-        double prev = 10.0;
-        for (int v = 0; v <= 50; v++)
+        var previous = 10.0;
+        for (var value = 0; value <= 1000; value++)
         {
-            var score = CodeHealthCalculator.Interpolate(v, 5, 10, 15, 25);
-            Assert.True(score <= prev, $"Monotonicity violated at value={v}: {score} > {prev}");
-            prev = score;
+            var actual = CalculateWithFactor(factor, value);
+
+            Assert.True(
+                actual <= previous,
+                $"Monotonicity violated for {factor} at {value}: {actual} > {previous}");
+            previous = actual;
         }
     }
 
-    [Fact]
-    public void Interpolate_ValueRange_Between1And10()
+    [Theory]
+    [InlineData(24, 0, 0, 0, 6.0)]
+    [InlineData(0, 878, 0, 0, 7.0)]
+    [InlineData(0, 0, 5, 0, 6.0)]
+    [InlineData(0, 0, 0, 2, 8.0)]
+    public void CalculateHealthScore_OneSaturatedFactor_IsBelowHealthyFloor(
+        int maxCogCc,
+        int lineCount,
+        int maxNesting,
+        int excessiveParams,
+        double expected)
     {
-        for (int v = -10; v <= 100; v++)
-        {
-            var score = CodeHealthCalculator.Interpolate(v, 5, 10, 15, 25);
-            Assert.InRange(score, 1.0, 10.0);
-        }
+        var actual = CodeHealthCalculator.CalculateHealthScore(
+            avgCc: 0,
+            maxCc: maxCogCc,
+            lineCount: lineCount,
+            methodCount: 0,
+            maxNesting: maxNesting,
+            excessiveParams: excessiveParams);
+
+        Assert.Equal(expected, actual);
+        Assert.True(actual < 9.0);
     }
 
-    // --- CalculateHealthScore tests ---
-
-    [Fact]
-    public void HealthScore_PerfectMetrics_Returns10()
+    [Theory]
+    [InlineData(9.0, "healthy")]
+    [InlineData(10.0, "healthy")]
+    [InlineData(4.0, "warning")]
+    [InlineData(8.9, "warning")]
+    [InlineData(3.9, "alert")]
+    [InlineData(1.0, "alert")]
+    public void Classify_UsesDocumentedBoundaries(double score, string expected)
     {
-        var score = CodeHealthCalculator.CalculateHealthScore(
-            avgCc: 0, maxCc: 0, lineCount: 0,
-            methodCount: 0, maxNesting: 0, excessiveParams: 0);
-        Assert.Equal(10.0, score);
+        var actual = CodeHealthCalculator.Classify(score);
+
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
-    public void HealthScore_WorstMetrics_Returns1()
+    public void ComputeAssemblyHealth_ComputesWeightedAndWorstDecileAggregates()
     {
-        var score = CodeHealthCalculator.CalculateHealthScore(
-            avgCc: 100, maxCc: 100, lineCount: 10000,
-            methodCount: 100, maxNesting: 20, excessiveParams: 20);
-        Assert.Equal(1.0, score);
+        var metrics = Enumerable.Range(1, 10)
+            .Select(index => CreateTypeMetrics(
+                lineCount: index == 1 ? 100 : 10,
+                codeHealth: index))
+            .ToList();
+
+        var actual = CodeHealthCalculator.ComputeAssemblyHealth(metrics);
+
+        Assert.NotNull(actual);
+        Assert.Equal(3.4, actual.LocWeightedAverageCodeHealth);
+        Assert.Equal(1.0, actual.WorstDecileCodeHealth);
+        Assert.Equal(3, actual.HighComplexityTypeCount);
     }
 
     [Fact]
-    public void HealthScore_WeightsSumToOne()
+    public void CalculateHealthScoreV1_PreservesLegacyWeightedFormula()
     {
-        const double expected = 1.0;
-        const double actual = 0.25 + 0.20 + 0.15 + 0.10 + 0.15 + 0.15;
-        Assert.Equal(expected, actual, precision: 10);
+        var actual = CodeHealthCalculator.CalculateHealthScoreV1(
+            avgCc: 0,
+            maxCc: 0,
+            lineCount: 0,
+            methodCount: 0,
+            maxNesting: 0,
+            excessiveParams: 0);
+
+        Assert.Equal(10.0, actual);
     }
 
     [Fact]
-    public void HealthScore_MonotonicallyDecreasing_WithAvgCC()
+    public void CodeHealthVersionSelector_Select_UsesLegacyScoreWithoutChangingSource()
     {
-        double prev = 10.0;
-        for (int cc = 0; cc <= 50; cc++)
-        {
-            var score = CodeHealthCalculator.CalculateHealthScore(
-                avgCc: cc, maxCc: 0, lineCount: 0,
-                methodCount: 0, maxNesting: 0, excessiveParams: 0);
-            Assert.True(score <= prev,
-                $"Monotonicity violated at avgCc={cc}: {score} > {prev}");
-            prev = score;
-        }
+        var type = CreateTypeMetrics(lineCount: 10, codeHealth: 5.0) with { CodeHealthV1 = 8.0 };
+        var source = new AnalysisResult(
+            "/test",
+            DateTimeOffset.UtcNow,
+            [],
+            [],
+            [],
+            [type]);
+
+        var actual = CodeHealthVersionSelector.Select(source, useV1: true);
+
+        Assert.Equal(8.0, actual.TypeMetrics![0].CodeHealth);
+        Assert.Equal(5.0, source.TypeMetrics![0].CodeHealth);
     }
+
+    static double CalculateWithFactor(string factor, int value)
+        => CodeHealthCalculator.CalculateHealthScore(
+            avgCc: factor == "avgCogCc" ? value : 0,
+            maxCc: factor == "maxCogCc" ? value : 0,
+            lineCount: factor == "lineCount" ? value : 0,
+            methodCount: factor == "methodCount" ? value : 0,
+            maxNesting: factor == "maxNesting" ? value : 0,
+            excessiveParams: factor == "excessiveParams" ? value : 0);
+
+    static TypeMetrics CreateTypeMetrics(int lineCount, double codeHealth)
+        => new(
+            "Type",
+            "Namespace",
+            "Assembly",
+            lineCount,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            codeHealth,
+            [],
+            CodeHealthCategory: CodeHealthCalculator.Classify(codeHealth));
 }

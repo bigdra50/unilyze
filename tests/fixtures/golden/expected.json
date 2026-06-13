@@ -35,11 +35,13 @@
         "ecsTypeCount": 6
       },
       "healthMetrics": {
-        "averageCodeHealth": 9.8,
-        "minCodeHealth": 4.9,
+        "averageCodeHealth": 9.9,
+        "minCodeHealth": 5.5,
         "highComplexityTypeCount": 0,
         "totalMethods": 92,
-        "averageCognitiveComplexity": 0.5
+        "averageCognitiveComplexity": 0.5,
+        "locWeightedAverageCodeHealth": 9.6,
+        "worstDecileCodeHealth": 8.8
       }
     }
   ],
@@ -4600,7 +4602,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/AllocationPatterns.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.AllocationPatterns",
-      "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns"
+      "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "BurstCompileAttribute",
@@ -4627,7 +4631,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/BurstStubs.cs",
       "startLine": 3,
       "qualifiedName": "Burst.BurstCompileAttribute",
-      "typeId": "Assembly-CSharp::Burst.BurstCompileAttribute"
+      "typeId": "Assembly-CSharp::Burst.BurstCompileAttribute",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT01",
@@ -4655,7 +4661,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT01"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT01",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT02",
@@ -4683,7 +4691,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT02"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT02",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT03",
@@ -4711,7 +4721,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT03"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT03",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT04",
@@ -4739,7 +4751,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT04"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT04",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT05",
@@ -4767,7 +4781,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT05"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT05",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT06",
@@ -4795,7 +4811,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT06"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT06",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT07",
@@ -4823,7 +4841,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT07"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT07",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT08",
@@ -4851,7 +4871,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT08"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT08",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT09",
@@ -4879,7 +4901,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT09"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT09",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT10",
@@ -4907,7 +4931,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT10"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT10",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT11",
@@ -4935,7 +4961,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT11"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT11",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT12",
@@ -4963,7 +4991,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT12"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT12",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT13",
@@ -4991,7 +5021,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT13"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT13",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT14",
@@ -5019,7 +5051,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT14"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT14",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT15",
@@ -5047,7 +5081,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT15"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT15",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CouplingT16",
@@ -5075,7 +5111,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT16"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT16",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "HighCouplingHub",
@@ -5128,7 +5166,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
       "startLine": 20,
       "qualifiedName": "GoldenFixture.Coupling.HighCouplingHub",
-      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub"
+      "typeId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CycleA",
@@ -5156,7 +5196,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
-      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA"
+      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "CycleB",
@@ -5184,7 +5226,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
-      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB"
+      "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "IGameService",
@@ -5212,7 +5256,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.IGameService"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.IGameService",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "GameService",
@@ -5240,7 +5286,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameService"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameService",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "GameInstaller",
@@ -5284,7 +5332,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DIInstaller.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
-      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller"
+      "typeId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase0",
@@ -5312,7 +5362,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase0"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase0",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase1",
@@ -5340,7 +5392,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase1"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase1",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase2",
@@ -5368,7 +5422,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase2"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase2",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase3",
@@ -5396,7 +5452,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase3"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase3",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase4",
@@ -5424,7 +5482,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase4"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase4",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "InhBase5",
@@ -5461,7 +5521,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase5",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "DeepLeaf",
@@ -5498,7 +5560,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Inheritance.DeepLeaf",
-      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.DeepLeaf"
+      "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.DeepLeaf",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "DeepNestingTarget",
@@ -5512,7 +5576,7 @@
       "averageCyclomaticComplexity": 7,
       "maxCyclomaticComplexity": 7,
       "excessiveParameterMethodCount": 1,
-      "codeHealth": 4.9,
+      "codeHealth": 5.5,
       "methods": [
         {
           "methodName": "DeeplyNested",
@@ -5575,7 +5639,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/DeepNestingTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.DeepNestingTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget",
+      "codeHealthV1": 4.9,
+      "codeHealthCategory": "warning"
     },
     {
       "typeName": "MissingBurstSystem",
@@ -5655,7 +5721,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 5,
       "qualifiedName": "Golden.Ecs.MissingBurstSystem",
-      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem"
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "AnnotatedBurstSystem",
@@ -5725,7 +5793,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 12,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstSystem",
-      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem"
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "MissingBurstJob",
@@ -5763,7 +5833,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 20,
       "qualifiedName": "Golden.Ecs.MissingBurstJob",
-      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob"
+      "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "AnnotatedBurstJob",
@@ -5791,7 +5863,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 22,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstJob",
-      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob"
+      "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ManagedSystem",
@@ -5819,7 +5893,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 25,
       "qualifiedName": "Golden.Ecs.ManagedSystem",
-      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem"
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "UnmanagedComponent",
@@ -5847,7 +5923,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 27,
       "qualifiedName": "Golden.Ecs.UnmanagedComponent",
-      "typeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent"
+      "typeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ManagedComponent",
@@ -5886,7 +5964,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 33,
       "qualifiedName": "Golden.Ecs.ManagedComponent",
-      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent"
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ManagedComponentClass",
@@ -5914,7 +5994,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
       "startLine": 38,
       "qualifiedName": "Golden.Ecs.ManagedComponentClass",
-      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass"
+      "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ExcessiveParametersTarget",
@@ -5928,7 +6010,7 @@
       "averageCyclomaticComplexity": 1,
       "maxCyclomaticComplexity": 1,
       "excessiveParameterMethodCount": 1,
-      "codeHealth": 9.2,
+      "codeHealth": 9.5,
       "methods": [
         {
           "methodName": "TooMany",
@@ -5967,7 +6049,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/ExcessiveParametersTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.ExcessiveParametersTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget",
+      "codeHealthV1": 9.2,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "GodClassTarget",
@@ -5981,7 +6065,7 @@
       "averageCyclomaticComplexity": 1,
       "maxCyclomaticComplexity": 1,
       "excessiveParameterMethodCount": 0,
-      "codeHealth": 9.4,
+      "codeHealth": 8.6,
       "methods": [
         {
           "methodName": "M01",
@@ -6287,7 +6371,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/GodClassTarget.cs",
       "startLine": 4,
       "qualifiedName": "GoldenFixture.GodClassTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.GodClassTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.GodClassTarget",
+      "codeHealthV1": 9.4,
+      "codeHealthCategory": "warning"
     },
     {
       "typeName": "HighComplexityTarget",
@@ -6301,7 +6387,7 @@
       "averageCyclomaticComplexity": 17,
       "maxCyclomaticComplexity": 17,
       "excessiveParameterMethodCount": 0,
-      "codeHealth": 7.3,
+      "codeHealth": 10,
       "methods": [
         {
           "methodName": "Branchy",
@@ -6348,7 +6434,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/HighComplexityTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.HighComplexityTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget",
+      "codeHealthV1": 7.3,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "LongMethodTarget",
@@ -6409,7 +6497,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/LongMethodTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LongMethodTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LongMethodTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LongMethodTarget",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "LowCohesionTarget",
@@ -6579,7 +6669,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/LowCohesionTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowCohesionTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "LowMaintainabilityTarget",
@@ -6593,7 +6685,7 @@
       "averageCyclomaticComplexity": 19,
       "maxCyclomaticComplexity": 19,
       "excessiveParameterMethodCount": 1,
-      "codeHealth": 7.2,
+      "codeHealth": 9.5,
       "methods": [
         {
           "methodName": "Opaque",
@@ -6648,7 +6740,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/LowMaintainabilityTarget.cs",
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowMaintainabilityTarget",
-      "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget"
+      "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget",
+      "codeHealthV1": 7.2,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "MonoBehaviourGodClassTarget",
@@ -6662,7 +6756,7 @@
       "averageCyclomaticComplexity": 1,
       "maxCyclomaticComplexity": 1,
       "excessiveParameterMethodCount": 0,
-      "codeHealth": 9.4,
+      "codeHealth": 8.6,
       "methods": [
         {
           "methodName": "M01",
@@ -6970,6 +7064,8 @@
       "startLine": 4,
       "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
+      "codeHealthV1": 9.4,
+      "codeHealthCategory": "warning",
       "hotPathMethodCount": 0
     },
     {
@@ -7142,6 +7238,8 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy",
       "hotPathMethodCount": 0
     },
     {
@@ -7171,6 +7269,8 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefBase",
       "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy",
       "hotPathMethodCount": 0
     },
     {
@@ -7200,6 +7300,8 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefConcrete",
       "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy",
       "hotPathMethodCount": 0
     },
     {
@@ -7227,7 +7329,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 3,
       "qualifiedName": "UnityEngine.SerializeFieldAttribute",
-      "typeId": "Assembly-CSharp::UnityEngine.SerializeFieldAttribute"
+      "typeId": "Assembly-CSharp::UnityEngine.SerializeFieldAttribute",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "MonoBehaviour",
@@ -7255,7 +7359,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 6,
       "qualifiedName": "UnityEngine.MonoBehaviour",
-      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour"
+      "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "Vector3",
@@ -7283,7 +7389,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 11,
       "qualifiedName": "UnityEngine.Vector3",
-      "typeId": "Assembly-CSharp::UnityEngine.Vector3"
+      "typeId": "Assembly-CSharp::UnityEngine.Vector3",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "Transform",
@@ -7363,7 +7471,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 17,
       "qualifiedName": "UnityEngine.Transform",
-      "typeId": "Assembly-CSharp::UnityEngine.Transform"
+      "typeId": "Assembly-CSharp::UnityEngine.Transform",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "Time",
@@ -7390,7 +7500,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 25,
       "qualifiedName": "UnityEngine.Time",
-      "typeId": "Assembly-CSharp::UnityEngine.Time"
+      "typeId": "Assembly-CSharp::UnityEngine.Time",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "Mathf",
@@ -7433,7 +7545,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
       "startLine": 31,
       "qualifiedName": "UnityEngine.Mathf",
-      "typeId": "Assembly-CSharp::UnityEngine.Mathf"
+      "typeId": "Assembly-CSharp::UnityEngine.Mathf",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ISystem",
@@ -7503,7 +7617,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 3,
       "qualifiedName": "Unity.Entities.ISystem",
-      "typeId": "Assembly-CSharp::Unity.Entities.ISystem"
+      "typeId": "Assembly-CSharp::Unity.Entities.ISystem",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "SystemBase",
@@ -7531,7 +7647,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 10,
       "qualifiedName": "Unity.Entities.SystemBase",
-      "typeId": "Assembly-CSharp::Unity.Entities.SystemBase"
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemBase",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "IJobEntity",
@@ -7559,7 +7677,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 12,
       "qualifiedName": "Unity.Entities.IJobEntity",
-      "typeId": "Assembly-CSharp::Unity.Entities.IJobEntity"
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobEntity",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "IJobChunk",
@@ -7586,7 +7706,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 14,
       "qualifiedName": "Unity.Entities.IJobChunk",
-      "typeId": "Assembly-CSharp::Unity.Entities.IJobChunk"
+      "typeId": "Assembly-CSharp::Unity.Entities.IJobChunk",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "IComponentData",
@@ -7614,7 +7736,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 16,
       "qualifiedName": "Unity.Entities.IComponentData",
-      "typeId": "Assembly-CSharp::Unity.Entities.IComponentData"
+      "typeId": "Assembly-CSharp::Unity.Entities.IComponentData",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "SystemState",
@@ -7642,7 +7766,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 18,
       "qualifiedName": "Unity.Entities.SystemState",
-      "typeId": "Assembly-CSharp::Unity.Entities.SystemState"
+      "typeId": "Assembly-CSharp::Unity.Entities.SystemState",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "Entity",
@@ -7670,7 +7796,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
       "startLine": 20,
       "qualifiedName": "Unity.Entities.Entity",
-      "typeId": "Assembly-CSharp::Unity.Entities.Entity"
+      "typeId": "Assembly-CSharp::Unity.Entities.Entity",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "UnityHotPathTarget",
@@ -7777,6 +7905,8 @@
       "startLine": 11,
       "qualifiedName": "GoldenFixture.UnityHotPathTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy",
       "hotPathMethodCount": 1
     },
     {
@@ -7805,7 +7935,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
-      "typeId": "Assembly-CSharp::VContainer.IContainerBuilder"
+      "typeId": "Assembly-CSharp::VContainer.IContainerBuilder",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "ContainerBuilderExtensions",
@@ -7862,7 +7994,9 @@
       "filePath": "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
-      "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions"
+      "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy"
     },
     {
       "typeName": "WeakTemporizationTarget",
@@ -7933,6 +8067,8 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
+      "codeHealthV1": 10,
+      "codeHealthCategory": "healthy",
       "hotPathMethodCount": 1
     }
   ],
@@ -7953,7 +8089,7 @@
       "level": "Type"
     }
   ],
-  "metricsVersion": 3,
+  "metricsVersion": 4,
   "projectKind": "unity",
   "energyPressure": 3.5
 }

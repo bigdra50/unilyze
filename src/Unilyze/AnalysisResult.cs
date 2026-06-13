@@ -27,7 +27,7 @@ public sealed record AnalysisResult(
     /// Metric definition version written to JSON as <c>metricsVersion</c>.
     /// Increment when any change alters measured values (requires minor bump + CHANGELOG [metrics] entry).
     /// </summary>
-    public const int CurrentMetricsVersion = 3;
+    public const int CurrentMetricsVersion = 4;
 }
 
 public sealed record AssemblyInfo(

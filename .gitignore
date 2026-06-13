@@ -17,3 +17,4 @@ artifacts/
 # Golden corpus csproj is generated at test runtime with a machine-specific HintPath
 tests/fixtures/golden/Golden.csproj
 implementation-notes.html
+tests/**/TestResults/

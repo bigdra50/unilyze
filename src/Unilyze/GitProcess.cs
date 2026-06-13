@@ -31,9 +31,27 @@ internal static class GitProcess
 
         using (process)
         {
-            var stderr = process.StandardError.ReadToEnd();
-            var stdout = process.StandardOutput.ReadToEnd();
-            process.WaitForExit();
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+
+            if (!process.WaitForExit(120_000))
+            {
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch
+                {
+                    // Best-effort cleanup.
+                }
+
+                throw new InvalidOperationException("git timed out after 120s.");
+            }
+
+            Task.WaitAll(stdoutTask, stderrTask);
+            var stdout = stdoutTask.Result;
+            var stderr = stderrTask.Result;
+
             if (process.ExitCode != 0)
             {
                 var detail = string.IsNullOrWhiteSpace(stderr) ? $"exit {process.ExitCode}" : stderr.Trim();

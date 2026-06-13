@@ -48,6 +48,7 @@ internal static class CliArgValidation
     static readonly HashSet<string> DiffBooleanOptions = new(StringComparer.Ordinal)
     {
         "-h", "--help", "--no-open", "--fail-on-regression", "--fail-on-version-mismatch", "--changed-only",
+        "--codehealth-v1",
     };
 
     static readonly HashSet<string> HotspotValueOptions = new(StringComparer.Ordinal)
@@ -108,7 +109,8 @@ internal static class CliArgValidation
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--verbose", "--quiet", "--background-refresh", "--incremental",
+        "-h", "--help", "--verbose", "--quiet", "--background-refresh", "--incremental", "--codehealth-v1",
+        "--show-mi",
     };
 
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)
@@ -119,7 +121,7 @@ internal static class CliArgValidation
 
     static readonly HashSet<string> BadgeBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help",
+        "-h", "--help", "--codehealth-v1",
     };
 
     static readonly HashSet<string> MetricsValueOptions = new(StringComparer.Ordinal)

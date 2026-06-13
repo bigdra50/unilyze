@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Xml.Linq;
+using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests;
 
@@ -34,21 +35,12 @@ public sealed class CliE2eTests : IDisposable
         {
             // Reuse the SDK-selected host to avoid apphost/runtime lookup mismatches in CI and local dev.
             FileName = DotnetHostPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
         };
         psi.ArgumentList.Add(AppDllPath);
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        using var proc = Process.Start(psi)
-            ?? throw new InvalidOperationException($"Failed to start process: {DotnetHostPath}");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        var stderr = proc.StandardError.ReadToEnd();
-        proc.WaitForExit(60_000);
-        return (proc.ExitCode, stdout, stderr);
+        return TestProcessRunner.Run(psi, 60_000);
     }
 
     private static string ResolveCurrentTargetFramework()
@@ -404,7 +396,7 @@ public sealed class CliE2eTests : IDisposable
     {
         WriteSimpleProject();
         var cachePath = ResolveStatuslineCachePath(_tempDir);
-        const string staleContent = "CH:STALE/1.0 MI:0 0smells";
+        const string staleContent = "CH:STALE/1.0 0smells";
         File.WriteAllText(cachePath, staleContent);
         File.SetLastWriteTimeUtc(cachePath, DateTime.UtcNow.AddHours(-2));
 
@@ -832,6 +824,52 @@ public sealed class CliE2eTests : IDisposable
         var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.Contains("CH:", stdout);
+        Assert.DoesNotContain("MI:", stdout);
+    }
+
+    [Fact]
+    public void Statusline_ShowMi_OutputsMaintainabilityIndex()
+    {
+        WriteSimpleProject();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--show-mi");
+        Assert.Equal(0, exitCode);
+        Assert.Contains("MI:", stdout);
+    }
+
+    [Fact]
+    public void Statusline_BackgroundRefresh_ShowMiAndDefaultUseSeparateCaches()
+    {
+        WriteSimpleProject();
+        var defaultCachePath = ResolveStatuslineCachePath(_tempDir);
+        var showMiCachePath = ResolveStatuslineCachePath(_tempDir, showMi: true);
+        TryDeleteStatuslineCache(defaultCachePath);
+        TryDeleteStatuslineCache(showMiCachePath);
+
+        var (defaultColdExit, defaultColdOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        var (showMiColdExit, showMiColdOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600", "--show-mi");
+
+        Assert.Equal(0, defaultColdExit);
+        Assert.Equal(0, showMiColdExit);
+        Assert.Empty(defaultColdOutput);
+        Assert.Empty(showMiColdOutput);
+
+        WaitForStatuslineCache(defaultCachePath, output => output.Contains("CH:") && !output.Contains("MI:"));
+        WaitForStatuslineCache(showMiCachePath, output => output.Contains("MI:"));
+
+        var (defaultWarmExit, defaultWarmOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+        var (showMiWarmExit, showMiWarmOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600", "--show-mi");
+        var (_, defaultAgainOutput, _) = Run(
+            "statusline", "-p", _tempDir, "--background-refresh", "--refresh", "3600");
+
+        Assert.Equal(0, defaultWarmExit);
+        Assert.Equal(0, showMiWarmExit);
+        Assert.DoesNotContain("MI:", defaultWarmOutput);
+        Assert.Contains("MI:", showMiWarmOutput);
+        Assert.DoesNotContain("MI:", defaultAgainOutput);
     }
 
     [Fact]
@@ -1683,9 +1721,24 @@ public sealed class CliE2eTests : IDisposable
         };
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        var stdout = proc.StandardOutput.ReadToEnd();
-        proc.WaitForExit(30_000);
-        return stdout;
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
+        {
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException("git worktree list timed out");
+        }
+
+        _ = stderrTask.GetAwaiter().GetResult();
+        return stdoutTask.GetAwaiter().GetResult();
     }
 
     private static void RunGit(string workingDirectory, params string[] args)
@@ -1704,12 +1757,26 @@ public sealed class CliE2eTests : IDisposable
 
         using var proc = Process.Start(psi)
             ?? throw new InvalidOperationException("Failed to start git");
-        proc.WaitForExit(30_000);
-        if (proc.ExitCode != 0)
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        if (!proc.WaitForExit(30_000))
         {
-            var stderr = proc.StandardError.ReadToEnd();
-            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
+            try
+            {
+                proc.Kill(entireProcessTree: true);
+            }
+            catch
+            {
+                // Best-effort cleanup before reporting the timeout.
+            }
+
+            throw new TimeoutException($"git {string.Join(' ', args)} timed out");
         }
+
+        _ = stdoutTask.GetAwaiter().GetResult();
+        var stderr = stderrTask.GetAwaiter().GetResult();
+        if (proc.ExitCode != 0)
+            throw new InvalidOperationException($"git {string.Join(' ', args)} failed: {stderr}");
     }
 
     private string WriteMonorepoFixture()
@@ -1789,10 +1856,18 @@ public sealed class CliE2eTests : IDisposable
             """);
     }
 
-    private static string ResolveStatuslineCachePath(string projectPath)
+    private static string ResolveStatuslineCachePath(
+        string projectPath,
+        bool useCodeHealthV1 = false,
+        bool showMi = false)
     {
         var fullPath = ProgramHelpers.ResolveProjectRoot(projectPath);
-        var hash = ComputeStatuslineCacheHash(fullPath);
+        var cacheKey = fullPath;
+        if (useCodeHealthV1)
+            cacheKey += "\0codehealth-v1";
+        if (showMi)
+            cacheKey += "\0show-mi";
+        var hash = ComputeStatuslineCacheHash(cacheKey);
         return Path.Combine(Path.GetTempPath(), $"unilyze-sl-{hash}.txt");
     }
 
@@ -1813,6 +1888,20 @@ public sealed class CliE2eTests : IDisposable
         {
             // Best-effort cleanup for isolated E2E runs.
         }
+    }
+
+    private static void WaitForStatuslineCache(string cachePath, Func<string, bool> predicate)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.Exists(cachePath) && predicate(File.ReadAllText(cachePath)))
+                return;
+            Thread.Sleep(250);
+        }
+
+        var content = File.Exists(cachePath) ? File.ReadAllText(cachePath) : "<missing>";
+        Assert.Fail($"Expected matching statusline cache at {cachePath}. Actual: {content}");
     }
 
     private void WriteCsprojWithValidReference()
