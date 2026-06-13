@@ -24,11 +24,11 @@ inputs:
     required: false
     default: ""
   metric:
-    description: Badge metric for the quality gate (codehealth, mi, smells)
+    description: Badge metric for the quality gate (codehealth, smells, or reference metric mi)
     required: false
     default: codehealth
   fail-under:
-    description: Fail the gate when codehealth min or mi average is strictly below this value
+    description: Fail when codehealth min or reference metric mi average is strictly below this value
     required: false
     default: ""
   fail-over:
@@ -69,7 +69,7 @@ outputs:
     description: Minimum CodeHealth score across analyzed types (1.0-10.0)
     value: ${{ steps.metrics.outputs.codehealth }}
   mi:
-    description: Average Maintainability Index across method-bearing types
+    description: Reference metric - average Maintainability Index across method-bearing types
     value: ${{ steps.metrics.outputs.mi }}
   smells:
     description: Warning-level code smell count (critical smells are not included in this number)

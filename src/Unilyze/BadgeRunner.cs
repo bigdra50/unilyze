@@ -159,7 +159,7 @@ internal static class BadgeRunner
               unilyze badge                                    Analyze current directory
               unilyze badge -p <path>                          Analyze specified project
               unilyze badge -p <path> --metric codehealth      Code health badge (default)
-              unilyze badge -p <path> --metric mi              Maintainability index badge
+              unilyze badge -p <path> --metric mi              (reference metric — see docs/metrics.md)
               unilyze badge -p <path> --metric smells          Code smells badge
               unilyze badge -p <path> --metric energy          Energy pressure proxy badge
               unilyze badge -p <path> --metric dup             Duplication badge

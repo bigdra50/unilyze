@@ -85,7 +85,7 @@ internal static class StatuslineFormatter
     static bool CountForSummary(CodeSmell smell, bool excludeBaselined)
         => SmellAggregation.CountsForGate(smell, excludeBaselined);
 
-    internal static string Format(Summary s)
+    internal static string Format(Summary s, bool showMi = false)
     {
         if (s.TypeCount == 0)
             return "";
@@ -103,13 +103,6 @@ internal static class StatuslineFormatter
             _ => Red
         };
 
-        var miColor = s.AverageMaintainabilityIndex switch
-        {
-            >= 80.0 => Green,
-            >= 60.0 => Yellow,
-            _ => Red
-        };
-
         var sb = new StringBuilder();
 
         var healthLabel = s.UsesCodeHealthV1 ? "CHv1" : "CH";
@@ -118,8 +111,16 @@ internal static class StatuslineFormatter
         sb.Append($" {healthColor}W:{s.EffectiveLocWeightedAverageCodeHealth:F1}{Reset}");
         sb.Append($" T:{s.EffectiveWorstDecileCodeHealth:F1}");
 
-        // Maintainability Index
-        sb.Append($" {miColor}MI:{s.AverageMaintainabilityIndex:F0}{Reset}");
+        if (showMi)
+        {
+            var miColor = s.AverageMaintainabilityIndex switch
+            {
+                >= 80.0 => Green,
+                >= 60.0 => Yellow,
+                _ => Red
+            };
+            sb.Append($" {miColor}MI:{s.AverageMaintainabilityIndex:F0}{Reset}");
+        }
 
         // Smells
         sb.Append($" {Yellow}{s.WarningCount}smells{Reset}");

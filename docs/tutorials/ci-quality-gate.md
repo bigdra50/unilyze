@@ -69,9 +69,11 @@ gate failed: min CodeHealth 8 < 10
 Other gate combinations:
 
 ```bash
-unilyze badge -p . --metric mi --fail-under 70          # average MI
 unilyze badge -p . --metric smells --fail-over 5        # warning count (any critical always fails)
 ```
+
+Compatibility note: `unilyze badge -p . --metric mi --fail-under 70` remains available for existing workflows, but MI is a reference metric.
+Use the CodeHealth gate for new workflows.
 
 Thresholds are **inclusive at the boundary**: a value exactly equal to `--fail-under` passes; strictly below fails.
 

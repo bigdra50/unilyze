@@ -69,6 +69,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Changed
 
+- **BREAKING:** The default `statusline` format no longer includes the `MI:` token; pass `--show-mi` to restore the reference metric. CodeHealth is now the only default statusline metric, based on the validity concerns documented by van Deursen (2014), "Think Twice Before Using the Maintainability Index," and Borg et al. (2024), "Ghost Echoes Revealed" (arXiv:2408.10754). MI computation, JSON output, UNI008, badge behavior, and diff deltas are unchanged; `metricsVersion` remains 4 ([#156](https://github.com/bigdra50/unilyze/issues/156))
 - Dropped `net9.0` (STS, EOL) from supported target frameworks; supported runtimes are now `net8.0` and `net10.0` per the .NET version support policy ([#43](https://github.com/bigdra50/unilyze/issues/43)). **Global-tool impact:** environments with only a .NET 9 runtime can no longer run the tool; install a .NET 8 or .NET 10 runtime instead.
 - **[metrics]** HighCoupling warning threshold raised from CBO >= 14 to CBO >= 15, aligning code with the documented contract ([#32](https://github.com/bigdra50/unilyze/issues/32))
 - **[metrics]** DeepInheritance warning threshold lowered from DIT >= 6 to DIT >= 5, aligning code with the documented contract ([#32](https://github.com/bigdra50/unilyze/issues/32))
