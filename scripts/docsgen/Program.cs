@@ -53,7 +53,7 @@ static string ResolveRepositoryRoot()
 static void UpdateOrCheck(string path, string generatedBlock, bool check, List<string> stalePaths)
 {
     var expected = BuildContent(path, generatedBlock);
-    if (File.Exists(path) && File.ReadAllText(path) == expected)
+    if (File.Exists(path) && Normalize(File.ReadAllText(path)) == Normalize(expected))
         return;
 
     if (check)
@@ -65,6 +65,8 @@ static void UpdateOrCheck(string path, string generatedBlock, bool check, List<s
     Directory.CreateDirectory(Path.GetDirectoryName(path)!);
     File.WriteAllText(path, expected, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 }
+
+static string Normalize(string value) => value.Replace("\r\n", "\n");
 
 static string BuildContent(string path, string generatedBlock)
 {

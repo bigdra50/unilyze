@@ -15,8 +15,8 @@ public class RuleDocsDriftTests
             var path = Path.Combine(repositoryRoot, "docs", "rules", $"{ruleId}.md");
             Assert.True(File.Exists(path), $"Missing docs/rules/{ruleId}.md");
 
-            var actual = ExtractGeneratedBlock(File.ReadAllText(path), path);
-            Assert.Equal(RuleDocRenderer.Render(ruleId), actual);
+            var actual = Normalize(ExtractGeneratedBlock(File.ReadAllText(path), path));
+            Assert.Equal(Normalize(RuleDocRenderer.Render(ruleId)), actual);
         }
     }
 
@@ -27,7 +27,7 @@ public class RuleDocsDriftTests
         var path = Path.Combine(repositoryRoot, "docs", "rules", "index.md");
         Assert.True(File.Exists(path), "Missing docs/rules/index.md");
 
-        var content = File.ReadAllText(path);
+        var content = Normalize(File.ReadAllText(path));
         foreach (var (ruleId, _) in SarifFormatter.EnumerateRules())
         {
             Assert.Contains($"| {ruleId} |", content, StringComparison.Ordinal);
@@ -44,6 +44,8 @@ public class RuleDocsDriftTests
 
         return content[(start + StartMarker.Length)..end];
     }
+
+    static string Normalize(string value) => value.Replace("\r\n", "\n");
 
     static string ResolveRepositoryRoot()
     {
