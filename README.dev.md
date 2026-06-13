@@ -11,6 +11,10 @@ For installation and usage, see [README.md](README.md).
 
 CI matrix: `net8.0;net10.0`.
 
+### Documentation site generator
+
+The GitHub Pages site uses mkdocs-material so documentation remains plain Markdown that in-repo drift tests can validate, while gaining built-in search. No .NET API reference generation is planned, and the Python dependency is confined to CI.
+
 ### .NET version support policy
 
 Supported runtimes are the **current LTS** and the **previous LTS** (until its EOL). EOL'd STS releases are dropped in the next minor release. As of 2026-06, supported TFMs are `net8.0` and `net10.0`; `net9.0` (STS, EOL) has been removed.

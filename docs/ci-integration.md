@@ -116,7 +116,7 @@ Outputs: `codehealth`, `mi`, `smells`, `gate-result` (`passed` / `failed` / `ski
 
 ## Publishing badges from Actions
 
-Generate SVG on every push to `main` and serve from a `badges` branch (this repository dogfoods the same pattern — see [badges.yml](../.github/workflows/badges.yml)):
+Generate SVG on every push to `main` and serve from a `badges` branch (this repository dogfoods the same pattern — see [badges.yml](https://github.com/bigdra50/unilyze/blob/main/.github/workflows/badges.yml)):
 
 ```yaml
 # .github/workflows/badges.yml

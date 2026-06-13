@@ -1,6 +1,6 @@
 # CI Quality Gate Tutorial
 
-This walkthrough sets up a pull-request check that **fails when code quality regresses** and **posts a markdown diff summary** to the PR. It complements the short pointers in [README.md](../../README.md) and the full reference in [docs/ci-integration.md](../ci-integration.md) (badges, quality gates, GitHub Action, diff regression).
+This walkthrough sets up a pull-request check that **fails when code quality regresses** and **posts a markdown diff summary** to the PR. It complements the short pointers in [README.md](https://github.com/bigdra50/unilyze#readme) and the full reference in [docs/ci-integration.md](../ci-integration.md) (badges, quality gates, GitHub Action, diff regression).
 
 unilyze runs at **SyntaxOnly** in CI (no Unity install required). Code Health and Maintainability Index are stable at this level; smell counts are level-dependent — see [docs/metrics.md](../metrics.md).
 
@@ -81,7 +81,7 @@ Compare the PR against a baseline and fail when **project-wide aggregates** wors
 
 ### Option A: Cached baseline JSON (fastest)
 
-Store a baseline snapshot on a branch or in CI artifacts (this repo dogfoods a `badges` branch — see [.github/workflows/badges.yml](../../.github/workflows/badges.yml)):
+Store a baseline snapshot on a branch or in CI artifacts (this repo dogfoods a `badges` branch — see [.github/workflows/badges.yml](https://github.com/bigdra50/unilyze/blob/main/.github/workflows/badges.yml)):
 
 ```bash
 # Assume baseline.json was produced earlier with the same -p path and filters
@@ -138,8 +138,8 @@ With `--fail-on-regression`, a failing gate still prints the full markdown to st
 
 Do **not** duplicate the full workflow YAML here. Canonical sources:
 
-- Badge publishing: [.github/workflows/badges.yml](../../.github/workflows/badges.yml) and [docs/ci-integration.md](../ci-integration.md#publishing-badges-from-actions)
-- This repo's own gate: [.github/workflows/ci.yml](../../.github/workflows/ci.yml) (`quality-gate` job)
+- Badge publishing: [.github/workflows/badges.yml](https://github.com/bigdra50/unilyze/blob/main/.github/workflows/badges.yml) and [docs/ci-integration.md](../ci-integration.md#publishing-badges-from-actions)
+- This repo's own gate: [.github/workflows/ci.yml](https://github.com/bigdra50/unilyze/blob/main/.github/workflows/ci.yml) (`quality-gate` job)
 
 A minimal PR gate job runs these shell steps (adapt paths to your project):
 
@@ -158,7 +158,7 @@ For private repositories, generate SVG badges with `unilyze badge --format svg` 
 
 ## Official GitHub Action
 
-Use [`bigdra50/unilyze@v1`](../../README.md#github-action) for a composite step that bundles install, snapshot, gates, and optional PR comments. Manual shell steps above remain valid — exit-code contract and gate semantics are identical. Full input table: [docs/ci-integration.md](../ci-integration.md#github-action).
+Use [`bigdra50/unilyze@v1`](https://github.com/bigdra50/unilyze#github-action) for a composite step that bundles install, snapshot, gates, and optional PR comments. Manual shell steps above remain valid — exit-code contract and gate semantics are identical. Full input table: [docs/ci-integration.md](../ci-integration.md#github-action).
 
 ## Quick local smoke test
 
