@@ -1,4 +1,6 @@
-namespace Unilyze;
+using Unilyze.Discovery;
+using Unilyze.Pipeline;
+namespace Unilyze.Unity;
 
 internal sealed class UnityAssetGuidIndex
 {

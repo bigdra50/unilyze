@@ -1,11 +1,12 @@
+using Unilyze.Pipeline;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Unity;
 
-public sealed record UnityTypeContext(bool IsMonoBehaviour, IReadOnlySet<string> HotPathMethodNames);
+internal sealed record UnityTypeContext(bool IsMonoBehaviour, IReadOnlySet<string> HotPathMethodNames);
 
-public static class UnityContextClassifier
+internal static class UnityContextClassifier
 {
     static readonly HashSet<string> AlwaysHotPathMethods = new(StringComparer.Ordinal)
     {

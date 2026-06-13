@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Unity;
 
 internal sealed class SerializedReferenceScanContext
 {

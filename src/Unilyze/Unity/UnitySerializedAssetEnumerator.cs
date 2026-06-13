@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Discovery;
+namespace Unilyze.Unity;
 
 internal static class UnitySerializedAssetEnumerator
 {

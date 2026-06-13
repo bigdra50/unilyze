@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Unilyze;
+namespace Unilyze.Unity;
 
 internal sealed record UnityObjectReference(long FileId, string? Guid);
 

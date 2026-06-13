@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Unity;
 
 internal static class UnityMetaGuidReader
 {
