@@ -1,0 +1,21 @@
+site_name: unilyze
+site_url: https://bigdra50.github.io/unilyze/
+repo_url: https://github.com/bigdra50/unilyze
+
+theme:
+  name: material
+
+validation:
+  links:
+    # docs/metrics.md intentionally retains references to repository files outside docs/.
+    not_found: info
+
+nav:
+  - Home: index.md
+  - Metrics: metrics.md
+  - CI Integration: ci-integration.md
+  - Statusline: statusline.md
+  - Tutorials:
+      - CI Quality Gate: tutorials/ci-quality-gate.md
+      - Agent Integration: tutorials/agent-integration.md
+      - Continuous Refactoring: tutorials/continuous-refactoring.md

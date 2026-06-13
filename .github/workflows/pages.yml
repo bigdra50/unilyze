@@ -28,13 +28,23 @@ jobs:
       - name: Restore
         run: dotnet restore src/Unilyze/Unilyze.csproj
 
-      # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net9.0;net10.0).
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install documentation dependencies
+        run: pip install mkdocs-material
+
+      - name: Build documentation site
+        run: mkdocs build --strict -d _site
+
+      # --framework is required because Unilyze.csproj is multi-targeted (net8.0;net10.0).
       # Self-analysis (dogfooding): unilyze analyzes its own source and emits the interactive HTML.
       - name: Generate demo HTML (self-analysis)
         run: |
-          mkdir -p _site
+          mkdir -p _site/demo
           dotnet run --project src/Unilyze -c Release --framework net10.0 --no-restore -- \
-            -p src/Unilyze -o _site/index.html
+            -p src/Unilyze -o _site/demo/index.html
 
       - uses: actions/configure-pages@v6
 
