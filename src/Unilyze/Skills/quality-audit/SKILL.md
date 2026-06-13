@@ -104,7 +104,7 @@ CycCC と CogCC の使い分け:
 ### Phase 3: 盲点補完
 
 unilyze の計測対象外を AI が確認する。
-[docs/metrics.md の検出責務ルーティング](../../../docs/metrics.md#検出責務ルーティング) の LLM 委譲行に対応するチェックリスト。
+[docs/metrics.md Detection responsibility routing](../../../docs/metrics.md#detection-responsibility-routing) の LLM 委譲行に対応するチェックリスト。
 詳細は [references/blind-spots.md](references/blind-spots.md) を参照。
 
 | 確認項目 | 着目箇所 | メトリクスで漏れる理由 | 入力データ |

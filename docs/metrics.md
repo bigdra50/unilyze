@@ -1,494 +1,494 @@
-# Unilyze メトリクス定義
+# Unilyze Metric Definitions
 
-Unilyze が計算する各メトリクスの定義・準拠仕様・既知の差異をまとめる。
+Definitions, compliance specifications, and known differences for each metric computed by Unilyze.
 
 ## Cognitive Complexity (CogCC)
 
-準拠仕様: [SonarSource Cognitive Complexity Whitepaper](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
+Compliance specification: [SonarSource Cognitive Complexity Whitepaper](https://www.sonarsource.com/docs/CognitiveComplexity.pdf)
 
-### ルール
+### Rules
 
-| カテゴリ | 対象 | インクリメント |
+| Category | Target | Increment |
 |---------|------|-------------|
-| 構造的 | `if`, `else if`, `else`, `switch`, `for`, `foreach`, `while`, `do`, `catch` | +1 + nesting |
-| 基本的 | `goto`, 直接再帰 | +1 |
-| 論理演算子 | `&&`, `||`, `or`, `and` | +1（種類変更時のみ。同種の連続は +1 のまま。`or`は`||`、`and`は`&&`と同種扱い） |
-| ネスト増加 | lambda, anonymous method | nesting +1 (構造的インクリメントなし) |
-| ショートハンド | `??`, `?.` | 0 (インクリメントなし) |
+| Structural | `if`, `else if`, `else`, `switch`, `for`, `foreach`, `while`, `do`, `catch` | +1 + nesting |
+| Fundamental | `goto`, direct recursion | +1 |
+| Logical operators | `&&`, `||`, `or`, `and` | +1 (only when the operator kind changes; consecutive same-kind operators stay at +1. `or` is same-kind as `||`, `and` as `&&`) |
+| Nesting increase | lambda, anonymous method | nesting +1 (no structural increment) |
+| Shorthand | `??`, `?.` | 0 (no increment) |
 
-### SonarAnalyzer.CSharp (S3776) との差異
+### Differences from SonarAnalyzer.CSharp (S3776)
 
-SonarAnalyzer.CSharp 10.20.0 との突合結果（Unilyze 自身のソースコード 70 メソッド）:
+Cross-validation results against SonarAnalyzer.CSharp 10.20.0 (70 methods from Unilyze's own source):
 
-| 指標 | 値 |
+| Metric | Value |
 |------|-----|
-| Spearman 順位相関 | 1.000 |
-| 完全一致率 | 100.0% (70/70) |
-| ±1 以内率 | 100.0% (70/70) |
+| Spearman rank correlation | 1.000 |
+| Exact match rate | 100.0% (70/70) |
+| Within ±1 rate | 100.0% (70/70) |
 
-| 構文 | SonarAnalyzer | Unilyze | 備考 |
+| Syntax | SonarAnalyzer | Unilyze | Notes |
 |------|-------------|---------|------|
-| `or` パターン結合子 | +1 | +1 | 対応済み (`||`と同種扱い) |
-| `and` パターン結合子 | +1 | +1 | 対応済み (`&&`と同種扱い) |
-| 直接再帰 | +1 | +1 | 対応済み (メソッド名ベースの検出) |
-| static ローカル関数 | 独立計算 | メソッドに含む | 仕様違い |
-| `??` (null coalesce) | 0 | 0 | 一致 (v0.2.0 で修正済み) |
-| `switch` expression | +1 + nesting | +1 + nesting | 一致 |
+| `or` pattern combinator | +1 | +1 | Supported (treated same-kind as `||`) |
+| `and` pattern combinator | +1 | +1 | Supported (treated same-kind as `&&`) |
+| Direct recursion | +1 | +1 | Supported (method-name-based detection) |
+| static local function | Independent calculation | Included in method | Specification difference |
+| `??` (null coalesce) | 0 | 0 | Match (fixed in v0.2.0) |
+| `switch` expression | +1 + nesting | +1 + nesting | Match |
 
 ## Cyclomatic Complexity (CycCC)
 
-準拠仕様: McCabe, T.J. (1976) "A Complexity Measure"
+Compliance specification: McCabe, T.J. (1976) "A Complexity Measure"
 
-各述語ノード（分岐点）を +1 カウントする。ベースパスは 1。
+Each predicate node (branch point) is counted as +1. Base paths are 1.
 
-### カウント対象
+### Count targets
 
-| ノード | インクリメント |
+| Node | Increment |
 |--------|-------------|
 | `if` | +1 |
 | `case` label / `case` pattern | +1 |
-| `for`, `foreach`（分解 foreach 含む）, `while`, `do` | +1 |
+| `for`, `foreach` (including deconstruction foreach), `while`, `do` | +1 |
 | `catch` | +1 |
-| `? :` (三項演算子) | +1 |
-| `?.` (null 条件) | +1 |
-| `??` (null 合体) | +1 |
-| `&&`, `||` | 各 +1 |
-| bool オペランドの `&`, `|` | 各 +1（semantic model がある解析レベルのみ。SyntaxOnly では型解決できず非カウント） |
+| `? :` (ternary operator) | +1 |
+| `?.` (null conditional) | +1 |
+| `??` (null coalescing) | +1 |
+| `&&`, `||` | +1 each |
+| `&`, `|` on bool operands | +1 each (semantic-model analysis levels only; not counted under SyntaxOnly where types cannot be resolved) |
 | `goto` | +1 |
 | `switch` expression arm | +1 |
 
-`??=`、switch expression 自体、catch の `when` フィルタ、`and` / `or` パターンはカウントしない。
+`??=`, the switch expression itself, catch `when` filters, and `and` / `or` patterns are not counted.
 
-### 公式 Roslyn エンジン (CodeAnalysisMetricData / Metrics.exe / CA1502) との規約差
+### Convention differences from the official Roslyn engine (CodeAnalysisMetricData / Metrics.exe / CA1502)
 
-unilyze 自身の src/Unilyze 全 339 メソッドを公式エンジンと突合し、両者の規約差を実証した確定表（97/100 型で残差ゼロ、残り 3 型は ±1 まで分解済み）
-（再現手順は [scripts/crossval](../scripts/crossval/)、検証データは「バリデーション (検証)」セクション）:
+Cross-validation of all 339 methods in src/Unilyze against the official engine established the following convention-difference table (zero residual for 97/100 types; remaining 3 types decomposed to ±1)
+(reproduction steps: [scripts/crossval](https://github.com/bigdra50/unilyze/blob/main/scripts/crossval/); validation data in the [Validation](#validation) section):
 
-| 構文 | 公式エンジン | Unilyze |
+| Syntax | Official engine | Unilyze |
 |------|------------|---------|
-| `if` / `? :` / ループ / `case` label・pattern / `?.` / `??` / `&&` / `\|\|` | +1 | +1 |
-| `default` label | +1 | カウントしない |
-| `catch` | カウントしない | +1 |
-| `switch` expression arm | カウントしない | +1 |
-| `goto` | カウントしない | +1 |
-| `??=` | カウントしない | カウントしない |
-| bool の `&` / `\|` | +1 | semantic 時のみ +1 |
-| 型集計 | 全メンバーシンボル各 base 1（暗黙 ctor・accessor・operator 含む） | 宣言メソッドのみ各 base 1 |
+| `if` / `? :` / loops / `case` label·pattern / `?.` / `??` / `&&` / `\|\|` | +1 | +1 |
+| `default` label | +1 | not counted |
+| `catch` | not counted | +1 |
+| `switch` expression arm | not counted | +1 |
+| `goto` | not counted | +1 |
+| `??=` | not counted | not counted |
+| bool `&` / `\|` | +1 | +1 only with semantic model |
+| Type aggregation | base 1 per member symbol (implicit ctor, accessor, operator included) | base 1 per declared method only |
 
-注意:
+Notes:
 
-- かつて本ドキュメントは「公式は `?.` `??` をカウントしない」と記載していたが、これは誤り（実装突合で反証済み）。両エンジンともカウントする
-- CA1502 の既定しきい値 25 を unilyze の CycCC に直接適用してはならない。switch expression arm 等の加算により unilyze 値は系統的に高くなり、概算換算式も提供しない（正確な比較には公式エンジンでの再解析が必要）
-- 設計判断: unilyze は拡張解釈（catch / arm / goto は実分岐としてカウント）を意図的に維持する。`catch` と switch arm は McCabe の分岐点定義に忠実であり、既存ベースライン（refactor loop・トレンド・バッジ）の互換も保つ。公式互換値が必要な場合は CA1502 / Metrics.exe を直接使うこと。モダンな複雑度ゲートには SonarAnalyzer S3776 と 100% 整合済みの CogCC を推奨する
+- This document previously stated "the official engine does not count `?.` `??`"; that was incorrect (disproved by implementation cross-validation). Both engines count them
+- Do not apply CA1502's default threshold of 25 directly to unilyze CycCC. Switch expression arms and similar additions make unilyze values systematically higher; no approximate conversion formula is provided (re-analysis with the official engine is required for accurate comparison)
+- Design decision: unilyze intentionally maintains the extended interpretation (counting catch / arm / goto as real branches). `catch` and switch arms are faithful to McCabe's branch-point definition and preserve compatibility with existing baselines (refactor loop, trends, badges). Use CA1502 / Metrics.exe directly when official-compatible values are needed. For modern complexity gates, CogCC (100% aligned with SonarAnalyzer S3776) is recommended
 
 ## LCOM-HS (Henderson-Sellers)
 
-準拠仕様: Henderson-Sellers, B. (1996) "Object-Oriented Metrics: Measures of Complexity"
+Compliance specification: Henderson-Sellers, B. (1996) "Object-Oriented Metrics: Measures of Complexity"
 
-### 公式
+### Formula
 
 ```
 LCOM-HS = (avg(mA) - M) / (1 - M)
 
-mA(f) = フィールド f にアクセスするメソッド数
-avg(mA) = 全フィールドの mA の平均
-M = インスタンスメソッド数（コンストラクタ含む）
+mA(f) = number of methods that access field f
+avg(mA) = average of mA across all fields
+M = number of instance methods (constructors included)
 ```
 
-### 解釈
+### Interpretation
 
-| 値 | 意味 |
+| Value | Meaning |
 |-----|------|
-| 0.0 | 完全凝集（全メソッドが全フィールドにアクセス） |
-| 1.0 | 完全分離（各メソッドが異なるフィールドにのみアクセス） |
-| null | 計算不能（フィールド 0 個、またはメソッド 0-1 個） |
+| 0.0 | Perfect cohesion (all methods access all fields) |
+| 1.0 | Perfect separation (each method accesses only a distinct field) |
+| null | Not computable (0 fields, or 0–1 methods) |
 
-### NDepend / CK との差異
+### Differences from NDepend / CK
 
-| 項目 | NDepend (最新) | CK | Unilyze |
+| Item | NDepend (latest) | CK | Unilyze |
 |------|--------------|-----|---------|
-| auto-property | F から除外 | F に含む | F から除外 (v0.2.0 で修正済み) |
-| コンストラクタ | M に含む | M に含む | M に含む (v0.2.0 で修正済み) |
-| static メンバー | 除外 | 除外 | 除外 |
+| auto-property | Excluded from F | Included in F | Excluded from F (fixed in v0.2.0) |
+| Constructor | Included in M | Included in M | Included in M (fixed in v0.2.0) |
+| static members | Excluded | Excluded | Excluded |
 
 ## WMC (Weighted Methods per Class)
 
-準拠仕様: Chidamber, S.R. & Kemerer, C.F. (1994) "A Metrics Suite for Object Oriented Design"
+Compliance specification: Chidamber, S.R. & Kemerer, C.F. (1994) "A Metrics Suite for Object Oriented Design"
 
-### 公式
+### Formula
 
 ```
 WMC = Σ CycCC(method_i)  for all methods in class
 ```
 
-クラス内の全メソッドの Cyclomatic Complexity の合計。重み付けは CycCC を使用。
+Sum of Cyclomatic Complexity for all methods in the class. Weighting uses CycCC.
 
-### 解釈
+### Interpretation
 
-| 値 | 意味 |
+| Value | Meaning |
 |-----|------|
-| 0 | メソッドなし（データクラス、enum等） |
-| 1-20 | 一般的な範囲 |
-| > 20 | リファクタリング候補 |
+| 0 | No methods (data class, enum, etc.) |
+| 1-20 | Typical range |
+| > 20 | Refactoring candidate |
 
 ## NOC (Number of Children)
 
-準拠仕様: Chidamber & Kemerer (1994)
+Compliance specification: Chidamber & Kemerer (1994)
 
-直接のサブクラス数。DependencyBuilder の Inheritance 依存から逆引きで算出。
+Count of direct subclasses. Derived by reverse lookup from DependencyBuilder Inheritance dependencies.
 
-### 解釈
+### Interpretation
 
-| 値 | 意味 |
+| Value | Meaning |
 |-----|------|
-| 0 | 継承されていない |
-| 高い | 再利用度が高い基底クラス。変更時の影響範囲が大きい |
+| 0 | Not inherited |
+| High | Reusable base class; large blast radius on change |
 
 ## RFC (Response For a Class)
 
-### 公式
+### Formula
 
 ```
 RFC = M + R
 
-M = クラス内のメソッド数（コンストラクタ含む）
-R = M 内から呼び出されるユニークな外部メソッド数
+M = number of methods in the class (constructors included)
+R = number of unique external methods invoked from within M
 ```
 
-### Semantic / Syntactic パス
+### Semantic / Syntactic paths
 
-| パス | 解決方法 |
+| Path | Resolution method |
 |------|---------|
-| Semantic | SemanticModel で InvocationExpression のシンボルを解決。正確 |
-| Syntactic (fallback) | InvocationExpression のメソッド名文字列で近似。オーバーロード区別不可 |
+| Semantic | Resolve InvocationExpression symbols via SemanticModel. Accurate |
+| Syntactic (fallback) | Approximate by InvocationExpression method name string. Cannot distinguish overloads |
 
-### 解釈
+### Interpretation
 
-| 値 | 意味 |
+| Value | Meaning |
 |-----|------|
-| <= 50 | 一般的な範囲 |
-| > 50 | テスト・理解が困難になる傾向 |
+| <= 50 | Typical range |
+| > 50 | Tends to be difficult to test and understand |
 
 ## CBO (Coupling Between Objects)
 
-準拠仕様: Chidamber & Kemerer (1994)
+Compliance specification: Chidamber & Kemerer (1994)
 
-### 公式
+### Formula
 
 ```
-CBO = 型 T が結合するユニークな外部型の数
+CBO = number of unique external types coupled to type T
 ```
 
-型 T の宣言・メンバー・メソッド本体から参照される型の集合から、自身と除外型を除いた件数。
+Count of types referenced from T's declaration, members, and method bodies, excluding self and excluded types.
 
-### カウント規約
+### Counting conventions
 
-実装: `CboCalculator.cs`
+Implementation: `CboCalculator.cs`
 
-| パス | 解決方法 |
+| Path | Resolution method |
 |------|---------|
-| Semantic | 型宣言の descendant から `TypeSyntax` / `ObjectCreationExpression` / `CastExpression` を走査し、`SemanticModel` で `ITypeSymbol` を解決。`INamedTypeSymbol.OriginalDefinition` を集合に追加（ジェネリック型引数・配列要素型も再帰収集） |
-| Syntactic (fallback) | base list、フィールド/プロパティ型、メソッド/コンストラクタのシグネチャと本体（局所変数宣言・`new`・cast・`typeof`）から型名文字列を収集 |
+| Semantic | Walk descendants of the type declaration for `TypeSyntax` / `ObjectCreationExpression` / `CastExpression`, resolve `ITypeSymbol` via `SemanticModel`, add `INamedTypeSymbol.OriginalDefinition` to the set (generic type arguments and array element types collected recursively) |
+| Syntactic (fallback) | Collect type name strings from base list, field/property types, method/constructor signatures and bodies (local variable declarations, `new`, cast, `typeof`) |
 
-共通の除外:
+Common exclusions:
 
-- 自身の型
-- Semantic 時: `SpecialType` が `None` 以外の組み込み型、`System.ValueType` / `System.Enum` / `System.Delegate` / `System.MulticastDelegate` / `System.Attribute` / `System.Void`
-- Syntactic 時: C# プリミティブ名（`int`, `string`, `object` 等）
+- Self type
+- Semantic: built-in types where `SpecialType` is not `None`, `System.ValueType` / `System.Enum` / `System.Delegate` / `System.MulticastDelegate` / `System.Attribute` / `System.Void`
+- Syntactic: C# primitive names (`int`, `string`, `object`, etc.)
 
-CBO は `TypeDependency` グラフとは独立に、型宣言 AST から直接算出する。DI 登録エッジは CBO には含まれない。
+CBO is computed directly from the type-declaration AST, independent of the `TypeDependency` graph. DI registration edges are not included in CBO.
 
-### しきい値（コードスメル）
+### Thresholds (code smell)
 
-| レベル | 条件 |
+| Level | Condition |
 |--------|------|
 | Warning (`HighCoupling`) | CBO >= 15 |
 | Critical (`HighCoupling`) | CBO >= 25 |
 
-定数: `SmellThresholds.HighCouplingCboWarning` / `HighCouplingCboCritical`
+Constants: `SmellThresholds.HighCouplingCboWarning` / `HighCouplingCboCritical`
 
-### 注意点
+### Notes
 
-- SemanticModel が利用できない `SyntaxOnly` 解析では過小評価される（外部エンジン型への結合が不可視）
-- 公式 Metrics エンジンの ClassCoupling とはカウント対象・粒度が異なる（「バリデーション (検証)」参照）
+- Under `SyntaxOnly` analysis without SemanticModel, CBO is underestimated (coupling to external engine types is invisible)
+- Differs from the official Metrics engine ClassCoupling in counting scope and granularity (see [Validation](#validation))
 
 ## DIT (Depth of Inheritance)
 
-準拠仕様: Chidamber & Kemerer (1994)
+Compliance specification: Chidamber & Kemerer (1994)
 
-### 公式
+### Formula
 
 ```
-DIT = 型 T から `System.Object` 手前までの継承チェーン長
+DIT = length of inheritance chain from type T up to (but not including) `System.Object`
 ```
 
-interface / struct は 0。class / record は直接・間接の基底 class を数える。
+interface / struct → 0. class / record counts direct and indirect base classes.
 
-### カウント規約
+### Counting conventions
 
-実装: `DitCalculator.cs`
+Implementation: `DitCalculator.cs`
 
-| パス | 規約 |
+| Path | Convention |
 |------|------|
-| Semantic | interface → 0。struct → 0。それ以外は `INamedTypeSymbol.BaseType` を `System.Object` に到達するまで辿り、段数をカウント（`System.Object` 自身は数えない） |
-| Syntactic (fallback) | interface / struct / record struct → 0。base list なし → 0。先頭 base が `QualifiedNameSyntax`（外部型）→ 1。同一 syntax tree 内で同名 interface 宣言があれば 0、それ以外 → 1 |
+| Semantic | interface → 0. struct → 0. Otherwise walk `INamedTypeSymbol.BaseType` until `System.Object` and count steps (`System.Object` itself is not counted) |
+| Syntactic (fallback) | interface / struct / record struct → 0. No base list → 0. First base is `QualifiedNameSyntax` (external type) → 1. Same-name interface declaration in the same syntax tree → 0; otherwise → 1 |
 
-Semantic 計算が失敗した場合、`SemanticEnricher` は syntactic fallback または `TypeNodeInfo.BaseType` の有無（0/1）に縮退する。
+When semantic calculation fails, `SemanticEnricher` falls back to syntactic fallback or `TypeNodeInfo.BaseType` presence (0/1).
 
-### しきい値（コードスメル）
+### Thresholds (code smell)
 
-| レベル | 条件 |
+| Level | Condition |
 |--------|------|
 | Warning (`DeepInheritance`) | DIT >= 5 |
 
-定数: `SmellThresholds.DeepInheritanceDitWarning`
+Constant: `SmellThresholds.DeepInheritanceDitWarning`
 
-### 注意点
+### Notes
 
-- 公式 Metrics エンジンは `object` 継承を 1 として数える規約差があり、全件でオフセットが生じる（「バリデーション (検証)」参照）
-- エンジン型（`UnityEngine.MonoBehaviour` 等）を跨ぐ継承は Semantic 解析が必須。`SyntaxOnly` では過小評価される
+- The official Metrics engine counts `object` inheritance as 1, producing a uniform offset (see [Validation](#validation))
+- Inheritance spanning engine types (`UnityEngine.MonoBehaviour`, etc.) requires Semantic analysis; `SyntaxOnly` underestimates
 
 ## Ca / Ce (Afferent / Efferent Coupling)
 
-Martin の安定度分析に基づく型単位の結合度。
+Type-level coupling based on Martin's stability analysis.
 
-### 公式
+### Formula
 
 ```
-Ca(T) = T を依存先 (To) とするユニーク有向エッジ数
-Ce(T) = T を依存元 (From) とするユニーク有向エッジ数
+Ca(T) = number of unique directed edges with T as dependency target (To)
+Ce(T) = number of unique directed edges with T as dependency source (From)
 ```
 
-入力は `DependencyBuilder.Build` が生成する `TypeDependency` リスト（継承・interface 実装・メンバー型・コンストラクタ/メソッド引数・ジェネリック制約）に加え、解決済みの DI 登録エッジ（VContainer / Zenject）および Unity シーン/プレハブ/`.asset` YAML から解決した `SerializedReference` エッジ（`[SerializeField]` または public フィールドと Inspector 配線の突合）。
+Input is the `TypeDependency` list from `DependencyBuilder.Build` (inheritance, interface implementation, member types, constructor/method parameters, generic constraints), plus resolved DI registration edges (VContainer / Zenject) and `SerializedReference` edges resolved from Unity scene/prefab/`.asset` YAML (`[SerializeField]` or public fields matched against Inspector wiring).
 
-### カウント規約
+### Counting conventions
 
-実装: `CouplingMetricsCalculator.cs`
+Implementation: `CouplingMetricsCalculator.cs`
 
-- 解析対象型集合（`allTypes`）に含まれる `FromTypeId` / `ToTypeId` のみカウント
-- 自己参照 (`From == To`) は除外
-- 同一 `(From, To)` ペアは 1 回のみ（`DependencyKind` が複数あっても重複しない）
-- `FromTypeId` または `ToTypeId` が null（解析対象外への未解決エッジ）は除外
+- Count only `FromTypeId` / `ToTypeId` present in the analysis target type set (`allTypes`)
+- Exclude self-reference (`From == To`)
+- Each `(From, To)` pair counted once (no duplication across multiple `DependencyKind` values)
+- Exclude edges where `FromTypeId` or `ToTypeId` is null (unresolved edges to types outside the analysis scope)
 
-Ca / Ce にしきい値ベースのコードスメル判定はない。
+No threshold-based code-smell detection for Ca / Ce.
 
-### 注意点
+### Notes
 
-- Ca / Ce は依存グラフ上のエッジ数であり、CBO（型宣言 AST からの型参照集合）とは定義が異なる
-- 解析対象外の型への DI 登録はエッジとして接続されず、Ca / Ce に寄与しない
-- `SerializedReference` は Inspector 上の具象型配線を表す。フィールド宣言型（例: 基底クラス）に対する `FieldType` エッジとは別種であり、Ca/Ce/Instability/TypeRank/循環/DfMS には反映されるが CBO（宣言ベース）は変更しない
+- Ca / Ce are edge counts on the dependency graph; definition differs from CBO (type-reference set from type-declaration AST)
+- DI registrations to types outside the analysis scope are not connected as edges and do not contribute to Ca / Ce
+- `SerializedReference` represents concrete-type Inspector wiring. It is distinct from `FieldType` edges on the declared field type (e.g. base class) and affects Ca/Ce/Instability/TypeRank/cycles/DfMS but not declaration-based CBO
 
 ## Instability (I)
 
-Martin の Instability。型単位とアセンブリ単位で算出粒度が異なる。
+Martin's Instability. Computed at type level and assembly level with different granularity.
 
-### 公式（型単位）
+### Formula (type level)
 
 ```
-I(T) = Ce(T) / (Ca(T) + Ce(T))     ※ Ca + Ce > 0 の場合
-I(T) = null                        ※ Ca + Ce = 0 の場合
+I(T) = Ce(T) / (Ca(T) + Ce(T))     when Ca + Ce > 0
+I(T) = null                        when Ca + Ce = 0
 ```
 
-実装: `CouplingMetricsCalculator.cs`（型ごと）。JSON 出力では小数第 2 位に丸める。
+Implementation: `CouplingMetricsCalculator.cs` (per type). JSON output rounds to 2 decimal places.
 
-### 公式（アセンブリ単位）
+### Formula (assembly level)
 
 ```
 I(assembly) = Σ Ce / (Σ Ca + Σ Ce)
 ```
 
-アセンブリ内全型の Ca / Ce をそれぞれ合算。実装: `AssemblyMetrics.ComputeAssemblyInstability`。`Distance from Main Sequence` の I はこちらを使用する。
+Sum Ca / Ce across all types in the assembly. Implementation: `AssemblyMetrics.ComputeAssemblyInstability`. Distance from Main Sequence uses this assembly-level I.
 
-### 解釈
+### Interpretation
 
-| 値 | 意味 |
+| Value | Meaning |
 |-----|------|
-| 0.0 | 完全に安定（他型からのみ依存される） |
-| 1.0 | 完全に不安定（他型へのみ依存する） |
-| null（型のみ） | 入出力結合がゼロ |
+| 0.0 | Fully stable (depended on by other types only) |
+| 1.0 | Fully unstable (depends on other types only) |
+| null (type only) | Zero inbound and outbound coupling |
 
-Ca / Ce / Instability にコードスメルしきい値はない。
+No code-smell thresholds for Ca / Ce / Instability.
 
 ## Halstead Complexity Measures
 
-準拠仕様: Halstead, M.H. (1977) "Elements of Software Science"
+Compliance specification: Halstead, M.H. (1977) "Elements of Software Science"
 
-### 基本測定値
+### Base measures
 
-| 記号 | 意味 |
+| Symbol | Meaning |
 |------|------|
-| n1 (UniqueOperators) | ユニークなオペレータ数 |
-| n2 (UniqueOperands) | ユニークなオペランド数 |
-| N1 (TotalOperators) | 総オペレータ数 |
-| N2 (TotalOperands) | 総オペランド数 |
+| n1 (UniqueOperators) | Number of unique operators |
+| n2 (UniqueOperands) | Number of unique operands |
+| N1 (TotalOperators) | Total operator count |
+| N2 (TotalOperands) | Total operand count |
 
-### 導出メトリクス
+### Derived metrics
 
-| メトリクス | 公式 | 説明 |
+| Metric | Formula | Description |
 |-----------|------|------|
-| Volume (V) | `(N1 + N2) * log2(n1 + n2)` | 実装サイズ |
-| Difficulty (D) | `(n1 / 2) * (N2 / n2)` | 理解の困難さ。n2=0 の場合は 0 |
-| Effort (E) | `D * V` | 実装に必要な精神的労力 |
-| EstimatedBugs (B) | `E^(2/3) / 3000` | 推定バグ数 |
+| Volume (V) | `(N1 + N2) * log2(n1 + n2)` | Implementation size |
+| Difficulty (D) | `(n1 / 2) * (N2 / n2)` | Difficulty of understanding. 0 when n2=0 |
+| Effort (E) | `D * V` | Mental effort required to implement |
+| EstimatedBugs (B) | `E^(2/3) / 3000` | Estimated bug count |
 
 ## Maintainability Index (MI)
 
-準拠仕様: Oman & Hagemeister (1992) — Visual Studio / Microsoft Code Metrics 系の正規化 MI
+Compliance specification: Oman & Hagemeister (1992) — normalized MI in the Visual Studio / Microsoft Code Metrics family
 
-### 公式（メソッド単位）
+### Formula (method level)
 
 ```
-loc = max(1, メソッド宣言の行数)
-V   = Halstead Volume（HalsteadCalculator.cs）
+loc = max(1, line span of method declaration)
+V   = Halstead Volume (HalsteadCalculator.cs)
 
 raw = 171 - 5.2 × ln(V) - 0.23 × CycCC - 16.2 × ln(loc)
-MI  = max(0, raw × 100 / 171)        ※ V > 0
-MI  = 100                            ※ V <= 0
+MI  = max(0, raw × 100 / 171)        when V > 0
+MI  = 100                            when V <= 0
 ```
 
-`ln` は自然対数（`Math.Log`）。CycCC は unilyze の Cyclomatic Complexity（McCabe 拡張解釈）。MI は初回の syntactic 解析時点の CycCC で計算され、Semantic enrich で CycCC が更新されても MI 自体は再計算されない。
+`ln` is the natural logarithm (`Math.Log`). CycCC is unilyze Cyclomatic Complexity (McCabe extended interpretation). MI is computed with CycCC from the initial syntactic parse; MI itself is not recomputed when Semantic enrich updates CycCC.
 
-### 型単位の集約
+### Type-level aggregation
 
-実装: `CodeHealthCalculator.cs`
+Implementation: `CodeHealthCalculator.cs`
 
 ```
-AverageMaintainabilityIndex = 型内メソッド MI の算術平均（小数第 1 位）
-MinMaintainabilityIndex     = 型内メソッド MI の最小（小数第 1 位）
+AverageMaintainabilityIndex = arithmetic mean of method MI in the type (1 decimal place)
+MinMaintainabilityIndex     = minimum method MI in the type (1 decimal place)
 ```
 
-メソッドを持たない型は MI 非対象。プロジェクト平均（statusline / badge）はメソッドを持つ型のみを分母とする。
+Types without methods are not MI targets. Project average (statusline / badge) uses only types with methods as the denominator.
 
-### しきい値（コードスメル）
+### Thresholds (code smell)
 
-| レベル | 条件 |
+| Level | Condition |
 |--------|------|
-| Warning (`LowMaintainability`) | メソッド MI < 60 |
+| Warning (`LowMaintainability`) | method MI < 60 |
 
-定数: `SmellThresholds.LowMaintainabilityMiWarning`
+Constant: `SmellThresholds.LowMaintainabilityMiWarning`
 
-badge / statusline（`--show-mi`）の色分け（参考）: green >= 80, yellow >= 60, red < 60（`BadgeFormatter.cs` / `StatuslineFormatter.cs`）
+badge / statusline (`--show-mi`) color bands (reference): green >= 80, yellow >= 60, red < 60 (`BadgeFormatter.cs` / `StatuslineFormatter.cs`)
 
-### 注意点
+### Notes
 
-- 行数はメソッド本体だけでなく、シグネチャを含む宣言全体の行スパン（`MemberExtractor.cs`）
-- 公式 Metrics エンジンは型単位で集約するため、メソッド平均との規約差で相関は高いが一致しない（「バリデーション (検証)」参照）
-- SyntaxOnly でも CodeHealth と同様おおむね安定
+- Line count spans the full declaration including the signature, not just the method body (`MemberExtractor.cs`)
+- The official Metrics engine aggregates at type level; convention difference from method average yields high correlation but not exact match (see [Validation](#validation))
+- Approximately stable under SyntaxOnly, same as CodeHealth
 
-### 妥当性の限界
+### Validity limits
 
-MI は 1992 年の Visual Basic コードに対する回帰分析から得られた固定係数（171, 5.2, 0.23, 16.2）に依存しており、現代の C# / Unity コードベースへの当てはまりには限界がある。
+MI relies on fixed coefficients (171, 5.2, 0.23, 16.2) from a 1992 regression on Visual Basic code and has limited applicability to modern C# / Unity codebases.
 
 - Arie van Deursen "Think Twice Before Using the Maintainability Index" (https://avandeursen.com/2014/08/29/think-twice-before-using-the-maintainability-index/)
 - Borg et al. "Ghost Echoes Revealed: Benchmarking Maintainability Metrics and Machine Learning Predictions Against Human Assessments" (ICSME 2024, arXiv:2408.10754)
 
-後者を含む近年の評価では、MI を含む古典的メトリクスは人間の保守性評価との一致が弱いことが示されている。unilyze では CodeHealth を既定の単一サーフェスメトリクスとし、MI は参考値として扱う。MI の計算と JSON 出力は、既存コンシューマーおよび公式 Metrics エンジンとの互換性検証のために維持する。
+Recent evaluations, including the latter, show that classical metrics including MI correlate weakly with human maintainability assessments. unilyze uses CodeHealth as the single default surface metric and treats MI as a reference value. MI computation and JSON output are retained for existing consumers and compatibility verification against the official Metrics engine.
 
 ## TypeRank
 
-NDepend の TypeRank に相当する、PageRank ベースの型重要度スコア。
+PageRank-based type importance score equivalent to NDepend TypeRank.
 
-解決済みの DI 登録エッジ（VContainer / Zenject）も `TypeDependency` として依存グラフに含まれ、CBO（Ca/Ce）・循環検出・TypeRank にカウントされる。解析対象外の型へ向かう未解決エッジは除外される。
+Resolved DI registration edges (VContainer / Zenject) are included in the `TypeDependency` graph and counted in CBO (Ca/Ce), cycle detection, and TypeRank. Unresolved edges to types outside the analysis scope are excluded.
 
-### アルゴリズム
+### Algorithm
 
-- 入力: DependencyBuilder の TypeDependency リスト → 隣接リスト
+- Input: DependencyBuilder TypeDependency list → adjacency list
 - damping factor: 0.85
-- 収束閾値: 1e-6 (L1 ノルム)
-- 最大反復回数: 100
-- Dangling node（出次数 0）のランクは全ノードに均等分配
-- 結果は正規化（合計 = 1.0）
+- convergence threshold: 1e-6 (L1 norm)
+- max iterations: 100
+- Dangling nodes (out-degree 0) distribute rank equally to all nodes
+- Result normalized (sum = 1.0)
 
-### 解釈
+### Interpretation
 
-高いほど多くの型から依存されている重要な型。値オブジェクトやインフラ型が上位に来る傾向がある。
+Higher values indicate types depended on by more other types. Value objects and infrastructure types tend to rank high.
 
 ## Abstractness (A)
 
-準拠仕様: Martin, R.C. "Agile Software Development" (Stable Abstractions Principle)
+Compliance specification: Martin, R.C. "Agile Software Development" (Stable Abstractions Principle)
 
-### 公式
+### Formula
 
 ```
-A = (abstract class 数 + interface 数) / 全型数
+A = (abstract class count + interface count) / total type count
 ```
 
-アセンブリ粒度で算出。0.0 = 全て具象、1.0 = 全て抽象。
+Computed at assembly granularity. 0.0 = all concrete, 1.0 = all abstract.
 
 ## Distance from Main Sequence (DfMS)
 
-### 公式
+### Formula
 
 ```
 D = |A + I - 1|
 
 A = Abstractness
-I = Instability (アセンブリ粒度: 全型の Ce 合計 / (Ca 合計 + Ce 合計))
+I = Instability (assembly granularity: sum of Ce / (sum of Ca + sum of Ce))
 ```
 
-Main Sequence（A + I = 1 の直線）からの距離。0.0 が理想。
+Distance from the Main Sequence line (A + I = 1). 0.0 is ideal.
 
-| 位置 | 意味 |
+| Position | Meaning |
 |------|------|
-| D ≈ 0 | 安定度と抽象度のバランスが良い |
-| A=0, I=0 (D=1) | 安定かつ具象 → Zone of Pain（変更困難） |
-| A=1, I=1 (D=1) | 不安定かつ抽象 → Zone of Uselessness |
+| D ≈ 0 | Good balance of stability and abstractness |
+| A=0, I=0 (D=1) | Stable and concrete → Zone of Pain (hard to change) |
+| A=1, I=1 (D=1) | Unstable and abstract → Zone of Uselessness |
 
 ## Relational Cohesion (H)
 
-準拠仕様: NDepend - Relational Cohesion
+Compliance specification: NDepend - Relational Cohesion
 
-### 公式
+### Formula
 
 ```
 H = (R + 1) / N
 
-R = アセンブリ内の型間依存エッジ数（重複除外、自己参照除外）
-N = アセンブリ内の型数
+R = number of inter-type dependency edges in the assembly (deduplicated, self-reference excluded)
+N = number of types in the assembly
 ```
 
-N <= 1 の場合は null。値が高いほどアセンブリ内の型が密に連携している。1.5-4.0 が推奨範囲。
+null when N <= 1. Higher values indicate tighter collaboration among types in the assembly. Recommended range: 1.5–4.0.
 
 ## DOTS / ECS
 
-unilyze は `com.unity.entities` パッケージ内の Roslyn analyzer / source generator（SGJE 診断: SystemAPI 誤用、Entities.ForEach チェーン不正など）とは**重複しない**。
-それらは Editor ビルドで失敗するため、CI に到達しない問題を対象とする。unilyze が検出するのはコンパイル後も残る以下のみ:
+unilyze does **not** duplicate Roslyn analyzers / source generators inside the `com.unity.entities` package (SGJE diagnostics: SystemAPI misuse, invalid Entities.ForEach chains, etc.).
+Those fail the Editor build and therefore target problems that never reach CI. unilyze detects only what remains after compilation:
 
-| ルール | 対象 | 意図 |
+| Rule | Target | Intent |
 |--------|------|------|
-| UNI024 MissingBurstCompile | `ISystem` / `IJobEntity` / `IJobChunk` struct | Burst 適用可能な ECS 型に `[BurstCompile]` がない |
-| UNI025 ManagedReferenceInComponentData | `struct IComponentData` | 参照型フィールドを持つコンポーネント struct（`class IComponentData` は意図的 managed として除外） |
+| UNI024 MissingBurstCompile | `ISystem` / `IJobEntity` / `IJobChunk` struct | ECS types eligible for Burst without `[BurstCompile]` |
+| UNI025 ManagedReferenceInComponentData | `struct IComponentData` | Component struct with reference-type fields (`class IComponentData` excluded as intentional managed) |
 
-`SystemBase` 派生クラスは Burst 非対象のため UNI024 では報告しない。
+`SystemBase`-derived classes are not Burst targets and are not reported by UNI024.
 
 ### Burst coverage (`burstCoverage`)
 
-アセンブリ単位の Burst 適用率。JSON `.assemblies[].metrics.burstCoverage`。
+Assembly-level Burst adoption rate. JSON `.assemblies[].metrics.burstCoverage`.
 
 ```
-eligible = ISystem struct + IJobEntity/IJobChunk struct の数
-covered  = eligible のうち型または全ライフサイクルメソッドに [BurstCompile] がある型
+eligible = count of ISystem struct + IJobEntity/IJobChunk struct
+covered  = eligible types with [BurstCompile] on the type or all lifecycle methods
 burstCoverage = covered / eligible
 ```
 
-eligible が 0 のアセンブリでは `burstCoverage` は null（`RelationalCohesion` と同じ nullable-when-undefined パターン）。
-`ecsTypeCount` は ECS 分類型（`EcsSystem` / `EcsJob` / `EcsComponentData`）の総数。ECS 型が無いアセンブリでは null。
+`burstCoverage` is null when eligible is 0 (same nullable-when-undefined pattern as `RelationalCohesion`).
+`ecsTypeCount` is the total of ECS-classified types (`EcsSystem` / `EcsJob` / `EcsComponentData`). null when the assembly has no ECS types.
 
-### 解析レベル依存
+### Analysis-level dependency
 
-| レベル | ECS 分類 | UNI024/UNI025 |
+| Level | ECS classification | UNI024/UNI025 |
 |--------|----------|---------------|
-| Complete（`Library/ScriptAssemblies` で `Unity.Entities` 解決可） | `Unity.Entities` 名前空間を検証 | セマンティック型判定（参照型フィールドは `IsReferenceType`） |
-| SyntaxOnly | 基底リストのインターフェース名一致 | 同名の非 Unity `ISystem` 等は誤検知しうる。UNI025 は string/object/配列/BCL コレクション等の保守的リスト |
+| Complete (`Unity.Entities` resolvable via `Library/ScriptAssemblies`) | Validates `Unity.Entities` namespace | Semantic type detection (reference-type fields via `IsReferenceType`) |
+| SyntaxOnly | Interface name match on base list | Non-Unity `ISystem` etc. with the same name may false-positive. UNI025 uses a conservative list (string/object/array/BCL collections, etc.) |
 
 ## Code Health
 
-独自メトリクス。型単位のスコア (1.0 - 10.0)。
+Proprietary metric. Type-level score (1.0 - 10.0).
 
-### v2 定義
+### v2 definition
 
-CodeHealth v2 は、良い要素が深刻な悪化要素を相殺しない非補償的な区分ペナルティ方式を使う。
-各入力を 0 以上のペナルティへ変換し、最終値を次の式で求める。
+CodeHealth v2 uses a non-compensatory piecewise penalty scheme in which favorable factors cannot offset severely degraded factors.
+Each input is converted to a non-negative penalty, and the final value is calculated using the following formula.
 
 ```text
 complexity = max(maxCogCCPenalty, maxNestingPenalty)
@@ -498,13 +498,13 @@ interface = excessiveParameterMethodCountPenalty
 codeHealth = clamp(10 - complexity - size - interface, 1, 10)
 ```
 
-同一軸で `max` を取るのは、Phase 6 で確認した共線性による二重加算を避けるため。
-`avgCogCC` は `maxCogCC` と Spearman ρ = 0.98、nesting は CogCC と ρ = 0.94-0.96、lineCount は methodCount と ρ = 0.75 だった。
+Taking the `max` within each axis avoids double-counting due to collinearity observed in Phase 6.
+`avgCogCC` had Spearman ρ = 0.98 with `maxCogCC`, nesting had ρ = 0.94-0.96 with CogCC, and lineCount had ρ = 0.75 with methodCount.
 
-各ペナルティは safe 上限以下で 0、safe から warning で最大値の 25% まで増加し、warning から alert で最大値まで増加する。
-alert 以上は飽和する。
+Each penalty is 0 at or below the safe upper bound, increases to 25% of its maximum from safe to warning, and increases to its maximum from warning to alert.
+It saturates at alert and above.
 
-| 軸 | 入力 | safe | warning | alert | 最大ペナルティ |
+| Axis | Input | safe | warning | alert | Maximum penalty |
 |----|------|-----:|--------:|------:|-----------------:|
 | complexity | maxCogCC | 16 | 19 | 24 | 4.0 |
 | complexity | maxNestingDepth | 3 | 4 | 5 | 4.0 |
@@ -512,68 +512,68 @@ alert 以上は飽和する。
 | size | methodCount | 11 | 16 | 34 | 3.0 |
 | interface | excessiveParameterMethodCount | 0 | 1 | 2 | 2.0 |
 
-しきい値は Phase 6 の 5 プロジェクト、1,456 型を `ThresholdCalibrator` と同じ Alves 方式で LoC 加重・システム等重みとして校正した。
-size は P70/P80/P90 をそのまま使う。
-complexity は `maxCogCC = -18.908071 + 5.968062 * ln(LOC + 1)` の残差 P70/P80/P90 = 1.166/4.028/9.453 を基準 LOC 272 に射影し、16/19/24 とした。
-残差を実行時に直接減算すると LOC 増加でスコアが改善し得るため、単調性を守る固定しきい値へ射影している。
-分位点が同値になる整数メトリクスは、警告帯を保持するため次の整数へ広げる。
+The thresholds were calibrated from 1,456 types across five Phase 6 projects using the same Alves method as `ThresholdCalibrator`, with LoC weighting and equal system weighting.
+For size, P70/P80/P90 are used directly.
+For complexity, residual P70/P80/P90 = 1.166/4.028/9.453 from `maxCogCC = -18.908071 + 5.968062 * ln(LOC + 1)` were projected onto the reference LOC 272, yielding 16/19/24.
+Because directly subtracting the residual at runtime could improve the score as LOC increases, it is projected onto fixed thresholds that preserve monotonicity.
+Integer metrics whose quantiles are equal are widened to the next integer to preserve the warning band.
 
-v2 は次の不変条件を持つ。
+v2 has the following invariants.
 
-- 全入力が safe 帯なら 10.0。
-- 全軸が飽和すれば 1.0。
-- どの入力を増やしてもスコアは増えない。
-- どれか 1 軸が飽和すると、他が safe でも 9.0 未満。
+- The score is 10.0 when all inputs are in the safe band.
+- The score is 1.0 when all axes are saturated.
+- Increasing any input never increases the score.
+- If any one axis is saturated, the score is below 9.0 even when the others are safe.
 
-### カテゴリ
+### Categories
 
-| category | 範囲 |
+| category | Range |
 |----------|------|
-| `healthy` | 9.0 以上 |
-| `warning` | 4.0 以上 9.0 未満 |
-| `alert` | 4.0 未満 |
+| `healthy` | 9.0 or higher |
+| `warning` | 4.0 or higher and below 9.0 |
+| `alert` | below 4.0 |
 
-JSON の `typeMetrics[].codeHealthCategory` に小文字で出力する。
-`highComplexityTypeCount` は `alert` 型数と同じ。
+Output in lowercase in JSON at `typeMetrics[].codeHealthCategory`.
+`highComplexityTypeCount` equals the number of `alert` types.
 
-### プロジェクト集約
+### Project aggregation
 
-- `averageCodeHealth`: 型の単純平均。
-- `minCodeHealth`: 最小値。`badge --fail-under` は引き続きこの値を評価する。
-- `locWeightedAverageCodeHealth`: `sum(codeHealth * lineCount) / sum(lineCount)`。
-- `worstDecileCodeHealth`: スコア下位 10% の平均。最低 1 型を含む。
+- `averageCodeHealth`: simple mean across types.
+- `minCodeHealth`: minimum value. `badge --fail-under` continues to evaluate this value.
+- `locWeightedAverageCodeHealth`: `sum(codeHealth * lineCount) / sum(lineCount)`.
+- `worstDecileCodeHealth`: mean of the bottom 10% of scores. Includes at least one type.
 
-badge と statusline は単純平均、最小値、LoC 加重平均、下位 10% 平均を表示する。
-色は LoC 加重平均のカテゴリ境界に従う。
+badge and statusline display the simple mean, minimum, LoC-weighted mean, and bottom-decile mean.
+Colors follow the category boundaries of the LoC-weighted mean.
 
-### v1 移行互換
+### v1 migration compatibility
 
-v2 導入リリースでは `typeMetrics[].codeHealthV1` に旧値を併記する。
-badge、statusline、diff の `--codehealth-v1` は表示とゲートを v1 値へ切り替える。
-このフィールドとフラグは v2 導入後の最初の minor リリースで削除する。
+The v2 introduction release also outputs the old value in `typeMetrics[].codeHealthV1`.
+`--codehealth-v1` for badge, statusline, and diff switches display and gating to the v1 value.
+This field and flag will be removed in the first minor release after the v2 introduction.
 
-| 項目 | v1 | v2 |
+| Item | v1 | v2 |
 |------|----|----|
-| 合成 | 6 要素の線形加重和 | 飽和する区分ペナルティの加算 |
-| CogCC | avg 25% + max 20% | max の残差校正しきい値。avg は除外 |
-| nesting | 独立 15% | complexity 軸内で max |
-| size | LOC 15% + methods 10% | size 軸内で max |
-| interface | 15% の線形スコア | 最大 2.0 の飽和ペナルティ |
-| 深刻要素の相殺 | 可能 | 不可 |
-| カテゴリ | なし | healthy / warning / alert |
+| Composition | linear weighted sum of 6 factors | sum of saturating piecewise penalties |
+| CogCC | avg 25% + max 20% | residual-calibrated thresholds for max; avg excluded |
+| nesting | independent 15% | max within the complexity axis |
+| size | LOC 15% + methods 10% | max within the size axis |
+| interface | linear score of 15% | saturating penalty with a maximum of 2.0 |
+| Severe-factor compensation | possible | not possible |
+| Categories | none | healthy / warning / alert |
 
 ## Code Smell
 
-既知のコードスメルをルールベースで検出する。
+Detects known code smells with rule-based heuristics.
 
-スメル検出はしきい値依存のヒューリスティックであり、ground truth ではない。
-Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smells and detection tools" (JSERD) によると、ツール間一致率は 67-100%、recall は 0-58%、precision は 0-100% であり、しきい値の差だけで結果が割れる。
-しきい値は下表に記載されている（**デフォルト値**）。プロジェクトの `.unilyze.json` で `smells` セクションを使い、スメル種別ごとに個別のしきい値を上書きできる。上書きは実行時の検出にのみ効き、下表の内容はデフォルトの単一情報源として維持される。
-計測値の互換性は [メトリクス互換性ポリシー](#メトリクス互換性ポリシー) を参照する。
+Smell detection is threshold-dependent heuristics, not ground truth.
+Paiva, Damasceno, Figueiredo & Sant'Anna (2017) "On the evaluation of code smells and detection tools" (JSERD) report inter-tool agreement of 67–100%, recall 0–58%, precision 0–100%; threshold differences alone can split results.
+Thresholds are listed in the table below (**default values**). Projects can override per smell kind via the `smells` section in `.unilyze.json`. Overrides affect runtime detection only; the table below remains the single source of truth for defaults.
+For measured-value compatibility, see the [Metric Compatibility Policy](#metric-compatibility-policy).
 
-### インライン抑制 (`unilyze-disable`)
+### Inline suppression (`unilyze-disable`)
 
-単一発生を黙らせる ESLint 風コメント。baseline（プロジェクト凍結）や `rules`（ルール全体 off）と併用でき、root `suppressedCount` に合算される（同一 smell が両方にマッチしても 1 回だけカウント）。
+ESLint-style comments to silence a single occurrence. Can be combined with baseline (project freeze) or `rules` (rule-wide off); counted in root `suppressedCount` (same smell matching both counts once).
 
 ```csharp
 // unilyze-disable-next-line UNI014 -- intentional guard
@@ -583,72 +583,72 @@ catch { }
 void LongButJustified() { /* ... */ }
 ```
 
-| 形式 | 効く範囲 |
+| Form | Scope |
 |------|----------|
-| `unilyze-disable-next-line UNIxxx` | コメントの**次の行**（UNI011–UNI025 など行番号付き detector smell） |
-| `unilyze-disable UNIxxx`（型/メソッド宣言の leading trivia） | その宣言スコープ内 |
+| `unilyze-disable-next-line UNIxxx` | **Next line** after the comment (line-numbered detector smells such as UNI011–UNI025) |
+| `unilyze-disable UNIxxx` (leading trivia on type/method declaration) | Within that declaration scope |
 
-ルール ID を省略するとスコープ内の全ルールを抑制する。未知 ID と `UNI009` は stderr 警告のうえ無視（解析 exit code 不変）。抑制された smell は JSON に `"suppressed": true` のまま残り、SARIF では `suppressions: [{ "kind": "inSource" }]` となる。statusline / badge / `diff --fail-on-regression` からは除外される。
+Omitting the rule ID suppresses all rules in scope. Unknown IDs and `UNI009` log a stderr warning and are ignored (analysis exit code unchanged). Suppressed smells remain in JSON with `"suppressed": true`; SARIF uses `suppressions: [{ "kind": "inSource" }]`. Excluded from statusline / badge / `diff --fail-on-regression`.
 
-**既知制約**
+**Known constraints**
 
-1. **同名オーバーロード非区別（メトリクス系）:** UNI001–UNI008, UNI010 はメソッド名/型名で directive と突き合わせるため、同一メソッド名のオーバーロードすべてが抑制対象になる。detector smell（UNI011–UNI025）は行位置で区別できる。
-2. **partial 型:** 抑制インデックスは `SyntaxLookups.BuildTypeDeclLookup` が索引する 1 つの宣言から構築される。型スコープ directive は索引される partial 宣言に置く（全 partial を走査する拡張は follow-up）。
-3. **UNI009:** 依存サイクル単位の報告のためインライン不可。`rules` のみ。
+1. **Same-name overload indistinguishability (metric smells):** UNI001–UNI008, UNI010 match directives by method/type name, so all overloads with the same method name are suppressed. Detector smells (UNI011–UNI025) can be distinguished by line position.
+2. **partial types:** The suppression index is built from one declaration indexed by `SyntaxLookups.BuildTypeDeclLookup`. Place type-scope directives on the indexed partial declaration (scanning all partials is a follow-up).
+3. **UNI009:** Reported per dependency cycle; inline suppression not supported. `rules` only.
 
-### しきい値プロファイル (`profile`)
+### Threshold profiles (`profile`)
 
-出典: Aniche, Treude, Zaidman et al., "SATT: Tailoring Code Metric Thresholds for Different Software Architectures" (SCAM 2016) — アーキテクチャ（ロール）ごとにメトリクス分布が異なり、単一しきい値は特定ロールを過検出する。
+Source: Aniche, Treude, Zaidman et al., "SATT: Tailoring Code Metric Thresholds for Different Software Architectures" (SCAM 2016) — metric distributions differ by architecture (role); a single threshold over-detects specific roles.
 
-`.unilyze.json` の `"profile"` キー、または CLI の `--profile` で組み込みプロファイルを選択する。CLI `--profile` はプロジェクト設定より優先し、プロジェクト設定はグローバル設定より優先する（`baseline` と同じ higher-scope-wins）。**しきい値の数値**については `profile` 基底値の上に `smells` セクションのユーザー上書きが最優先（`profile` < user thresholds）。
+Select a built-in profile via `"profile"` in `.unilyze.json` or CLI `--profile`. CLI `--profile` overrides project config; project config overrides global config (same higher-scope-wins as `baseline`). **Threshold numeric values:** user overrides in the `smells` section take highest priority over `profile` base values (`profile` < user thresholds).
 
-| プロファイル | 説明 |
+| Profile | Description |
 |-------------|------|
-| `default`（省略時） | 全ロール共通の既定しきい値（従来どおり）。JSON ルートに `profile` は出力しない。`metricsVersion` も変わらない。 |
-| `unity` | Unity ロール別しきい値。JSON ルートに `"profile": "unity"` を記録。 |
+| `default` (when omitted) | Global default thresholds (as before). `profile` is not emitted at JSON root. `metricsVersion` unchanged. |
+| `unity` | Role-specific thresholds for Unity. JSON root records `"profile": "unity"`. |
 
-#### 型ロール (`role`)
+#### Type roles (`role`)
 
-各型は JSON `types[]` に `role` を持つ（camelCase 列挙）:
+Each type has `role` in JSON `types[]` (camelCase enum):
 
-| `role` | 判定 |
+| `role` | Detection |
 |--------|------|
-| `MonoBehaviour` | 基底型チェーンが `UnityEngine.MonoBehaviour` |
-| `ScriptableObject` | 基底型チェーンが `UnityEngine.ScriptableObject` |
-| `EditorExtension` | 基底が `UnityEditor.Editor` / `EditorWindow`、または `[CustomEditor]` 属性 |
-| `PlainCSharp` | 上記以外 |
+| `MonoBehaviour` | Base-type chain includes `UnityEngine.MonoBehaviour` |
+| `ScriptableObject` | Base-type chain includes `UnityEngine.ScriptableObject` |
+| `EditorExtension` | Base is `UnityEditor.Editor` / `EditorWindow`, or `[CustomEditor]` attribute |
+| `PlainCSharp` | None of the above |
 
-**SyntaxOnly 時の制限:** 構文フォールバックは `TypeNodeInfo.BaseType` の直接基底名のみ照合する。`Player : BaseView`（`BaseView : MonoBehaviour`）のような間接派生は Semantic 解析でないと `MonoBehaviour` と判定されない。
+**SyntaxOnly limitation:** Syntactic fallback matches only the direct base name in `TypeNodeInfo.BaseType`. Indirect derivation such as `Player : BaseView` (`BaseView : MonoBehaviour`) is not classified as `MonoBehaviour` without Semantic analysis.
 
-#### `unity` プロファイルのロール別しきい値（暫定）
+#### Role-specific thresholds for `unity` profile (provisional)
 
-文献（SATT SCAM 2016; Alves ICSM 2010）に基づく暫定値。最終値は `unilyze calibrate` のロール別分布から導出予定（#86）。
+Provisional values from literature (SATT SCAM 2016; Alves ICSM 2010). Final values planned from role-specific distributions via `unilyze calibrate` (#86).
 
-| ロール | GodClass (Warning) | 備考 |
+| Role | GodClass (Warning) | Notes |
 |--------|-------------------|------|
-| `MonoBehaviour` | 行数 >= 800 or メソッド数 >= 30 | ライフサイクルメソッド過多による過検出を緩和（Nardone et al. TOSEM 2023） |
-| `ScriptableObject` | 行数 >= 650 or メソッド数 >= 25 | |
-| `EditorExtension` | 行数 >= 700 or メソッド数 >= 25 | |
-| `PlainCSharp` | 既定表と同じ | |
+| `MonoBehaviour` | lines >= 800 or methods >= 30 | Relaxed to reduce over-detection from lifecycle method proliferation (Nardone et al. TOSEM 2023) |
+| `ScriptableObject` | lines >= 650 or methods >= 25 | |
+| `EditorExtension` | lines >= 700 or methods >= 25 | |
+| `PlainCSharp` | Same as default table | |
 
-その他のスメル（LongMethod, HighCoupling 等）は `PlainCSharp` 以外も当面は既定表と同じ。
+Other smells (LongMethod, HighCoupling, etc.) use the default table for all roles except `PlainCSharp` for now.
 
-#### LowCohesion の informational 扱い（`unity` プロファイル）
+#### LowCohesion informational handling (`unity` profile)
 
-出典: Palomba, Bavota, Di Penta, Oliveto, De Lucia, "Do They Really Smell Bad?" (ICSME 2014) — 凝集度スメルは開発者の問題認識が低い。
+Source: Palomba, Bavota, Di Penta, Oliveto, De Lucia, "Do They Really Smell Bad?" (ICSME 2014) — cohesion smells have low developer problem recognition.
 
-`unity` プロファイルでは `LowCohesion` (UNI006) を **warning スメルとしては出力せず**、閾値を満たした場合は `typeMetrics[].informationalCount` に加算する。`badge --fail-over` や `diff --fail-on-regression` の warning カウントには含まれない。`default` プロファイルでは従来どおり Warning。
+Under the `unity` profile, `LowCohesion` (UNI006) is **not emitted as a warning smell**; when the threshold is met, it is added to `typeMetrics[].informationalCount`. Not included in `badge --fail-over` or `diff --fail-on-regression` warning counts. Under `default`, remains Warning as before.
 
-`unilyze metrics --profile unity` でアクティブプロファイルとロール別しきい値を表示する。
+`unilyze metrics --profile unity` displays the active profile and role-specific thresholds.
 
 <!-- smell-thresholds:start -->
-| スメル | 判定条件 (Warning) | 判定条件 (Critical) |
+| Smell | Warning condition | Critical condition |
 |--------|-------------------|-------------------|
-| GodClass | 行数 >= 500 or メソッド数 >= 20 | 行数 >= 1000 |
-| LongMethod | 行数 >= 80 or CogCC >= 25 | 行数 >= 150 or CogCC >= 40 |
-| ExcessiveParameters | パラメータ数 > 5 | — |
+| GodClass | lines >= 500 or methods >= 20 | lines >= 1000 |
+| LongMethod | lines >= 80 or CogCC >= 25 | lines >= 150 or CogCC >= 40 |
+| ExcessiveParameters | parameter count > 5 | — |
 | HighComplexity | CycCC >= 15 or CogCC >= 15 | — |
-| DeepNesting | ネスト深度 >= 4 | ネスト深度 >= 6 |
+| DeepNesting | nesting depth >= 4 | nesting depth >= 6 |
 | LowCohesion | LCOM >= 0.8 | — |
 | HighCoupling | CBO >= 15 | CBO >= 25 |
 | LowMaintainability | MI < 60 | — |
@@ -711,68 +711,68 @@ Old trend snapshots without energy counts render as missing (`-` or chart gaps),
 Research grounding: Pérez Caseiras, Veron, Perez, Moraga, Calero, and Cetina, "Towards green game software engineering: A comparative analysis of energy consumption between the widespread Unity and Unreal video game engines", Information and Software Technology (2025), arXiv:2402.06346.
 The study shows that code and engine implementation choices can produce measurable energy differences, but it does not calibrate this static density to physical energy units.
 
-### 検出責務ルーティング
+### Detection responsibility routing
 
-各スメルの検出責務を、決定的ルール検出（構造系・グラフ系・セマンティック系）と LLM 委譲（セマンティックな意図判断）に分ける。
-Souza et al. (arXiv:2601.09873) はスメル種別ごとに最適な検出器が異なり、構造系は決定的ルール、セマンティック系は LLM が有利と報告している。
-Wu, Mu et al. (iSMELL, ASE 2024) はメトリクスツールと LLM の組み合わせが LLM 単体を上回ると報告しており、決定的検出と LLM 解釈の分担を支持する。
-LLM 委譲項目の詳細は [quality-audit blind-spots](../src/Unilyze/Skills/quality-audit/references/blind-spots.md) を参照し、Phase 3 チェックリストで確認する。
+Each smell's detection responsibility is split between deterministic rule detection (structural, graph, semantic) and LLM delegation (semantic intent judgment).
+Souza et al. (arXiv:2601.09873) report that the optimal detector differs by smell kind: structural smells favor deterministic rules; semantic smells favor LLMs.
+Wu, Mu et al. (iSMELL, ASE 2024) report that combining metric tools with LLMs outperforms LLM-only approaches, supporting a split between deterministic detection and LLM interpretation.
+See [quality-audit blind-spots](https://github.com/bigdra50/unilyze/blob/main/src/Unilyze/Skills/quality-audit/references/blind-spots.md) for LLM-delegated items; confirm in the Phase 3 checklist.
 
-| スメル | SARIF ルール | 検出責務 | 根拠 |
+| Smell | SARIF rule | Detection responsibility | Rationale |
 |--------|-------------|---------|------|
-| GodClass | UNI001 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| LongMethod | UNI002 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| ExcessiveParameters | UNI003 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| HighComplexity | UNI004 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| DeepNesting | UNI005 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| LowCohesion | UNI006 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| HighCoupling | UNI007 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| LowMaintainability | UNI008 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| CyclicDependency | UNI009 | ルール検出（グラフ解析） | 依存グラフ解析必須 |
-| DeepInheritance | UNI010 | ルール検出（メトリクスしきい値） | 構造系。しきい値で安定検出 |
-| BoxingAllocation | UNI011 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| ClosureCapture | UNI012 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| ParamsArrayAllocation | UNI013 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| CatchAllException | UNI014 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| MissingInnerException | UNI015 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| ThrowingSystemException | UNI016 | ルール検出（セマンティック解析） | SemanticModel 必須 |
-| AsyncVoidMethod | UNI022 | ルール検出（構文 + セマンティック解析） | async void の検出。Unity メッセージ・イベントハンドラは除外 |
-| BlockingTaskWait | UNI023 | ルール検出（構文 + セマンティック解析） | Task/ValueTask/UniTask へのブロッキング待機。SyntaxOnly では GetAwaiter().GetResult() のみ |
-| MissingBurstCompile | UNI024 | ルール検出（構文 + セマンティック解析） | `ISystem`/`IJobEntity`/`IJobChunk` struct の `[BurstCompile]` 欠落。Complete では `Unity.Entities` 名前空間を検証。SyntaxOnly はインターフェース名一致で検出（同名の非 Unity インターフェースは誤検知しうる） |
-| ManagedReferenceInComponentData | UNI025 | ルール検出（構文 + セマンティック解析） | `struct IComponentData` の参照型フィールド。`class IComponentData` は対象外。SyntaxOnly は string/object/配列/BCL コレクション等の保守的リスト |
-| WeakTemporization | UNI021 | ルール検出（構文解析、セマンティック補強） | SyntaxOnly 可 |
-| ExpensiveUnityApiInHotPath | UNI017 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
-| LinqInHotPath | UNI018 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
-| CollectionAllocationInHotPath | UNI019 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
-| StringConcatenationInHotPath | UNI020 | ルール検出（Unity ホットパス構文解析） | Unity 固有。MonoBehaviour の毎フレームメソッド内のみ |
-| Feature Envy | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| 命名品質 | — | LLM 委譲 (`--include-api-surface` の identifiers / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
-| 意図とコードの乖離 | — | LLM 委譲 (`--include-api-surface` の docSummary / identifiers を入力) | 意図・文脈判断が必要でしきい値化できない |
-| コメントとコードの不整合 | — | LLM 委譲 (`--include-api-surface` の docSummary / publicSignatures を入力) | 意図・文脈判断が必要でしきい値化できない |
-| トップレベルステートメント | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
-| ランタイムリスク (Dispose 漏れ / デッドロック) | — | LLM 委譲 | 意図・文脈判断が必要でしきい値化できない |
+| GodClass | UNI001 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| LongMethod | UNI002 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| ExcessiveParameters | UNI003 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| HighComplexity | UNI004 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| DeepNesting | UNI005 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| LowCohesion | UNI006 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| HighCoupling | UNI007 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| LowMaintainability | UNI008 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| CyclicDependency | UNI009 | Rule detection (graph analysis) | Dependency graph analysis required |
+| DeepInheritance | UNI010 | Rule detection (metric threshold) | Structural; stable threshold detection |
+| BoxingAllocation | UNI011 | Rule detection (semantic analysis) | SemanticModel required |
+| ClosureCapture | UNI012 | Rule detection (semantic analysis) | SemanticModel required |
+| ParamsArrayAllocation | UNI013 | Rule detection (semantic analysis) | SemanticModel required |
+| CatchAllException | UNI014 | Rule detection (semantic analysis) | SemanticModel required |
+| MissingInnerException | UNI015 | Rule detection (semantic analysis) | SemanticModel required |
+| ThrowingSystemException | UNI016 | Rule detection (semantic analysis) | SemanticModel required |
+| AsyncVoidMethod | UNI022 | Rule detection (syntax + semantic analysis) | Detects async void; excludes Unity message methods and event handlers |
+| BlockingTaskWait | UNI023 | Rule detection (syntax + semantic analysis) | Blocking wait on Task/ValueTask/UniTask; SyntaxOnly detects GetAwaiter().GetResult() only |
+| MissingBurstCompile | UNI024 | Rule detection (syntax + semantic analysis) | Missing `[BurstCompile]` on `ISystem`/`IJobEntity`/`IJobChunk` struct. Complete validates `Unity.Entities` namespace; SyntaxOnly matches interface names (non-Unity interfaces with the same name may false-positive) |
+| ManagedReferenceInComponentData | UNI025 | Rule detection (syntax + semantic analysis) | Reference-type fields in `struct IComponentData`; `class IComponentData` excluded. SyntaxOnly uses conservative list (string/object/array/BCL collections, etc.) |
+| WeakTemporization | UNI021 | Rule detection (syntax analysis, semantic enrichment) | SyntaxOnly capable |
+| ExpensiveUnityApiInHotPath | UNI017 | Rule detection (Unity hot-path syntax analysis) | Unity-specific; MonoBehaviour per-frame methods only |
+| LinqInHotPath | UNI018 | Rule detection (Unity hot-path syntax analysis) | Unity-specific; MonoBehaviour per-frame methods only |
+| CollectionAllocationInHotPath | UNI019 | Rule detection (Unity hot-path syntax analysis) | Unity-specific; MonoBehaviour per-frame methods only |
+| StringConcatenationInHotPath | UNI020 | Rule detection (Unity hot-path syntax analysis) | Unity-specific; MonoBehaviour per-frame methods only |
+| Feature Envy | — | LLM delegation | Requires intent/context judgment; not thresholdable |
+| Naming quality | — | LLM delegation (inputs: `--include-api-surface` identifiers / publicSignatures) | Requires intent/context judgment; not thresholdable |
+| Intent–code divergence | — | LLM delegation (inputs: `--include-api-surface` docSummary / identifiers) | Requires intent/context judgment; not thresholdable |
+| Comment–code inconsistency | — | LLM delegation (inputs: `--include-api-surface` docSummary / publicSignatures) | Requires intent/context judgment; not thresholdable |
+| Top-level statements | — | LLM delegation | Requires intent/context judgment; not thresholdable |
+| Runtime risk (Dispose leak / deadlock) | — | LLM delegation | Requires intent/context judgment; not thresholdable |
 
-## バリデーション (検証)
+## Validation
 
-### Complete vs SyntaxOnly 解析の差分
+### Complete vs SyntaxOnly analysis differences
 
-Unity DLL を解決できない環境（CI 等）では SyntaxOnly に縮退する。
-同一の実プロジェクト（oculus-samples/Unity-Decommissioned、283 型）を Complete と SyntaxOnly で解析した実測差分:
+When Unity DLLs cannot be resolved (CI environments, etc.), analysis falls back to SyntaxOnly.
+Measured differences on the same real project (oculus-samples/Unity-Decommissioned, 283 types) analyzed at Complete and SyntaxOnly:
 
-| 指標 | Complete | SyntaxOnly | 備考 |
+| Metric | Complete | SyntaxOnly | Notes |
 |------|----------|------------|------|
-| CodeHealth avg | 9.6 | 9.6 | 同一（構文情報のみで算出されるため） |
-| CodeHealth min | 4.8 | 5.0 | 差分は `#if UNITY_EDITOR` の define 有無起因 |
-| 依存関係数 | 452 | 429 | -5% |
-| 循環依存 | 6 | 6 | 同一 |
-| smells 総数 | 885 | 289 | 内訳は下表 |
-| DIT max | 7 | 1 | エンジン型を跨ぐ継承はセマンティック必須 |
-| CBO avg | 13.7 | 5.7 | UnityEngine 型への結合が不可視 |
-| 解析時間 | 4.6s | 0.6s | |
+| CodeHealth avg | 9.6 | 9.6 | Identical (computed from syntax information only) |
+| CodeHealth min | 4.8 | 5.0 | Difference due to `#if UNITY_EDITOR` define presence |
+| Dependency count | 452 | 429 | -5% |
+| Cyclic dependencies | 6 | 6 | Identical |
+| Total smells | 885 | 289 | Breakdown in table below |
+| DIT max | 7 | 1 | Inheritance spanning engine types requires semantic analysis |
+| CBO avg | 13.7 | 5.7 | Coupling to UnityEngine types invisible |
+| Analysis time | 4.6s | 0.6s | |
 
-smells の内訳差分:
+Smell breakdown differences:
 
-| スメル | Complete | SyntaxOnly |
+| Smell | Complete | SyntaxOnly |
 |--------|----------|------------|
 | BoxingAllocation | 312 | 0 |
 | ClosureCapture | 181 | 81 |
@@ -780,66 +780,66 @@ smells の内訳差分:
 | DeepInheritance | 38 | 0 |
 | HighCoupling | 111 | 19 |
 
-SyntaxOnly では SemanticModel 依存の検出（Boxing / Params / DIT / CBO）が過小になる。
-このため `unilyze badge` の対象は、レベル間で安定する CodeHealth / MI と、構文レベルのサブセットに縮退する smells に限定している。
-上表のとおり smells の総数自体はレベル間で大きく変わる（885 → 289）ため、smells バッジはレベルをまたいだ比較に使えない旨をドキュメントに明記している。
+Under SyntaxOnly, SemanticModel-dependent detection (Boxing / Params / DIT / CBO) is underestimated.
+Therefore `unilyze badge` targets CodeHealth / MI (stable across levels) and smells limited to the syntax-level subset.
+As shown above, total smell counts vary greatly across levels (885 → 289); documentation states that smell badges must not be used for cross-level comparison.
 
-### Microsoft.CodeAnalysis Metrics (公式エンジン) との突合
+### Cross-validation with Microsoft.CodeAnalysis Metrics (official engine)
 
-公式 Metrics ツールと同一実装の `CodeAnalysisMetricData`（Microsoft.CodeAnalysis.AnalyzerUtilities）で unilyze 自身の src/Unilyze を計測し、unilyze の SyntaxOnly 解析と突合した
-（100 型マッチ、source generator 由来の JsonSerializerContext 2 型を除外。再現: [scripts/crossval](../scripts/crossval/)）:
+Measured src/Unilyze with the official Metrics tool's `CodeAnalysisMetricData` (Microsoft.CodeAnalysis.AnalyzerUtilities) and cross-validated against unilyze SyntaxOnly analysis
+(100 type matches; 2 JsonSerializerContext types from source generators excluded. Reproduction: [scripts/crossval](https://github.com/bigdra50/unilyze/blob/main/scripts/crossval/)):
 
-| 指標 | Pearson 相関 | 平均絶対差 | 備考 |
+| Metric | Pearson correlation | Mean absolute difference | Notes |
 |------|-------------|-----------|------|
-| CycCC | 0.983 | 2.0 | 型単位合計で比較。乖離は規約差で 97/100 型が厳密に説明可能（下記） |
-| MI | 0.870 | 5.4 | 公式は型集約、unilyze はメソッド平均（メソッド無し 43 型は unilyze 非対象。statusline / badge の MI 平均もメソッドを持つ型のみを分母とする） |
-| 結合度 | 0.817 (順位) | — | 公式 ClassCoupling 平均 14.0 vs unilyze CBO 3.6（SyntaxOnly では過小） |
-| DIT | — | — | 公式は object 継承を 1 と数える規約差で全件オフセット |
+| CycCC | 0.983 | 2.0 | Compared as type-level totals. Divergence explainable by convention differences for 97/100 types (below) |
+| MI | 0.870 | 5.4 | Official aggregates at type level; unilyze uses method average (43 types without methods are not MI targets in unilyze; statusline / badge MI average also uses only types with methods as denominator) |
+| Coupling | 0.817 (rank) | — | Official ClassCoupling avg 14.0 vs unilyze CBO 3.6 (underestimated under SyntaxOnly) |
+| DIT | — | — | Official counts `object` inheritance as 1; uniform offset on all items |
 
-CycCC の乖離の構造（全 339 メソッドの突合で実証済み・issue #4 で調査完了）:
+Structure of CycCC divergence (proven on all 339 methods; investigation completed in issue #4):
 
-乖離 Δ = unilyze − 公式 は、規約差の構文出現数で厳密に分解できる（97/100 型で Δ = arm + catch + goto − default − メンバー base 差が完全一致）。
-乖離上位の型と分解:
+Divergence Δ = unilyze − official decomposes strictly by convention-difference syntax occurrences (97/100 types: Δ = arm + catch + goto − default − member base difference matches exactly).
+Top divergent types and decomposition:
 
-| 型 | 公式 | Unilyze | Δ | 内訳 |
+| Type | Official | Unilyze | Δ | Breakdown |
 |----|------|---------|---|------|
 | BadgeFormatter | 14 | 28 | +14 | switch arm ×14 |
 | HalsteadCalculator | 16 | 30 | +14 | switch arm ×14 |
 | DIContainerAnalyzer | 42 | 55 | +13 | switch arm ×14 − default ×1 |
 | BadgeSvgRenderer | 12 | 22 | +10 | switch arm ×10 |
 | ClosureDetector | 30 | 40 | +10 | switch arm ×10 |
-| BloomFilter128 | 26 | 17 | −9 | 公式のメンバー base（ctor / accessor 各 1）×9 |
+| BloomFilter128 | 26 | 17 | −9 | Official member base (ctor / accessor each 1) ×9 |
 
-メソッドを持たない record / DTO 型は一律 Δ = −1（公式が暗黙 ctor を base 1 で数えるため）。
-残差が残る 3 型（HalsteadWalker / State / Walker）は、SyntaxOnly で型解決できない bool `&` `|` と、ネスト型のメンバー名照合に起因する ±1。
+Record / DTO types without methods uniformly have Δ = −1 (official counts implicit ctor as base 1).
+The 3 types with residual (HalsteadWalker / State / Walker) differ by ±1 due to bool `&` `|` not resolvable under SyntaxOnly and nested-type member name matching.
 
-なお、調査前の仮説「`?.` `??` が unilyze 固有の加算」は反証された（公式エンジンも両方カウントする）。
-実際の乖離要因は switch expression arm（本コードベースで支配的）、catch、goto、default、メンバー base 差である。
-この調査の副産物として、分解 foreach（`foreach (var (a, b) in ...)`）が CycCC / CogCC / ネスト深度の全 walker でカウント漏れしていたバグを発見・修正した。
+The pre-investigation hypothesis that "`?.` `??` are unilyze-specific additions" was disproved (the official engine also counts both).
+Actual divergence factors are switch expression arms (dominant in this codebase), catch, goto, default, and member base differences.
+As a by-product of this investigation, a bug was found and fixed: deconstruction foreach (`foreach (var (a, b) in ...)`) was not counted in CycCC / CogCC / nesting-depth walkers.
 
-## しきい値較正 (`unilyze calibrate`)
+## Threshold Calibration (`unilyze calibrate`)
 
-出典: Alves, Ypma & Visser, "Deriving Metric Thresholds from Benchmark Data", ICSM 2010。
+Source: Alves, Ypma & Visser, "Deriving Metric Thresholds from Benchmark Data", ICSM 2010.
 
-### 同一ツール原則（Alves Section VII-D）
+### Same-tool principle (Alves Section VII-D)
 
-しきい値は、適用時と同じツール・同じスコープで導出しなければならない。unilyze の CycCC は switch expression arm や `catch` を分岐として数える拡張解釈を採用しており（上記「Cyclomatic Complexity」の注意参照）、CA1502 の既定 25 や他ツールのベンチマーク値をそのまま流用できない。`calibrate` は unilyze 自身が出力した JSON スナップショットのみを入力とし、導出と解析を同一ツール内で完結させる。
+Thresholds must be derived with the same tool and scope used at application time. unilyze CycCC uses the extended interpretation counting switch expression arms and `catch` as branches (see Cyclomatic Complexity notes above); CA1502's default 25 and benchmark values from other tools cannot be reused directly. `calibrate` accepts only JSON snapshots produced by unilyze itself, keeping derivation and analysis within one tool.
 
-### 手順
+### Procedure
 
-1. 複数システム（各 1 本の `unilyze -f json` スナップショット）を用意する。入力はすべて同一 `metricsVersion` であること（不一致時はエラー終了）。
-2. 各システム内で、メソッドごとに LOC 比率で重み付けする（重み = メソッド LOC / 当該システムのメソッド LOC 合計）。
-3. システム間では各システムの寄与が等しくなるよう、上記重みをシステム数で割ってプールする（大規模リポジトリが分布を支配しない）。
-4. プールした加重分布からパーセンタイルを読み、4 段階のリスク帯（low / moderate / high / veryHigh）の境界を得る。
-   - 通常メトリクス: 70 / 80 / 90 パーセンタイル
-   - パラメータ数: 80 / 90 / 95 パーセンタイル（論文どおり）
+1. Prepare multiple systems (one `unilyze -f json` snapshot each). All inputs must share the same `metricsVersion` (error exit on mismatch).
+2. Within each system, weight by method LOC ratio (weight = method LOC / total method LOC in that system).
+3. Across systems, divide weights by system count so each system contributes equally (large repos do not dominate the distribution).
+4. Read percentiles from the pooled weighted distribution to obtain four risk-band boundaries (low / moderate / high / veryHigh).
+   - Normal metrics: 70 / 80 / 90 percentiles
+   - Parameter count: 80 / 90 / 95 percentiles (per paper)
 
-対象メトリクス:
+Target metrics:
 
-| 区分 | メトリクス | 用途 |
+| Category | Metrics | Used for |
 |------|-----------|------|
-| メソッド | LOC, CycCC, CogCC, 最大ネスト深度, パラメータ数 | LongMethod / HighComplexity / DeepNesting / ExcessiveParameters |
-| 型 | メソッド数, 型 LOC | GodClass |
+| Method | LOC, CycCC, CogCC, max nesting depth, parameter count | LongMethod / HighComplexity / DeepNesting / ExcessiveParameters |
+| Type | method count, type LOC | GodClass |
 
 ### CLI
 
@@ -847,141 +847,141 @@ CycCC の乖離の構造（全 339 メソッドの突合で実証済み・issue 
 unilyze calibrate <dir-of-jsons> [-o thresholds.json]
 ```
 
-出力 JSON には `metrics`（各メトリクスのパーセンタイルとリスク帯）、`sources`（入力ファイル名・メソッド数などの由来）、`unilyzeConfigFragment`（`.unilyze.json` の `smells` に貼れる候補）を含む。組み込み既定値（`SmellThresholds`）は変更しない。較正結果の適用はプロジェクト設定または将来のリリース判断に委ねる。
+Output JSON includes `metrics` (percentiles and risk bands per metric), `sources` (input file names, method counts, etc.), and `unilyzeConfigFragment` (candidates pasteable into `.unilyze.json` `smells`). Built-in defaults (`SmellThresholds`) are unchanged. Applying calibration results is left to project configuration or future release decisions.
 
-### 限界
+### Limitations
 
-Alves 原論文は約 100 システムのベンチマークを使用する。unilyze の検証用 Unity OSS コーパス（HelloMarioFramework、Boss Room、UniTask、VContainer 等）は規模が小さく、導出値は暫定的な候補として扱う。コーパス拡大時は同一手順で再実行すること。
+The Alves paper uses benchmarks of roughly 100 systems. unilyze's validation Unity OSS corpus (HelloMarioFramework, Boss Room, UniTask, VContainer, etc.) is small; derived values are provisional candidates. Re-run with the same procedure when the corpus grows.
 
-## コード重複 (dup)
+## Code Duplication (dup)
 
-`unilyze dup` はメイン解析 JSON とは独立した重複コードレポートを出力する。CodeHealth への組み込みは CodeHealth v2 で予定。
+`unilyze dup` produces a duplication report independent of the main analysis JSON. Integration into CodeHealth is planned for CodeHealth v2.
 
-### 正規化
+### Normalization
 
-各 `.cs` ファイルの Roslyn トークン列を走査し、以下のルールで正規化する。
+Scan Roslyn token sequences per `.cs` file and normalize with the following rules.
 
-| トークン種別 | 正規化 |
+| Token kind | Normalization |
 |-------------|--------|
-| 識別子 | `ID` |
-| 数値/文字列/文字/真偽値リテラル、補間文字列テキスト | `LIT` |
-| キーワード、演算子、句読点 | 原文のまま |
-| トリビア（空白、コメント） | 除外 |
+| Identifiers | `ID` |
+| Numeric/string/char/bool literals, interpolated string text | `LIT` |
+| Keywords, operators, punctuation | As-is |
+| Trivia (whitespace, comments) | Excluded |
 
-Type-2（識別子・リテラル差し替え）および Type 3-2 相当（識別子/リテラル盲目）のクローンを検出する。文の挿入/削除で一致が分割される点は既知の限界。
+Detects Type-2 (identifier/literal substitution) and Type 3-2 equivalent (identifier/literal blind) clones. Known limitation: statement insertion/deletion can split matches.
 
-### 検出アルゴリズム
+### Detection algorithm
 
-- 最小ウィンドウ: 100 トークン（既定、`--min-tokens` または `.unilyze.json` の `dup.minTokens` で上書き、CLI が最優先）
-- Rabin-Karp ローリングハッシュで候補をバケット化し、ハッシュ衝突時はトークン列の完全一致で検証
-- 一致ウィンドウを双方向に拡張し、同一ファイル内の重なりはマージ
+- Minimum window: 100 tokens (default; override via `--min-tokens` or `.unilyze.json` `dup.minTokens`; CLI takes priority)
+- Rabin-Karp rolling hash buckets candidates; token-sequence exact match on hash collision
+- Extend matching windows bidirectionally; merge overlaps within the same file
 
-### 重複率
+### Duplication rate
 
-`duplicationPercent` = クローンでカバーされる行の和集合 / 解析対象ファイルの総行数 × 100。SonarQube の Duplicated Lines % と同様の行ベース密度。
+`duplicationPercent` = union of lines covered by clones / total lines in analyzed files × 100. Line-based density like SonarQube Duplicated Lines %.
 
-### サードパーティ抑制
+### Third-party suppression
 
-既定の third-party ルート: `Assets/Plugins`, `Assets/Standard Assets`, `Assets/AssetStoreTools`（`--third-party-dir` と `.unilyze.json` の `dup.thirdPartyDirs` で拡張可能）。
+Default third-party roots: `Assets/Plugins`, `Assets/Standard Assets`, `Assets/AssetStoreTools` (extendable via `--third-party-dir` and `.unilyze.json` `dup.thirdPartyDirs`).
 
-両端が同一 third-party ルート内にあるペアは既定で抑制し、`suppressedPairCount` に計上する。first-party ↔ third-party のペアは常に報告。`--include-third-party` で抑制を無効化。
+Pairs where both ends are within the same third-party root are suppressed by default and counted in `suppressedPairCount`. first-party ↔ third-party pairs are always reported. Disable suppression with `--include-third-party`.
 
-### CI ゲート
+### CI gate
 
 ```bash
-unilyze badge -p . --metric dup --fail-over 3   # 3% 超で exit 2
+unilyze badge -p . --metric dup --fail-over 3   # exit 2 when > 3%
 ```
 
-バッジ色: green < 3%, yellow 3–10%, red ≥ 10%（SonarQube 既定の 3% 品質ゲートに準拠）。
+Badge colors: green < 3%, yellow 3–10%, red ≥ 10% (aligned with SonarQube default 3% quality gate).
 
-### SyntaxOnly 完全動作
+### Full operation under SyntaxOnly
 
-`dup` は `SyntaxTree` のみを消費し、`Compilation` / `SemanticModel` に依存しない。Unity DLL なしの CI でも Complete レベルと同一結果。
+`dup` consumes `SyntaxTree` only; no dependency on `Compilation` / `SemanticModel`. Same results in CI without Unity DLLs as at Complete level.
 
-### 既知のノイズ
+### Known noise
 
-大規模な配列初期化子など `LIT` トークンが支配的なウィンドウは、データテーブル同士をクローンとして検出しうる。
+Windows dominated by `LIT` tokens (large array initializers, etc.) may detect data tables as clones.
 
-## アセンブリマッピング
+## Assembly Mapping
 
-アセンブリ粒度メトリクス（Abstractness、Instability、Distance from Main Sequence、Relational Cohesion、アセンブリ循環）は、解析対象をアセンブリ単位に分割したうえで集計する。
+Assembly-granularity metrics (Abstractness, Instability, Distance from Main Sequence, Relational Cohesion, assembly cycles) require splitting the analysis scope into assembly units before aggregation.
 
-| プロジェクト種別 | 分割単位 | 依存エッジ |
+| Project kind | Split unit | Dependency edges |
 |------------------|----------|------------|
-| Unity | `.asmdef` の `name`（`Assets/` 配下） | asmdef `references`（GUID 解決） |
-| 一般 .NET（asmdef なし、Unity 以外） | 発見した各 `.csproj` のファイル名（拡張子なし） | `ProjectReference` |
-| Unity で asmdef なし / csproj もなし | 単一の `Assembly-CSharp` | なし |
+| Unity | `.asmdef` `name` (under `Assets/`) | asmdef `references` (GUID resolution) |
+| General .NET (no asmdef, non-Unity) | Discovered `.csproj` file name (extension stripped) | `ProjectReference` |
+| Unity without asmdef or csproj | Single `Assembly-CSharp` | None |
 
-入れ子 csproj ディレクトリは、親アセンブリの `ExcludeDirectories` に子 csproj ディレクトリを追加し、各 `.cs` ファイルが 1 アセンブリにのみ属するようにする（asmdef の入れ子と同じ方式）。すべての csproj ディレクトリ外に loose な `.cs` がある場合は、`Assembly-CSharp` フォールバックを追加する。
+Nested csproj directories add child csproj directories to the parent assembly's `ExcludeDirectories` so each `.cs` file belongs to exactly one assembly (same as nested asmdef). When loose `.cs` files exist outside all csproj directories, an `Assembly-CSharp` fallback is added.
 
-`typeId` は `{assembly}::{namespace.path}` 形式のため、一般 .NET リポジトリでは csproj マッピング導入後に assembly プレフィックスが変わる（例: `Assembly-CSharp::Foo.Bar` → `MyApp::Foo.Bar`）。Unity（asmdef あり）と csproj/asmdef 皆無のパスでは従来どおり。
+`typeId` uses `{assembly}::{namespace.path}` format; in general .NET repos the assembly prefix changes after csproj mapping (e.g. `Assembly-CSharp::Foo.Bar` → `MyApp::Foo.Bar`). Unity (with asmdef) and paths without csproj/asmdef remain as before.
 
-## メトリクス互換性ポリシー
+## Metric Compatibility Policy
 
-計測値を変える bugfix が patch リリースで複数回入った経緯がある（分解 foreach のカウント漏れ修正、MI 平均の分母から無メソッド型を除外、DIT の `I[A-Z]` ヒューリスティック廃止など）。
-これらはツール側の都合による計測値の変動であり、`diff` / `trend` / `badge` をバージョンを跨いで使う利用者にとってはノイズになる。
-以下のポリシーで、ツール起因のメトリクス変動がどのリリース種別で発生しうるかを明確にする。
+Multiple patch releases have changed measured values via bugfixes (deconstruction foreach count omission fix, excluding method-less types from MI average denominator, removing DIT `I[A-Z]` heuristic, etc.).
+These are tool-side measurement fluctuations that add noise for users of `diff` / `trend` / `badge` across versions.
+The following policy clarifies which release kinds may change measured values.
 
-メトリクス定義の変更は [CHANGELOG.md](../CHANGELOG.md) に `[metrics]` プレフィックス付きで記載すること（同ファイルの [metrics] tag convention を参照）。
+Metric definition changes must be recorded in [CHANGELOG.md](https://github.com/bigdra50/unilyze/blob/main/CHANGELOG.md) with the `[metrics]` prefix (see the [metrics] tag convention in that file).
 
-### リリース種別ごとの計測値の扱い
+### Measured-value handling by release kind
 
-| リリース種別 | 計測値の変更 | 許容される変更 |
+| Release kind | Measured-value changes | Permitted changes |
 |------------|------------|--------------|
-| patch | しない | クラッシュ修正、出力形式の追加（既存値を変えない範囲の項目追加・新フォーマット） |
-| minor 以上 | しうる | メトリクス定義の変更（後述） |
+| patch | None | Crash fixes, output-format additions (new fields/formats that do not change existing values) |
+| minor and above | May occur | Metric definition changes (below) |
 
-メトリクス定義の変更とは、以下のいずれかを指す。
+Metric definition changes are any of:
 
-- カウント規約（どの構文を加算するか。例: 分解 foreach、switch expression arm）
-- 分母・分子の構成（例: MI 平均の対象とする型集合）
-- しきい値（コードスメル判定の Warning / Critical 境界など）
-- 複合スコアの重み（Code Health の各要素の重み配分など）
+- Counting conventions (which syntax to add; e.g. deconstruction foreach, switch expression arm)
+- Numerator/denominator composition (e.g. type set for MI average)
+- Thresholds (code-smell Warning / Critical boundaries, etc.)
+- Composite score weights (Code Health element weights, etc.)
 
-これらの変更は最低でも minor バンプを要する。
-patch リリースで計測値を変えてはならない。
+These changes require at least a minor bump.
+Patch releases must not change measured values.
 
-### 定義変更時の手順
+### Procedure when changing definitions
 
-メトリクス定義を変更するリリースでは、以下を必須とする。
+Releases that change metric definitions must:
 
-1. リリースノートに計測影響を記載する。どのメトリクスがどちらの方向に動くか（増加 / 減少 / 値域変化）を明示する
-2. [scripts/crossval](../scripts/crossval/) のクロスバリデーションを再実行し、本ドキュメントの「バリデーション (検証)」セクションの検証データを更新する
-3. 「公式エンジンとの規約差」など定義差を記述している箇所があれば、変更内容に合わせて更新する
+1. Document measurement impact in release notes: which metrics move in which direction (increase / decrease / value-range change)
+2. Re-run [scripts/crossval](https://github.com/bigdra50/unilyze/blob/main/scripts/crossval/) cross-validation and update validation data in this document's [Validation](#validation) section
+3. Update any convention-difference descriptions (e.g. "differences from official engine") to match the change
 
-### 利用者向けの注意
+### Notes for users
 
-`diff` / `trend` は本来、解析対象コードの変化を追うための機能である。
-ただし比較する 2 点が異なる unilyze バージョンで計測されている場合、メトリクス定義の変更（minor 以上で発生しうる）の影響が混入する。
-コードを変えていないのに値が動いた場合、unilyze のバージョン差を疑うこと。
-バージョンを固定して計測すれば、この影響は発生しない。
+`diff` / `trend` are intended to track changes in analyzed code.
+However, when the two comparison points were measured with different unilyze versions, metric definition changes (possible in minor and above) can mix in.
+If values move without code changes, suspect an unilyze version difference.
+Pinning the unilyze version eliminates this effect.
 
-### metricsVersion による機械的検出
+### Mechanical detection via metricsVersion
 
-JSON 出力のルートに `metricsVersion`（int）と `toolVersion`（string）を含める。
-`metricsVersion` は計測定義の互換性を表す整数で、計測値を変える変更のたびにインクリメントする。
-`toolVersion` はスナップショット生成時の unilyze アセンブリバージョンである。
+JSON output root includes `metricsVersion` (int) and `toolVersion` (string).
+`metricsVersion` is an integer representing measurement-definition compatibility; increment on every change that alters measured values.
+`toolVersion` is the unilyze assembly version at snapshot generation.
 
-`diff` と `trend` は入力間で `metricsVersion` が異なる場合、stderr に 1 行警告を出す。
-`diff --fail-on-version-mismatch` を指定すると、バージョン不一致時に exit code 2 で終了する（CI ゲート用）。
+`diff` and `trend` emit a one-line stderr warning when `metricsVersion` differs between inputs.
+`diff --fail-on-version-mismatch` exits with code 2 on version mismatch (for CI gates).
 
-**metricsVersion のインクリメント規則:** 計測値を変える任意の変更（カウント規約・分母/分子・しきい値・重みの変更）では、
-(1) `AnalysisResult.CurrentMetricsVersion` をインクリメント、(2) 最低 minor バンプ、(3) CHANGELOG に `[metrics]` エントリを追加、
-の 3 点をセットで行う。patch リリースで metricsVersion を上げてはならない。
+**metricsVersion increment rules:** Any change that alters measured values (counting conventions, numerator/denominator, thresholds, weights) requires
+(1) increment `AnalysisResult.CurrentMetricsVersion`, (2) at least minor bump, (3) add CHANGELOG `[metrics]` entry,
+as a set. Do not raise metricsVersion in a patch release.
 
-同一リリースウィンドウ（`[Unreleased]` 期間）では `metricsVersion` のバンプは 1 回にまとめる。
-未リリースのバージョン番号に対応する定義は流動的であり、タグ付け前に複数の `[metrics]` 変更が入っても番号の再割り当ては行わない。
+Within the same release window (`[Unreleased]` period), bundle `metricsVersion` bumps into one increment.
+Definitions for unreleased version numbers are fluid; multiple `[metrics]` changes before tagging do not trigger renumbering.
 
-### 参照解析オプトイン（NuGet / 生成コード）
+### Reference analysis opt-ins (NuGet / generated code)
 
-`--resolve-nuget` と `--include-generated` は既定オフ。有効化すると CBO / DIT / boxing などの semantic メトリクスが package 型や source generator 出力を解決できるようになり、値が変わる場合がある。`metricsVersion` は上がらない（既定出力は byte-identical）。
+`--resolve-nuget` and `--include-generated` are off by default. Enabling them can resolve package types and source-generator output for semantic metrics such as CBO / DIT / boxing, which may change values. `metricsVersion` does not increase (default output remains byte-identical).
 
-- `--resolve-nuget` / `"resolveNuget": true` — `obj/project.assets.json` から NuGet compile アセンブリを注入（`dotnet restore` 後）。BCL ランタイム注入（#84）と併用。
-- `--include-generated` / `"includeGenerated": true` — `EmitCompilerGeneratedFiles=true` ビルドの `obj/<Config>/<TFM>/generated/**/*.cs` を compilation のみに追加（型数・LineCount・smells には含めない）。
-- `--tfm` / `"targetFramework"` — 単一 TFM を明示。省略時は csproj の `TargetFramework(s)` 先頭、次に実行中ランタイム、最後に最高バージョン。
+- `--resolve-nuget` / `"resolveNuget": true` — inject NuGet compile assemblies from `obj/project.assets.json` (after `dotnet restore`). Used with BCL runtime injection (#84).
+- `--include-generated` / `"includeGenerated": true` — add `obj/<Config>/<TFM>/generated/**/*.cs` from `EmitCompilerGeneratedFiles=true` builds to compilation only (not included in type count, LineCount, or smells).
+- `--tfm` / `"targetFramework"` — explicit single TFM. When omitted: first `TargetFramework(s)` in csproj, then running runtime, then highest version.
 
-JSON 出力には有効な opt-in 設定（`resolveNuget`, `includeGenerated`, `targetFramework`）が echo される。`diff` / `trend` / baseline 比較は **同一 opt-in 設定** のスナップショット同士でのみ有効。
+JSON output echoes active opt-in settings (`resolveNuget`, `includeGenerated`, `targetFramework`). `diff` / `trend` / baseline comparison is valid only between snapshots with **identical opt-in settings**.
 
-### 将来課題
+### Future work
 
-（解決済み: issue #30 で `metricsVersion` / `toolVersion` を実装。上記「metricsVersion による機械的検出」を参照。）
+(Resolved: issue #30 implemented `metricsVersion` / `toolVersion`. See "Mechanical detection via metricsVersion" above.)

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [metrics] tag convention
 
-Any changelog entry that changes a computed metric value **must** be prefixed with `[metrics]` and **requires** at least a minor version bump. See the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー) for which changes count as metric-definition changes and the full release procedure.
+Any changelog entry that changes a computed metric value **must** be prefixed with `[metrics]` and **requires** at least a minor version bump. See the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy) for which changes count as metric-definition changes and the full release procedure.
 
 ## [Unreleased]
 

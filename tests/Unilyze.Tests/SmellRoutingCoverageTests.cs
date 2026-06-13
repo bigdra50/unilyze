@@ -2,7 +2,7 @@ namespace Unilyze.Tests;
 
 public class SmellRoutingCoverageTests
 {
-    const string RoutingHeading = "### 検出責務ルーティング";
+    const string RoutingHeading = "### Detection responsibility routing";
 
     [Fact]
     public void RoutingTable_CoversAllCodeSmellKinds()

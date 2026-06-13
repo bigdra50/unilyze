@@ -2,7 +2,7 @@
 
 unilyze が計測できない / 精度が低い領域。AI レビューで補完する。
 運用上のチェックリストは [SKILL.md Phase 3](../SKILL.md#phase-3-盲点補完) を参照。
-ルーティング一覧は [docs/metrics.md 検出責務ルーティング](../../../../docs/metrics.md#検出責務ルーティング) を参照。
+ルーティング一覧は [docs/metrics.md Detection responsibility routing](../../../../docs/metrics.md#detection-responsibility-routing) を参照。
 
 ## 計測対象外
 
