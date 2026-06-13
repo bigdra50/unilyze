@@ -104,7 +104,7 @@ Run `unilyze --help` for all options. JSON output includes `projectKind` (`unity
 
 ### Status Line Integration
 
-`unilyze statusline` outputs a one-line code health summary (e.g. `CH:9.8/5.9 MI:52 111smells 🔴1 📦66`). Use `--background-refresh` for non-blocking updates in Claude Code's status bar. Details: [docs/statusline.md](./docs/statusline.md).
+`unilyze statusline` outputs a one-line code health summary (e.g. `CH:9.8/5.9 W:9.4 T:7.2 MI:52 111smells 🔴1 📦66`). Use `--background-refresh` for non-blocking updates in Claude Code's status bar. Details: [docs/statusline.md](./docs/statusline.md).
 
 ### Badges
 

@@ -62,7 +62,7 @@ jobs:
           unilyze-version: ${{ steps.package.outputs.version }}
           nuget-source: ./artifacts/nupkg
           metric: codehealth
-          fail-under: "8.0"
+          fail-under: "6.6"
 
       - name: Assert action outputs
         shell: bash

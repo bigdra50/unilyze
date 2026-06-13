@@ -5,30 +5,34 @@ namespace Unilyze.Tests;
 public sealed class BadgeFormatterTests
 {
     [Fact]
-    public void Build_CodeHealth_HighMin_ReturnsBrightgreen()
+    public void Build_CodeHealth_HealthyLocWeightedAverage_ReturnsBrightgreen()
     {
         var summary = new StatuslineFormatter.Summary(9.2, 8.5, 0, 0, 10, 80, 0, 0);
         var badge = BadgeFormatter.Build(BadgeMetric.CodeHealth, summary);
 
         Assert.Equal(1, badge.SchemaVersion);
         Assert.Equal("code health", badge.Label);
-        Assert.Equal("9.2 / 8.5", badge.Message);
+        Assert.Equal("9.2 / 8.5 / w9.2 / t8.5", badge.Message);
         Assert.Equal("brightgreen", badge.Color);
     }
 
     [Fact]
-    public void Build_CodeHealth_MediumMin_ReturnsYellow()
+    public void Build_CodeHealth_WarningLocWeightedAverage_ReturnsYellow()
     {
-        var summary = new StatuslineFormatter.Summary(9.2, 6.1, 0, 0, 10, 80, 0, 0);
+        var summary = new StatuslineFormatter.Summary(
+            9.2, 6.1, 0, 0, 10, 80, 0, 0,
+            LocWeightedAverageCodeHealth: 6.1);
         var badge = BadgeFormatter.Build(BadgeMetric.CodeHealth, summary);
 
         Assert.Equal("yellow", badge.Color);
     }
 
     [Fact]
-    public void Build_CodeHealth_LowMin_ReturnsRed()
+    public void Build_CodeHealth_AlertLocWeightedAverage_ReturnsRed()
     {
-        var summary = new StatuslineFormatter.Summary(8.0, 4.8, 0, 0, 10, 80, 0, 0);
+        var summary = new StatuslineFormatter.Summary(
+            8.0, 4.8, 0, 0, 10, 80, 0, 0,
+            LocWeightedAverageCodeHealth: 3.8);
         var badge = BadgeFormatter.Build(BadgeMetric.CodeHealth, summary);
 
         Assert.Equal("red", badge.Color);

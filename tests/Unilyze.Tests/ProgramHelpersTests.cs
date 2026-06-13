@@ -18,6 +18,7 @@ public sealed class ProgramHelpersTests
     [InlineData("--help")]
     [InlineData("-v")]
     [InlineData("--version")]
+    [InlineData("--codehealth-v1")]
     public void ParseOptions_BooleanFlags_SetToTrue(string flag)
     {
         var result = ProgramHelpers.ParseOptions([flag]);

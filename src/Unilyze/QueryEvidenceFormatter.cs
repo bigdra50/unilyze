@@ -44,11 +44,18 @@ internal static class QueryEvidenceFormatter
             ? pack.TypeName
             : $"{pack.Namespace}.{pack.TypeName}";
         var anchorSuffix = pack.Anchor is null ? "" : $" @ `{pack.Anchor}`";
-        sb.AppendLine($"## {displayName} — CH {pack.Metrics.CodeHealth:F1}{anchorSuffix}");
+        var category = pack.Metrics.CodeHealthCategory is null
+            ? ""
+            : $" ({pack.Metrics.CodeHealthCategory})";
+        sb.AppendLine($"## {displayName} — CH {pack.Metrics.CodeHealth:F1}{category}{anchorSuffix}");
         sb.AppendLine();
         sb.AppendLine("| Metric | Value |");
         sb.AppendLine("| --- | --- |");
         AppendMetricRow(sb, "codeHealth", pack.Metrics.CodeHealth.ToString("F1"));
+        if (pack.Metrics.CodeHealthCategory is not null)
+            AppendMetricRow(sb, "codeHealthCategory", pack.Metrics.CodeHealthCategory);
+        if (pack.Metrics.CodeHealthV1 is not null)
+            AppendMetricRow(sb, "codeHealthV1", pack.Metrics.CodeHealthV1.Value.ToString("F1"));
         AppendMetricRow(sb, "cbo", FormatNullable(pack.Metrics.Cbo));
         AppendMetricRow(sb, "lcom", FormatNullable(pack.Metrics.Lcom));
         AppendMetricRow(sb, "dit", FormatNullable(pack.Metrics.Dit));

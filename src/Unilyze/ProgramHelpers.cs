@@ -25,7 +25,8 @@ internal static class ProgramHelpers
             or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
             or "--verbose" or "--quiet" or "--background-refresh" or "--no-bot-filter"
             or "--include-api-surface" or "--include-third-party"
-            or "--incremental" or "--resolve-nuget" or "--include-generated";
+            or "--incremental" or "--resolve-nuget" or "--include-generated"
+            or "--codehealth-v1";
 
     static bool TryReadOptionValue(string[] args, int optionIndex, out string value)
     {
