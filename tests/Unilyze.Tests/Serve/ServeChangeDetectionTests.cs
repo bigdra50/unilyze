@@ -130,12 +130,15 @@ public sealed class ServeChangeDetectionTests : IDisposable
             reconcileInterval: TimeSpan.FromMilliseconds(100));
 
         watcher.Start();
-        File.WriteAllText(source, "class A { public int X; }");
+        // A single filesystem mutation is one fingerprint transition. Editing content and
+        // bumping mtime as two operations can be observed as two transitions under CI load and
+        // fire twice (each firing correct for its own transition). Use one mtime bump, then
+        // assert the single transition is consumed exactly once even after several reconcile
+        // cycles elapse — a converged count is deterministic where a tight negative Wait is not.
         File.SetLastWriteTimeUtc(source, DateTime.UtcNow.AddSeconds(5));
 
         Assert.True(changed.Wait(TimeSpan.FromSeconds(5)));
-        changed.Reset();
-        Assert.False(changed.Wait(TimeSpan.FromMilliseconds(500)));
+        Thread.Sleep(TimeSpan.FromMilliseconds(600));
         Assert.Equal(1, Volatile.Read(ref count));
     }
 }
