@@ -439,7 +439,10 @@ public class SarifFormatterTests
         {
             Assert.NotNull(rule!["help"]?["text"]);
             Assert.NotNull(rule["help"]?["markdown"]);
-            Assert.Equal(SmellThresholds.SarifHelpUri, rule["helpUri"]!.GetValue<string>());
+            var ruleId = rule["id"]!.GetValue<string>();
+            var helpUri = rule["helpUri"]!.GetValue<string>();
+            Assert.Equal(SmellThresholds.GetSarifHelpUri(ruleId), helpUri);
+            Assert.Contains(ruleId, helpUri, StringComparison.OrdinalIgnoreCase);
 
             var tags = rule["properties"]!["tags"]!.AsArray();
             Assert.NotEmpty(tags);

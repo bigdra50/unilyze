@@ -13,6 +13,7 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ### Added
 
+- Generated documentation pages for all SARIF rules, per-rule SARIF `helpUri` links, and drift guards that require documentation for new detectors ([#158](https://github.com/bigdra50/unilyze/issues/158))
 - GitHub Pages expands from the self-analysis demo to an mkdocs-material documentation site; the demo moves to `/demo/` ([#158](https://github.com/bigdra50/unilyze/issues/158))
 - **[metrics]** Unity `energyPressure` static proxy (hot-path performance smells per hot-path method), `badge --metric energy --fail-over`, and trend JSON/table/HTML series; independent of CodeHealth, additive JSON fields only, and `metricsVersion` stays 3 ([#157](https://github.com/bigdra50/unilyze/issues/157))
 - HTML viewer large-graph mode lazily materializes type nodes and dependency edges from analysis data, computes namespace meta-edges without hidden Cytoscape elements, and runs ELK through a Web Worker with preset-coordinate application; dagre and static-report fallbacks remain intact ([#162](https://github.com/bigdra50/unilyze/issues/162))
