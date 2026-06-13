@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Unilyze;
+namespace Unilyze.Cli;
 
 sealed record TargetConfig(string Id, string DisplayName, string ProjectDir, string SkillFileName = "SKILL.md");
 

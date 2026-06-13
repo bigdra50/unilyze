@@ -1,6 +1,11 @@
+using Unilyze.Findings;
+using Unilyze.Discovery;
+using Unilyze.Output;
+using Unilyze.Config;
+using Unilyze.Pipeline;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Cli;
 
 internal static class ProgramHelpers
 {

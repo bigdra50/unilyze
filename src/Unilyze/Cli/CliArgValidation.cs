@@ -1,4 +1,4 @@
-namespace Unilyze;
+namespace Unilyze.Cli;
 
 internal static class CliArgValidation
 {
