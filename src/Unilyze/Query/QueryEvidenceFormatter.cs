@@ -1,7 +1,9 @@
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
 using System.Text;
 using System.Text.Json;
 
-namespace Unilyze;
+namespace Unilyze.Query;
 
 internal static class QueryEvidenceFormatter
 {

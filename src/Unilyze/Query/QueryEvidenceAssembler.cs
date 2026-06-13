@@ -1,4 +1,7 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
+namespace Unilyze.Query;
 
 internal static class QueryEvidenceAssembler
 {

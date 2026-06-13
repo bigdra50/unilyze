@@ -1,11 +1,14 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+using Unilyze.Metrics;
+using Unilyze.Pipeline;
+namespace Unilyze.Query;
 
-public sealed record QueryResult(
+internal sealed record QueryResult(
     string ProjectPath,
     DateTimeOffset AnalyzedAt,
     IReadOnlyList<TypeEvidencePack> Types);
 
-public sealed record TypeEvidencePack(
+internal sealed record TypeEvidencePack(
     string TypeName,
     string? Namespace,
     string? QualifiedName,
@@ -18,7 +21,7 @@ public sealed record TypeEvidencePack(
     IReadOnlyList<TypeEvidenceMethod> TopMethods,
     TypeEvidenceApiSurface? ApiSurface = null);
 
-public sealed record TypeEvidenceApiSurface(
+internal sealed record TypeEvidenceApiSurface(
     bool HasDocComment,
     string? DocSummary,
     IReadOnlyList<string> PublicSignatures,
@@ -26,7 +29,7 @@ public sealed record TypeEvidenceApiSurface(
     int DocumentedPublicMemberCount,
     int PublicMemberCount);
 
-public sealed record TypeEvidenceMetrics(
+internal sealed record TypeEvidenceMetrics(
     double CodeHealth,
     int? Cbo,
     double? Lcom,
@@ -41,7 +44,7 @@ public sealed record TypeEvidenceMetrics(
     string? CodeHealthCategory = null,
     double? CodeHealthV1 = null);
 
-public sealed record TypeEvidenceSmell(
+internal sealed record TypeEvidenceSmell(
     CodeSmellKind Kind,
     SmellSeverity Severity,
     string? MethodName,
@@ -50,12 +53,12 @@ public sealed record TypeEvidenceSmell(
     string? Id = null,
     string? Triage = null);
 
-public sealed record TypeEvidenceDependencyGroup(
+internal sealed record TypeEvidenceDependencyGroup(
     DependencyKind Kind,
     int Count,
     IReadOnlyList<string> Peers);
 
-public sealed record TypeEvidenceMethod(
+internal sealed record TypeEvidenceMethod(
     string MethodName,
     int CognitiveComplexity,
     string? Anchor);
