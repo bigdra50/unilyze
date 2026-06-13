@@ -1,6 +1,8 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+using Unilyze.Pipeline;
+namespace Unilyze.Metrics;
 
-public sealed record MethodMetrics(
+internal sealed record MethodMetrics(
     string MethodName,
     int CognitiveComplexity,
     int CyclomaticComplexity,
@@ -13,7 +15,7 @@ public sealed record MethodMetrics(
     double? HalsteadEffort = null,
     double? HalsteadEstimatedBugs = null);
 
-public sealed record TypeMetrics(
+internal sealed record TypeMetrics(
     string TypeName,
     string Namespace,
     string Assembly,
@@ -52,7 +54,7 @@ public sealed record TypeMetrics(
     string? CodeHealthCategory = null,
     int? HotPathMethodCount = null);
 
-public sealed record AssemblyHealthMetrics(
+internal sealed record AssemblyHealthMetrics(
     double AverageCodeHealth,
     double MinCodeHealth,
     int HighComplexityTypeCount,
@@ -61,7 +63,7 @@ public sealed record AssemblyHealthMetrics(
     double LocWeightedAverageCodeHealth,
     double WorstDecileCodeHealth);
 
-public static class CodeHealthCalculator
+internal static class CodeHealthCalculator
 {
     public static IReadOnlyList<TypeMetrics> ComputeTypeMetrics(IReadOnlyList<TypeNodeInfo> allTypes)
     {

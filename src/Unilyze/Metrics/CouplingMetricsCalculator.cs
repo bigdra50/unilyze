@@ -1,11 +1,12 @@
+using Unilyze.Pipeline;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public sealed record CouplingInfo(int AfferentCoupling, int EfferentCoupling, double? Instability);
+internal sealed record CouplingInfo(int AfferentCoupling, int EfferentCoupling, double? Instability);
 
-public static class CouplingMetricsCalculator
+internal static class CouplingMetricsCalculator
 {
     public static IReadOnlyDictionary<string, CouplingInfo> Calculate(
         IReadOnlyList<TypeDependency> dependencies,

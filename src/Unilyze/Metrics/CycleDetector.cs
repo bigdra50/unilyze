@@ -1,12 +1,13 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Metrics;
 
-public enum CycleLevel { Type, Assembly }
+internal enum CycleLevel { Type, Assembly }
 
-public sealed record CyclicDependency(
+internal sealed record CyclicDependency(
     IReadOnlyList<string> Cycle,
     CycleLevel Level);
 
-public static class CycleDetector
+internal static class CycleDetector
 {
     public static IReadOnlyList<CyclicDependency> DetectAll(
         IReadOnlyList<TypeDependency> dependencies,

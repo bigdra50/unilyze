@@ -1,4 +1,5 @@
-namespace Unilyze;
+using Unilyze.Detectors;
+namespace Unilyze.Metrics;
 
 internal readonly record struct EnergyPressureMetrics(
     int HotPathSmellCount,

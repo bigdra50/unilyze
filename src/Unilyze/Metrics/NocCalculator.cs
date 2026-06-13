@@ -1,6 +1,7 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Metrics;
 
-public static class NocCalculator
+internal static class NocCalculator
 {
     public static IReadOnlyDictionary<string, int> Calculate(IReadOnlyList<TypeDependency> dependencies)
     {

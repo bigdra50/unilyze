@@ -2,9 +2,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class LcomCalculator
+internal static class LcomCalculator
 {
     /// <summary>
     /// LCOM-HS (Henderson-Sellers variant).

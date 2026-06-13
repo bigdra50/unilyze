@@ -2,9 +2,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class RfcCalculator
+internal static class RfcCalculator
 {
     public static int Calculate(TypeDeclarationSyntax typeDecl, SemanticModel? model)
     {

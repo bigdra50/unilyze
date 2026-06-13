@@ -1,9 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class DitCalculator
+internal static class DitCalculator
 {
     public static int Calculate(TypeDeclarationSyntax typeDecl, SemanticModel? model)
     {

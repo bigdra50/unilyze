@@ -2,9 +2,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class CboCalculator
+internal static class CboCalculator
 {
     static readonly HashSet<string> SyntacticPrimitives = new(StringComparer.Ordinal)
     {

@@ -2,9 +2,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class CognitiveComplexity
+internal static class CognitiveComplexity
 {
     public static int Calculate(SyntaxNode? body)
     {

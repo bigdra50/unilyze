@@ -5,9 +5,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public sealed record HalsteadMetrics(
+internal sealed record HalsteadMetrics(
     int UniqueOperators,
     int UniqueOperands,
     int TotalOperators,
@@ -17,7 +17,7 @@ public sealed record HalsteadMetrics(
     double Effort,
     double EstimatedBugs);
 
-public static class HalsteadCalculator
+internal static class HalsteadCalculator
 {
     static readonly ConcurrentQueue<Dictionary<string, int>> DictPool = new();
 

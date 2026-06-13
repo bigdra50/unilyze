@@ -1,9 +1,9 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
-public static class NestingDepth
+internal static class NestingDepth
 {
     public static int Calculate(SyntaxNode? body)
     {

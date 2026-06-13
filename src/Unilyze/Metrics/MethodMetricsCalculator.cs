@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Unilyze;
+namespace Unilyze.Metrics;
 
 internal static class MethodMetricsCalculator
 {

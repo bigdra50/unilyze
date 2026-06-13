@@ -1,6 +1,7 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Metrics;
 
-public static class RankCalculator
+internal static class RankCalculator
 {
     const double Damping = 0.85;
     const double ConvergenceThreshold = 1e-6;

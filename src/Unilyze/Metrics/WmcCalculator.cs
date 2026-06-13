@@ -1,6 +1,7 @@
-namespace Unilyze;
+using Unilyze.Pipeline;
+namespace Unilyze.Metrics;
 
-public static class WmcCalculator
+internal static class WmcCalculator
 {
     public static int Calculate(IReadOnlyList<MemberInfo> members)
     {
