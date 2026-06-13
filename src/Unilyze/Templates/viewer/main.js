@@ -1746,13 +1746,45 @@ document.getElementById('cls').onclick=()=>dp.classList.add('hidden');
 const _sp=document.getElementById('sp');
 const _spBody=document.getElementById('spBody');
 const _spPath=document.getElementById('spPath');
+
+// Lightweight C# syntax highlighter. Tokens are emitted as <span> whose text is set via
+// textContent only (gaps as text nodes) — the source is never passed through innerHTML, so
+// the textContent-only safety guarantee of the source view holds.
+const _CS_KEYWORDS=new Set(('abstract as async await base bool break byte case catch char checked class const continue '
+  +'decimal default delegate do double else enum event explicit extern false finally fixed float for foreach get goto if '
+  +'implicit in init int interface internal is lock long nameof namespace new null object operator out override params '
+  +'partial private protected public readonly record ref required return sbyte sealed set short sizeof stackalloc static '
+  +'string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using var virtual void volatile '
+  +'when where while with yield').split(' '));
+const _CS_RE=/(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|([@$]{0,2}"(?:""|\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(#[^\n]*)|(\b0[xX][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?[fFdDmMuUlL]*\b)|([A-Za-z_][A-Za-z0-9_]*)/g;
+function appendHighlightedCSharp(el,text){
+  el.textContent='';
+  _CS_RE.lastIndex=0;
+  let last=0,m;
+  while((m=_CS_RE.exec(text))){
+    if(m.index>last) el.appendChild(document.createTextNode(text.slice(last,m.index)));
+    let cls=null;
+    if(m[1]||m[2]) cls='tok-comment';
+    else if(m[3]) cls='tok-string';
+    else if(m[4]) cls='tok-preproc';
+    else if(m[5]) cls='tok-number';
+    else if(m[6]){ if(_CS_KEYWORDS.has(m[0])) cls='tok-keyword'; else if(/^[A-Z]/.test(m[0])) cls='tok-type'; }
+    if(cls){ const s=document.createElement('span'); s.className=cls; s.textContent=m[0]; el.appendChild(s); }
+    else el.appendChild(document.createTextNode(m[0]));
+    last=_CS_RE.lastIndex;
+    if(_CS_RE.lastIndex===m.index) _CS_RE.lastIndex++; // guard against zero-length matches
+  }
+  if(last<text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
+
 async function openSource(fileId,startLine){
   if(!_sp||typeof window.unilyzeFetchSource!=='function') return;
   try{
     const r=await window.unilyzeFetchSource(fileId);
     if(_spPath) _spPath.textContent=r.path||'';
     if(_spBody){
-      _spBody.textContent=r.text;
+      if(/\.cs$/i.test(r.path||'')) appendHighlightedCSharp(_spBody,r.text);
+      else _spBody.textContent=r.text;
       _sp.classList.remove('hidden');
       const ln=Math.max(1,(startLine|0)||1);
       const lh=parseFloat(getComputedStyle(_spBody).lineHeight)||16;
