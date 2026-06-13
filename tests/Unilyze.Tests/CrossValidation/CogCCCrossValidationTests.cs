@@ -16,11 +16,18 @@ public class CogCCCrossValidationTests(ITestOutputHelper output)
     public async Task CrossValidate_UnilyzeSourceCode()
     {
         // Exclude Program.cs because top-level statements do not compile as a library in the Sonar helper project.
-        var csFiles = Directory.GetFiles(SourceDir, "*.cs")
+        var csFiles = Directory.GetFiles(SourceDir, "*.cs", SearchOption.AllDirectories)
             .Where(f =>
             {
                 var name = Path.GetFileName(f);
-                return !name.Equals("Program.cs", StringComparison.OrdinalIgnoreCase);
+                var pathSegments = Path.GetRelativePath(SourceDir, f)
+                    .Split(
+                        [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+                        StringSplitOptions.RemoveEmptyEntries);
+                var isGenerated = pathSegments.Any(segment =>
+                    segment.Equals("obj", StringComparison.OrdinalIgnoreCase) ||
+                    segment.Equals("bin", StringComparison.OrdinalIgnoreCase));
+                return !name.Equals("Program.cs", StringComparison.OrdinalIgnoreCase) && !isGenerated;
             })
             .ToList();
 
