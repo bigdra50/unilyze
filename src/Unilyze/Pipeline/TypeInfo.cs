@@ -1,0 +1,583 @@
+using Unilyze.DI;
+using Unilyze.Discovery;
+using Unilyze.Config;
+using Unilyze.Metrics;
+using Unilyze.Incremental;
+using System.Collections.Concurrent;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace Unilyze.Pipeline;
+
+internal sealed record TypeDependency(
+    string FromType,
+    string ToType,
+    DependencyKind Kind,
+    string? FromTypeId = null,
+    string? ToTypeId = null);
+
+internal enum DependencyKind
+{
+    Inheritance,
+    InterfaceImpl,
+    FieldType,
+    PropertyType,
+    ConstructorParam,
+    MethodParam,
+    ReturnType,
+    EventType,
+    GenericConstraint,
+    DIRegistration,
+    SerializedReference
+}
+
+internal sealed record ParameterInfo(string Name, string Type);
+
+internal sealed record AttributeInfo(string Name, IReadOnlyDictionary<string, string>? Arguments);
+
+internal sealed record GenericConstraintInfo(string TypeParameter, IReadOnlyList<string> Constraints);
+
+internal sealed record TypeNodeInfo(
+    string Name,
+    string Namespace,
+    string Kind,
+    IReadOnlyList<string> Modifiers,
+    string? BaseType,
+    IReadOnlyList<string> Interfaces,
+    IReadOnlyList<MemberInfo> Members,
+    IReadOnlyList<string> ConstructorParams,
+    IReadOnlyList<AttributeInfo> Attributes,
+    IReadOnlyList<GenericConstraintInfo> GenericConstraints,
+    string? EnumBaseType,
+    string Assembly,
+    string FilePath,
+    bool IsNested,
+    int LineCount = 0,
+    int? StartLine = null,
+    string? QualifiedName = null,
+    string? TypeId = null,
+    TypeRole? Role = null);
+
+internal sealed record MemberInfo(
+    string Name,
+    string Type,
+    string MemberKind,
+    IReadOnlyList<string> Modifiers,
+    IReadOnlyList<ParameterInfo> Parameters,
+    IReadOnlyList<AttributeInfo> Attributes,
+    int? CognitiveComplexity = null,
+    int? CyclomaticComplexity = null,
+    int? MaxNestingDepth = null,
+    int LineCount = 0,
+    int? StartLine = null,
+    double? HalsteadVolume = null,
+    double? HalsteadDifficulty = null,
+    double? HalsteadEffort = null,
+    double? HalsteadEstimatedBugs = null);
+
+internal sealed record AnalyzeDirectoryResult(
+    IReadOnlyList<TypeNodeInfo> Types,
+    IReadOnlyList<SyntaxTree> SyntaxTrees);
+
+internal static class TypeAnalyzer
+{
+    public static IReadOnlyList<TypeNodeInfo> AnalyzeDirectory(string directory, string assemblyName)
+        => AnalyzeDirectoryWithTrees(directory, assemblyName).Types;
+
+    public static AnalyzeDirectoryResult AnalyzeDirectoryWithTrees(
+        string directory, string assemblyName, IReadOnlyList<string>? preprocessorSymbols = null,
+        IReadOnlyList<string>? excludeDirectories = null, bool excludeGeneratedCode = true,
+        bool applyAnyDepthExcludes = true, int? maxParallelism = null)
+    {
+        var parseOptions = CSharpParseOptions.Default
+            .WithLanguageVersion(LanguageVersion.Latest);
+        if (preprocessorSymbols is { Count: > 0 })
+            parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
+
+        var csFiles = Directory
+            .EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
+                f, excludeDirectories, excludeGeneratedCode, directory, applyAnyDepthExcludes))
+            .ToList();
+        var (rawTypeList, treeList) = ParseSourceFiles(
+            csFiles, assemblyName, parseOptions, maxParallelism);
+        return new AnalyzeDirectoryResult(ApplySyntaxPostProcessing(rawTypeList), treeList);
+    }
+
+    internal static (List<TypeNodeInfo> RawTypes, List<SyntaxTree> Trees) ParseSourceFiles(
+        IReadOnlyList<string> csFiles,
+        string assemblyName,
+        CSharpParseOptions parseOptions,
+        int? maxParallelism = null)
+    {
+        var rawTypes = new ConcurrentBag<TypeNodeInfo>();
+        var trees = new ConcurrentBag<SyntaxTree>();
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = UnilyzeConfig.ResolveMaxParallelism(maxParallelism)
+        };
+
+        Parallel.ForEach(csFiles, parallelOptions, file =>
+        {
+            var (tree, fileRawTypes) = ParseSingleFile(file, assemblyName, parseOptions);
+            trees.Add(tree);
+            foreach (var rawType in fileRawTypes)
+                rawTypes.Add(rawType);
+        });
+
+        var rawTypeList = rawTypes.OrderBy(t => t.FilePath, StringComparer.Ordinal)
+            .ThenBy(t => t.StartLine).ToList();
+        return (rawTypeList, trees.ToList());
+    }
+
+    internal static (SyntaxTree Tree, IReadOnlyList<TypeNodeInfo> RawTypes) ParseSingleFile(
+        string filePath,
+        string assemblyName,
+        CSharpParseOptions parseOptions)
+    {
+        var source = File.ReadAllText(filePath);
+        var tree = CSharpSyntaxTree.ParseText(source, options: parseOptions, path: filePath);
+        var fileRawTypes = new List<TypeNodeInfo>();
+        ExtractTypesInto(fileRawTypes, tree.GetRoot(), assemblyName, filePath);
+        return (tree, fileRawTypes);
+    }
+
+    internal static IReadOnlyList<TypeNodeInfo> ApplySyntaxPostProcessing(IReadOnlyList<TypeNodeInfo> rawTypeList)
+    {
+        // B2: 2パス interface 判定
+        var knownInterfaces = new HashSet<string>(
+            rawTypeList.Where(t => t.Kind == "interface").Select(t => t.Name.Split('<')[0]));
+        var resolved = rawTypeList.Select(t => ResolveBaseTypes(t, knownInterfaces)).ToList();
+
+        // B4: partial マージ
+        return MergePartialTypes(resolved);
+    }
+
+    internal static string ComputeKnownInterfacesHash(IReadOnlyList<TypeNodeInfo> rawTypeList) =>
+        SyntaxCacheFingerprint.HashKnownInterfaces(rawTypeList);
+
+    // --- Phase 1: Raw extraction (allocation-reduced: no yield state machines) ---
+
+    static void ExtractTypesInto(ConcurrentBag<TypeNodeInfo> bag, SyntaxNode root, string assemblyName, string filePath)
+    {
+        foreach (var rawType in ExtractRawTypesFromRoot(root, assemblyName, filePath))
+            bag.Add(rawType);
+    }
+
+    static void ExtractTypesInto(List<TypeNodeInfo> list, SyntaxNode root, string assemblyName, string filePath)
+    {
+        list.AddRange(ExtractRawTypesFromRoot(root, assemblyName, filePath));
+    }
+
+    static IEnumerable<TypeNodeInfo> ExtractRawTypesFromRoot(SyntaxNode root, string assemblyName, string filePath)
+    {
+        foreach (var node in root.DescendantNodes())
+        {
+            switch (node)
+            {
+                case TypeDeclarationSyntax typeDecl:
+                    yield return ExtractSingleTypeDecl(typeDecl, assemblyName, filePath);
+                    break;
+                case EnumDeclarationSyntax enumDecl:
+                    yield return ExtractSingleEnumDecl(enumDecl, assemblyName, filePath);
+                    break;
+                case DelegateDeclarationSyntax delDecl:
+                    yield return ExtractSingleDelegateDecl(delDecl, assemblyName, filePath);
+                    break;
+            }
+        }
+    }
+
+    static TypeNodeInfo ExtractSingleTypeDecl(TypeDeclarationSyntax typeDecl, string assemblyName, string filePath)
+    {
+        var name = typeDecl.Identifier.Text;
+        if (typeDecl.TypeParameterList is { } tpl)
+            name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
+
+        var kind = GetTypeKind(typeDecl);
+        var ns = GetNamespace(typeDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(typeDecl);
+        var typeId = TypeIdentity.CreateTypeId(typeDecl, assemblyName);
+        var modifiers = MemberExtractor.GetModifiers(typeDecl.Modifiers);
+        var attributes = MemberExtractor.GetAttributeInfos(typeDecl.AttributeLists);
+        var genericConstraints = MemberExtractor.ExtractGenericConstraints(typeDecl);
+        var isNested = typeDecl.Parent is TypeDeclarationSyntax;
+
+        var baseListItems = typeDecl.BaseList is { } baseList
+            ? baseList.Types.Select(t => t.Type.ToString()).ToList()
+            : [];
+
+        var members = MemberExtractor.ExtractMembers(typeDecl).ToList();
+        var ctorParams = MemberExtractor.ExtractConstructorParams(typeDecl).ToList();
+        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams);
+
+        var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
+
+        var typeSpan = typeDecl.GetLocation().GetLineSpan();
+        var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
+        var typeStartLine = typeSpan.StartLinePosition.Line + 1;
+
+        return new TypeNodeInfo(
+            name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
+            attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine,
+            qualifiedName, typeId);
+    }
+
+    static string GetTypeKind(TypeDeclarationSyntax typeDecl) => typeDecl switch
+    {
+        RecordDeclarationSyntax r => r.ClassOrStructKeyword.Text == "struct" ? "record struct" : "record",
+        ClassDeclarationSyntax => "class",
+        StructDeclarationSyntax => "struct",
+        InterfaceDeclarationSyntax => "interface",
+        _ => "type"
+    };
+
+    static (string? BaseType, List<string> Interfaces) SplitBaseList(List<string> baseListItems, bool isInterface)
+    {
+        if (baseListItems.Count == 0 || isInterface)
+            return (null, baseListItems);
+
+        return (baseListItems[0], baseListItems[1..]);
+    }
+
+    static TypeNodeInfo ExtractSingleEnumDecl(EnumDeclarationSyntax enumDecl, string assemblyName, string filePath)
+    {
+        var ns = GetNamespace(enumDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(enumDecl);
+        var typeId = TypeIdentity.CreateTypeId(enumDecl, assemblyName);
+        var modifiers = MemberExtractor.GetModifiers(enumDecl.Modifiers);
+        var attributes = MemberExtractor.GetAttributeInfos(enumDecl.AttributeLists);
+        var isNested = enumDecl.Parent is TypeDeclarationSyntax;
+
+        string? enumBaseType = null;
+        if (enumDecl.BaseList is { } enumBase)
+            enumBaseType = enumBase.Types.FirstOrDefault()?.Type.ToString();
+
+        var enumMembers = enumDecl.Members
+            .Select(m =>
+            {
+                var value = m.EqualsValue?.Value.ToString();
+                var memberType = value != null ? $"enum = {value}" : "enum";
+                return new MemberInfo(
+                    m.Identifier.Text, memberType, "EnumMember", [], [],
+                    MemberExtractor.GetAttributeInfos(m.AttributeLists));
+            })
+            .ToList();
+
+        var enumSpan = enumDecl.GetLocation().GetLineSpan();
+        var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
+        var enumStartLine = enumSpan.StartLinePosition.Line + 1;
+
+        return new TypeNodeInfo(
+            enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
+            attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine,
+            qualifiedName, typeId);
+    }
+
+    static TypeNodeInfo ExtractSingleDelegateDecl(DelegateDeclarationSyntax delDecl, string assemblyName, string filePath)
+    {
+        var name = delDecl.Identifier.Text;
+        if (delDecl.TypeParameterList is { } tpl)
+            name += $"<{string.Join(",", tpl.Parameters.Select(p => p.Identifier.Text))}>";
+
+        var ns = GetNamespace(delDecl);
+        var qualifiedName = TypeIdentity.CreateQualifiedName(delDecl);
+        var typeId = TypeIdentity.CreateTypeId(delDecl, assemblyName);
+        var modifiers = MemberExtractor.GetModifiers(delDecl.Modifiers);
+        var attributes = MemberExtractor.GetAttributeInfos(delDecl.AttributeLists);
+        var isNested = delDecl.Parent is TypeDeclarationSyntax;
+
+        var parameters = delDecl.ParameterList.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList();
+
+        var returnType = delDecl.ReturnType.ToString();
+        var members = new List<MemberInfo>
+        {
+            new("Invoke", returnType, "Method", ["public"], parameters, [])
+        };
+
+        var genericConstraints = delDecl.ConstraintClauses
+            .Select(cc => new GenericConstraintInfo(
+                cc.Name.ToString(), cc.Constraints.Select(c => c.ToString()).ToList()))
+            .ToList();
+
+        var delSpan = delDecl.GetLocation().GetLineSpan();
+        var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
+        var delStartLine = delSpan.StartLinePosition.Line + 1;
+
+        return new TypeNodeInfo(
+            name, ns, "delegate", modifiers, null, [], members, [],
+            attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine,
+            qualifiedName, typeId);
+    }
+
+    // --- Phase 2: Resolve base type vs interfaces ---
+
+    static TypeNodeInfo ResolveBaseTypes(TypeNodeInfo type, HashSet<string> knownInterfaces)
+    {
+        if (type.Kind is "enum" or "delegate" or "interface") return type;
+        if (type.BaseType == null) return type;
+
+        var baseName = type.BaseType.Split('<')[0];
+        if (knownInterfaces.Contains(baseName))
+        {
+            var newInterfaces = new List<string> { type.BaseType };
+            newInterfaces.AddRange(type.Interfaces);
+            return type with { BaseType = null, Interfaces = newInterfaces };
+        }
+
+        return type;
+    }
+
+    // --- B4: Partial type merging ---
+
+    static IReadOnlyList<TypeNodeInfo> MergePartialTypes(IReadOnlyList<TypeNodeInfo> types)
+    {
+        return types
+            .GroupBy(TypeIdentity.GetTypeId)
+            .Select(group => group.ToList())
+            .Select(parts => parts.Count == 1 ? parts[0] : MergeTypeParts(parts))
+            .ToList();
+    }
+
+    // Merges partial declarations of the same type; first occurrence wins for duplicates.
+    static TypeNodeInfo MergeTypeParts(List<TypeNodeInfo> parts)
+    {
+        var first = parts[0];
+        var baseType = parts.Select(p => p.BaseType).FirstOrDefault(b => b is not null);
+        return first with
+        {
+            LineCount = parts.Sum(p => p.LineCount),
+            BaseType = baseType ?? first.BaseType,
+            Interfaces = parts.SelectMany(p => p.Interfaces).Distinct().ToList(),
+            Members = parts.SelectMany(p => p.Members).ToList(),
+            ConstructorParams = parts.SelectMany(p => p.ConstructorParams).ToList(),
+            Attributes = parts.SelectMany(p => p.Attributes).DistinctBy(a => a.Name).ToList(),
+            GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList()
+        };
+    }
+
+    static string GetNamespace(SyntaxNode node)
+    {
+        var ns = node.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().FirstOrDefault();
+        return ns?.Name.ToString() ?? "";
+    }
+}
+
+static class DependencyBuilder
+{
+    public static IReadOnlyList<TypeDependency> Build(IReadOnlyList<TypeNodeInfo> types)
+    {
+        var knownTypes = KnownTypeIndex.Create(types);
+        var deps = new List<TypeDependency>();
+
+        foreach (var type in types)
+        {
+            if (type.BaseType != null)
+                AddDepsForTypeName(type, type.BaseType, DependencyKind.Inheritance, knownTypes, deps);
+
+            foreach (var iface in type.Interfaces)
+                AddDepsForTypeName(type, iface, DependencyKind.InterfaceImpl, knownTypes, deps);
+
+            CollectMemberDeps(type, knownTypes, deps);
+            CollectConstraintDeps(type, knownTypes, deps);
+        }
+
+        return deps
+            .Where(d => d.FromTypeId != d.ToTypeId)
+            .Distinct()
+            .ToList();
+    }
+
+    static void CollectMemberDeps(TypeNodeInfo type, KnownTypeIndex knownTypes, List<TypeDependency> deps)
+    {
+        foreach (var member in type.Members)
+        {
+            var kind = member.MemberKind switch
+            {
+                "Field" => DependencyKind.FieldType,
+                "Property" => DependencyKind.PropertyType,
+                "Method" => DependencyKind.ReturnType,
+                "Event" => DependencyKind.EventType,
+                "Indexer" => DependencyKind.PropertyType,
+                _ => DependencyKind.FieldType
+            };
+            AddDepsForTypeName(type, member.Type, kind, knownTypes, deps);
+
+            foreach (var param in member.Parameters)
+                AddDepsForTypeName(type, param.Type, DependencyKind.MethodParam, knownTypes, deps);
+        }
+
+        foreach (var ctorParam in type.ConstructorParams)
+            AddDepsForTypeName(type, ctorParam, DependencyKind.ConstructorParam, knownTypes, deps);
+    }
+
+    static void CollectConstraintDeps(TypeNodeInfo type, KnownTypeIndex knownTypes, List<TypeDependency> deps)
+    {
+        foreach (var constraint in type.GenericConstraints)
+        {
+            foreach (var c in constraint.Constraints)
+            {
+                var constraintType = c.TrimEnd('?');
+                if (constraintType is "class" or "struct" or "notnull" or "unmanaged" or "new()")
+                    continue;
+                AddDepsForTypeName(type, constraintType, DependencyKind.GenericConstraint, knownTypes, deps);
+            }
+        }
+    }
+
+    static void AddDepsForTypeName(TypeNodeInfo fromType, string typeName, DependencyKind kind,
+        KnownTypeIndex knownTypes, List<TypeDependency> deps)
+    {
+        foreach (var extracted in ExtractAllTypeNames(typeName))
+        {
+            foreach (var target in knownTypes.Resolve(fromType, extracted))
+            {
+                deps.Add(new TypeDependency(
+                    fromType.Name,
+                    target.Name,
+                    kind,
+                    TypeIdentity.GetTypeId(fromType),
+                    TypeIdentity.GetTypeId(target)));
+            }
+        }
+    }
+
+    static IReadOnlyList<string> ExtractAllTypeNames(string typeName)
+    {
+        typeName = typeName.TrimEnd('?');
+        if (string.IsNullOrEmpty(typeName)) return [];
+
+        var result = new List<string>();
+        var angleBracket = typeName.IndexOf('<');
+        if (angleBracket >= 0)
+        {
+            result.Add(typeName[..angleBracket]);
+            if (angleBracket + 1 < typeName.Length - 1)
+            {
+                var inner = typeName[(angleBracket + 1)..^1];
+                var parts = SplitGenericArgs(inner);
+                foreach (var part in parts)
+                    result.AddRange(ExtractAllTypeNames(part.Trim()));
+            }
+        }
+        else
+        {
+            result.Add(typeName);
+        }
+
+        return result;
+    }
+
+    static string[] SplitGenericArgs(string args)
+    {
+        var result = new List<string>();
+        var depth = 0;
+        var start = 0;
+
+        for (var i = 0; i < args.Length; i++)
+        {
+            switch (args[i])
+            {
+                case '<': depth++; break;
+                case '>': depth--; break;
+                case ',' when depth == 0:
+                    result.Add(args[start..i].Trim());
+                    start = i + 1;
+                    break;
+            }
+        }
+
+        result.Add(args[start..].Trim());
+        return result.ToArray();
+    }
+
+    sealed class KnownTypeIndex
+    {
+        readonly Dictionary<string, TypeNodeInfo> _byId;
+        readonly Dictionary<string, List<TypeNodeInfo>> _byQualifiedName;
+        readonly Dictionary<string, List<TypeNodeInfo>> _bySimpleName;
+
+        KnownTypeIndex(
+            Dictionary<string, TypeNodeInfo> byId,
+            Dictionary<string, List<TypeNodeInfo>> byQualifiedName,
+            Dictionary<string, List<TypeNodeInfo>> bySimpleName)
+        {
+            _byId = byId;
+            _byQualifiedName = byQualifiedName;
+            _bySimpleName = bySimpleName;
+        }
+
+        public static KnownTypeIndex Create(IReadOnlyList<TypeNodeInfo> types)
+        {
+            var byId = new Dictionary<string, TypeNodeInfo>(types.Count);
+            var byQualifiedName = new Dictionary<string, List<TypeNodeInfo>>(StringComparer.Ordinal);
+            var bySimpleName = new Dictionary<string, List<TypeNodeInfo>>(StringComparer.Ordinal);
+
+            foreach (var type in types)
+            {
+                var typeId = TypeIdentity.GetTypeId(type);
+                byId.TryAdd(typeId, type);
+
+                AddToLookup(byQualifiedName, TypeIdentity.GetQualifiedName(type), type);
+                AddToLookup(bySimpleName, TypeIdentity.GetSimpleName(type), type);
+            }
+
+            return new KnownTypeIndex(byId, byQualifiedName, bySimpleName);
+        }
+
+        public IReadOnlyList<TypeNodeInfo> Resolve(TypeNodeInfo fromType, string rawTypeName)
+        {
+            var normalized = TypeNameFormat.NormalizeTypeReference(rawTypeName);
+            if (string.IsNullOrWhiteSpace(normalized))
+                return [];
+
+            var exactQualified = ResolveUnique(_byQualifiedName, normalized);
+            if (exactQualified.Count > 0)
+                return exactQualified;
+
+            foreach (var prefix in TypeIdentity.GetContainingQualifiedNamePrefixes(fromType))
+            {
+                var nestedQualified = $"{prefix}.{normalized}";
+                var nestedMatch = ResolveUnique(_byQualifiedName, nestedQualified);
+                if (nestedMatch.Count > 0)
+                    return nestedMatch;
+            }
+
+            if (!string.IsNullOrEmpty(fromType.Namespace))
+            {
+                var sameNamespace = ResolveUnique(_byQualifiedName, $"{fromType.Namespace}.{normalized}");
+                if (sameNamespace.Count > 0)
+                    return sameNamespace;
+            }
+
+            var simpleName = TypeNameFormat.StripGenericArgs(normalized);
+            return ResolveUnique(_bySimpleName, simpleName);
+        }
+
+        static IReadOnlyList<TypeNodeInfo> ResolveUnique(
+            Dictionary<string, List<TypeNodeInfo>> lookup,
+            string key)
+        {
+            if (!lookup.TryGetValue(key, out var matches) || matches.Count != 1)
+                return [];
+
+            return matches;
+        }
+
+        static void AddToLookup(
+            Dictionary<string, List<TypeNodeInfo>> lookup,
+            string key,
+            TypeNodeInfo type)
+        {
+            if (!lookup.TryGetValue(key, out var items))
+            {
+                items = [];
+                lookup[key] = items;
+            }
+            items.Add(type);
+        }
+    }
+}
