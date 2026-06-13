@@ -8,6 +8,7 @@ theme:
 nav:
   - Home: index.md
   - Metrics: metrics.md
+  - Rules: rules/index.md
   - CI Integration: ci-integration.md
   - Statusline: statusline.md
   - Tutorials:

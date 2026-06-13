@@ -158,8 +158,8 @@ public static class SmellThresholds
         _ => null,
     };
 
-    public const string SarifHelpUri =
-        "https://github.com/bigdra50/unilyze/blob/main/docs/metrics.md#code-smell";
+    public static string GetSarifHelpUri(string ruleId)
+        => $"https://bigdra50.github.io/unilyze/rules/{ruleId.ToUpperInvariant()}/";
 
     public static string? GetSarifHelpText(CodeSmellKind kind)
         => GetSarifHelpText(kind, EffectiveSmellThresholds.Default);

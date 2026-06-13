@@ -107,6 +107,9 @@ public static class SarifFormatter
     public static IEnumerable<(string RuleId, CodeSmellKind Kind)> EnumerateRules()
         => RuleDefinitions.Select(static r => (r.RuleId, r.Kind));
 
+    public static IEnumerable<(string RuleId, CodeSmellKind Kind, string ShortDescription)> EnumerateRuleDefinitions()
+        => RuleDefinitions;
+
     internal static string ComputeFingerprint(
         string ruleId,
         string relativePath,

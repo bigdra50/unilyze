@@ -17,7 +17,7 @@ static class SarifFormattingHelpers
             ["id"] = ruleId,
             ["shortDescription"] = new JsonObject { ["text"] = shortDescription },
             ["defaultConfiguration"] = new JsonObject { ["level"] = "warning" },
-            ["helpUri"] = SmellThresholds.SarifHelpUri,
+            ["helpUri"] = SmellThresholds.GetSarifHelpUri(ruleId),
         };
 
         var fullDescription = SmellThresholds.GetSarifFullDescription(kind, thresholds);
