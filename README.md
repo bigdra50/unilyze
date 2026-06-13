@@ -217,7 +217,7 @@ unilyze -p . --include-generated        # EmitCompilerGeneratedFiles output (com
 unilyze -p . --resolve-nuget --tfm net8.0 # Pin target framework for multi-TFM repos
 ```
 
-Equivalent `.unilyze.json` keys: `"resolveNuget"`, `"includeGenerated"`, `"targetFramework"`. Enabled settings are echoed in JSON output. Compare snapshots only with identical opt-in settings — see [docs/metrics.md](./docs/metrics.md#参照解析オプトインnuget--生成コード).
+Equivalent `.unilyze.json` keys: `"resolveNuget"`, `"includeGenerated"`, `"targetFramework"`. Enabled settings are echoed in JSON output. Compare snapshots only with identical opt-in settings — see [docs/metrics.md](./docs/metrics.md#reference-analysis-opt-ins-nuget--generated-code).
 
 ### Suppressing findings
 

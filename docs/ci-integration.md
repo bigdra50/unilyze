@@ -2,7 +2,7 @@
 
 Reference for badges, quality gates, GitHub Actions, and diff-based PR gates. For a step-by-step walkthrough, see the [CI quality gate tutorial](./tutorials/ci-quality-gate.md).
 
-unilyze runs at **SyntaxOnly** in CI when no Unity installation is present (no Unity DLLs resolved). Code Health and Maintainability Index are approximately stable across analysis levels; smell counts are level-dependent — only the syntax-level subset is reported at SyntaxOnly (semantic smells such as boxing are omitted). See [metrics.md](./metrics.md#バリデーション-検証) for measured differences.
+unilyze runs at **SyntaxOnly** in CI when no Unity installation is present (no Unity DLLs resolved). Code Health and Maintainability Index are approximately stable across analysis levels; smell counts are level-dependent — only the syntax-level subset is reported at SyntaxOnly (semantic smells such as boxing are omitted). See [metrics.md](./metrics.md#validation) for measured differences.
 
 ## Badges
 

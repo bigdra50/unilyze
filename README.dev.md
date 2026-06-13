@@ -44,6 +44,8 @@ Supported runtimes are the **current LTS** and the **previous LTS** (until its E
 - [.github/workflows/ci.yml](.github/workflows/ci.yml): CI / pack smoke / CodeHealth gate
 - [action.yml](action.yml): Official composite GitHub Action (Marketplace candidate)
 
+Repository documentation is English-only. The [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy) couples every metric-definition change to `docs/metrics.md`; maintaining a second-language copy would systematically drift from the implementation and drift tests.
+
 ## GitHub Action
 
 The composite action lives at the repository root ([action.yml](action.yml)) so the CLI and action ship from one repo. Consumers reference `bigdra50/unilyze@v1` after the first action release.
@@ -109,7 +111,7 @@ If metric values move intentionally, confirm the change, then regenerate the bas
 UNILYZE_GOLDEN_UPDATE=1 dotnet test tests/Unilyze.Tests -f net10.0 --filter GoldenCorpus
 ```
 
-Review the `expected.json` diff in your PR. When the change alters measured values, also bump `AnalysisResult.CurrentMetricsVersion` and add a `[metrics]` entry to `CHANGELOG.md` per the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー). Do not auto-regenerate in CI.
+Review the `expected.json` diff in your PR. When the change alters measured values, also bump `AnalysisResult.CurrentMetricsVersion` and add a `[metrics]` entry to `CHANGELOG.md` per the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy). Do not auto-regenerate in CI.
 
 ### Complete-level CI validation (GameCI)
 
@@ -300,7 +302,7 @@ Related files:
 3. Pass pack/install smoke
 4. Confirm README / docs / package metadata match the implementation
 5. Confirm HTML fallback and `--no-open` are not broken
-6. Apply the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
+6. Apply the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
 7. If you changed a metric-calculation file, verify the `metricsVersion` bump (`AnalysisResult.CurrentMetricsVersion`) and CHANGELOG `[metrics]` entry
 8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into a new `## [X.Y.Z]` section and set the release date). The publish workflow fails if this section is missing for the tagged version.
 9. After the release workflow completes, copy the rendered `unilyze.rb` to `bigdra50/homebrew-tap/Formula/unilyze.rb`

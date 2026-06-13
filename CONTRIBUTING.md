@@ -36,7 +36,7 @@ UNILYZE_GOLDEN_UPDATE=1 dotnet test tests/Unilyze.Tests -f net10.0 --filter Gold
 Review the generated `tests/fixtures/golden/expected.json` diff.
 Do not regenerate the corpus automatically in CI.
 
-When measured values or metric definitions change, follow the [Metric Compatibility Policy](docs/metrics.md#メトリクス互換性ポリシー), including the required `metricsVersion` update where applicable.
+When measured values or metric definitions change, follow the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy), including the required `metricsVersion` update where applicable.
 Add a `CHANGELOG.md` entry under `[Unreleased]` whose text starts with `[metrics]`.
 
 Further details are in [Golden corpus (metrics compatibility)](README.dev.md#golden-corpus-metrics-compatibility).

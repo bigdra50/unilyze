@@ -67,20 +67,20 @@ public static class SmellThresholds
     public static string RenderDocsThresholdTable()
     {
         var sb = new StringBuilder();
-        sb.AppendLine("| スメル | 判定条件 (Warning) | 判定条件 (Critical) |");
+        sb.AppendLine("| Smell | Warning condition | Critical condition |");
         sb.AppendLine("|--------|-------------------|-------------------|");
         AppendDocsRow(sb, "GodClass",
-            $"行数 >= {GodClassLinesWarning} or メソッド数 >= {GodClassMethodsWarning}",
-            $"行数 >= {GodClassLinesCritical}");
+            $"lines >= {GodClassLinesWarning} or methods >= {GodClassMethodsWarning}",
+            $"lines >= {GodClassLinesCritical}");
         AppendDocsRow(sb, "LongMethod",
-            $"行数 >= {LongMethodLinesWarning} or CogCC >= {LongMethodCogCcWarning}",
-            $"行数 >= {LongMethodLinesCritical} or CogCC >= {LongMethodCogCcCritical}");
-        AppendDocsRow(sb, "ExcessiveParameters", $"パラメータ数 > {ExcessiveParametersMax}", "—");
+            $"lines >= {LongMethodLinesWarning} or CogCC >= {LongMethodCogCcWarning}",
+            $"lines >= {LongMethodLinesCritical} or CogCC >= {LongMethodCogCcCritical}");
+        AppendDocsRow(sb, "ExcessiveParameters", $"parameter count > {ExcessiveParametersMax}", "—");
         AppendDocsRow(sb, "HighComplexity",
             $"CycCC >= {HighComplexityCycCcWarning} or CogCC >= {HighComplexityCogCcWarning}", "—");
         AppendDocsRow(sb, "DeepNesting",
-            $"ネスト深度 >= {DeepNestingDepthWarning}",
-            $"ネスト深度 >= {DeepNestingDepthCritical}");
+            $"nesting depth >= {DeepNestingDepthWarning}",
+            $"nesting depth >= {DeepNestingDepthCritical}");
         AppendDocsRow(sb, "LowCohesion", $"LCOM >= {LowCohesionLcomWarning:0.0}", "—");
         AppendDocsRow(sb, "HighCoupling",
             $"CBO >= {HighCouplingCboWarning}",
