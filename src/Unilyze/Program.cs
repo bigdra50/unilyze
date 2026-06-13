@@ -117,6 +117,7 @@ try
 {
     string json;
     AnalysisResult result;
+    string? editorCommand = null;
     var resolved = new ResolvedAnalysisConfig(
         EffectiveSmellThresholds.Default,
         SmellThresholdProfiles.DefaultProfileName,
@@ -135,6 +136,7 @@ try
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(path!);
         var config = UnilyzeConfig.LoadMerged(projectRoot, cliExcludeDirs, cliProfile);
+        editorCommand = config.EditorCommand ?? "vscode";
         var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(projectRoot, opts);
         resolved = config.ResolveAnalysisConfig();
         result = AnalysisPipeline.Build(
@@ -166,7 +168,7 @@ try
     {
         var htmlPath = output ?? Path.Combine(Path.GetTempPath(), $"unilyze-{Path.GetFileName(result.ProjectPath)}.html");
 
-        var html = HtmlFormatter.Generate(json, result.ProjectPath);
+        var html = HtmlFormatter.Generate(json, result.ProjectPath, editorCommand);
         File.WriteAllText(htmlPath, html);
         Console.Error.WriteLine($"Written to {htmlPath}");
 

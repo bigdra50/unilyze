@@ -28,9 +28,25 @@ internal static class ConfigRunner
             "list" => List(projectRoot),
             "add-exclude-dir" => AddExcludeDir(configPath, positional),
             "remove-exclude-dir" => RemoveExcludeDir(configPath, positional),
+            "set-editor" => SetEditor(configPath, positional),
             _ => CliArgValidationSupport.ReportUnknown(
                 "subcommand", subcommand, CliArgValidation.ConfigSubcommands),
         };
+    }
+
+    static int SetEditor(string configPath, IReadOnlyList<string> positional)
+    {
+        if (positional.Count == 0)
+        {
+            Console.Error.WriteLine(
+                "Usage: unilyze config set-editor <vscode|cursor|idea|subl|url-template> [--global]");
+            return 1;
+        }
+
+        var config = UnilyzeConfig.LoadFile(configPath);
+        UnilyzeConfig.SaveFile(configPath, config with { EditorCommand = positional[0] });
+        Console.Error.WriteLine($"Set editor to '{positional[0]}' in {configPath}");
+        return 0;
     }
 
     static int AddExcludeDir(string configPath, IReadOnlyList<string> positional)
@@ -80,7 +96,8 @@ internal static class ConfigRunner
         PrintSection("project", projectPath, project, ref hasAny);
 
         hasAny |= merged.Smells is { Count: > 0 } || merged.Rules is { Count: > 0 }
-            || merged.Baseline is not null || merged.Profile is not null;
+            || merged.Baseline is not null || merged.Profile is not null
+            || merged.EditorCommand is not null;
 
         if (hasAny)
         {
@@ -98,6 +115,8 @@ internal static class ConfigRunner
             }
             if (merged.Baseline is not null)
                 Console.WriteLine($"  baseline: {merged.Baseline}");
+            if (merged.EditorCommand is not null)
+                Console.WriteLine($"  editorCommand: {merged.EditorCommand}");
 
             var effectiveThresholds = merged.ResolveAnalysisConfig().Thresholds;
             PrintEffectiveThresholds(effectiveThresholds);
@@ -114,7 +133,8 @@ internal static class ConfigRunner
     {
         var sectionHasValues = config.ExcludeDirs is { Count: > 0 }
             || config.DisableDefaultExcludes
-            || config.DisableGeneratedCodeExcludes;
+            || config.DisableGeneratedCodeExcludes
+            || config.EditorCommand is not null;
         if (!sectionHasValues)
             return;
 
@@ -131,6 +151,8 @@ internal static class ConfigRunner
 
         Console.WriteLine($"  disableDefaultExcludes: {config.DisableDefaultExcludes.ToString().ToLowerInvariant()}");
         Console.WriteLine($"  disableGeneratedCodeExcludes: {config.DisableGeneratedCodeExcludes.ToString().ToLowerInvariant()}");
+        if (config.EditorCommand is not null)
+            Console.WriteLine($"  editorCommand: {config.EditorCommand}");
     }
 
     static void PrintEffectiveThresholds(EffectiveSmellThresholds thresholds)
@@ -182,6 +204,12 @@ internal static class ConfigRunner
               unilyze config add-exclude-dir <dir> --global       Add directory to global config
               unilyze config remove-exclude-dir <dir>             Remove directory from project config
               unilyze config remove-exclude-dir <dir> --global    Remove directory from global config
+              unilyze config set-editor <editor>                   Set editor for project config
+              unilyze config set-editor <editor> --global          Set editor for global config
+
+            Editor values:
+              Presets: vscode, cursor, idea, subl
+              Custom:  URL template containing {file} and {line}
 
             Options:
               --global    Target global config ($XDG_CONFIG_HOME/unilyze/config.json)

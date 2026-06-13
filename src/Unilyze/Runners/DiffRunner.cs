@@ -525,7 +525,13 @@ internal static class DiffRunner
             Path.GetTempPath(),
             $"unilyze-diff-{Path.GetFileNameWithoutExtension(ctx.BeforePath)}-{Path.GetFileNameWithoutExtension(ctx.AfterPath)}.html");
 
-        var html = HtmlFormatter.GenerateWithDiff(ctx.AfterJson, ctx.DiffJson, ctx.After.ProjectPath);
+        var projectRoot = ProgramHelpers.ResolveProjectRoot(ctx.After.ProjectPath);
+        var config = UnilyzeConfig.LoadMerged(projectRoot);
+        var html = HtmlFormatter.GenerateWithDiff(
+            ctx.AfterJson,
+            ctx.DiffJson,
+            ctx.After.ProjectPath,
+            config.EditorCommand ?? "vscode");
         File.WriteAllText(htmlPath, html);
         Console.Error.WriteLine($"Written to {htmlPath}");
 

@@ -36,7 +36,9 @@ internal sealed record UnilyzeConfig(
     [property: JsonPropertyName("maxParallelism")]
     int? MaxParallelism = null,
     [property: JsonPropertyName("dup")]
-    DupConfigSection? Dup = null)
+    DupConfigSection? Dup = null,
+    [property: JsonPropertyName("editorCommand")]
+    string? EditorCommand = null)
 {
     public static UnilyzeConfig Empty { get; } = new();
 
@@ -129,7 +131,8 @@ internal sealed record UnilyzeConfig(
             higher.Baseline ?? lower.Baseline,
             higher.Triage ?? lower.Triage,
             higher.MaxParallelism ?? lower.MaxParallelism,
-            MergeDup(lower.Dup, higher.Dup));
+            MergeDup(lower.Dup, higher.Dup),
+            higher.EditorCommand ?? lower.EditorCommand);
     }
 
     static IReadOnlyList<string>? MergeExcludeDirs(

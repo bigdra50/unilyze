@@ -262,6 +262,16 @@ body.offline-mode .panel{
   padding:0;font:inherit;text-align:left
 }
 .offline-link:hover{text-decoration:underline}
+.open-in-editor{
+  display:inline-flex;align-items:center;margin-top:10px;padding:4px 8px;
+  color:var(--accent);border:1px solid var(--border);border-radius:4px;
+  font-size:10px;text-decoration:none;background:rgba(88,166,255,.06)
+}
+.open-in-editor:hover{border-color:var(--accent);background:rgba(88,166,255,.12)}
+.open-in-editor-mini{
+  color:var(--accent);text-decoration:none;margin-left:6px;opacity:.7;font-size:11px
+}
+.open-in-editor-mini:hover{opacity:1;text-decoration:underline}
 .offline-pills{display:flex;gap:6px;flex-wrap:wrap}
 .offline-pill{
   display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:999px;

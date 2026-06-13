@@ -30,7 +30,8 @@ internal static class CliArgValidation
         "--global", "-h", "--help",
     };
 
-    public static readonly string[] ConfigSubcommands = ["list", "add-exclude-dir", "remove-exclude-dir"];
+    public static readonly string[] ConfigSubcommands =
+        ["list", "add-exclude-dir", "remove-exclude-dir", "set-editor"];
 
     static readonly HashSet<string> SkillsBooleanOptions = new(StringComparer.Ordinal)
     {

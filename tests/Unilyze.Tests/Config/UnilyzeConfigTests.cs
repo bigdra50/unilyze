@@ -54,6 +54,27 @@ public sealed class UnilyzeConfigTests : IDisposable
     }
 
     [Fact]
+    public void Merge_EditorCommand_HigherWins()
+    {
+        var lower = new UnilyzeConfig(EditorCommand: "vscode");
+        var higher = new UnilyzeConfig(EditorCommand: "cursor");
+
+        var result = UnilyzeConfig.Merge(lower, higher);
+
+        Assert.Equal("cursor", result.EditorCommand);
+    }
+
+    [Fact]
+    public void LoadFile_EditorCommand_ParsesValue()
+    {
+        var path = WriteTempFile("config.json", """{ "editorCommand": "idea" }""");
+
+        var result = UnilyzeConfig.LoadFile(path);
+
+        Assert.Equal("idea", result.EditorCommand);
+    }
+
+    [Fact]
     public void LoadFile_NonExistent_ReturnsEmpty()
     {
         var result = UnilyzeConfig.LoadFile(Path.Combine(_tempDir, "nonexistent.json"));

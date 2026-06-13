@@ -31,6 +31,42 @@ public sealed class HtmlFormatterTests
     }
 
     [Fact]
+    public void Generate_EmbedsEditorCommand()
+    {
+        var result = MakeEmptyResult();
+        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath, "cursor");
+
+        Assert.DoesNotContain("__EDITOR_COMMAND__", html);
+        Assert.Contains("""const EDITOR_CMD = "cursor";""", html);
+        Assert.Contains("open-in-editor", html);
+    }
+
+    [Fact]
+    public void Generate_WithoutEditorCommand_DisablesEditorLinks()
+    {
+        var result = MakeEmptyResult();
+        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath);
+
+        Assert.Contains("const EDITOR_CMD = null;", html);
+    }
+
+    [Fact]
+    public void Generate_MaliciousEditorCommand_CannotBreakOutOfInlineScript()
+    {
+        const string Payload = "</script><script>globalThis.unilyzeEditorXss=true</script>";
+        var result = MakeEmptyResult();
+        var json = JsonSerializer.Serialize(result, AnalysisJsonContext.Default.AnalysisResult);
+
+        var html = HtmlFormatter.Generate(json, result.ProjectPath, Payload);
+
+        Assert.DoesNotContain(Payload, html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Generate_BundlesVendorScriptsOffline()
     {
         var result = MakeEmptyResult();
@@ -72,6 +108,17 @@ public sealed class HtmlFormatterTests
         // graph-mode diff wiring (#73): bucket data attribute and halo styling
         Assert.Contains("diffBucket", html);
         Assert.Contains("underlay-color", html);
+    }
+
+    [Fact]
+    public void GenerateWithDiff_EmbedsEditorCommand()
+    {
+        var after = MakeResultWithType(codeHealth: 6.0, maxCogCC: 12);
+        var afterJson = JsonSerializer.Serialize(after, AnalysisJsonContext.Default.AnalysisResult);
+
+        var html = HtmlFormatter.GenerateWithDiff(afterJson, "null", after.ProjectPath, "idea");
+
+        Assert.Contains("""const EDITOR_CMD = "idea";""", html);
     }
 
     [Fact]

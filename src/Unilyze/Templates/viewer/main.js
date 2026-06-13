@@ -1,4 +1,19 @@
 const DATA = __DATA_PLACEHOLDER__;
+const EDITOR_CMD = __EDITOR_COMMAND__;
+
+const EDITOR_PRESETS = {
+  vscode:'vscode://file{file}:{line}',
+  cursor:'cursor://file{file}:{line}',
+  idea:'idea://open?file={file}&line={line}',
+  subl:'subl://open?url=file://{file}&line={line}',
+};
+
+function editorUri(file,line){
+  if(!file||EDITOR_CMD==null) return null;
+  const tpl=EDITOR_PRESETS[EDITOR_CMD]||
+    (typeof EDITOR_CMD==='string'&&EDITOR_CMD.includes('{file}') ? EDITOR_CMD : EDITOR_PRESETS.vscode);
+  return tpl.replace('{file}',encodeURI(file)).replace('{line}',line||1);
+}
 
 function stripGenericArgs(name){
   const v=(name||'').replace(/^global::/,'').replace(/\?$/,'');
@@ -195,6 +210,19 @@ function escapeHtml(value){
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
+}
+
+function typeSource(type,metrics){
+  return {
+    file:metrics?.filePath||type?.filePath||null,
+    line:metrics?.startLine||type?.startLine||1
+  };
+}
+
+function editorLink(uri,className,label,title){
+  if(!uri) return '';
+  return '<a class="'+className+'" href="'+escapeHtml(uri)+'"'+
+    (title?' title="'+escapeHtml(title)+'"':'')+'>'+label+'</a>';
 }
 
 function renderOfflineReport(){
@@ -419,6 +447,8 @@ function renderOfflineReport(){
     html+=escapeHtml(type.name)+'</h2>';
     html+='<div class="meta">'+escapeHtml(type.kind)+' &middot; '+escapeHtml(type.assembly)+'</div>';
     html+='<div class="meta">'+escapeHtml(type.qualifiedName||qualifiedName(type.namespace,type.name))+'</div>';
+    const source=typeSource(type,metrics);
+    html+=editorLink(editorUri(source.file,source.line),'open-in-editor','Open in editor');
 
     if(metrics){
       html+='<div class="section-title">Metrics</div>';
@@ -460,7 +490,8 @@ function renderOfflineReport(){
     if(type.members&&type.members.length){
       html+='<div class="section-title">Members ('+type.members.length+')</div>';
       type.members.forEach(member=>{
-        html+='<div class="member"><span class="badge">'+escapeHtml(member.memberKind[0])+'</span><span class="n">'+escapeHtml(member.name)+'</span> <span class="t">'+escapeHtml(member.type)+'</span></div>';
+        html+='<div class="member"><span class="badge">'+escapeHtml(member.memberKind[0])+'</span><span class="n">'+escapeHtml(member.name)+'</span> <span class="t">'+escapeHtml(member.type)+'</span>'+
+          (member.startLine?editorLink(editorUri(source.file,member.startLine),'open-in-editor-mini','&#8599;','Open '+member.name):'')+'</div>';
       });
     }
 
@@ -1565,6 +1596,8 @@ cy.on('tap','node[nodeType="type"]',e=>{
   h+=esc(t.name)+'</h2>';
   h+='<div class="meta">'+esc(t.kind)+' &middot; '+esc(t.assembly)+'</div>';
   if(t.namespace)h+='<div class="meta">'+esc(t.namespace)+'</div>';
+  const source=typeSource(t,mx);
+  h+=editorLink(editorUri(source.file,source.line),'open-in-editor','Open in editor');
 
   if(mx){
     const hcol=healthColor(mx.codeHealth);
@@ -1627,7 +1660,8 @@ cy.on('tap','node[nodeType="type"]',e=>{
       h+='<div class="member"><span class="badge">'+m.memberKind[0]+'</span>';
       h+=ccBadge;
       h+='<span class="n">'+esc(m.name)+'</span> ';
-      h+='<span class="t">'+esc(m.type)+'</span></div>';
+      h+='<span class="t">'+esc(m.type)+'</span>'+
+        (m.startLine?editorLink(editorUri(source.file,m.startLine),'open-in-editor-mini','&#8599;','Open '+(m.name||'')):'')+'</div>';
     });}
 
   const og=DATA.dependencies.filter(d=>depFromId(d)===tk);
