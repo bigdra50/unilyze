@@ -13,9 +13,11 @@ internal sealed class SnapshotStore
     long _generation;
     ServePhase _phase = ServePhase.Analyzing;
     ServeSnapshot? _snapshot;
+    string? _lastErrorCode;
     string? _lastError;
     DateTimeOffset? _lastSuccessUtc;
     ServeAnalysisMetrics? _lastMetrics;
+    TaskCompletionSource<long> _changed = CreateChangeSignal();
 
     public ServeSnapshot? Current
     {
@@ -38,6 +40,7 @@ internal sealed class SnapshotStore
             var snapshot = new ServeSnapshot(_generation + 1, content);
             _snapshot = snapshot;
             _phase = ServePhase.Ready;
+            _lastErrorCode = null;
             _lastError = null;
             _lastSuccessUtc = content.AnalyzedAtUtc;
             _lastMetrics = content.Metrics;
@@ -46,12 +49,13 @@ internal sealed class SnapshotStore
         }
     }
 
-    public void PublishFailure(string error)
+    public void PublishFailure(ServeAnalysisFailure failure)
     {
         lock (_gate)
         {
             _phase = ServePhase.Failed;
-            _lastError = error;
+            _lastErrorCode = failure.Code;
+            _lastError = failure.Summary;
             Advance();
         }
     }
@@ -66,42 +70,57 @@ internal sealed class SnapshotStore
                 _snapshot?.Generation,
                 _snapshot?.ETag,
                 _lastSuccessUtc,
+                _lastErrorCode,
                 _lastError,
                 _lastMetrics);
         }
     }
 
-    /// <summary>
-    /// Blocks until the generation exceeds <paramref name="after"/> or the timeout elapses,
-    /// then returns the current state. This is the server side of the ETag long-poll.
-    /// </summary>
-    public ServeStateView WaitForChange(long after, TimeSpan timeout)
+    public async Task<ServeStateView> WaitForChangeAsync(
+        long after,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
     {
-        var deadline = DateTime.UtcNow + timeout;
+        Task<long> changedTask;
         lock (_gate)
         {
-            while (_generation <= after)
-            {
-                var remaining = deadline - DateTime.UtcNow;
-                if (remaining <= TimeSpan.Zero)
-                    break;
-                Monitor.Wait(_gate, remaining);
-            }
+            if (_generation > after)
+                return CreateStateView();
+            changedTask = _changed.Task;
+        }
 
-            return new ServeStateView(
-                _generation,
-                _phase,
-                _snapshot?.Generation,
-                _snapshot?.ETag,
-                _lastSuccessUtc,
-                _lastError,
-                _lastMetrics);
+        try
+        {
+            await changedTask.WaitAsync(timeout, cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+        }
+
+        lock (_gate)
+        {
+            return CreateStateView();
         }
     }
 
     void Advance()
     {
         _generation++;
-        Monitor.PulseAll(_gate);
+        var completed = _changed;
+        _changed = CreateChangeSignal();
+        completed.TrySetResult(_generation);
     }
+
+    ServeStateView CreateStateView() => new(
+        _generation,
+        _phase,
+        _snapshot?.Generation,
+        _snapshot?.ETag,
+        _lastSuccessUtc,
+        _lastErrorCode,
+        _lastError,
+        _lastMetrics);
+
+    static TaskCompletionSource<long> CreateChangeSignal() =>
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
 }

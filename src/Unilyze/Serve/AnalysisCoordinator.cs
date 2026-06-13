@@ -1,10 +1,8 @@
 namespace Unilyze.Serve;
 
 /// <summary>
-/// Serializes change-driven re-analysis: it coalesces a burst of change events into one
-/// run (~300 ms debounce), guarantees a single analysis at a time, and re-runs once more
-/// if changes arrived while an analysis was in flight. Each run marks the session
-/// analyzing, then atomically publishes success or marks failure (keeping the old snapshot).
+/// Serializes change-driven analysis and tracks a monotonic input generation. A result is
+/// published only if no newer generation arrived while it was being built.
 /// </summary>
 internal sealed class AnalysisCoordinator : IDisposable
 {
@@ -12,9 +10,12 @@ internal sealed class AnalysisCoordinator : IDisposable
     readonly Func<ServeSnapshotContent> _build;
     readonly TimeSpan _debounce;
     readonly Action<ServeSnapshot>? _onPublished;
-    readonly Action<string>? _onFailed;
+    readonly Action<ServeAnalysisFailure, Exception>? _onFailed;
     readonly AutoResetEvent _wake = new(false);
     readonly CancellationTokenSource _cts = new();
+    readonly object _generationGate = new();
+    long _requestedGeneration;
+    long _consumedGeneration;
     Thread? _worker;
 
     public AnalysisCoordinator(
@@ -22,7 +23,7 @@ internal sealed class AnalysisCoordinator : IDisposable
         Func<ServeSnapshotContent> build,
         TimeSpan? debounce = null,
         Action<ServeSnapshot>? onPublished = null,
-        Action<string>? onFailed = null)
+        Action<ServeAnalysisFailure, Exception>? onFailed = null)
     {
         _store = store;
         _build = build;
@@ -31,51 +32,90 @@ internal sealed class AnalysisCoordinator : IDisposable
         _onFailed = onFailed;
     }
 
-    /// <summary>Starts the worker and requests an immediate first analysis.</summary>
-    public void Start()
+    public long RequestAnalysis()
+    {
+        long generation;
+        lock (_generationGate)
+            generation = ++_requestedGeneration;
+        _wake.Set();
+        return generation;
+    }
+
+    public void Start(bool requestInitialAnalysis = true)
     {
         _worker = new Thread(Loop) { IsBackground = true, Name = "unilyze-serve-analysis" };
         _worker.Start();
-        RequestAnalysis();
+        if (requestInitialAnalysis)
+            RequestAnalysis();
     }
-
-    public void RequestAnalysis() => _wake.Set();
 
     void Loop()
     {
         var waits = new[] { _wake, _cts.Token.WaitHandle };
         while (!_cts.IsCancellationRequested)
         {
-            // Wait for the first change signal (or shutdown).
             if (WaitHandle.WaitAny(waits) == 1)
                 return;
 
-            // Debounce: keep extending while more signals arrive within the window.
             while (_wake.WaitOne(_debounce))
             {
                 if (_cts.IsCancellationRequested)
                     return;
             }
 
-            RunOnce();
+            RunOnce(GetRequestedGeneration());
         }
     }
 
-    void RunOnce()
+    void RunOnce(long requestedGeneration)
     {
+        lock (_generationGate)
+        {
+            if (requestedGeneration <= _consumedGeneration)
+                return;
+        }
+
         _store.MarkAnalyzing();
         try
         {
             var content = _build();
-            var snapshot = _store.PublishSuccess(content);
+            ServeSnapshot snapshot;
+            lock (_generationGate)
+            {
+                if (_requestedGeneration > requestedGeneration)
+                    return;
+                snapshot = _store.PublishSuccess(content);
+            }
             _onPublished?.Invoke(snapshot);
         }
         catch (Exception ex)
         {
-            // Keep the previous snapshot; surface the failure as stale state.
-            _store.PublishFailure(ex.Message);
-            _onFailed?.Invoke(ex.Message);
+            var failure = ServeAnalysisFailureClassifier.Classify(ex);
+            lock (_generationGate)
+            {
+                if (_requestedGeneration > requestedGeneration)
+                    return;
+                _store.PublishFailure(failure);
+            }
+            _onFailed?.Invoke(failure, ex);
         }
+        finally
+        {
+            bool rerun;
+            lock (_generationGate)
+            {
+                _consumedGeneration = requestedGeneration;
+                rerun = _requestedGeneration > requestedGeneration;
+            }
+            if (rerun)
+                _wake.Set();
+        }
+    }
+
+    long GetRequestedGeneration()
+    {
+        lock (_generationGate)
+            return _requestedGeneration;
     }
 
     public void Dispose()

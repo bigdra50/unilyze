@@ -22,11 +22,40 @@ public sealed class ServeAnalysisLoopTests
             return new ServeSnapshotContent(
                 bytes, $"\"etag-{n}\"", DateTimeOffset.UtcNow,
                 new ServeAnalysisMetrics(1.0, bytes.Length),
-                new Dictionary<string, string>(), new Dictionary<string, string>());
+                new Dictionary<string, string>(), new Dictionary<string, string>(), []);
         }
 
         bool _throwNext;
         public void SetThrowNext() => Volatile.Write(ref _throwNext, true);
+    }
+
+    sealed class BlockingBuilder
+    {
+        readonly ManualResetEventSlim _firstBuildStarted = new(false);
+        readonly ManualResetEventSlim _releaseFirstBuild = new(false);
+        int _count;
+
+        public int Count => Volatile.Read(ref _count);
+
+        public bool WaitForFirstBuild(TimeSpan timeout) => _firstBuildStarted.Wait(timeout);
+
+        public void ReleaseFirstBuild() => _releaseFirstBuild.Set();
+
+        public ServeSnapshotContent Build()
+        {
+            var n = Interlocked.Increment(ref _count);
+            if (n == 1)
+            {
+                _firstBuildStarted.Set();
+                _releaseFirstBuild.Wait(TimeSpan.FromSeconds(5));
+            }
+
+            var bytes = Encoding.UTF8.GetBytes($"{{\"n\":{n}}}");
+            return new ServeSnapshotContent(
+                bytes, $"\"etag-{n}\"", DateTimeOffset.UtcNow,
+                new ServeAnalysisMetrics(1.0, bytes.Length),
+                new Dictionary<string, string>(), new Dictionary<string, string>(), []);
+        }
     }
 
     static bool WaitUntil(Func<bool> predicate, int timeoutMs = 3000)
@@ -97,5 +126,38 @@ public sealed class ServeAnalysisLoopTests
         coordinator.RequestAnalysis();
         Assert.True(WaitUntil(() =>
             store.GetState().Phase == ServePhase.Ready && !ReferenceEquals(store.Current, previous)));
+    }
+
+    [Fact]
+    public async Task WaitForChangeAsync_WhenCancelled_StopsWaiting()
+    {
+        var store = new SnapshotStore();
+        using var cancellation = new CancellationTokenSource();
+        var wait = store.WaitForChangeAsync(
+            store.GetState().Generation,
+            TimeSpan.FromSeconds(25),
+            cancellation.Token);
+
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => wait);
+    }
+
+    [Fact]
+    public void ChangeDuringAnalysis_DiscardsOlderGeneration()
+    {
+        var store = new SnapshotStore();
+        var builder = new BlockingBuilder();
+        using var coordinator = new AnalysisCoordinator(
+            store, builder.Build, TimeSpan.FromMilliseconds(20));
+
+        coordinator.Start();
+        Assert.True(builder.WaitForFirstBuild(TimeSpan.FromSeconds(3)));
+        coordinator.RequestAnalysis();
+        builder.ReleaseFirstBuild();
+
+        Assert.True(WaitUntil(() => store.GetState().Phase == ServePhase.Ready));
+        Assert.Equal(2, builder.Count);
+        Assert.Equal("\"etag-2\"", store.Current?.ETag);
     }
 }

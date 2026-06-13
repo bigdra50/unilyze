@@ -25,7 +25,8 @@ internal sealed record ServeSnapshotContent(
     DateTimeOffset AnalyzedAtUtc,
     ServeAnalysisMetrics Metrics,
     IReadOnlyDictionary<string, string> FileIdToAbsolutePath,
-    IReadOnlyDictionary<string, string> FileIdToDisplayPath);
+    IReadOnlyDictionary<string, string> FileIdToDisplayPath,
+    IReadOnlyList<string> AllowedSourceRoots);
 
 /// <summary>An immutable successful snapshot, tagged with the generation it was published at.</summary>
 internal sealed record ServeSnapshot(long Generation, ServeSnapshotContent Content)
@@ -46,5 +47,6 @@ internal sealed record ServeStateView(
     long? SnapshotGeneration,
     string? SnapshotETag,
     DateTimeOffset? LastSuccessUtc,
+    string? LastErrorCode,
     string? LastError,
     ServeAnalysisMetrics? LastMetrics);

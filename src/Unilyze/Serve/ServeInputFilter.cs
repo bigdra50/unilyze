@@ -16,7 +16,7 @@ internal static class ServeInputFilter
 
     static readonly HashSet<string> ExcludedSegments = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".git", "obj", "bin", "Temp", ".unilyze", "node_modules", "Logs",
+        ".git", "obj", "bin", "Temp", "node_modules", "Logs",
     };
 
     public static bool IsRelevant(string fullPath, string projectRoot)
@@ -46,6 +46,16 @@ internal static class ServeInputFilter
         }
 
         var fileName = segments.Length > 0 ? segments[^1] : string.Empty;
+
+        if (segments.Length > 1
+            && string.Equals(segments[0], ".unilyze", StringComparison.OrdinalIgnoreCase))
+        {
+            return segments.Length == 2
+                && string.Equals(fileName, "triage.json", StringComparison.OrdinalIgnoreCase);
+        }
+
+        if (string.Equals(fileName, ".unilyze.json", StringComparison.OrdinalIgnoreCase))
+            return true;
 
         // Unity editor version pins the analysis level / defines.
         if (string.Equals(fileName, "ProjectVersion.txt", StringComparison.OrdinalIgnoreCase)

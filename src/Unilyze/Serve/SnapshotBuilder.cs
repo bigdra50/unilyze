@@ -18,8 +18,13 @@ namespace Unilyze.Serve;
 internal sealed class SnapshotBuilder
 {
     readonly ServeOptions _options;
+    readonly string _projectRoot;
 
-    public SnapshotBuilder(ServeOptions options) => _options = options;
+    public SnapshotBuilder(ServeOptions options)
+    {
+        _options = options;
+        _projectRoot = ProgramHelpers.ResolveProjectRoot(options.Path);
+    }
 
     public ServeSnapshotContent Build()
     {
@@ -27,7 +32,7 @@ internal sealed class SnapshotBuilder
         var result = RunAnalysis();
         var analysisMillis = sw.Elapsed.TotalMilliseconds;
 
-        var sanitized = SnapshotSanitizer.Sanitize(result);
+        var sanitized = SnapshotSanitizer.Sanitize(result, [_projectRoot]);
         var json = JsonSerializer.Serialize(sanitized.Result, AnalysisJsonContext.Default.AnalysisResult);
         var bytes = Encoding.UTF8.GetBytes(json);
 
@@ -37,15 +42,31 @@ internal sealed class SnapshotBuilder
             AnalyzedAtUtc: DateTimeOffset.UtcNow,
             Metrics: new ServeAnalysisMetrics(analysisMillis, bytes.Length),
             FileIdToAbsolutePath: sanitized.FileIdToAbsolutePath,
-            FileIdToDisplayPath: sanitized.FileIdToDisplayPath);
+            FileIdToDisplayPath: sanitized.FileIdToDisplayPath,
+            AllowedSourceRoots: sanitized.AllowedSourceRoots);
+    }
+
+    public IReadOnlyList<string> ResolveWatchedInputPaths()
+    {
+        var paths = new List<string>
+        {
+            UnilyzeConfig.GetGlobalConfigPath(),
+            UnilyzeConfig.GetProjectConfigPath(_projectRoot),
+        };
+        var config = UnilyzeConfig.LoadMerged(_projectRoot, _options.ExcludeDirs, _options.Profile);
+        if (config.Baseline is { } baselinePath)
+            paths.Add(BaselineFile.ResolvePath(_projectRoot, baselinePath));
+        paths.Add(config.Triage is { } triagePath
+            ? TriageFile.ResolvePath(_projectRoot, triagePath)
+            : TriageFile.DefaultPath(_projectRoot));
+        return paths;
     }
 
     AnalysisResult RunAnalysis()
     {
-        var projectRoot = ProgramHelpers.ResolveProjectRoot(_options.Path);
-        var config = UnilyzeConfig.LoadMerged(projectRoot, _options.ExcludeDirs, _options.Profile);
+        var config = UnilyzeConfig.LoadMerged(_projectRoot, _options.ExcludeDirs, _options.Profile);
         var referenceOpts = BuildReferenceOpts();
-        var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(projectRoot, referenceOpts);
+        var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(_projectRoot, referenceOpts);
         var resolved = config.ResolveAnalysisConfig();
 
         var result = AnalysisPipeline.Build(
@@ -62,11 +83,26 @@ internal sealed class SnapshotBuilder
 
         var baselinePath = config.Baseline;
         if (baselinePath is not null)
-            ProgramHelpers.TryApplyBaseline(result, projectRoot, baselinePath, out result);
+        {
+            if (ProgramHelpers.TryApplyBaseline(
+                    result, _projectRoot, baselinePath, out result) is 1)
+            {
+                throw new ServeAnalysisException(
+                    "BASELINE_APPLY_FAILED",
+                    "The configured baseline could not be applied.",
+                    $"Failed to apply baseline '{BaselineFile.ResolvePath(_projectRoot, baselinePath)}'.");
+            }
+        }
 
         var emptyOpts = new Dictionary<string, string>();
-        var triagePath = TriageApplication.ResolvePath(emptyOpts, config, projectRoot);
-        TriageApplication.TryApply(result, triagePath, out result);
+        var triagePath = TriageApplication.ResolvePath(emptyOpts, config, _projectRoot);
+        if (TriageApplication.TryApply(result, triagePath, out result) is 1)
+        {
+            throw new ServeAnalysisException(
+                "TRIAGE_APPLY_FAILED",
+                "The configured triage file could not be applied.",
+                $"Failed to apply triage file '{triagePath}'.");
+        }
 
         return result;
     }

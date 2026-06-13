@@ -12,6 +12,9 @@ namespace Unilyze.Serve;
 internal sealed class ServeHttpHandler
 {
     static readonly TimeSpan LongPollTimeout = TimeSpan.FromSeconds(25);
+    static readonly TimeSpan LongPollHeartbeat = TimeSpan.FromSeconds(1);
+    static readonly byte[] JsonWhitespace = [(byte)' '];
+    const int MaxConcurrentLongPolls = 16;
 
     // default-src 'none' denies everything not explicitly allowed; scripts/vendor/styles are
     // same-origin; style stays 'unsafe-inline' until the viewer's inline style attrs are removed.
@@ -23,6 +26,8 @@ internal sealed class ServeHttpHandler
     readonly ServeAuth _auth;
     readonly SnapshotStore _store;
     readonly string _title;
+    readonly object _longPollGate = new();
+    readonly LinkedList<CancellationTokenSource> _activeLongPolls = new();
 
     public ServeHttpHandler(ServeAuth auth, SnapshotStore store, string title)
     {
@@ -31,7 +36,7 @@ internal sealed class ServeHttpHandler
         _title = title;
     }
 
-    public void Handle(HttpListenerContext context)
+    public async Task HandleAsync(HttpListenerContext context, CancellationToken cancellationToken)
     {
         var request = context.Request;
 
@@ -74,7 +79,7 @@ internal sealed class ServeHttpHandler
                 return;
             }
 
-            HandleApi(context, path);
+            await HandleApiAsync(context, path, cancellationToken);
             return;
         }
 
@@ -110,7 +115,10 @@ internal sealed class ServeHttpHandler
         return reader.ReadToEnd();
     }
 
-    void HandleApi(HttpListenerContext context, string path)
+    async Task HandleApiAsync(
+        HttpListenerContext context,
+        string path,
+        CancellationToken cancellationToken)
     {
         if (!string.Equals(context.Request.HttpMethod, "GET", StringComparison.Ordinal))
         {
@@ -121,7 +129,7 @@ internal sealed class ServeHttpHandler
         switch (path)
         {
             case "/api/state":
-                HandleState(context);
+                await HandleStateAsync(context, cancellationToken);
                 break;
             case "/api/snapshot":
                 HandleSnapshot(context);
@@ -139,11 +147,71 @@ internal sealed class ServeHttpHandler
         }
     }
 
-    void HandleState(HttpListenerContext context)
+    async Task HandleStateAsync(HttpListenerContext context, CancellationToken cancellationToken)
     {
-        var after = ParseAfter(context.Request.QueryString["after"]);
-        var state = _store.WaitForChange(after, LongPollTimeout);
-        WriteJson(context, 200, ServeStateJson.Build(state));
+        var pollCancellation =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        LinkedListNode<CancellationTokenSource> pollNode;
+        CancellationTokenSource? evicted = null;
+        lock (_longPollGate)
+        {
+            if (_activeLongPolls.Count >= MaxConcurrentLongPolls)
+            {
+                evicted = _activeLongPolls.First!.Value;
+                _activeLongPolls.RemoveFirst();
+            }
+            pollNode = _activeLongPolls.AddLast(pollCancellation);
+        }
+        try { evicted?.Cancel(); } catch (ObjectDisposedException) { }
+
+        try
+        {
+            var after = ParseAfter(context.Request.QueryString["after"]);
+            var response = context.Response;
+            response.StatusCode = 200;
+            response.ContentType = "application/json; charset=utf-8";
+            response.Headers["X-Content-Type-Options"] = "nosniff";
+            response.Headers["Cache-Control"] = "no-store";
+            response.SendChunked = true;
+
+            var waitTask = _store.WaitForChangeAsync(
+                after, LongPollTimeout, pollCancellation.Token);
+            try
+            {
+                while (!waitTask.IsCompleted)
+                {
+                    var heartbeat = Task.Delay(LongPollHeartbeat, pollCancellation.Token);
+                    if (await Task.WhenAny(waitTask, heartbeat) == waitTask)
+                        break;
+
+                    await response.OutputStream.WriteAsync(
+                        JsonWhitespace, pollCancellation.Token);
+                    await response.OutputStream.FlushAsync(pollCancellation.Token);
+                }
+
+                var state = await waitTask;
+                var body = Encoding.UTF8.GetBytes(ServeStateJson.Build(state));
+                await response.OutputStream.WriteAsync(body, cancellationToken);
+                response.OutputStream.Close();
+            }
+            catch (Exception ex) when (ex is IOException
+                or HttpListenerException
+                or ObjectDisposedException)
+            {
+                pollCancellation.Cancel();
+                try { await waitTask; } catch (OperationCanceledException) { }
+                throw;
+            }
+        }
+        finally
+        {
+            lock (_longPollGate)
+            {
+                if (pollNode.List is not null)
+                    _activeLongPolls.Remove(pollNode);
+            }
+            pollCancellation.Dispose();
+        }
     }
 
     void HandleSnapshot(HttpListenerContext context)
@@ -199,10 +267,20 @@ internal sealed class ServeHttpHandler
             return;
         }
 
+        if (!SourcePathBoundary.TryResolveAllowedFile(
+                absolutePath,
+                snapshot.Content.AllowedSourceRoots,
+                out var resolvedPath)
+            || !SourcePathBoundary.PathComparer.Equals(resolvedPath, absolutePath))
+        {
+            WriteStatus(context, 404, "Source unavailable");
+            return;
+        }
+
         string text;
         try
         {
-            text = File.ReadAllText(absolutePath);
+            text = File.ReadAllText(resolvedPath);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FileNotFoundException or DirectoryNotFoundException)
         {

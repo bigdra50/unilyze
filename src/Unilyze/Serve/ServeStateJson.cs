@@ -33,6 +33,11 @@ internal static class ServeStateJson
             else
                 writer.WriteNull("lastSuccessUtc");
 
+            if (state.LastErrorCode is { } errorCode)
+                writer.WriteString("lastErrorCode", errorCode);
+            else
+                writer.WriteNull("lastErrorCode");
+
             if (state.LastError is { } error)
                 writer.WriteString("lastError", error);
             else

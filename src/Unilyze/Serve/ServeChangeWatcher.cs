@@ -1,36 +1,53 @@
 namespace Unilyze.Serve;
 
 /// <summary>
-/// Detects analysis-input changes two ways: a <see cref="FileSystemWatcher"/> for
-/// immediacy, and a low-frequency fingerprint reconcile that recovers events the
-/// watcher dropped. Every relevant notification (and every fingerprint divergence)
-/// invokes <c>onChange</c>; downstream coalescing collapses bursts into one analysis.
+/// Serializes watcher notifications and periodic fingerprint reconciliation so one input
+/// change advances the analysis generation once.
 /// </summary>
 internal sealed class ServeChangeWatcher : IDisposable
 {
     readonly string _projectRoot;
-    readonly Action _onChange;
+    readonly Func<long> _onChange;
+    readonly Func<IReadOnlyCollection<string>> _resolveExplicitInputs;
     readonly TimeSpan _reconcileInterval;
-    readonly object _gate = new();
+    readonly SemaphoreSlim _reconcileGate = new(1, 1);
+    readonly CancellationTokenSource _cts = new();
 
     FileSystemWatcher? _watcher;
     Timer? _reconcileTimer;
     string _fingerprint = string.Empty;
-    bool _disposed;
+    int _disposed;
 
-    public ServeChangeWatcher(string projectRoot, Action onChange, TimeSpan? reconcileInterval = null)
+    public ServeChangeWatcher(
+        string projectRoot,
+        Func<long> onChange,
+        Func<IReadOnlyCollection<string>>? resolveExplicitInputs = null,
+        TimeSpan? reconcileInterval = null)
     {
         _projectRoot = projectRoot;
         _onChange = onChange;
+        _resolveExplicitInputs = resolveExplicitInputs ?? (() => []);
         _reconcileInterval = reconcileInterval ?? TimeSpan.FromSeconds(2);
     }
 
     public void Start()
     {
-        _fingerprint = ServeInputFingerprint.Compute(_projectRoot);
-        TryStartFileSystemWatcher();
+        _reconcileGate.Wait();
+        try
+        {
+            TryStartFileSystemWatcher();
+            _fingerprint = ComputeFingerprint();
+        }
+        finally
+        {
+            _reconcileGate.Release();
+        }
 
-        _reconcileTimer = new Timer(_ => Reconcile(), null, _reconcileInterval, _reconcileInterval);
+        _reconcileTimer = new Timer(
+            _ => _ = ReconcileAsync(),
+            null,
+            _reconcileInterval,
+            _reconcileInterval);
     }
 
     void TryStartFileSystemWatcher()
@@ -53,63 +70,69 @@ internal sealed class ServeChangeWatcher : IDisposable
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
-            // Fall back to reconcile-only mode (e.g., inotify watch limit reached).
-            Console.Error.WriteLine($"unilyze serve: file watcher unavailable ({ex.Message}); using periodic reconcile only.");
+            Console.Error.WriteLine(
+                $"unilyze serve: file watcher unavailable ({ex.Message}); using periodic reconcile only.");
         }
     }
 
     void OnFileSystemEvent(object sender, FileSystemEventArgs e)
     {
         if (ServeInputFilter.IsRelevant(e.FullPath, _projectRoot))
-            _onChange();
+            _ = ReconcileAsync();
     }
 
     void OnRenamed(object sender, RenamedEventArgs e)
     {
         if (ServeInputFilter.IsRelevant(e.FullPath, _projectRoot)
             || ServeInputFilter.IsRelevant(e.OldFullPath, _projectRoot))
-            _onChange();
+            _ = ReconcileAsync();
     }
 
-    void OnWatcherError(object sender, ErrorEventArgs e)
-    {
-        // Buffer overflow: events were dropped. Force a reconcile to catch up.
-        Reconcile(force: true);
-    }
+    void OnWatcherError(object sender, ErrorEventArgs e) =>
+        _ = ReconcileAsync(force: true);
 
-    void Reconcile(bool force = false)
+    async Task ReconcileAsync(bool force = false)
     {
-        string current;
         try
         {
-            current = ServeInputFingerprint.Compute(_projectRoot);
+            await _reconcileGate.WaitAsync(_cts.Token);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        catch (OperationCanceledException)
         {
             return;
         }
 
-        bool changed;
-        lock (_gate)
+        try
         {
-            changed = force || !string.Equals(current, _fingerprint, StringComparison.Ordinal);
-            _fingerprint = current;
+            var current = ComputeFingerprint();
+            var previous = Interlocked.Exchange(ref _fingerprint, current);
+            if (!_cts.IsCancellationRequested
+                && (force || !string.Equals(current, previous, StringComparison.Ordinal)))
+                _onChange();
         }
-
-        if (changed)
-            _onChange();
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+        }
+        finally
+        {
+            _reconcileGate.Release();
+        }
     }
+
+    string ComputeFingerprint() =>
+        ServeInputFingerprint.Compute(_projectRoot, _resolveExplicitInputs());
 
     public void Dispose()
     {
-        lock (_gate)
-        {
-            if (_disposed)
-                return;
-            _disposed = true;
-        }
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            return;
 
+        _cts.Cancel();
         try { _watcher?.Dispose(); } catch { /* best effort */ }
         try { _reconcileTimer?.Dispose(); } catch { /* best effort */ }
+        _reconcileGate.Wait();
+        _reconcileGate.Release();
+        _cts.Dispose();
+        _reconcileGate.Dispose();
     }
 }

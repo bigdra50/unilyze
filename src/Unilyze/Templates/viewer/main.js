@@ -711,6 +711,8 @@ let nsHealthMap = new Map();
 let els = [];
 let typesByNamespace = new Map();
 let dependencyElements = [];
+let hotMethods = null;
+let hotTypes = null;
 let _mc = null;
 const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
 
@@ -919,6 +921,8 @@ function buildDerivedState(data){
   buildNamespaceTree();
   buildNamespaceHealth();
   buildElements();
+  hotMethods = null;
+  hotTypes = null;
 }
 
 // Build the initial derived state from the embedded/empty snapshot before cy init.
@@ -1178,6 +1182,14 @@ function rebuild(){
     const additions=desiredTypes
       .filter(t=>cy.getElementById('t:'+typeKey(t)).empty())
       .map(typeNodeElement);
+    desiredTypes.forEach(t=>{
+      const node=cy.getElementById('t:'+typeKey(t));
+      if(node.empty()) return;
+      const element=typeNodeElement(t);
+      updateNodeData(node,element.data);
+      const parentId=element.data.parent;
+      if(!node.parent().length||node.parent().id()!==parentId) node.move({parent:parentId});
+    });
     if(additions.length) cy.add(additions);
     materializedNamespaces.add(ns);
   });
@@ -1782,8 +1794,10 @@ function appendHighlightedCSharp(el,text){
 
 async function openSource(fileId,startLine){
   if(!_sp||typeof window.unilyzeFetchSource!=='function') return;
+  const request=++_sourceRequest;
   try{
     const r=await window.unilyzeFetchSource(fileId);
+    if(request!==_sourceRequest) return;
     if(_spPath) _spPath.textContent=r.path||'';
     if(_spBody){
       if(/\.cs$/i.test(r.path||'')) appendHighlightedCSharp(_spBody,r.text);
@@ -1794,6 +1808,7 @@ async function openSource(fileId,startLine){
       _spBody.scrollTop=(ln-1)*lh;
     }
   }catch(err){
+    if(request!==_sourceRequest) return;
     if(_spBody){ _spBody.textContent='Failed to load source: '+err.message; _sp.classList.remove('hidden'); }
   }
 }
@@ -1802,7 +1817,11 @@ if(dc) dc.addEventListener('click',e=>{
   if(b) openSource(b.dataset.fileid, parseInt(b.dataset.line,10));
 });
 const _spClose=document.getElementById('spClose');
-if(_spClose) _spClose.onclick=()=>{ if(_sp) _sp.classList.add('hidden'); };
+let _sourceRequest=0;
+if(_spClose) _spClose.onclick=()=>{
+  _sourceRequest++;
+  if(_sp) _sp.classList.add('hidden');
+};
 
 // --- Search UX (#75): helpers shared with offline keyboard handling ---
 const SEARCH_EXPAND_CAP=50;
@@ -2098,20 +2117,21 @@ document.getElementById('bFit').onclick=()=>{
 document.getElementById('bLay').onclick=()=>{rebuild();layout()};
 
 // --- Legend ---
-(function(){
+function renderLegend(){
   let h='<b>Assemblies</b> ';
   asm.forEach(a=>{
     const c=ac[a.name]||'#6e7681';
     const s=a.name.split('.').pop();
-    h+='<div class="li"><div class="sw" style="background:'+c+'"></div>'+s+'</div>';
+    h+='<div class="li"><div class="sw" style="background:'+c+'"></div>'+esc(s)+'</div>';
   });
   h+='<div class="sep" style="width:1px;height:14px;background:#1e2538"></div><b>Edges</b> ';
   Object.entries(DC).forEach(([k,c])=>{
     const d=DS[k]||{s:'solid'};
-    h+='<div class="li"><div class="el" style="border-bottom:2px '+d.s+' '+c+'"></div>'+k+'</div>';
+    h+='<div class="li"><div class="el" style="border-bottom:2px '+d.s+' '+c+'"></div>'+esc(k)+'</div>';
   });
   document.getElementById('lg').innerHTML=h;
-})();
+}
+renderLegend();
 
 let stText=DATA.types.length+' types \u00b7 '+DATA.dependencies.length+' deps \u00b7 '+asm.length+' assemblies';
 const asmWithHealth=asm.filter(a=>a.healthMetrics);
@@ -2283,7 +2303,6 @@ function navigateToType(typeName){
 }
 
 // --- Feature 1: Hotspot Panel ---
-let hotMethods=null,hotTypes=null;
 function buildHotspots(){
   if(hotMethods) return;
   hotMethods=[];
@@ -2556,12 +2575,29 @@ document.getElementById('cycList').addEventListener('click',e=>{
 // --- Live snapshot application (serve mode) ---
 // Reconcile the namespace summary/compound nodes that cy was seeded with; rebuild()
 // then reconciles type nodes + edges incrementally. No cy.destroy(), no reload.
+function updateNodeData(node,data){
+  const next=Object.assign({},data);
+  delete next.parent;
+  Object.keys(node.data()).forEach(key=>{
+    if(key!=='id'&&key!=='parent'&&!Object.prototype.hasOwnProperty.call(next,key))
+      node.removeData(key);
+  });
+  node.data(next);
+}
+
 function reconcileNamespaceNodes(){
   const desiredIds=new Set(els.map(e=>e.data.id));
   cy.nodes('[nodeType="namespace"],[nodeType="compound"]').forEach(n=>{
     if(!desiredIds.has(n.id())) n.remove();
   });
   const existing=new Set(cy.nodes().map(n=>n.id()));
+  els.forEach(e=>{
+    const node=cy.getElementById(e.data.id);
+    if(node.empty()) return;
+    const d=Object.assign({},e.data);
+    if(_mc&&d.label!=null) d.nw=_mw(d.label, d.nodeType==='namespace'?_mf.ns:_mf.type);
+    updateNodeData(node,d);
+  });
   const additions=els.filter(e=>!existing.has(e.data.id)).map(e=>{
     const d=Object.assign({},e.data);
     if(_mc&&d.label!=null) d.nw=_mw(d.label, d.nodeType==='namespace'?_mf.ns:_mf.type);
@@ -2581,18 +2617,39 @@ function refreshStats(){
   document.getElementById('st').textContent=stText;
 }
 
+function closeSnapshotPanels(){
+  dp.classList.add('hidden');
+  _sourceRequest++;
+  if(_sp) _sp.classList.add('hidden');
+}
+
+function refreshOpenSnapshotPanels(){
+  const hotspotPanel=document.getElementById('hp');
+  if(!hotspotPanel.classList.contains('hidden')){
+    const tab=document.querySelector('.lp-tab.active[data-panel="hp"]')?.dataset.tab||'methods';
+    renderHotspots(tab,document.getElementById('hpSort').value);
+  }
+  if(!document.getElementById('cycp').classList.contains('hidden')) renderCyclePanel();
+  if(!document.getElementById('asmOv').classList.contains('hidden')) renderAsmModal();
+}
+
 let _snapshotApplied=false;
 function applySnapshot(data){
   performance.mark('unilyze-apply-start');
+  closeSnapshotPanels();
   buildDerivedState(data);
   if(!cy) return;
+  [...expanded].forEach(ns=>{if(!nsTree.has(ns)) expanded.delete(ns)});
+  clearCycleHighlight();
+  detectCycles();
   reconcileNamespaceNodes();
   rebuild();
   const isFirst=!_snapshotApplied;
   _snapshotApplied=true;
   layout(isFirst); // fit to frame the first snapshot; preserve viewport on later updates
-  detectCycles();
+  renderLegend();
   refreshStats();
+  refreshOpenSnapshotPanels();
   markBadgesDirty(); rebuildBadges();
   if(document.getElementById('q')) runGraphSearch();
   performance.mark('unilyze-apply-end');

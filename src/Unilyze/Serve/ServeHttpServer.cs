@@ -2,13 +2,6 @@ using System.Net;
 
 namespace Unilyze.Serve;
 
-/// <summary>
-/// A loopback-only <see cref="HttpListener"/> wrapper. LAN exposure is intentionally
-/// out of scope, so the bind address is always <see cref="IPAddress.Loopback"/> and
-/// there is no <c>--host</c>. Because <see cref="HttpListener"/> exposes no API to read
-/// back an OS-assigned port (so port 0 is unusable), we either bind the requested
-/// <c>--port</c> or probe random high ports and retry on conflict.
-/// </summary>
 internal sealed class ServeHttpServer : IDisposable
 {
     const int MinEphemeralPort = 49152;
@@ -18,6 +11,8 @@ internal sealed class ServeHttpServer : IDisposable
     readonly IPAddress _address;
     readonly int? _requestedPort;
     HttpListener? _listener;
+    CancellationTokenSource? _requestShutdown;
+    Task? _acceptTask;
 
     public ServeHttpServer(IPAddress address, int? requestedPort)
     {
@@ -85,57 +80,69 @@ internal sealed class ServeHttpServer : IDisposable
         return listener;
     }
 
-    /// <summary>
-    /// Spins up a background accept loop. Each request is dispatched to the thread pool
-    /// so a blocking long-poll handler cannot starve the listener. The returned token
-    /// registration stops the listener on cancellation, unblocking the loop.
-    /// </summary>
-    public IDisposable RunAcceptLoop(Action<HttpListenerContext> handler, CancellationToken token)
+    public IDisposable RunAcceptLoop(
+        Func<HttpListenerContext, CancellationToken, Task> handler,
+        CancellationToken token)
     {
         var listener = _listener ?? throw new InvalidOperationException("Server not started.");
+        _requestShutdown = CancellationTokenSource.CreateLinkedTokenSource(token);
         var registration = token.Register(Stop);
-
-        var thread = new Thread(() => AcceptLoop(listener, handler, token))
-        {
-            IsBackground = true,
-            Name = "unilyze-serve-accept",
-        };
-        thread.Start();
-
-        return registration;
+        _acceptTask = AcceptLoopAsync(listener, handler, _requestShutdown.Token);
+        return new AcceptLoopLifetime(this, registration);
     }
 
-    static void AcceptLoop(HttpListener listener, Action<HttpListenerContext> handler, CancellationToken token)
+    static async Task AcceptLoopAsync(
+        HttpListener listener,
+        Func<HttpListenerContext, CancellationToken, Task> handler,
+        CancellationToken token)
     {
+        var requests = new HashSet<Task>();
         while (!token.IsCancellationRequested && listener.IsListening)
         {
             HttpListenerContext context;
             try
             {
-                context = listener.GetContext();
+                context = await listener.GetContextAsync();
             }
             catch (Exception) when (token.IsCancellationRequested || !listener.IsListening)
             {
-                return;
+                break;
             }
             catch (HttpListenerException)
             {
-                return;
+                break;
             }
             catch (ObjectDisposedException)
             {
-                return;
+                break;
             }
 
-            ThreadPool.QueueUserWorkItem(_ => DispatchSafely(handler, context));
+            var request = DispatchSafelyAsync(handler, context, token);
+            lock (requests)
+            {
+                requests.RemoveWhere(task => task.IsCompleted);
+                requests.Add(request);
+            }
         }
+
+        Task[] pending;
+        lock (requests)
+            pending = requests.ToArray();
+        await Task.WhenAll(pending);
     }
 
-    static void DispatchSafely(Action<HttpListenerContext> handler, HttpListenerContext context)
+    static async Task DispatchSafelyAsync(
+        Func<HttpListenerContext, CancellationToken, Task> handler,
+        HttpListenerContext context,
+        CancellationToken token)
     {
         try
         {
-            handler(context);
+            await handler(context, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            TryAbort(context);
         }
         catch (Exception)
         {
@@ -151,7 +158,6 @@ internal sealed class ServeHttpServer : IDisposable
         }
         catch
         {
-            // The client may already be gone; nothing more to do.
         }
     }
 
@@ -163,19 +169,58 @@ internal sealed class ServeHttpServer : IDisposable
         }
         catch
         {
-            // Already stopped/disposed.
         }
     }
 
     public void Dispose()
     {
+        _requestShutdown?.Cancel();
         try
         {
             _listener?.Close();
         }
         catch
         {
-            // Best-effort teardown.
+        }
+        try
+        {
+            _acceptTask?.Wait(TimeSpan.FromSeconds(5));
+        }
+        catch
+        {
+        }
+        _requestShutdown?.Dispose();
+    }
+
+    sealed class AcceptLoopLifetime : IDisposable
+    {
+        readonly ServeHttpServer _server;
+        readonly CancellationTokenRegistration _registration;
+        int _disposed;
+
+        public AcceptLoopLifetime(
+            ServeHttpServer server,
+            CancellationTokenRegistration registration)
+        {
+            _server = server;
+            _registration = registration;
+        }
+
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+                return;
+
+            _registration.Dispose();
+            _server._requestShutdown?.Cancel();
+            _server.Stop();
+            try
+            {
+                _server._acceptTask?.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch
+            {
+            }
         }
     }
 }

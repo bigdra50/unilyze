@@ -11,15 +11,44 @@ namespace Unilyze.Serve;
 /// </summary>
 internal static class ServeInputFingerprint
 {
-    public static string Compute(string projectRoot)
+    public static string Compute(
+        string projectRoot,
+        IReadOnlyCollection<string>? explicitInputPaths = null)
     {
         var entries = new List<string>();
         EnumerateRelevantFiles(projectRoot, entries);
+        AppendExplicitInputs(projectRoot, explicitInputPaths, entries);
         entries.Sort(StringComparer.Ordinal);
 
         using var sha = SHA256.Create();
         var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(string.Join('\n', entries)));
         return Convert.ToHexString(bytes);
+    }
+
+    static void AppendExplicitInputs(
+        string projectRoot,
+        IReadOnlyCollection<string>? explicitInputPaths,
+        List<string> entries)
+    {
+        if (explicitInputPaths is not { Count: > 0 })
+            return;
+
+        foreach (var path in explicitInputPaths.Distinct(SourcePathBoundary.PathComparer))
+        {
+            var fullPath = Path.GetFullPath(path);
+            try
+            {
+                var info = new FileInfo(fullPath);
+                var name = Path.GetRelativePath(projectRoot, fullPath).Replace('\\', '/');
+                entries.Add(info.Exists
+                    ? $"explicit:{name}|{info.Length}|{info.LastWriteTimeUtc.Ticks}"
+                    : $"explicit:{name}|missing");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                entries.Add($"explicit:{fullPath}|unavailable");
+            }
+        }
     }
 
     static void EnumerateRelevantFiles(string projectRoot, List<string> entries)

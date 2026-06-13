@@ -32,36 +32,30 @@ internal sealed class ServeApp
         var store = new SnapshotStore();
         var handler = new ServeHttpHandler(auth, store, title);
         var builder = new SnapshotBuilder(_options);
-        // Keep absolute paths out of client-facing failure messages (the stale banner shows
-        // lastError); the loopback root is reduced to its display name.
-        ServeSnapshotContent BuildSanitized()
-        {
-            try { return builder.Build(); }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(ex.Message.Replace(projectRoot, title, StringComparison.Ordinal));
-            }
-        }
         using var coordinator = new AnalysisCoordinator(
             store,
-            BuildSanitized,
+            builder.Build,
             onPublished: snapshot => Console.Error.WriteLine(
                 $"gen {snapshot.Generation}: analysis {snapshot.Content.Metrics.AnalysisMillis:F0}ms, "
                 + $"json {snapshot.Content.Metrics.JsonSizeBytes} bytes"),
-            onFailed: error => Console.Error.WriteLine($"analysis failed (snapshot kept stale): {error}"));
-        using var watcher = new ServeChangeWatcher(projectRoot, coordinator.RequestAnalysis);
+            onFailed: (failure, exception) => Console.Error.WriteLine(
+                $"analysis failed [{failure.Code}] (snapshot kept stale): {exception}"));
+        using var watcher = new ServeChangeWatcher(
+            projectRoot,
+            coordinator.RequestAnalysis,
+            builder.ResolveWatchedInputPaths);
 
         Console.Error.WriteLine($"unilyze serve listening on {url}");
         Console.Error.WriteLine($"Watching {projectRoot}");
         Console.Error.WriteLine("Press Ctrl-C to stop.");
 
-        coordinator.Start();
         watcher.Start();
+        coordinator.Start();
 
         if (!_options.NoOpen)
             ProgramHelpers.TryOpenInBrowser(url);
 
-        using var acceptLoop = server.RunAcceptLoop(handler.Handle, shutdown.Token);
+        using var acceptLoop = server.RunAcceptLoop(handler.HandleAsync, shutdown.Token);
 
         shutdown.Token.WaitHandle.WaitOne();
         Console.Error.WriteLine("Shutting down...");

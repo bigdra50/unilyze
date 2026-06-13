@@ -36,13 +36,28 @@
     var headers = Object.assign({}, authHeaders);
     if (etag) headers['If-None-Match'] = etag;
     var res = await fetch('/api/snapshot', { headers: headers });
-    if (res.status === 304) return false; // unchanged
-    if (res.status === 503) return false;  // no snapshot yet
+    if (res.status === 304) throw new Error('snapshot not updated');
+    if (res.status === 503) throw new Error('snapshot not ready');
     if (!res.ok) throw new Error('snapshot HTTP ' + res.status);
-    etag = res.headers.get('ETag') || etag;
+    var nextEtag = res.headers.get('ETag');
+    if (!nextEtag) throw new Error('snapshot response missing ETag');
     var data = await res.json();
-    window.unilyzeApplySnapshot(data);
+    await Promise.resolve(window.unilyzeApplySnapshot(data));
+    etag = nextEtag;
     return true;
+  }
+
+  async function applyLatestSnapshot() {
+    setSnapshotPending();
+    while (!stopped) {
+      try {
+        await fetchSnapshot();
+        return;
+      } catch (e) {
+        setSnapshotFailure(e);
+        await sleep(1000);
+      }
+    }
   }
 
   async function pollLoop() {
@@ -63,10 +78,11 @@
         continue;
       }
       generation = state.generation;
-      updateStatus(state);
       if (state.snapshotGeneration != null && state.snapshotEtag !== etag) {
-        try { await fetchSnapshot(); } catch (e) { /* keep the prior snapshot */ }
+        await applyLatestSnapshot();
       }
+      if (stopped) return;
+      updateStatus(state);
     }
   }
 
@@ -93,6 +109,22 @@
       dotEl.className = 'ss-dot ss-reconnect';
       if (textEl) textEl.textContent = 'reconnecting…';
     }
+  }
+
+  function setSnapshotPending() {
+    if (dotEl) dotEl.className = 'ss-dot ss-analyzing';
+    if (textEl) textEl.textContent = 'updating…';
+    setStale(true, 'Updating snapshot — showing the last good result');
+  }
+
+  function setSnapshotFailure(error) {
+    var message = error && error.message ? error.message : String(error);
+    if (dotEl) dotEl.className = 'ss-dot ss-failed';
+    if (textEl) textEl.textContent = 'snapshot update failed — showing stale result';
+    if (timeEl) timeEl.textContent = message ? (' · ' + message) : '';
+    setStale(true, 'Snapshot update failed — showing the last good result'
+      + (message ? (' · ' + message) : ''));
+    console.warn('[unilyze] snapshot update failed; retrying', error);
   }
 
   function formatTime(iso) {

@@ -27,7 +27,13 @@ public sealed class ServeE2eTests : IDisposable
         }
     }
 
-    sealed record StateView(long Generation, string Phase, long? SnapshotGeneration, string? SnapshotEtag, string? LastError);
+    sealed record StateView(
+        long Generation,
+        string Phase,
+        long? SnapshotGeneration,
+        string? SnapshotEtag,
+        string? LastErrorCode,
+        string? LastError);
 
     static async Task<string> TokenAsync(ServeProcess serve)
     {
@@ -56,10 +62,12 @@ public sealed class ServeE2eTests : IDisposable
             ? null : root.GetProperty("snapshotEtag").GetString();
         string? err = root.GetProperty("lastError").ValueKind == JsonValueKind.Null
             ? null : root.GetProperty("lastError").GetString();
+        string? errCode = root.GetProperty("lastErrorCode").ValueKind == JsonValueKind.Null
+            ? null : root.GetProperty("lastErrorCode").GetString();
         return new StateView(
             root.GetProperty("generation").GetInt64(),
             root.GetProperty("phase").GetString() ?? "",
-            snapGen, etag, err);
+            snapGen, etag, errCode, err);
     }
 
     static async Task<StateView> WaitForPhaseAsync(ServeProcess serve, string token, string phase, int timeoutMs = 40000)
@@ -208,6 +216,142 @@ public sealed class ServeE2eTests : IDisposable
 
         using var noAuth = await serve.Client.GetAsync($"{serve.BaseUrl}api/source?fileId={fileId}");
         Assert.Equal(HttpStatusCode.Unauthorized, noAuth.StatusCode);
+    }
+
+    [Fact]
+    public async Task SourceBoundary_ExternalSlnProject_HasNoSourceFileId()
+    {
+        var dir = NewProject();
+        var outside = NewProject();
+        File.WriteAllText(
+            Path.Combine(outside, "External.csproj"),
+            "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+        File.WriteAllText(
+            Path.Combine(outside, "ExternalLeak.cs"),
+            "namespace External; public class ExternalLeak { public string Secret => \"outside-secret\"; }\n");
+        File.WriteAllText(
+            Path.Combine(dir, "App.sln"),
+            "Microsoft Visual Studio Solution File, Format Version 12.00\n"
+            + "Project(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"External\", "
+            + $"\"{Path.GetRelativePath(dir, Path.Combine(outside, "External.csproj")).Replace('\\', '/')}\", "
+            + "\"{11111111-1111-1111-1111-111111111111}\"\n"
+            + "EndProject\nGlobal\nEndGlobal\n");
+        using var serve = ServeProcess.Start(dir);
+        var token = await TokenAsync(serve);
+        await WaitForReadyAsync(serve, token);
+
+        using var response = await serve.Client.SendAsync(Authed($"{serve.BaseUrl}api/snapshot", token));
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var externalType = document.RootElement.GetProperty("types").EnumerateArray()
+            .Single(type => type.GetProperty("name").GetString() == "ExternalLeak");
+
+        Assert.Equal(string.Empty, externalType.GetProperty("filePath").GetString());
+    }
+
+    [Fact]
+    public async Task SourceBoundary_SymlinkSwapAfterSnapshot_IsRejected()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        var dir = NewProject();
+        var outside = NewProject();
+        var outsideFile = Path.Combine(outside, "Secret.cs");
+        File.WriteAllText(outsideFile, "class Secret { const string Value = \"outside-secret\"; }");
+        using var serve = ServeProcess.Start(dir);
+        var token = await TokenAsync(serve);
+        await WaitForReadyAsync(serve, token);
+
+        using var snapshot = await serve.Client.SendAsync(Authed($"{serve.BaseUrl}api/snapshot", token));
+        using var document = JsonDocument.Parse(await snapshot.Content.ReadAsStringAsync());
+        var fileId = document.RootElement.GetProperty("types").EnumerateArray()
+            .Select(type => type.GetProperty("filePath").GetString())
+            .First(value => !string.IsNullOrEmpty(value))!;
+
+        File.Delete(Path.Combine(dir, "Alpha.cs"));
+        File.CreateSymbolicLink(Path.Combine(dir, "Alpha.cs"), outsideFile);
+
+        using var source = await serve.Client.SendAsync(
+            Authed($"{serve.BaseUrl}api/source?fileId={fileId}", token));
+        Assert.Equal(HttpStatusCode.NotFound, source.StatusCode);
+    }
+
+    [Fact]
+    public async Task Api_MaliciousOrigin_IsRejected()
+    {
+        using var serve = ServeProcess.Start(NewProject());
+        var token = await TokenAsync(serve);
+        var request = Authed($"{serve.BaseUrl}api/state", token);
+        request.Headers.TryAddWithoutValidation("Origin", "https://evil.example");
+
+        using var response = await serve.Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Api_WrongPortHost_IsRejected()
+    {
+        using var serve = ServeProcess.Start(NewProject());
+        var request = new HttpRequestMessage(HttpMethod.Get, serve.BaseUrl);
+        request.Headers.Host = "127.0.0.1:1";
+
+        using var response = await serve.Client.SendAsync(request);
+
+        Assert.NotEqual(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task DisconnectedLongPolls_ReleaseConcurrencySlots()
+    {
+        using var serve = ServeProcess.Start(NewProject());
+        var token = await TokenAsync(serve);
+        var ready = await WaitForReadyAsync(serve, token);
+        var cancellations = Enumerable.Range(0, 16)
+            .Select(_ => new CancellationTokenSource())
+            .ToList();
+        var requests = cancellations
+            .Select(cancellation => serve.Client.SendAsync(
+                Authed($"{serve.BaseUrl}api/state?after={ready.Generation}", token),
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellation.Token))
+            .ToList();
+        var responses = await Task.WhenAll(requests);
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+
+        foreach (var cancellation in cancellations)
+            cancellation.Cancel();
+        foreach (var response in responses)
+            response.Dispose();
+        foreach (var cancellation in cancellations)
+            cancellation.Dispose();
+        await Task.Delay(TimeSpan.FromSeconds(2.5));
+
+        using var recoveryCancellation = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+        using var recovery = await serve.Client.SendAsync(
+            Authed($"{serve.BaseUrl}api/state?after={ready.Generation}", token),
+            HttpCompletionOption.ResponseHeadersRead,
+            recoveryCancellation.Token);
+
+        Assert.Equal(HttpStatusCode.OK, recovery.StatusCode);
+    }
+
+    [Fact]
+    public async Task InvalidBaseline_KeepsSnapshotAndReturnsSafeError()
+    {
+        var dir = NewProject();
+        using var serve = ServeProcess.Start(dir);
+        var token = await TokenAsync(serve);
+        var ready = await WaitForReadyAsync(serve, token);
+
+        File.WriteAllText(
+            Path.Combine(dir, ".unilyze.json"),
+            "{\"baseline\":\"missing-baseline.json\"}");
+        var failed = await WaitForPhaseAsync(serve, token, "failed");
+
+        Assert.Equal("BASELINE_APPLY_FAILED", failed.LastErrorCode);
+        Assert.DoesNotContain(dir, failed.LastError ?? string.Empty);
+        Assert.Equal(ready.SnapshotEtag, failed.SnapshotEtag);
     }
 
     [Fact]

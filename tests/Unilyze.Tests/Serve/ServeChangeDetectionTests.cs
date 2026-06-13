@@ -29,6 +29,9 @@ public sealed class ServeChangeDetectionTests : IDisposable
     [InlineData("bin/Debug/App.dll", false)]
     [InlineData(".git/HEAD", false)]
     [InlineData(".unilyze/cache/snap.json", false)]
+    [InlineData(".unilyze/triage.json", true)]
+    [InlineData(".unilyze/baseline.json", false)]
+    [InlineData(".unilyze.json", true)]
     [InlineData("README.md", false)]
     [InlineData("Assets/Notes.txt", false)]
     public void IsRelevant_ClassifiesAnalysisInputs(string relativePath, bool expected)
@@ -87,5 +90,52 @@ public sealed class ServeChangeDetectionTests : IDisposable
         File.WriteAllText(Path.Combine(objDir, "Generated.cs"), "class G {}");
 
         Assert.Equal(before, ServeInputFingerprint.Compute(_root));
+    }
+
+    [Fact]
+    public void Fingerprint_ChangesWhenExplicitExternalInputChanges()
+    {
+        var external = Path.Combine(Path.GetTempPath(), $"unilyze-config-{Guid.NewGuid():N}.json");
+        try
+        {
+            File.WriteAllText(external, "{}");
+            var before = ServeInputFingerprint.Compute(_root, [external]);
+
+            File.WriteAllText(external, "{\"profile\":\"strict\"}");
+            File.SetLastWriteTimeUtc(external, DateTime.UtcNow.AddSeconds(5));
+
+            Assert.NotEqual(before, ServeInputFingerprint.Compute(_root, [external]));
+        }
+        finally
+        {
+            File.Delete(external);
+        }
+    }
+
+    [Fact]
+    public void Watcher_SourceEdit_IsConsumedOnceAcrossReconcile()
+    {
+        var source = Path.Combine(_root, "A.cs");
+        File.WriteAllText(source, "class A {}");
+        var count = 0;
+        using var changed = new ManualResetEventSlim();
+        using var watcher = new ServeChangeWatcher(
+            _root,
+            () =>
+            {
+                Interlocked.Increment(ref count);
+                changed.Set();
+                return count;
+            },
+            reconcileInterval: TimeSpan.FromMilliseconds(100));
+
+        watcher.Start();
+        File.WriteAllText(source, "class A { public int X; }");
+        File.SetLastWriteTimeUtc(source, DateTime.UtcNow.AddSeconds(5));
+
+        Assert.True(changed.Wait(TimeSpan.FromSeconds(5)));
+        changed.Reset();
+        Assert.False(changed.Wait(TimeSpan.FromMilliseconds(500)));
+        Assert.Equal(1, Volatile.Read(ref count));
     }
 }

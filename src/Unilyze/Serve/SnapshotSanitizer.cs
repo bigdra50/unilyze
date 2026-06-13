@@ -5,7 +5,8 @@ namespace Unilyze.Serve;
 internal sealed record SanitizedSnapshot(
     AnalysisResult Result,
     IReadOnlyDictionary<string, string> FileIdToAbsolutePath,
-    IReadOnlyDictionary<string, string> FileIdToDisplayPath);
+    IReadOnlyDictionary<string, string> FileIdToDisplayPath,
+    IReadOnlyList<string> AllowedSourceRoots);
 
 /// <summary>
 /// Strips absolute filesystem paths from a snapshot before it reaches the browser and
@@ -16,10 +17,13 @@ internal sealed record SanitizedSnapshot(
 /// </summary>
 internal static class SnapshotSanitizer
 {
-    public static SanitizedSnapshot Sanitize(AnalysisResult result)
+    public static SanitizedSnapshot Sanitize(
+        AnalysisResult result,
+        IEnumerable<string> allowedSourceRoots)
     {
-        var projectRoot = result.ProjectPath;
-        var idByPath = new Dictionary<string, string>(StringComparer.Ordinal);
+        var roots = SourcePathBoundary.ResolveAllowedRoots(allowedSourceRoots);
+        var projectRoot = roots.FirstOrDefault() ?? Path.GetFullPath(result.ProjectPath);
+        var idByPath = new Dictionary<string, string>(SourcePathBoundary.PathComparer);
         var absById = new Dictionary<string, string>(StringComparer.Ordinal);
         var displayById = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -27,13 +31,15 @@ internal static class SnapshotSanitizer
         {
             if (string.IsNullOrEmpty(absolutePath))
                 return null;
-            if (idByPath.TryGetValue(absolutePath, out var existing))
+            if (!SourcePathBoundary.TryResolveAllowedFile(absolutePath, roots, out var resolvedPath))
+                return null;
+            if (idByPath.TryGetValue(resolvedPath, out var existing))
                 return existing;
 
             var id = "f" + idByPath.Count.ToString();
-            idByPath[absolutePath] = id;
-            absById[id] = absolutePath;
-            displayById[id] = ToDisplayPath(projectRoot, absolutePath);
+            idByPath[resolvedPath] = id;
+            absById[id] = resolvedPath;
+            displayById[id] = ToDisplayPath(projectRoot, resolvedPath);
             return id;
         }
 
@@ -57,7 +63,7 @@ internal static class SnapshotSanitizer
             Assemblies = assemblies,
         };
 
-        return new SanitizedSnapshot(sanitized, absById, displayById);
+        return new SanitizedSnapshot(sanitized, absById, displayById, roots);
     }
 
     static string ToDisplayPath(string projectRoot, string absolutePath)
@@ -65,6 +71,9 @@ internal static class SnapshotSanitizer
         try
         {
             var rel = Path.GetRelativePath(projectRoot, absolutePath);
+            if (rel is ".." || rel.StartsWith("../", StringComparison.Ordinal)
+                || rel.StartsWith(@"..\", StringComparison.Ordinal))
+                return Path.GetFileName(absolutePath);
             return rel.Replace('\\', '/');
         }
         catch (ArgumentException)
