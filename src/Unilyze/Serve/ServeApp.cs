@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text;
 using Unilyze.Cli;
 
 namespace Unilyze.Serve;
@@ -25,18 +24,23 @@ internal sealed class ServeApp
         server.Start();
         var url = server.Url;
 
+        var auth = new ServeAuth(server.Port);
+        var handler = new ServeHttpHandler(auth);
+
         Console.Error.WriteLine($"unilyze serve listening on {url}");
         Console.Error.WriteLine("Press Ctrl-C to stop.");
 
         if (!_options.NoOpen)
             ProgramHelpers.TryOpenInBrowser(url);
 
-        using var acceptLoop = server.RunAcceptLoop(HandleRequest, shutdown.Token);
+        using var acceptLoop = server.RunAcceptLoop(handler.Handle, shutdown.Token);
 
         shutdown.Token.WaitHandle.WaitOne();
         Console.Error.WriteLine("Shutting down...");
         return 0;
     }
+
+    // (request handling now lives in ServeHttpHandler)
 
     void RegisterShutdownSignals(CancellationTokenSource shutdown)
     {
@@ -54,14 +58,5 @@ internal sealed class ServeApp
         };
     }
 
-    void HandleRequest(HttpListenerContext context)
-    {
-        // Placeholder response until the viewer + API endpoints land in later issues.
-        var body = Encoding.UTF8.GetBytes("unilyze serve is starting.\n");
-        context.Response.StatusCode = 200;
-        context.Response.ContentType = "text/plain; charset=utf-8";
-        context.Response.ContentLength64 = body.Length;
-        context.Response.OutputStream.Write(body, 0, body.Length);
-        context.Response.OutputStream.Close();
-    }
+    // Request handling lives in ServeHttpHandler.
 }
