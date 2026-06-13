@@ -65,7 +65,7 @@ public sealed class SyntaxCacheStoreTests : IDisposable
         SyntaxCacheStore.EnsureGitIgnore(_projectRoot);
         var gitIgnore = Path.Combine(_projectRoot, ".unilyze", "cache", ".gitignore");
         Assert.True(File.Exists(gitIgnore));
-        Assert.Equal("*" + Environment.NewLine, File.ReadAllText(gitIgnore));
+        Assert.Equal("*\n", File.ReadAllText(gitIgnore));
     }
 
     static SyntaxCacheManifest SampleManifest(string fingerprint) =>

@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ${{ matrix.os }}
+    # Belt-and-suspenders: caps the entire job at 20m so a deadlocked process
+    # that bypasses blame-hang still fails fast instead of consuming 6h.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +28,10 @@ jobs:
             framework: net10.0
 
     steps:
+      # MinVer needs full history + tags; shallow clones yield 0.0.0.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -34,8 +40,9 @@ jobs:
       - name: Restore
         run: dotnet restore tests/Unilyze.Tests/Unilyze.Tests.csproj
 
+      # Hang-blame aborts a hung run after 15m and prints the tests that were still running.
       - name: Test
-        run: dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f ${{ matrix.framework }} --no-restore -v minimal
+        run: dotnet test tests/Unilyze.Tests/Unilyze.Tests.csproj -f ${{ matrix.framework }} --no-restore -v minimal --blame-hang --blame-hang-timeout 15m --blame-hang-dump-type none
 
   # Self quality gate (issue #29): dogfood badge --fail-under on this repo.
   # Measured 2026-06-10 (SyntaxOnly, -p src/Unilyze, same scope as badges.yml): avg CodeHealth 9.7, min 8.0.
@@ -44,7 +51,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # MinVer needs full history + tags; shallow clones yield 0.0.0.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-dotnet@v4
         with:
