@@ -76,7 +76,8 @@ internal sealed record MemberInfo(
     double? HalsteadDifficulty = null,
     double? HalsteadEffort = null,
     double? HalsteadEstimatedBugs = null,
-    SourceLocation? Location = null);
+    SourceLocation? Location = null,
+    string? MemberId = null);
 
 internal sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
@@ -210,9 +211,9 @@ internal static class TypeAnalyzer
             ? baseList.Types.Select(t => t.Type.ToString()).ToList()
             : [];
 
-        var members = MemberExtractor.ExtractMembers(typeDecl).ToList();
+        var members = MemberExtractor.ExtractMembers(typeDecl, typeId).ToList();
         var ctorParams = MemberExtractor.ExtractConstructorParams(typeDecl).ToList();
-        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams);
+        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams, typeId);
 
         var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
 

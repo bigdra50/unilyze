@@ -38,7 +38,7 @@
         "averageCodeHealth": 9.9,
         "minCodeHealth": 5.5,
         "highComplexityTypeCount": 0,
-        "totalMethods": 92,
+        "totalMethods": 93,
         "averageCognitiveComplexity": 0.5,
         "locWeightedAverageCodeHealth": 9.6,
         "worstDecileCodeHealth": 8.8
@@ -77,7 +77,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 11
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodBoxing()"
         },
         {
           "name": "PropertyBoxing",
@@ -93,7 +94,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 20
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Property:PropertyBoxing"
         },
         {
           "name": "MethodClosure",
@@ -117,7 +119,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 26
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodClosure()"
         },
         {
           "name": "PropertyClosure",
@@ -133,7 +136,8 @@
             "fileRef": 0,
             "startLine": 28,
             "endLine": 35
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Property:PropertyClosure"
         },
         {
           "name": "MethodParams",
@@ -157,7 +161,8 @@
             "fileRef": 0,
             "startLine": 37,
             "endLine": 40
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodParams()"
         },
         {
           "name": "PropertyParams",
@@ -173,7 +178,8 @@
             "fileRef": 0,
             "startLine": 42,
             "endLine": 49
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Property:PropertyParams"
         },
         {
           "name": "LogParams",
@@ -202,7 +208,8 @@
             "fileRef": 0,
             "startLine": 51,
             "endLine": 51
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:LogParams(params int[])"
         },
         {
           "name": "SumParams",
@@ -231,7 +238,8 @@
             "fileRef": 0,
             "startLine": 53,
             "endLine": 53
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:SumParams(params int[])"
         }
       ],
       "constructorParams": [],
@@ -751,7 +759,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 22
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t01"
         },
         {
           "name": "_t02",
@@ -765,7 +774,8 @@
             "fileRef": 0,
             "startLine": 23,
             "endLine": 23
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t02"
         },
         {
           "name": "_t03",
@@ -779,7 +789,8 @@
             "fileRef": 0,
             "startLine": 24,
             "endLine": 24
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t03"
         },
         {
           "name": "_t04",
@@ -793,7 +804,8 @@
             "fileRef": 0,
             "startLine": 25,
             "endLine": 25
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t04"
         },
         {
           "name": "_t05",
@@ -807,7 +819,8 @@
             "fileRef": 0,
             "startLine": 26,
             "endLine": 26
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t05"
         },
         {
           "name": "_t06",
@@ -821,7 +834,8 @@
             "fileRef": 0,
             "startLine": 27,
             "endLine": 27
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t06"
         },
         {
           "name": "_t07",
@@ -835,7 +849,8 @@
             "fileRef": 0,
             "startLine": 28,
             "endLine": 28
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t07"
         },
         {
           "name": "_t08",
@@ -849,7 +864,8 @@
             "fileRef": 0,
             "startLine": 29,
             "endLine": 29
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t08"
         },
         {
           "name": "_t09",
@@ -863,7 +879,8 @@
             "fileRef": 0,
             "startLine": 30,
             "endLine": 30
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t09"
         },
         {
           "name": "_t10",
@@ -877,7 +894,8 @@
             "fileRef": 0,
             "startLine": 31,
             "endLine": 31
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t10"
         },
         {
           "name": "_t11",
@@ -891,7 +909,8 @@
             "fileRef": 0,
             "startLine": 32,
             "endLine": 32
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t11"
         },
         {
           "name": "_t12",
@@ -905,7 +924,8 @@
             "fileRef": 0,
             "startLine": 33,
             "endLine": 33
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t12"
         },
         {
           "name": "_t13",
@@ -919,7 +939,8 @@
             "fileRef": 0,
             "startLine": 34,
             "endLine": 34
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t13"
         },
         {
           "name": "_t14",
@@ -933,7 +954,8 @@
             "fileRef": 0,
             "startLine": 35,
             "endLine": 35
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t14"
         },
         {
           "name": "_t15",
@@ -947,7 +969,8 @@
             "fileRef": 0,
             "startLine": 36,
             "endLine": 36
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t15"
         },
         {
           "name": "_t16",
@@ -961,7 +984,8 @@
             "fileRef": 0,
             "startLine": 37,
             "endLine": 37
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Field:_t16"
         },
         {
           "name": "TouchAll",
@@ -985,7 +1009,8 @@
             "fileRef": 0,
             "startLine": 39,
             "endLine": 57
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Method:TouchAll()"
         }
       ],
       "constructorParams": [],
@@ -1030,7 +1055,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA|Field:Partner"
         }
       ],
       "constructorParams": [],
@@ -1075,7 +1101,8 @@
             "fileRef": 0,
             "startLine": 10,
             "endLine": 10
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB|Field:Partner"
         }
       ],
       "constructorParams": [],
@@ -1191,7 +1218,8 @@
             "fileRef": 0,
             "startLine": 11,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller|Method:Configure(IContainerBuilder)"
         }
       ],
       "constructorParams": [],
@@ -1471,7 +1499,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 25
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget|Method:DeeplyNested(int,int,int,int,int,int)"
         }
       ],
       "constructorParams": [],
@@ -1532,7 +1561,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnCreate(ref SystemState)"
         },
         {
           "name": "OnUpdate",
@@ -1561,7 +1591,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "name": "OnDestroy",
@@ -1590,7 +1621,8 @@
             "fileRef": 0,
             "startLine": 9,
             "endLine": 9
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "constructorParams": [],
@@ -1651,7 +1683,8 @@
             "fileRef": 0,
             "startLine": 15,
             "endLine": 15
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnCreate(ref SystemState)"
         },
         {
           "name": "OnUpdate",
@@ -1680,7 +1713,8 @@
             "fileRef": 0,
             "startLine": 16,
             "endLine": 16
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "name": "OnDestroy",
@@ -1709,7 +1743,8 @@
             "fileRef": 0,
             "startLine": 17,
             "endLine": 17
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "constructorParams": [],
@@ -1855,7 +1890,8 @@
             "fileRef": 0,
             "startLine": 29,
             "endLine": 29
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent|Field:Target"
         },
         {
           "name": "Value",
@@ -1871,7 +1907,8 @@
             "fileRef": 0,
             "startLine": 30,
             "endLine": 30
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent|Field:Value"
         }
       ],
       "constructorParams": [],
@@ -1918,7 +1955,8 @@
             "fileRef": 0,
             "startLine": 35,
             "endLine": 35
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.ManagedComponent|Field:Label"
         }
       ],
       "constructorParams": [],
@@ -1965,7 +2003,8 @@
             "fileRef": 0,
             "startLine": 40,
             "endLine": 40
-          }
+          },
+          "memberId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass|Field:Label"
         }
       ],
       "constructorParams": [],
@@ -2047,7 +2086,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget|Method:TooMany(int,int,int,int,int,int,int)"
         }
       ],
       "constructorParams": [],
@@ -2090,7 +2130,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Field:_a"
         },
         {
           "name": "_b",
@@ -2104,7 +2145,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Field:_b"
         },
         {
           "name": "_c",
@@ -2118,7 +2160,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Field:_c"
         },
         {
           "name": "_d",
@@ -2132,7 +2175,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Field:_d"
         },
         {
           "name": "_e",
@@ -2146,7 +2190,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Field:_e"
         },
         {
           "name": "M01",
@@ -2170,7 +2215,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M01()"
         },
         {
           "name": "M02",
@@ -2194,7 +2240,8 @@
             "fileRef": 0,
             "startLine": 9,
             "endLine": 9
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M02()"
         },
         {
           "name": "M03",
@@ -2218,7 +2265,8 @@
             "fileRef": 0,
             "startLine": 10,
             "endLine": 10
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M03()"
         },
         {
           "name": "M04",
@@ -2242,7 +2290,8 @@
             "fileRef": 0,
             "startLine": 11,
             "endLine": 11
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M04()"
         },
         {
           "name": "M05",
@@ -2266,7 +2315,8 @@
             "fileRef": 0,
             "startLine": 12,
             "endLine": 12
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M05()"
         },
         {
           "name": "M06",
@@ -2290,7 +2340,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 13
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M06()"
         },
         {
           "name": "M07",
@@ -2314,7 +2365,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M07()"
         },
         {
           "name": "M08",
@@ -2338,7 +2390,8 @@
             "fileRef": 0,
             "startLine": 15,
             "endLine": 15
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M08()"
         },
         {
           "name": "M09",
@@ -2362,7 +2415,8 @@
             "fileRef": 0,
             "startLine": 16,
             "endLine": 16
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M09()"
         },
         {
           "name": "M10",
@@ -2386,7 +2440,8 @@
             "fileRef": 0,
             "startLine": 17,
             "endLine": 17
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M10()"
         },
         {
           "name": "M11",
@@ -2410,7 +2465,8 @@
             "fileRef": 0,
             "startLine": 18,
             "endLine": 18
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M11()"
         },
         {
           "name": "M12",
@@ -2434,7 +2490,8 @@
             "fileRef": 0,
             "startLine": 19,
             "endLine": 19
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M12()"
         },
         {
           "name": "M13",
@@ -2458,7 +2515,8 @@
             "fileRef": 0,
             "startLine": 20,
             "endLine": 20
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M13()"
         },
         {
           "name": "M14",
@@ -2482,7 +2540,8 @@
             "fileRef": 0,
             "startLine": 21,
             "endLine": 21
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M14()"
         },
         {
           "name": "M15",
@@ -2506,7 +2565,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 22
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M15()"
         },
         {
           "name": "M16",
@@ -2530,7 +2590,8 @@
             "fileRef": 0,
             "startLine": 23,
             "endLine": 23
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M16()"
         },
         {
           "name": "M17",
@@ -2554,7 +2615,8 @@
             "fileRef": 0,
             "startLine": 24,
             "endLine": 24
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M17()"
         },
         {
           "name": "M18",
@@ -2578,7 +2640,8 @@
             "fileRef": 0,
             "startLine": 25,
             "endLine": 25
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M18()"
         },
         {
           "name": "M19",
@@ -2602,7 +2665,8 @@
             "fileRef": 0,
             "startLine": 26,
             "endLine": 26
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M19()"
         },
         {
           "name": "M20",
@@ -2626,7 +2690,8 @@
             "fileRef": 0,
             "startLine": 27,
             "endLine": 27
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M20()"
         },
         {
           "name": "M21",
@@ -2650,7 +2715,8 @@
             "fileRef": 0,
             "startLine": 28,
             "endLine": 28
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M21()"
         }
       ],
       "constructorParams": [],
@@ -2708,7 +2774,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 24
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget|Method:Branchy(int)"
         }
       ],
       "constructorParams": [],
@@ -2766,7 +2833,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 94
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LongMethodTarget|Method:RunLongMethod(int)"
         }
       ],
       "constructorParams": [],
@@ -2809,7 +2877,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f01"
         },
         {
           "name": "_f02",
@@ -2823,7 +2892,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f02"
         },
         {
           "name": "_f03",
@@ -2837,7 +2907,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f03"
         },
         {
           "name": "_f04",
@@ -2851,7 +2922,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f04"
         },
         {
           "name": "_f05",
@@ -2865,7 +2937,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f05"
         },
         {
           "name": "_f06",
@@ -2879,7 +2952,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f06"
         },
         {
           "name": "_f07",
@@ -2893,7 +2967,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f07"
         },
         {
           "name": "_f08",
@@ -2907,7 +2982,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f08"
         },
         {
           "name": "_f09",
@@ -2921,7 +2997,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f09"
         },
         {
           "name": "_f10",
@@ -2935,7 +3012,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Field:_f10"
         },
         {
           "name": "Use01",
@@ -2959,7 +3037,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use01()"
         },
         {
           "name": "Use02",
@@ -2983,7 +3062,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use02()"
         },
         {
           "name": "Use03",
@@ -3007,7 +3087,8 @@
             "fileRef": 0,
             "startLine": 9,
             "endLine": 9
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use03()"
         },
         {
           "name": "Use04",
@@ -3031,7 +3112,8 @@
             "fileRef": 0,
             "startLine": 10,
             "endLine": 10
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use04()"
         },
         {
           "name": "Use05",
@@ -3055,7 +3137,8 @@
             "fileRef": 0,
             "startLine": 11,
             "endLine": 11
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use05()"
         },
         {
           "name": "Use06",
@@ -3079,7 +3162,8 @@
             "fileRef": 0,
             "startLine": 12,
             "endLine": 12
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use06()"
         },
         {
           "name": "Use07",
@@ -3103,7 +3187,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 13
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use07()"
         },
         {
           "name": "Use08",
@@ -3127,7 +3212,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use08()"
         },
         {
           "name": "Use09",
@@ -3151,7 +3237,8 @@
             "fileRef": 0,
             "startLine": 15,
             "endLine": 15
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use09()"
         },
         {
           "name": "Use10",
@@ -3175,7 +3262,8 @@
             "fileRef": 0,
             "startLine": 16,
             "endLine": 16
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use10()"
         }
       ],
       "constructorParams": [],
@@ -3269,7 +3357,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 32
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget|Method:Opaque(int,int,int,int,int,int,int,int,int,int)"
         }
       ],
       "constructorParams": [],
@@ -3313,7 +3402,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:_a"
         },
         {
           "name": "_b",
@@ -3327,7 +3417,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:_b"
         },
         {
           "name": "_c",
@@ -3341,7 +3432,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:_c"
         },
         {
           "name": "_d",
@@ -3355,7 +3447,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:_d"
         },
         {
           "name": "_e",
@@ -3369,7 +3462,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:_e"
         },
         {
           "name": "wiredTarget",
@@ -3387,7 +3481,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Field:wiredTarget"
         },
         {
           "name": "M01",
@@ -3411,7 +3506,8 @@
             "fileRef": 0,
             "startLine": 10,
             "endLine": 10
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M01()"
         },
         {
           "name": "M02",
@@ -3435,7 +3531,8 @@
             "fileRef": 0,
             "startLine": 11,
             "endLine": 11
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M02()"
         },
         {
           "name": "M03",
@@ -3459,7 +3556,8 @@
             "fileRef": 0,
             "startLine": 12,
             "endLine": 12
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M03()"
         },
         {
           "name": "M04",
@@ -3483,7 +3581,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 13
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M04()"
         },
         {
           "name": "M05",
@@ -3507,7 +3606,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M05()"
         },
         {
           "name": "M06",
@@ -3531,7 +3631,8 @@
             "fileRef": 0,
             "startLine": 15,
             "endLine": 15
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M06()"
         },
         {
           "name": "M07",
@@ -3555,7 +3656,8 @@
             "fileRef": 0,
             "startLine": 16,
             "endLine": 16
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M07()"
         },
         {
           "name": "M08",
@@ -3579,7 +3681,8 @@
             "fileRef": 0,
             "startLine": 17,
             "endLine": 17
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M08()"
         },
         {
           "name": "M09",
@@ -3603,7 +3706,8 @@
             "fileRef": 0,
             "startLine": 18,
             "endLine": 18
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M09()"
         },
         {
           "name": "M10",
@@ -3627,7 +3731,8 @@
             "fileRef": 0,
             "startLine": 19,
             "endLine": 19
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M10()"
         },
         {
           "name": "M11",
@@ -3651,7 +3756,8 @@
             "fileRef": 0,
             "startLine": 20,
             "endLine": 20
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M11()"
         },
         {
           "name": "M12",
@@ -3675,7 +3781,8 @@
             "fileRef": 0,
             "startLine": 21,
             "endLine": 21
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M12()"
         },
         {
           "name": "M13",
@@ -3699,7 +3806,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 22
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M13()"
         },
         {
           "name": "M14",
@@ -3723,7 +3831,8 @@
             "fileRef": 0,
             "startLine": 23,
             "endLine": 23
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M14()"
         },
         {
           "name": "M15",
@@ -3747,7 +3856,8 @@
             "fileRef": 0,
             "startLine": 24,
             "endLine": 24
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M15()"
         },
         {
           "name": "M16",
@@ -3771,7 +3881,8 @@
             "fileRef": 0,
             "startLine": 25,
             "endLine": 25
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M16()"
         },
         {
           "name": "M17",
@@ -3795,7 +3906,8 @@
             "fileRef": 0,
             "startLine": 26,
             "endLine": 26
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M17()"
         },
         {
           "name": "M18",
@@ -3819,7 +3931,8 @@
             "fileRef": 0,
             "startLine": 27,
             "endLine": 27
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M18()"
         },
         {
           "name": "M19",
@@ -3843,7 +3956,8 @@
             "fileRef": 0,
             "startLine": 28,
             "endLine": 28
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M19()"
         },
         {
           "name": "M20",
@@ -3867,7 +3981,8 @@
             "fileRef": 0,
             "startLine": 29,
             "endLine": 29
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M20()"
         },
         {
           "name": "M21",
@@ -3891,7 +4006,8 @@
             "fileRef": 0,
             "startLine": 30,
             "endLine": 30
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M21()"
         }
       ],
       "constructorParams": [],
@@ -3935,7 +4051,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f01"
         },
         {
           "name": "_f02",
@@ -3949,7 +4066,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f02"
         },
         {
           "name": "_f03",
@@ -3963,7 +4081,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f03"
         },
         {
           "name": "_f04",
@@ -3977,7 +4096,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f04"
         },
         {
           "name": "_f05",
@@ -3991,7 +4111,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f05"
         },
         {
           "name": "_f06",
@@ -4005,7 +4126,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f06"
         },
         {
           "name": "_f07",
@@ -4019,7 +4141,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f07"
         },
         {
           "name": "_f08",
@@ -4033,7 +4156,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f08"
         },
         {
           "name": "_f09",
@@ -4047,7 +4171,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f09"
         },
         {
           "name": "_f10",
@@ -4061,7 +4186,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Field:_f10"
         },
         {
           "name": "Use01",
@@ -4085,7 +4211,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use01()"
         },
         {
           "name": "Use02",
@@ -4109,7 +4236,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use02()"
         },
         {
           "name": "Use03",
@@ -4133,7 +4261,8 @@
             "fileRef": 0,
             "startLine": 9,
             "endLine": 9
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use03()"
         },
         {
           "name": "Use04",
@@ -4157,7 +4286,8 @@
             "fileRef": 0,
             "startLine": 10,
             "endLine": 10
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use04()"
         },
         {
           "name": "Use05",
@@ -4181,7 +4311,8 @@
             "fileRef": 0,
             "startLine": 11,
             "endLine": 11
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use05()"
         },
         {
           "name": "Use06",
@@ -4205,7 +4336,8 @@
             "fileRef": 0,
             "startLine": 12,
             "endLine": 12
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use06()"
         },
         {
           "name": "Use07",
@@ -4229,7 +4361,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 13
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use07()"
         },
         {
           "name": "Use08",
@@ -4253,7 +4386,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use08()"
         },
         {
           "name": "Use09",
@@ -4277,7 +4411,8 @@
             "fileRef": 0,
             "startLine": 15,
             "endLine": 15
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use09()"
         },
         {
           "name": "Use10",
@@ -4301,7 +4436,8 @@
             "fileRef": 0,
             "startLine": 16,
             "endLine": 16
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use10()"
         }
       ],
       "constructorParams": [],
@@ -4441,7 +4577,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.MonoBehaviour|Field:transform"
         }
       ],
       "constructorParams": [],
@@ -4492,7 +4629,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 13
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Vector3|Field:zero"
         },
         {
           "name": "op_Addition",
@@ -4526,7 +4664,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 14
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Vector3|Operator:op_Addition(Vector3,Vector3)"
         }
       ],
       "constructorParams": [],
@@ -4571,7 +4710,8 @@
             "fileRef": 0,
             "startLine": 19,
             "endLine": 19
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Field:position"
         },
         {
           "name": "Translate",
@@ -4600,7 +4740,8 @@
             "fileRef": 0,
             "startLine": 20,
             "endLine": 20
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:Translate(Vector3)"
         },
         {
           "name": "Rotate",
@@ -4629,7 +4770,8 @@
             "fileRef": 0,
             "startLine": 21,
             "endLine": 21
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:Rotate(Vector3)"
         },
         {
           "name": "RotateAround",
@@ -4666,7 +4808,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 22
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:RotateAround(Vector3,Vector3,float)"
         }
       ],
       "constructorParams": [],
@@ -4713,7 +4856,8 @@
             "fileRef": 0,
             "startLine": 27,
             "endLine": 27
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Time|Field:deltaTime"
         },
         {
           "name": "time",
@@ -4730,7 +4874,8 @@
             "fileRef": 0,
             "startLine": 28,
             "endLine": 28
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Time|Field:time"
         }
       ],
       "constructorParams": [],
@@ -4790,7 +4935,8 @@
             "fileRef": 0,
             "startLine": 33,
             "endLine": 33
-          }
+          },
+          "memberId": "Assembly-CSharp::UnityEngine.Mathf|Method:Sin(float)"
         }
       ],
       "constructorParams": [],
@@ -4846,7 +4992,8 @@
             "fileRef": 0,
             "startLine": 5,
             "endLine": 5
-          }
+          },
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnCreate(ref SystemState)"
         },
         {
           "name": "OnUpdate",
@@ -4873,7 +5020,8 @@
             "fileRef": 0,
             "startLine": 6,
             "endLine": 6
-          }
+          },
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "name": "OnDestroy",
@@ -4900,7 +5048,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "constructorParams": [],
@@ -5085,7 +5234,8 @@
             "fileRef": 0,
             "startLine": 22,
             "endLine": 22
-          }
+          },
+          "memberId": "Assembly-CSharp::Unity.Entities.Entity|Field:Index"
         }
       ],
       "constructorParams": [],
@@ -5137,7 +5287,8 @@
             "fileRef": 0,
             "startLine": 13,
             "endLine": 19
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget|Method:Update()"
         }
       ],
       "constructorParams": [],
@@ -5225,7 +5376,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions|Method:Register\u00602(IContainerBuilder)"
         },
         {
           "name": "Register",
@@ -5255,7 +5407,8 @@
             "fileRef": 0,
             "startLine": 8,
             "endLine": 8
-          }
+          },
+          "memberId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions|Method:Register\u00601(IContainerBuilder)"
         }
       ],
       "constructorParams": [],
@@ -5299,7 +5452,8 @@
             "fileRef": 0,
             "startLine": 7,
             "endLine": 7
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget|Field:velocity"
         },
         {
           "name": "Update",
@@ -5321,7 +5475,8 @@
             "fileRef": 0,
             "startLine": 9,
             "endLine": 12
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget|Method:Update()"
         },
         {
           "name": "ScaledUpdate",
@@ -5343,7 +5498,8 @@
             "fileRef": 0,
             "startLine": 14,
             "endLine": 17
-          }
+          },
+          "memberId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget|Method:ScaledUpdate()"
         }
       ],
       "constructorParams": [],
@@ -5758,7 +5914,8 @@
           "maintainabilityIndex": 78.3,
           "halsteadDifficulty": 1,
           "halsteadEffort": 8,
-          "halsteadEstimatedBugs": 0.0013
+          "halsteadEstimatedBugs": 0.0013,
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodBoxing()"
         },
         {
           "methodName": "MethodClosure",
@@ -5771,7 +5928,8 @@
           "maintainabilityIndex": 76.3,
           "halsteadDifficulty": 2,
           "halsteadEffort": 31,
-          "halsteadEstimatedBugs": 0.0033
+          "halsteadEstimatedBugs": 0.0033,
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodClosure()"
         },
         {
           "methodName": "MethodParams",
@@ -5784,7 +5942,8 @@
           "maintainabilityIndex": 82,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:MethodParams()"
         },
         {
           "methodName": "LogParams",
@@ -5797,7 +5956,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:LogParams(params int[])"
         },
         {
           "methodName": "SumParams",
@@ -5810,7 +5970,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.AllocationPatterns|Method:SumParams(params int[])"
         }
       ],
       "cbo": 1,
@@ -6423,7 +6584,8 @@
           "maintainabilityIndex": 61.4,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub|Method:TouchAll()"
         }
       ],
       "cbo": 16,
@@ -6598,7 +6760,8 @@
           "maintainabilityIndex": 82,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller|Method:Configure(IContainerBuilder)"
         }
       ],
       "cbo": 3,
@@ -6872,7 +7035,8 @@
           "maintainabilityIndex": 57.7,
           "halsteadDifficulty": 14,
           "halsteadEffort": 845.2,
-          "halsteadEstimatedBugs": 0.0298
+          "halsteadEstimatedBugs": 0.0298,
+          "memberId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget|Method:DeeplyNested(int,int,int,int,int,int)"
         }
       ],
       "cbo": 0,
@@ -6951,7 +7115,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnCreate(ref SystemState)"
         },
         {
           "methodName": "OnUpdate",
@@ -6964,7 +7129,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "methodName": "OnDestroy",
@@ -6977,7 +7143,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "cbo": 2,
@@ -7033,7 +7200,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnCreate(ref SystemState)"
         },
         {
           "methodName": "OnUpdate",
@@ -7046,7 +7214,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "methodName": "OnDestroy",
@@ -7059,7 +7228,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "cbo": 3,
@@ -7306,7 +7476,8 @@
           "maintainabilityIndex": 87.4,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget|Method:TooMany(int,int,int,int,int,int,int)"
         }
       ],
       "cbo": 0,
@@ -7361,7 +7532,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M01()"
         },
         {
           "methodName": "M02",
@@ -7374,7 +7546,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M02()"
         },
         {
           "methodName": "M03",
@@ -7387,7 +7560,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M03()"
         },
         {
           "methodName": "M04",
@@ -7400,7 +7574,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M04()"
         },
         {
           "methodName": "M05",
@@ -7413,7 +7588,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M05()"
         },
         {
           "methodName": "M06",
@@ -7426,7 +7602,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M06()"
         },
         {
           "methodName": "M07",
@@ -7439,7 +7616,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M07()"
         },
         {
           "methodName": "M08",
@@ -7452,7 +7630,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M08()"
         },
         {
           "methodName": "M09",
@@ -7465,7 +7644,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M09()"
         },
         {
           "methodName": "M10",
@@ -7478,7 +7658,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M10()"
         },
         {
           "methodName": "M11",
@@ -7491,7 +7672,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M11()"
         },
         {
           "methodName": "M12",
@@ -7504,7 +7686,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M12()"
         },
         {
           "methodName": "M13",
@@ -7517,7 +7700,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M13()"
         },
         {
           "methodName": "M14",
@@ -7530,7 +7714,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M14()"
         },
         {
           "methodName": "M15",
@@ -7543,7 +7728,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M15()"
         },
         {
           "methodName": "M16",
@@ -7556,7 +7742,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M16()"
         },
         {
           "methodName": "M17",
@@ -7569,7 +7756,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M17()"
         },
         {
           "methodName": "M18",
@@ -7582,7 +7770,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M18()"
         },
         {
           "methodName": "M19",
@@ -7595,7 +7784,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M19()"
         },
         {
           "methodName": "M20",
@@ -7608,7 +7798,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M20()"
         },
         {
           "methodName": "M21",
@@ -7621,7 +7812,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.GodClassTarget|Method:M21()"
         }
       ],
       "lcom": 0.84,
@@ -7683,7 +7875,8 @@
           "maintainabilityIndex": 51.5,
           "halsteadDifficulty": 2.91,
           "halsteadEffort": 1031.9,
-          "halsteadEstimatedBugs": 0.034
+          "halsteadEstimatedBugs": 0.034,
+          "memberId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget|Method:Branchy(int)"
         }
       ],
       "cbo": 0,
@@ -7746,7 +7939,8 @@
           "maintainabilityIndex": 35.9,
           "halsteadDifficulty": 1.5,
           "halsteadEffort": 1680.5,
-          "halsteadEstimatedBugs": 0.0471
+          "halsteadEstimatedBugs": 0.0471,
+          "memberId": "Assembly-CSharp::GoldenFixture.LongMethodTarget|Method:RunLongMethod(int)"
         }
       ],
       "cbo": 0,
@@ -7809,7 +8003,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use01()"
         },
         {
           "methodName": "Use02",
@@ -7822,7 +8017,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use02()"
         },
         {
           "methodName": "Use03",
@@ -7835,7 +8031,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use03()"
         },
         {
           "methodName": "Use04",
@@ -7848,7 +8045,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use04()"
         },
         {
           "methodName": "Use05",
@@ -7861,7 +8059,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use05()"
         },
         {
           "methodName": "Use06",
@@ -7874,7 +8073,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use06()"
         },
         {
           "methodName": "Use07",
@@ -7887,7 +8087,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use07()"
         },
         {
           "methodName": "Use08",
@@ -7900,7 +8101,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use08()"
         },
         {
           "methodName": "Use09",
@@ -7913,7 +8115,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use09()"
         },
         {
           "methodName": "Use10",
@@ -7926,7 +8129,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget|Method:Use10()"
         }
       ],
       "lcom": 1,
@@ -7981,7 +8185,8 @@
           "maintainabilityIndex": 45.9,
           "halsteadDifficulty": 39.38,
           "halsteadEffort": 27679,
-          "halsteadEstimatedBugs": 0.305
+          "halsteadEstimatedBugs": 0.305,
+          "memberId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget|Method:Opaque(int,int,int,int,int,int,int,int,int,int)"
         }
       ],
       "cbo": 0,
@@ -8052,7 +8257,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M01()"
         },
         {
           "methodName": "M02",
@@ -8065,7 +8271,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M02()"
         },
         {
           "methodName": "M03",
@@ -8078,7 +8285,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M03()"
         },
         {
           "methodName": "M04",
@@ -8091,7 +8299,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M04()"
         },
         {
           "methodName": "M05",
@@ -8104,7 +8313,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M05()"
         },
         {
           "methodName": "M06",
@@ -8117,7 +8327,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M06()"
         },
         {
           "methodName": "M07",
@@ -8130,7 +8341,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M07()"
         },
         {
           "methodName": "M08",
@@ -8143,7 +8355,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M08()"
         },
         {
           "methodName": "M09",
@@ -8156,7 +8369,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M09()"
         },
         {
           "methodName": "M10",
@@ -8169,7 +8383,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M10()"
         },
         {
           "methodName": "M11",
@@ -8182,7 +8397,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M11()"
         },
         {
           "methodName": "M12",
@@ -8195,7 +8411,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M12()"
         },
         {
           "methodName": "M13",
@@ -8208,7 +8425,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M13()"
         },
         {
           "methodName": "M14",
@@ -8221,7 +8439,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M14()"
         },
         {
           "methodName": "M15",
@@ -8234,7 +8453,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M15()"
         },
         {
           "methodName": "M16",
@@ -8247,7 +8467,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M16()"
         },
         {
           "methodName": "M17",
@@ -8260,7 +8481,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M17()"
         },
         {
           "methodName": "M18",
@@ -8273,7 +8495,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M18()"
         },
         {
           "methodName": "M19",
@@ -8286,7 +8509,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M19()"
         },
         {
           "methodName": "M20",
@@ -8299,7 +8523,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M20()"
         },
         {
           "methodName": "M21",
@@ -8312,7 +8537,8 @@
           "maintainabilityIndex": 95.1,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.8,
-          "halsteadEstimatedBugs": 0.0009
+          "halsteadEstimatedBugs": 0.0009,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget|Method:M21()"
         }
       ],
       "lcom": 0.88,
@@ -8376,7 +8602,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use01()"
         },
         {
           "methodName": "Use02",
@@ -8389,7 +8616,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use02()"
         },
         {
           "methodName": "Use03",
@@ -8402,7 +8630,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use03()"
         },
         {
           "methodName": "Use04",
@@ -8415,7 +8644,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use04()"
         },
         {
           "methodName": "Use05",
@@ -8428,7 +8658,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use05()"
         },
         {
           "methodName": "Use06",
@@ -8441,7 +8672,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use06()"
         },
         {
           "methodName": "Use07",
@@ -8454,7 +8686,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use07()"
         },
         {
           "methodName": "Use08",
@@ -8467,7 +8700,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use08()"
         },
         {
           "methodName": "Use09",
@@ -8480,7 +8714,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use09()"
         },
         {
           "methodName": "Use10",
@@ -8493,7 +8728,8 @@
           "maintainabilityIndex": 97.8,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003
+          "halsteadEstimatedBugs": 0.0003,
+          "memberId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget|Method:Use10()"
         }
       ],
       "lcom": 1,
@@ -8651,20 +8887,37 @@
       "namespace": "UnityEngine",
       "assembly": "Assembly-CSharp",
       "lineCount": 5,
-      "methodCount": 0,
+      "methodCount": 1,
       "maxNestingDepth": 0,
       "averageCognitiveComplexity": 0,
       "maxCognitiveComplexity": 0,
-      "averageCyclomaticComplexity": 0,
-      "maxCyclomaticComplexity": 0,
+      "averageCyclomaticComplexity": 1,
+      "maxCyclomaticComplexity": 1,
       "excessiveParameterMethodCount": 0,
       "codeHealth": 10,
-      "methods": [],
+      "methods": [
+        {
+          "methodName": "op_Addition",
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "parameterCount": 2,
+          "lineCount": 1,
+          "startLine": 14,
+          "maintainabilityIndex": 100,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::UnityEngine.Vector3|Operator:op_Addition(Vector3,Vector3)"
+        }
+      ],
       "cbo": 0,
       "dit": 0,
       "afferentCoupling": 2,
       "efferentCoupling": 0,
       "instability": 0,
+      "averageMaintainabilityIndex": 100,
+      "minMaintainabilityIndex": 100,
       "wmc": 1,
       "noc": 0,
       "rfc": 0,
@@ -8701,7 +8954,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:Translate(Vector3)"
         },
         {
           "methodName": "Rotate",
@@ -8714,7 +8968,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:Rotate(Vector3)"
         },
         {
           "methodName": "RotateAround",
@@ -8727,7 +8982,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::UnityEngine.Transform|Method:RotateAround(Vector3,Vector3,float)"
         }
       ],
       "lcom": 1.5,
@@ -8812,7 +9068,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::UnityEngine.Mathf|Method:Sin(float)"
         }
       ],
       "cbo": 0,
@@ -8857,7 +9114,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnCreate(ref SystemState)"
         },
         {
           "methodName": "OnUpdate",
@@ -8870,7 +9128,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnUpdate(ref SystemState)"
         },
         {
           "methodName": "OnDestroy",
@@ -8883,7 +9142,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::Unity.Entities.ISystem|Method:OnDestroy(ref SystemState)"
         }
       ],
       "cbo": 1,
@@ -9108,7 +9368,8 @@
           "maintainabilityIndex": 67.8,
           "halsteadDifficulty": 3.5,
           "halsteadEffort": 308,
-          "halsteadEstimatedBugs": 0.0152
+          "halsteadEstimatedBugs": 0.0152,
+          "memberId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget|Method:Update()"
         }
       ],
       "cbo": 3,
@@ -9247,7 +9508,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions|Method:Register\u00602(IContainerBuilder)"
         },
         {
           "methodName": "Register",
@@ -9260,7 +9522,8 @@
           "maintainabilityIndex": 100,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions|Method:Register\u00601(IContainerBuilder)"
         }
       ],
       "cbo": 1,
@@ -9306,7 +9569,8 @@
           "maintainabilityIndex": 84.6,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget|Method:Update()"
         },
         {
           "methodName": "ScaledUpdate",
@@ -9319,7 +9583,8 @@
           "maintainabilityIndex": 81.1,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "memberId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget|Method:ScaledUpdate()"
         }
       ],
       "lcom": 0,

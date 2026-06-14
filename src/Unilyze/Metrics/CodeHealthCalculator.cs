@@ -13,7 +13,8 @@ internal sealed record MethodMetrics(
     double? MaintainabilityIndex = null,
     double? HalsteadDifficulty = null,
     double? HalsteadEffort = null,
-    double? HalsteadEstimatedBugs = null);
+    double? HalsteadEstimatedBugs = null,
+    string? MemberId = null);
 
 internal sealed record TypeMetrics(
     string TypeName,
@@ -98,10 +99,13 @@ internal static class CodeHealthCalculator
             Math.Round(worstDecileAverage, 1));
     }
 
+    static readonly HashSet<string> ExecutableMemberKinds =
+        ["Method", "Constructor", "Destructor", "Operator", "ConversionOperator"];
+
     static TypeMetrics ComputeSingleType(TypeNodeInfo type)
     {
         var methods = type.Members
-            .Where(m => m.MemberKind == "Method" && m.CognitiveComplexity.HasValue)
+            .Where(m => ExecutableMemberKinds.Contains(m.MemberKind) && m.CognitiveComplexity.HasValue)
             .Select(m =>
             {
                 var mi = m.HalsteadVolume.HasValue
@@ -119,7 +123,8 @@ internal static class CodeHealthCalculator
                     mi.HasValue ? Math.Round(mi.Value, 1) : null,
                     m.HalsteadDifficulty.HasValue ? Math.Round(m.HalsteadDifficulty.Value, 2) : null,
                     m.HalsteadEffort.HasValue ? Math.Round(m.HalsteadEffort.Value, 1) : null,
-                    m.HalsteadEstimatedBugs.HasValue ? Math.Round(m.HalsteadEstimatedBugs.Value, 4) : null);
+                    m.HalsteadEstimatedBugs.HasValue ? Math.Round(m.HalsteadEstimatedBugs.Value, 4) : null,
+                    m.MemberId);
             })
             .ToList();
 

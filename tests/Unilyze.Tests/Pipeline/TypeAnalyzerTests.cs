@@ -453,4 +453,100 @@ public class TypeAnalyzerTests : IDisposable
         Assert.True(decl.StartLine > 0);
         Assert.True(decl.EndLine >= decl.StartLine);
     }
+
+    [Fact]
+    public void AllMemberKinds_HaveMemberId()
+    {
+        WriteFile("WithId.cs", """
+            namespace Sample;
+            public class WithId
+            {
+                private int _field;
+                public string Name { get; set; }
+                public event System.EventHandler Changed;
+                public int this[int i] => i;
+                public WithId() { }
+                ~WithId() { }
+                public static WithId operator +(WithId a, WithId b) => a;
+                public static implicit operator int(WithId a) => 0;
+                public void Method() { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "App");
+        var type = Assert.Single(result);
+        foreach (var member in type.Members)
+        {
+            Assert.NotNull(member.MemberId);
+            Assert.StartsWith("App::", member.MemberId!);
+        }
+    }
+
+    [Fact]
+    public void Overloads_GetDistinctMemberIds()
+    {
+        WriteFile("Overloads.cs", """
+            namespace Sample;
+            public class Overloaded
+            {
+                public void Do() { }
+                public void Do(int x) { }
+                public void Do(string s, int x) { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "App");
+        var type = Assert.Single(result);
+        var methodIds = type.Members
+            .Where(m => m.MemberKind == "Method")
+            .Select(m => m.MemberId)
+            .ToList();
+        Assert.Equal(3, methodIds.Count);
+        Assert.Equal(3, methodIds.Distinct().Count());
+    }
+
+    [Fact]
+    public void GenericMethods_GetDistinctMemberIds()
+    {
+        WriteFile("Generics.cs", """
+            namespace Sample;
+            public class GenericMethods
+            {
+                public void Process<T>(T item) { }
+                public void Process<T, U>(T a, U b) { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "App");
+        var type = Assert.Single(result);
+        var methodIds = type.Members
+            .Where(m => m.MemberKind == "Method")
+            .Select(m => m.MemberId)
+            .ToList();
+        Assert.Equal(2, methodIds.Count);
+        Assert.Equal(2, methodIds.Distinct().Count());
+    }
+
+    [Fact]
+    public void ExplicitInterface_GetsDistinctMemberId()
+    {
+        WriteFile("ExplicitIface.cs", """
+            namespace Sample;
+            public interface IFoo { void Do(); }
+            public class ExplicitImpl : IFoo
+            {
+                public void Do() { }
+                void IFoo.Do() { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "App");
+        var impl = result.Single(t => t.Name == "ExplicitImpl");
+        var methodIds = impl.Members
+            .Where(m => m.MemberKind == "Method")
+            .Select(m => m.MemberId)
+            .ToList();
+        Assert.Equal(2, methodIds.Count);
+        Assert.Equal(2, methodIds.Distinct().Count());
+    }
 }
