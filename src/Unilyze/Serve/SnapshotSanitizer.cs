@@ -55,12 +55,17 @@ internal static class SnapshotSanitizer
             .Select(a => a with { Directory = string.Empty })
             .ToList();
 
+        var sourceTable = result.SourceTable?
+            .Select(path => ToDisplayPath(projectRoot, path))
+            .ToList();
+
         var sanitized = result with
         {
             ProjectPath = Path.GetFileName(projectRoot.TrimEnd('/', '\\')),
             Types = types,
             TypeMetrics = metrics,
             Assemblies = assemblies,
+            SourceTable = sourceTable,
         };
 
         return new SanitizedSnapshot(sanitized, absById, displayById, roots);

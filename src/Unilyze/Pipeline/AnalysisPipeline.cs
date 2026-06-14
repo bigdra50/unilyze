@@ -124,6 +124,8 @@ internal static class AnalysisPipeline
             ? EnergyPressureCalculator.ForGate(finalMetrics, excludeBaselined: false).Pressure
             : null;
 
+        var sourceTable = BuildSourceTable(resolvedTypes);
+
         var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
@@ -144,8 +146,25 @@ internal static class AnalysisPipeline
             ResolveNuget: options.ResolveNuget ? true : null,
             IncludeGenerated: options.IncludeGenerated ? true : null,
             TargetFramework: selectedTfm,
-            EnergyPressure: energyPressure);
+            EnergyPressure: energyPressure,
+            SchemaVersion: AnalysisResult.CurrentSchemaVersion,
+            SourceTable: sourceTable.Count > 0 ? sourceTable : null);
 
         return FindingFingerprint.AssignIds(result);
+    }
+
+    static List<string> BuildSourceTable(IReadOnlyList<TypeNodeInfo> types)
+    {
+        var paths = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var type in types)
+        {
+            if (!string.IsNullOrEmpty(type.FilePath) && !paths.ContainsKey(type.FilePath))
+                paths[type.FilePath] = paths.Count;
+        }
+
+        var table = new string[paths.Count];
+        foreach (var (path, index) in paths)
+            table[index] = path;
+        return [..table];
     }
 }

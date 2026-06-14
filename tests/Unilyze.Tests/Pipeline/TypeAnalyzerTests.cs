@@ -368,4 +368,89 @@ public class TypeAnalyzerTests : IDisposable
         // nested if inside if => max nesting = 2
         Assert.Equal(2, compute.MaxNestingDepth);
     }
+
+    [Fact]
+    public void AllMemberKinds_HaveLocation()
+    {
+        WriteFile("AllMembers.cs", """
+            namespace Sample;
+            public class AllMembers
+            {
+                private int _field;
+                public string Name { get; set; }
+                public event System.EventHandler Changed;
+                public int this[int i] => i;
+                public AllMembers() { }
+                public AllMembers(int x) { _field = x; }
+                ~AllMembers() { }
+                public static AllMembers operator +(AllMembers a, AllMembers b) => a;
+                public static implicit operator int(AllMembers a) => 0;
+                public void Method() { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+        var type = Assert.Single(result);
+        foreach (var member in type.Members)
+        {
+            Assert.NotNull(member.Location);
+            Assert.True(member.Location!.StartLine > 0, $"{member.MemberKind} {member.Name} has no StartLine");
+            Assert.True(member.Location.EndLine >= member.Location.StartLine,
+                $"{member.MemberKind} {member.Name} EndLine < StartLine");
+        }
+
+        var kinds = type.Members.Select(m => m.MemberKind).Distinct().OrderBy(k => k).ToList();
+        Assert.Contains("Field", kinds);
+        Assert.Contains("Property", kinds);
+        Assert.Contains("Event", kinds);
+        Assert.Contains("Indexer", kinds);
+        Assert.Contains("Constructor", kinds);
+        Assert.Contains("Destructor", kinds);
+        Assert.Contains("Operator", kinds);
+        Assert.Contains("ConversionOperator", kinds);
+        Assert.Contains("Method", kinds);
+    }
+
+    [Fact]
+    public void PartialTypes_MergeDeclarations()
+    {
+        WriteFile("PartA.cs", """
+            namespace Sample;
+            public partial class PartialTarget
+            {
+                public void A() { }
+            }
+            """);
+        WriteFile("PartB.cs", """
+            namespace Sample;
+            public partial class PartialTarget
+            {
+                public void B() { }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+        var type = Assert.Single(result);
+        Assert.NotNull(type.Declarations);
+        Assert.Equal(2, type.Declarations!.Count);
+    }
+
+    [Fact]
+    public void TypeDeclarations_HaveLocationSet()
+    {
+        WriteFile("Located.cs", """
+            namespace Sample;
+            public class Located
+            {
+                public int Value { get; set; }
+            }
+            """);
+
+        var result = TypeAnalyzer.AnalyzeDirectory(_tempDir, "Asm");
+        var type = Assert.Single(result);
+        Assert.NotNull(type.Declarations);
+        var decl = Assert.Single(type.Declarations!);
+        Assert.True(decl.StartLine > 0);
+        Assert.True(decl.EndLine >= decl.StartLine);
+    }
 }

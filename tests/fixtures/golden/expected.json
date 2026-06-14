@@ -15,7 +15,7 @@
         "delegateCount": 0,
         "publicTypeCount": 67,
         "sealedTypeCount": 0,
-        "totalMembers": 155,
+        "totalMembers": 156,
         "namespaces": [
           "Burst",
           "Golden.Ecs",
@@ -72,7 +72,12 @@
           "halsteadVolume": 8,
           "halsteadDifficulty": 1,
           "halsteadEffort": 8,
-          "halsteadEstimatedBugs": 0.0013333333333333333
+          "halsteadEstimatedBugs": 0.0013333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 11
+          }
         },
         {
           "name": "PropertyBoxing",
@@ -83,7 +88,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 20
+          }
         },
         {
           "name": "MethodClosure",
@@ -102,7 +112,12 @@
           "halsteadVolume": 15.509775004326936,
           "halsteadDifficulty": 2,
           "halsteadEffort": 31.019550008653873,
-          "halsteadEstimatedBugs": 0.003290806962640765
+          "halsteadEstimatedBugs": 0.003290806962640765,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 26
+          }
         },
         {
           "name": "PropertyClosure",
@@ -113,7 +128,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 28,
+            "endLine": 35
+          }
         },
         {
           "name": "MethodParams",
@@ -132,7 +152,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 37,
+            "endLine": 40
+          }
         },
         {
           "name": "PropertyParams",
@@ -143,7 +168,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 42,
+            "endLine": 49
+          }
         },
         {
           "name": "LogParams",
@@ -167,7 +197,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 51,
+            "endLine": 51
+          }
         },
         {
           "name": "SumParams",
@@ -191,7 +226,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 53,
+            "endLine": 53
+          }
         }
       ],
       "constructorParams": [],
@@ -204,7 +244,14 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.AllocationPatterns",
       "typeId": "Assembly-CSharp::GoldenFixture.AllocationPatterns",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 54
+        }
+      ]
     },
     {
       "name": "BurstCompileAttribute",
@@ -226,7 +273,14 @@
       "startLine": 3,
       "qualifiedName": "Burst.BurstCompileAttribute",
       "typeId": "Assembly-CSharp::Burst.BurstCompileAttribute",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 3
+        }
+      ]
     },
     {
       "name": "CouplingT01",
@@ -247,7 +301,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT01",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT01",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 3
+        }
+      ]
     },
     {
       "name": "CouplingT02",
@@ -268,7 +329,14 @@
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT02",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT02",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 4,
+          "endLine": 4
+        }
+      ]
     },
     {
       "name": "CouplingT03",
@@ -289,7 +357,14 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT03",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT03",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 5
+        }
+      ]
     },
     {
       "name": "CouplingT04",
@@ -310,7 +385,14 @@
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT04",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT04",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 6,
+          "endLine": 6
+        }
+      ]
     },
     {
       "name": "CouplingT05",
@@ -331,7 +413,14 @@
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT05",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT05",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 7,
+          "endLine": 7
+        }
+      ]
     },
     {
       "name": "CouplingT06",
@@ -352,7 +441,14 @@
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT06",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT06",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 8,
+          "endLine": 8
+        }
+      ]
     },
     {
       "name": "CouplingT07",
@@ -373,7 +469,14 @@
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT07",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT07",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 9,
+          "endLine": 9
+        }
+      ]
     },
     {
       "name": "CouplingT08",
@@ -394,7 +497,14 @@
       "startLine": 10,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT08",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT08",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 10,
+          "endLine": 10
+        }
+      ]
     },
     {
       "name": "CouplingT09",
@@ -415,7 +525,14 @@
       "startLine": 11,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT09",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT09",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 11,
+          "endLine": 11
+        }
+      ]
     },
     {
       "name": "CouplingT10",
@@ -436,7 +553,14 @@
       "startLine": 12,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT10",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT10",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 12,
+          "endLine": 12
+        }
+      ]
     },
     {
       "name": "CouplingT11",
@@ -457,7 +581,14 @@
       "startLine": 13,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT11",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT11",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 13,
+          "endLine": 13
+        }
+      ]
     },
     {
       "name": "CouplingT12",
@@ -478,7 +609,14 @@
       "startLine": 14,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT12",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT12",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 14,
+          "endLine": 14
+        }
+      ]
     },
     {
       "name": "CouplingT13",
@@ -499,7 +637,14 @@
       "startLine": 15,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT13",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT13",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 15,
+          "endLine": 15
+        }
+      ]
     },
     {
       "name": "CouplingT14",
@@ -520,7 +665,14 @@
       "startLine": 16,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT14",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT14",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 16,
+          "endLine": 16
+        }
+      ]
     },
     {
       "name": "CouplingT15",
@@ -541,7 +693,14 @@
       "startLine": 17,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT15",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT15",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 17,
+          "endLine": 17
+        }
+      ]
     },
     {
       "name": "CouplingT16",
@@ -562,7 +721,14 @@
       "startLine": 18,
       "qualifiedName": "GoldenFixture.Coupling.CouplingT16",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.CouplingT16",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 18,
+          "endLine": 18
+        }
+      ]
     },
     {
       "name": "HighCouplingHub",
@@ -580,7 +746,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 22
+          }
         },
         {
           "name": "_t02",
@@ -589,7 +760,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 23,
+            "endLine": 23
+          }
         },
         {
           "name": "_t03",
@@ -598,7 +774,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 24,
+            "endLine": 24
+          }
         },
         {
           "name": "_t04",
@@ -607,7 +788,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 25,
+            "endLine": 25
+          }
         },
         {
           "name": "_t05",
@@ -616,7 +802,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 26,
+            "endLine": 26
+          }
         },
         {
           "name": "_t06",
@@ -625,7 +816,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 27,
+            "endLine": 27
+          }
         },
         {
           "name": "_t07",
@@ -634,7 +830,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 28,
+            "endLine": 28
+          }
         },
         {
           "name": "_t08",
@@ -643,7 +844,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 29,
+            "endLine": 29
+          }
         },
         {
           "name": "_t09",
@@ -652,7 +858,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 30,
+            "endLine": 30
+          }
         },
         {
           "name": "_t10",
@@ -661,7 +872,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 31,
+            "endLine": 31
+          }
         },
         {
           "name": "_t11",
@@ -670,7 +886,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 32,
+            "endLine": 32
+          }
         },
         {
           "name": "_t12",
@@ -679,7 +900,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 33,
+            "endLine": 33
+          }
         },
         {
           "name": "_t13",
@@ -688,7 +914,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 34,
+            "endLine": 34
+          }
         },
         {
           "name": "_t14",
@@ -697,7 +928,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 35,
+            "endLine": 35
+          }
         },
         {
           "name": "_t15",
@@ -706,7 +942,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 36,
+            "endLine": 36
+          }
         },
         {
           "name": "_t16",
@@ -715,7 +956,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 37,
+            "endLine": 37
+          }
         },
         {
           "name": "TouchAll",
@@ -734,7 +980,12 @@
           "halsteadVolume": 32,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 39,
+            "endLine": 57
+          }
         }
       ],
       "constructorParams": [],
@@ -747,7 +998,14 @@
       "startLine": 20,
       "qualifiedName": "GoldenFixture.Coupling.HighCouplingHub",
       "typeId": "Assembly-CSharp::GoldenFixture.Coupling.HighCouplingHub",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 20,
+          "endLine": 58
+        }
+      ]
     },
     {
       "name": "CycleA",
@@ -767,7 +1025,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         }
       ],
       "constructorParams": [],
@@ -780,7 +1043,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Cycles.CycleA",
       "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleA",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 6
+        }
+      ]
     },
     {
       "name": "CycleB",
@@ -800,7 +1070,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 10,
+            "endLine": 10
+          }
         }
       ],
       "constructorParams": [],
@@ -813,7 +1088,14 @@
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Cycles.CycleB",
       "typeId": "Assembly-CSharp::GoldenFixture.Cycles.CycleB",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 8,
+          "endLine": 11
+        }
+      ]
     },
     {
       "name": "IGameService",
@@ -834,7 +1116,14 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.DI.IGameService",
       "typeId": "Assembly-CSharp::GoldenFixture.DI.IGameService",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 5
+        }
+      ]
     },
     {
       "name": "GameService",
@@ -857,7 +1146,14 @@
       "startLine": 7,
       "qualifiedName": "GoldenFixture.DI.GameService",
       "typeId": "Assembly-CSharp::GoldenFixture.DI.GameService",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 7,
+          "endLine": 7
+        }
+      ]
     },
     {
       "name": "GameInstaller",
@@ -890,7 +1186,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 11,
+            "endLine": 14
+          }
         }
       ],
       "constructorParams": [],
@@ -903,7 +1204,14 @@
       "startLine": 9,
       "qualifiedName": "GoldenFixture.DI.GameInstaller",
       "typeId": "Assembly-CSharp::GoldenFixture.DI.GameInstaller",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 9,
+          "endLine": 15
+        }
+      ]
     },
     {
       "name": "InhBase0",
@@ -924,7 +1232,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase0",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase0",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 3
+        }
+      ]
     },
     {
       "name": "InhBase1",
@@ -946,7 +1261,14 @@
       "startLine": 4,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase1",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase1",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 4,
+          "endLine": 4
+        }
+      ]
     },
     {
       "name": "InhBase2",
@@ -968,7 +1290,14 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase2",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase2",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 5
+        }
+      ]
     },
     {
       "name": "InhBase3",
@@ -990,7 +1319,14 @@
       "startLine": 6,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase3",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase3",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 6,
+          "endLine": 6
+        }
+      ]
     },
     {
       "name": "InhBase4",
@@ -1012,7 +1348,14 @@
       "startLine": 7,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase4",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase4",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 7,
+          "endLine": 7
+        }
+      ]
     },
     {
       "name": "InhBase5",
@@ -1034,7 +1377,14 @@
       "startLine": 8,
       "qualifiedName": "GoldenFixture.Inheritance.InhBase5",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.InhBase5",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 8,
+          "endLine": 8
+        }
+      ]
     },
     {
       "name": "DeepLeaf",
@@ -1056,7 +1406,14 @@
       "startLine": 9,
       "qualifiedName": "GoldenFixture.Inheritance.DeepLeaf",
       "typeId": "Assembly-CSharp::GoldenFixture.Inheritance.DeepLeaf",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 9,
+          "endLine": 9
+        }
+      ]
     },
     {
       "name": "DeepNestingTarget",
@@ -1109,7 +1466,12 @@
           "halsteadVolume": 60.37013046707142,
           "halsteadDifficulty": 14,
           "halsteadEffort": 845.1818265389999,
-          "halsteadEstimatedBugs": 0.02979743254809659
+          "halsteadEstimatedBugs": 0.02979743254809659,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 25
+          }
         }
       ],
       "constructorParams": [],
@@ -1122,7 +1484,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.DeepNestingTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.DeepNestingTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 26
+        }
+      ]
     },
     {
       "name": "MissingBurstSystem",
@@ -1158,7 +1527,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         },
         {
           "name": "OnUpdate",
@@ -1182,7 +1556,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         },
         {
           "name": "OnDestroy",
@@ -1206,7 +1585,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 9,
+            "endLine": 9
+          }
         }
       ],
       "constructorParams": [],
@@ -1219,7 +1603,14 @@
       "startLine": 5,
       "qualifiedName": "Golden.Ecs.MissingBurstSystem",
       "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstSystem",
-      "role": "EcsSystem"
+      "role": "EcsSystem",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 10
+        }
+      ]
     },
     {
       "name": "AnnotatedBurstSystem",
@@ -1255,7 +1646,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 15,
+            "endLine": 15
+          }
         },
         {
           "name": "OnUpdate",
@@ -1279,7 +1675,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 16,
+            "endLine": 16
+          }
         },
         {
           "name": "OnDestroy",
@@ -1303,7 +1704,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 17,
+            "endLine": 17
+          }
         }
       ],
       "constructorParams": [],
@@ -1320,7 +1726,14 @@
       "startLine": 12,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstSystem",
       "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstSystem",
-      "role": "EcsSystem"
+      "role": "EcsSystem",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 12,
+          "endLine": 18
+        }
+      ]
     },
     {
       "name": "MissingBurstJob",
@@ -1344,7 +1757,14 @@
       "startLine": 20,
       "qualifiedName": "Golden.Ecs.MissingBurstJob",
       "typeId": "Assembly-CSharp::Golden.Ecs.MissingBurstJob",
-      "role": "EcsJob"
+      "role": "EcsJob",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 20,
+          "endLine": 20
+        }
+      ]
     },
     {
       "name": "AnnotatedBurstJob",
@@ -1372,7 +1792,14 @@
       "startLine": 22,
       "qualifiedName": "Golden.Ecs.AnnotatedBurstJob",
       "typeId": "Assembly-CSharp::Golden.Ecs.AnnotatedBurstJob",
-      "role": "EcsJob"
+      "role": "EcsJob",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 22,
+          "endLine": 23
+        }
+      ]
     },
     {
       "name": "ManagedSystem",
@@ -1394,7 +1821,14 @@
       "startLine": 25,
       "qualifiedName": "Golden.Ecs.ManagedSystem",
       "typeId": "Assembly-CSharp::Golden.Ecs.ManagedSystem",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 25,
+          "endLine": 25
+        }
+      ]
     },
     {
       "name": "UnmanagedComponent",
@@ -1416,7 +1850,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 29,
+            "endLine": 29
+          }
         },
         {
           "name": "Value",
@@ -1427,7 +1866,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 30,
+            "endLine": 30
+          }
         }
       ],
       "constructorParams": [],
@@ -1440,7 +1884,14 @@
       "startLine": 27,
       "qualifiedName": "Golden.Ecs.UnmanagedComponent",
       "typeId": "Assembly-CSharp::Golden.Ecs.UnmanagedComponent",
-      "role": "EcsComponentData"
+      "role": "EcsComponentData",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 27,
+          "endLine": 31
+        }
+      ]
     },
     {
       "name": "ManagedComponent",
@@ -1462,7 +1913,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 35,
+            "endLine": 35
+          }
         }
       ],
       "constructorParams": [],
@@ -1475,7 +1931,14 @@
       "startLine": 33,
       "qualifiedName": "Golden.Ecs.ManagedComponent",
       "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponent",
-      "role": "EcsComponentData"
+      "role": "EcsComponentData",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 33,
+          "endLine": 36
+        }
+      ]
     },
     {
       "name": "ManagedComponentClass",
@@ -1497,7 +1960,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 40,
+            "endLine": 40
+          }
         }
       ],
       "constructorParams": [],
@@ -1510,7 +1978,14 @@
       "startLine": 38,
       "qualifiedName": "Golden.Ecs.ManagedComponentClass",
       "typeId": "Assembly-CSharp::Golden.Ecs.ManagedComponentClass",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 38,
+          "endLine": 41
+        }
+      ]
     },
     {
       "name": "ExcessiveParametersTarget",
@@ -1567,7 +2042,12 @@
           "halsteadVolume": 7,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 6
+          }
         }
       ],
       "constructorParams": [],
@@ -1580,7 +2060,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.ExcessiveParametersTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.ExcessiveParametersTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 7
+        }
+      ]
     },
     {
       "name": "GodClassTarget",
@@ -1598,7 +2085,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_b",
@@ -1607,7 +2099,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_c",
@@ -1616,7 +2113,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_d",
@@ -1625,7 +2127,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_e",
@@ -1634,7 +2141,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "M01",
@@ -1653,7 +2165,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         },
         {
           "name": "M02",
@@ -1672,7 +2189,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 9,
+            "endLine": 9
+          }
         },
         {
           "name": "M03",
@@ -1691,7 +2213,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 10,
+            "endLine": 10
+          }
         },
         {
           "name": "M04",
@@ -1710,7 +2237,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 11,
+            "endLine": 11
+          }
         },
         {
           "name": "M05",
@@ -1729,7 +2261,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 12,
+            "endLine": 12
+          }
         },
         {
           "name": "M06",
@@ -1748,7 +2285,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 13
+          }
         },
         {
           "name": "M07",
@@ -1767,7 +2309,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 14
+          }
         },
         {
           "name": "M08",
@@ -1786,7 +2333,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 15,
+            "endLine": 15
+          }
         },
         {
           "name": "M09",
@@ -1805,7 +2357,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 16,
+            "endLine": 16
+          }
         },
         {
           "name": "M10",
@@ -1824,7 +2381,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 17,
+            "endLine": 17
+          }
         },
         {
           "name": "M11",
@@ -1843,7 +2405,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 18,
+            "endLine": 18
+          }
         },
         {
           "name": "M12",
@@ -1862,7 +2429,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 19,
+            "endLine": 19
+          }
         },
         {
           "name": "M13",
@@ -1881,7 +2453,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 20,
+            "endLine": 20
+          }
         },
         {
           "name": "M14",
@@ -1900,7 +2477,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 21,
+            "endLine": 21
+          }
         },
         {
           "name": "M15",
@@ -1919,7 +2501,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 22
+          }
         },
         {
           "name": "M16",
@@ -1938,7 +2525,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 23,
+            "endLine": 23
+          }
         },
         {
           "name": "M17",
@@ -1957,7 +2549,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 24,
+            "endLine": 24
+          }
         },
         {
           "name": "M18",
@@ -1976,7 +2573,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 25,
+            "endLine": 25
+          }
         },
         {
           "name": "M19",
@@ -1995,7 +2597,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 26,
+            "endLine": 26
+          }
         },
         {
           "name": "M20",
@@ -2014,7 +2621,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 27,
+            "endLine": 27
+          }
         },
         {
           "name": "M21",
@@ -2033,7 +2645,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 28,
+            "endLine": 28
+          }
         }
       ],
       "constructorParams": [],
@@ -2046,7 +2663,14 @@
       "startLine": 4,
       "qualifiedName": "GoldenFixture.GodClassTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.GodClassTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 4,
+          "endLine": 29
+        }
+      ]
     },
     {
       "name": "HighComplexityTarget",
@@ -2079,7 +2703,12 @@
           "halsteadVolume": 354.39810378076373,
           "halsteadDifficulty": 2.911764705882353,
           "halsteadEffort": 1031.923890420459,
-          "halsteadEstimatedBugs": 0.0340390311257656
+          "halsteadEstimatedBugs": 0.0340390311257656,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 24
+          }
         }
       ],
       "constructorParams": [],
@@ -2092,7 +2721,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.HighComplexityTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.HighComplexityTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 25
+        }
+      ]
     },
     {
       "name": "LongMethodTarget",
@@ -2125,7 +2761,12 @@
           "halsteadVolume": 1120.3018835571868,
           "halsteadDifficulty": 1.5,
           "halsteadEffort": 1680.4528253357803,
-          "halsteadEstimatedBugs": 0.04711540862948621
+          "halsteadEstimatedBugs": 0.04711540862948621,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 94
+          }
         }
       ],
       "constructorParams": [],
@@ -2138,7 +2779,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LongMethodTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.LongMethodTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 95
+        }
+      ]
     },
     {
       "name": "LowCohesionTarget",
@@ -2156,7 +2804,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f02",
@@ -2165,7 +2818,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f03",
@@ -2174,7 +2832,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f04",
@@ -2183,7 +2846,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f05",
@@ -2192,7 +2860,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f06",
@@ -2201,7 +2874,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f07",
@@ -2210,7 +2888,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f08",
@@ -2219,7 +2902,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f09",
@@ -2228,7 +2916,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f10",
@@ -2237,7 +2930,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "Use01",
@@ -2256,7 +2954,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         },
         {
           "name": "Use02",
@@ -2275,7 +2978,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         },
         {
           "name": "Use03",
@@ -2294,7 +3002,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 9,
+            "endLine": 9
+          }
         },
         {
           "name": "Use04",
@@ -2313,7 +3026,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 10,
+            "endLine": 10
+          }
         },
         {
           "name": "Use05",
@@ -2332,7 +3050,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 11,
+            "endLine": 11
+          }
         },
         {
           "name": "Use06",
@@ -2351,7 +3074,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 12,
+            "endLine": 12
+          }
         },
         {
           "name": "Use07",
@@ -2370,7 +3098,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 13
+          }
         },
         {
           "name": "Use08",
@@ -2389,7 +3122,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 14
+          }
         },
         {
           "name": "Use09",
@@ -2408,7 +3146,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 15,
+            "endLine": 15
+          }
         },
         {
           "name": "Use10",
@@ -2427,7 +3170,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 16,
+            "endLine": 16
+          }
         }
       ],
       "constructorParams": [],
@@ -2440,7 +3188,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowCohesionTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.LowCohesionTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 17
+        }
+      ]
     },
     {
       "name": "LowMaintainabilityTarget",
@@ -2509,7 +3264,12 @@
           "halsteadVolume": 702.9584951086791,
           "halsteadDifficulty": 39.375,
           "halsteadEffort": 27678.99074490424,
-          "halsteadEstimatedBugs": 0.30500871288164444
+          "halsteadEstimatedBugs": 0.30500871288164444,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 32
+          }
         }
       ],
       "constructorParams": [],
@@ -2522,7 +3282,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.LowMaintainabilityTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.LowMaintainabilityTarget",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 33
+        }
+      ]
     },
     {
       "name": "MonoBehaviourGodClassTarget",
@@ -2541,7 +3308,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_b",
@@ -2550,7 +3322,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_c",
@@ -2559,7 +3336,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_d",
@@ -2568,7 +3350,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "_e",
@@ -2577,7 +3364,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "wiredTarget",
@@ -2590,7 +3382,12 @@
               "name": "UnityEngine.SerializeField"
             }
           ],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         },
         {
           "name": "M01",
@@ -2609,7 +3406,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 10,
+            "endLine": 10
+          }
         },
         {
           "name": "M02",
@@ -2628,7 +3430,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 11,
+            "endLine": 11
+          }
         },
         {
           "name": "M03",
@@ -2647,7 +3454,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 12,
+            "endLine": 12
+          }
         },
         {
           "name": "M04",
@@ -2666,7 +3478,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 13
+          }
         },
         {
           "name": "M05",
@@ -2685,7 +3502,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 14
+          }
         },
         {
           "name": "M06",
@@ -2704,7 +3526,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 15,
+            "endLine": 15
+          }
         },
         {
           "name": "M07",
@@ -2723,7 +3550,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 16,
+            "endLine": 16
+          }
         },
         {
           "name": "M08",
@@ -2742,7 +3574,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 17,
+            "endLine": 17
+          }
         },
         {
           "name": "M09",
@@ -2761,7 +3598,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 18,
+            "endLine": 18
+          }
         },
         {
           "name": "M10",
@@ -2780,7 +3622,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 19,
+            "endLine": 19
+          }
         },
         {
           "name": "M11",
@@ -2799,7 +3646,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 20,
+            "endLine": 20
+          }
         },
         {
           "name": "M12",
@@ -2818,7 +3670,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 21,
+            "endLine": 21
+          }
         },
         {
           "name": "M13",
@@ -2837,7 +3694,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 22
+          }
         },
         {
           "name": "M14",
@@ -2856,7 +3718,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 23,
+            "endLine": 23
+          }
         },
         {
           "name": "M15",
@@ -2875,7 +3742,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 24,
+            "endLine": 24
+          }
         },
         {
           "name": "M16",
@@ -2894,7 +3766,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 25,
+            "endLine": 25
+          }
         },
         {
           "name": "M17",
@@ -2913,7 +3790,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 26,
+            "endLine": 26
+          }
         },
         {
           "name": "M18",
@@ -2932,7 +3814,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 27,
+            "endLine": 27
+          }
         },
         {
           "name": "M19",
@@ -2951,7 +3838,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 28,
+            "endLine": 28
+          }
         },
         {
           "name": "M20",
@@ -2970,7 +3862,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 29,
+            "endLine": 29
+          }
         },
         {
           "name": "M21",
@@ -2989,7 +3886,12 @@
           "halsteadVolume": 4.754887502163468,
           "halsteadDifficulty": 1,
           "halsteadEffort": 4.754887502163468,
-          "halsteadEstimatedBugs": 0.0009425525573729414
+          "halsteadEstimatedBugs": 0.0009425525573729414,
+          "location": {
+            "fileRef": 0,
+            "startLine": 30,
+            "endLine": 30
+          }
         }
       ],
       "constructorParams": [],
@@ -3002,7 +3904,14 @@
       "startLine": 4,
       "qualifiedName": "GoldenFixture.MonoBehaviourGodClassTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourGodClassTarget",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 4,
+          "endLine": 31
+        }
+      ]
     },
     {
       "name": "MonoBehaviourLowCohesionTarget",
@@ -3021,7 +3930,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f02",
@@ -3030,7 +3944,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f03",
@@ -3039,7 +3958,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f04",
@@ -3048,7 +3972,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f05",
@@ -3057,7 +3986,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f06",
@@ -3066,7 +4000,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f07",
@@ -3075,7 +4014,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f08",
@@ -3084,7 +4028,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f09",
@@ -3093,7 +4042,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "_f10",
@@ -3102,7 +4056,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "Use01",
@@ -3121,7 +4080,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         },
         {
           "name": "Use02",
@@ -3140,7 +4104,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         },
         {
           "name": "Use03",
@@ -3159,7 +4128,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 9,
+            "endLine": 9
+          }
         },
         {
           "name": "Use04",
@@ -3178,7 +4152,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 10,
+            "endLine": 10
+          }
         },
         {
           "name": "Use05",
@@ -3197,7 +4176,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 11,
+            "endLine": 11
+          }
         },
         {
           "name": "Use06",
@@ -3216,7 +4200,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 12,
+            "endLine": 12
+          }
         },
         {
           "name": "Use07",
@@ -3235,7 +4224,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 13
+          }
         },
         {
           "name": "Use08",
@@ -3254,7 +4248,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 14
+          }
         },
         {
           "name": "Use09",
@@ -3273,7 +4272,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 15,
+            "endLine": 15
+          }
         },
         {
           "name": "Use10",
@@ -3292,7 +4296,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0.5,
           "halsteadEffort": 1,
-          "halsteadEstimatedBugs": 0.0003333333333333333
+          "halsteadEstimatedBugs": 0.0003333333333333333,
+          "location": {
+            "fileRef": 0,
+            "startLine": 16,
+            "endLine": 16
+          }
         }
       ],
       "constructorParams": [],
@@ -3305,7 +4314,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.MonoBehaviourLowCohesionTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.MonoBehaviourLowCohesionTarget",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 17
+        }
+      ]
     },
     {
       "name": "SerializedRefBase",
@@ -3328,7 +4344,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefBase",
       "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefBase",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 5
+        }
+      ]
     },
     {
       "name": "SerializedRefConcrete",
@@ -3350,7 +4373,14 @@
       "startLine": 3,
       "qualifiedName": "GoldenFixture.SerializedRefConcrete",
       "typeId": "Assembly-CSharp::GoldenFixture.SerializedRefConcrete",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 5
+        }
+      ]
     },
     {
       "name": "SerializeFieldAttribute",
@@ -3379,7 +4409,14 @@
       "startLine": 3,
       "qualifiedName": "UnityEngine.SerializeFieldAttribute",
       "typeId": "Assembly-CSharp::UnityEngine.SerializeFieldAttribute",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 4
+        }
+      ]
     },
     {
       "name": "MonoBehaviour",
@@ -3399,7 +4436,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         }
       ],
       "constructorParams": [],
@@ -3412,7 +4454,19 @@
       "startLine": 6,
       "qualifiedName": "UnityEngine.MonoBehaviour",
       "typeId": "Assembly-CSharp::UnityEngine.MonoBehaviour",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 6,
+          "endLine": 9
+        },
+        {
+          "fileRef": 0,
+          "startLine": 6,
+          "endLine": 6
+        }
+      ]
     },
     {
       "name": "Vector3",
@@ -3433,7 +4487,46 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 13
+          }
+        },
+        {
+          "name": "op_Addition",
+          "type": "Vector3",
+          "memberKind": "Operator",
+          "modifiers": [
+            "public",
+            "static"
+          ],
+          "parameters": [
+            {
+              "name": "a",
+              "type": "Vector3"
+            },
+            {
+              "name": "b",
+              "type": "Vector3"
+            }
+          ],
+          "attributes": [],
+          "cognitiveComplexity": 0,
+          "cyclomaticComplexity": 1,
+          "maxNestingDepth": 0,
+          "lineCount": 1,
+          "startLine": 14,
+          "halsteadVolume": 0,
+          "halsteadDifficulty": 0,
+          "halsteadEffort": 0,
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 14
+          }
         }
       ],
       "constructorParams": [],
@@ -3446,7 +4539,14 @@
       "startLine": 11,
       "qualifiedName": "UnityEngine.Vector3",
       "typeId": "Assembly-CSharp::UnityEngine.Vector3",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 11,
+          "endLine": 15
+        }
+      ]
     },
     {
       "name": "Transform",
@@ -3466,7 +4566,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 19,
+            "endLine": 19
+          }
         },
         {
           "name": "Translate",
@@ -3490,7 +4595,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 20,
+            "endLine": 20
+          }
         },
         {
           "name": "Rotate",
@@ -3514,7 +4624,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 21,
+            "endLine": 21
+          }
         },
         {
           "name": "RotateAround",
@@ -3546,7 +4661,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 22
+          }
         }
       ],
       "constructorParams": [],
@@ -3559,7 +4679,14 @@
       "startLine": 17,
       "qualifiedName": "UnityEngine.Transform",
       "typeId": "Assembly-CSharp::UnityEngine.Transform",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 17,
+          "endLine": 23
+        }
+      ]
     },
     {
       "name": "Time",
@@ -3581,7 +4708,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 27,
+            "endLine": 27
+          }
         },
         {
           "name": "time",
@@ -3593,7 +4725,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 28,
+            "endLine": 28
+          }
         }
       ],
       "constructorParams": [],
@@ -3606,7 +4743,14 @@
       "startLine": 25,
       "qualifiedName": "UnityEngine.Time",
       "typeId": "Assembly-CSharp::UnityEngine.Time",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 25,
+          "endLine": 29
+        }
+      ]
     },
     {
       "name": "Mathf",
@@ -3641,7 +4785,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 33,
+            "endLine": 33
+          }
         }
       ],
       "constructorParams": [],
@@ -3654,7 +4803,14 @@
       "startLine": 31,
       "qualifiedName": "UnityEngine.Mathf",
       "typeId": "Assembly-CSharp::UnityEngine.Mathf",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 31,
+          "endLine": 34
+        }
+      ]
     },
     {
       "name": "ISystem",
@@ -3685,7 +4841,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 5,
+            "endLine": 5
+          }
         },
         {
           "name": "OnUpdate",
@@ -3707,7 +4868,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 6,
+            "endLine": 6
+          }
         },
         {
           "name": "OnDestroy",
@@ -3729,7 +4895,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         }
       ],
       "constructorParams": [],
@@ -3742,7 +4913,14 @@
       "startLine": 3,
       "qualifiedName": "Unity.Entities.ISystem",
       "typeId": "Assembly-CSharp::Unity.Entities.ISystem",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 8
+        }
+      ]
     },
     {
       "name": "SystemBase",
@@ -3763,7 +4941,14 @@
       "startLine": 10,
       "qualifiedName": "Unity.Entities.SystemBase",
       "typeId": "Assembly-CSharp::Unity.Entities.SystemBase",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 10,
+          "endLine": 10
+        }
+      ]
     },
     {
       "name": "IJobEntity",
@@ -3784,7 +4969,14 @@
       "startLine": 12,
       "qualifiedName": "Unity.Entities.IJobEntity",
       "typeId": "Assembly-CSharp::Unity.Entities.IJobEntity",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 12,
+          "endLine": 12
+        }
+      ]
     },
     {
       "name": "IJobChunk",
@@ -3805,7 +4997,14 @@
       "startLine": 14,
       "qualifiedName": "Unity.Entities.IJobChunk",
       "typeId": "Assembly-CSharp::Unity.Entities.IJobChunk",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 14,
+          "endLine": 14
+        }
+      ]
     },
     {
       "name": "IComponentData",
@@ -3826,7 +5025,14 @@
       "startLine": 16,
       "qualifiedName": "Unity.Entities.IComponentData",
       "typeId": "Assembly-CSharp::Unity.Entities.IComponentData",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 16,
+          "endLine": 16
+        }
+      ]
     },
     {
       "name": "SystemState",
@@ -3847,7 +5053,14 @@
       "startLine": 18,
       "qualifiedName": "Unity.Entities.SystemState",
       "typeId": "Assembly-CSharp::Unity.Entities.SystemState",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 18,
+          "endLine": 18
+        }
+      ]
     },
     {
       "name": "Entity",
@@ -3867,7 +5080,12 @@
           ],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 22,
+            "endLine": 22
+          }
         }
       ],
       "constructorParams": [],
@@ -3880,7 +5098,14 @@
       "startLine": 20,
       "qualifiedName": "Unity.Entities.Entity",
       "typeId": "Assembly-CSharp::Unity.Entities.Entity",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 20,
+          "endLine": 23
+        }
+      ]
     },
     {
       "name": "UnityHotPathTarget",
@@ -3907,7 +5132,12 @@
           "halsteadVolume": 88,
           "halsteadDifficulty": 3.5,
           "halsteadEffort": 308,
-          "halsteadEstimatedBugs": 0.015202414034698918
+          "halsteadEstimatedBugs": 0.015202414034698918,
+          "location": {
+            "fileRef": 0,
+            "startLine": 13,
+            "endLine": 19
+          }
         }
       ],
       "constructorParams": [],
@@ -3920,7 +5150,14 @@
       "startLine": 11,
       "qualifiedName": "GoldenFixture.UnityHotPathTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.UnityHotPathTarget",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 11,
+          "endLine": 20
+        }
+      ]
     },
     {
       "name": "IContainerBuilder",
@@ -3941,7 +5178,14 @@
       "startLine": 3,
       "qualifiedName": "VContainer.IContainerBuilder",
       "typeId": "Assembly-CSharp::VContainer.IContainerBuilder",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 3,
+          "endLine": 3
+        }
+      ]
     },
     {
       "name": "ContainerBuilderExtensions",
@@ -3976,7 +5220,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         },
         {
           "name": "Register",
@@ -4001,7 +5250,12 @@
           "halsteadVolume": 0,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 8,
+            "endLine": 8
+          }
         }
       ],
       "constructorParams": [],
@@ -4014,7 +5268,14 @@
       "startLine": 5,
       "qualifiedName": "VContainer.ContainerBuilderExtensions",
       "typeId": "Assembly-CSharp::VContainer.ContainerBuilderExtensions",
-      "role": "PlainCSharp"
+      "role": "PlainCSharp",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 9
+        }
+      ]
     },
     {
       "name": "WeakTemporizationTarget",
@@ -4033,7 +5294,12 @@
           "modifiers": [],
           "parameters": [],
           "attributes": [],
-          "lineCount": 0
+          "lineCount": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 7,
+            "endLine": 7
+          }
         },
         {
           "name": "Update",
@@ -4050,7 +5316,12 @@
           "halsteadVolume": 2,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 9,
+            "endLine": 12
+          }
         },
         {
           "name": "ScaledUpdate",
@@ -4067,7 +5338,12 @@
           "halsteadVolume": 6.339850002884624,
           "halsteadDifficulty": 0,
           "halsteadEffort": 0,
-          "halsteadEstimatedBugs": 0
+          "halsteadEstimatedBugs": 0,
+          "location": {
+            "fileRef": 0,
+            "startLine": 14,
+            "endLine": 17
+          }
         }
       ],
       "constructorParams": [],
@@ -4080,7 +5356,14 @@
       "startLine": 5,
       "qualifiedName": "GoldenFixture.WeakTemporizationTarget",
       "typeId": "Assembly-CSharp::GoldenFixture.WeakTemporizationTarget",
-      "role": "MonoBehaviour"
+      "role": "MonoBehaviour",
+      "declarations": [
+        {
+          "fileRef": 0,
+          "startLine": 5,
+          "endLine": 18
+        }
+      ]
     }
   ],
   "dependencies": [
@@ -7382,7 +8665,7 @@
       "afferentCoupling": 2,
       "efferentCoupling": 0,
       "instability": 0,
-      "wmc": 0,
+      "wmc": 1,
       "noc": 0,
       "rfc": 0,
       "typeRank": 0.047483,
@@ -8091,5 +9374,31 @@
   ],
   "metricsVersion": 4,
   "projectKind": "unity",
-  "energyPressure": 3.5
+  "energyPressure": 3.5,
+  "schemaVersion": 1,
+  "sourceTable": [
+    "/golden-fixture/Assets/Scripts/AllocationPatterns.cs",
+    "/golden-fixture/Assets/Scripts/BurstStubs.cs",
+    "/golden-fixture/Assets/Scripts/CouplingTypes.cs",
+    "/golden-fixture/Assets/Scripts/CyclicTypes.cs",
+    "/golden-fixture/Assets/Scripts/DIInstaller.cs",
+    "/golden-fixture/Assets/Scripts/DeepInheritanceChain.cs",
+    "/golden-fixture/Assets/Scripts/DeepNestingTarget.cs",
+    "/golden-fixture/Assets/Scripts/EcsBurstTarget.cs",
+    "/golden-fixture/Assets/Scripts/ExcessiveParametersTarget.cs",
+    "/golden-fixture/Assets/Scripts/GodClassTarget.cs",
+    "/golden-fixture/Assets/Scripts/HighComplexityTarget.cs",
+    "/golden-fixture/Assets/Scripts/LongMethodTarget.cs",
+    "/golden-fixture/Assets/Scripts/LowCohesionTarget.cs",
+    "/golden-fixture/Assets/Scripts/LowMaintainabilityTarget.cs",
+    "/golden-fixture/Assets/Scripts/MonoBehaviourGodClassTarget.cs",
+    "/golden-fixture/Assets/Scripts/MonoBehaviourLowCohesionTarget.cs",
+    "/golden-fixture/Assets/Scripts/SerializedRefBase.cs",
+    "/golden-fixture/Assets/Scripts/SerializedRefConcrete.cs",
+    "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
+    "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+    "/golden-fixture/Assets/Scripts/UnityHotPathTarget.cs",
+    "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
+    "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs"
+  ]
 }

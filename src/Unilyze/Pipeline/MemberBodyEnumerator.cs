@@ -147,7 +147,7 @@ internal static class MemberBodyEnumerator
         _ => "accessor"
     };
 
-    static string GetOperatorMemberName(OperatorDeclarationSyntax op)
+    internal static string GetOperatorMemberName(OperatorDeclarationSyntax op)
     {
         var isUnary = op.ParameterList.Parameters.Count == 1;
         var opKind = op.OperatorToken.Kind();
