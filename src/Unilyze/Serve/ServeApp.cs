@@ -30,7 +30,7 @@ internal sealed class ServeApp
 
         var auth = new ServeAuth(server.Port);
         var store = new SnapshotStore();
-        var handler = new ServeHttpHandler(auth, store, title);
+        var handler = new ServeHttpHandler(auth, store, title, projectRoot);
         var builder = new SnapshotBuilder(_options);
         using var coordinator = new AnalysisCoordinator(
             store,
