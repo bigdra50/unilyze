@@ -57,6 +57,7 @@ internal sealed record AssemblyInfo(
         typeof(JsonStringEnumConverter<SmellSeverity>),
         typeof(JsonStringEnumConverter<TypeRole>),
         typeof(JsonStringEnumConverter<ChangeStatus>),
+        typeof(JsonStringEnumConverter<MethodChangeKind>),
         typeof(JsonStringEnumConverter<CycleLevel>)])]
 [JsonSerializable(typeof(AnalysisResult))]
 [JsonSerializable(typeof(DiffResult))]

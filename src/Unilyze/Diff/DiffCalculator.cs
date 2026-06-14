@@ -249,22 +249,40 @@ internal static class DiffCalculator
             if (afterByKey.TryGetValue(key, out var a))
             {
                 matched.Add(key);
-                var deltas = new List<MetricDelta<int>>
-                {
-                    new("CognitiveComplexity", b.CognitiveComplexity, a.CognitiveComplexity, a.CognitiveComplexity - b.CognitiveComplexity),
-                    new("CyclomaticComplexity", b.CyclomaticComplexity, a.CyclomaticComplexity, a.CyclomaticComplexity - b.CyclomaticComplexity),
-                    new("MaxNestingDepth", b.MaxNestingDepth, a.MaxNestingDepth, a.MaxNestingDepth - b.MaxNestingDepth),
-                    new("LineCount", b.LineCount, a.LineCount, a.LineCount - b.LineCount),
-                };
+                var deltas = BuildMethodDeltas(b, a);
                 var status = ClassifyMethodDeltas(deltas);
-                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, status, deltas));
+                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, status, deltas,
+                    MethodChangeKind.Changed, a.MemberId ?? b.MemberId));
+            }
+            else
+            {
+                diffs.Add(new MethodDiff(b.MethodName, b.ParameterCount, ChangeStatus.Unchanged, [],
+                    MethodChangeKind.Removed, b.MemberId));
+            }
+        }
+
+        foreach (var a in after)
+        {
+            var key = MethodKey(a);
+            if (!matched.Contains(key))
+            {
+                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, ChangeStatus.Unchanged, [],
+                    MethodChangeKind.Added, a.MemberId));
             }
         }
 
         return diffs;
     }
 
-    static string MethodKey(MethodMetrics m) => $"{m.MethodName}:{m.ParameterCount}";
+    static List<MetricDelta<int>> BuildMethodDeltas(MethodMetrics b, MethodMetrics a) =>
+    [
+        new("CognitiveComplexity", b.CognitiveComplexity, a.CognitiveComplexity, a.CognitiveComplexity - b.CognitiveComplexity),
+        new("CyclomaticComplexity", b.CyclomaticComplexity, a.CyclomaticComplexity, a.CyclomaticComplexity - b.CyclomaticComplexity),
+        new("MaxNestingDepth", b.MaxNestingDepth, a.MaxNestingDepth, a.MaxNestingDepth - b.MaxNestingDepth),
+        new("LineCount", b.LineCount, a.LineCount, a.LineCount - b.LineCount),
+    ];
+
+    static string MethodKey(MethodMetrics m) => m.MemberId ?? $"{m.MethodName}:{m.ParameterCount}";
 
     static IReadOnlyList<SmellChange>? ComputeSmellChanges(
         IReadOnlyList<CodeSmell>? before, IReadOnlyList<CodeSmell>? after)

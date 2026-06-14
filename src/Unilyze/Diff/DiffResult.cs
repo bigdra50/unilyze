@@ -3,13 +3,17 @@ namespace Unilyze.Diff;
 
 internal enum ChangeStatus { Improved, Degraded, Unchanged }
 
+internal enum MethodChangeKind { Added, Removed, Changed }
+
 internal sealed record MetricDelta<T>(string Name, T Before, T After, T Delta) where T : struct;
 
 internal sealed record MethodDiff(
     string MethodName,
     int ParameterCount,
     ChangeStatus Status,
-    IReadOnlyList<MetricDelta<int>> IntDeltas);
+    IReadOnlyList<MetricDelta<int>> IntDeltas,
+    MethodChangeKind ChangeKind = MethodChangeKind.Changed,
+    string? MemberId = null);
 
 internal sealed record SmellChange(CodeSmell Smell, bool IsResolved);
 
