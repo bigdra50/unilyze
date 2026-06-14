@@ -160,9 +160,17 @@ internal static class MemberBodyEnumerator
     static bool TryGetOperatorName(bool isUnary, SyntaxKind opKind, out string name)
     {
         if (isUnary)
-            return UnaryOperatorNames.TryGetValue(opKind, out name);
+        {
+            var found = UnaryOperatorNames.TryGetValue(opKind, out var n);
+            name = n ?? "";
+            return found;
+        }
 
-        return BinaryOperatorNames.TryGetValue(opKind, out name);
+        {
+            var found = BinaryOperatorNames.TryGetValue(opKind, out var n);
+            name = n ?? "";
+            return found;
+        }
     }
 
     static readonly Dictionary<SyntaxKind, string> UnaryOperatorNames = new()
