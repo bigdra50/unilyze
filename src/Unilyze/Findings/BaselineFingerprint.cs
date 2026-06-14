@@ -12,7 +12,8 @@ internal sealed record BaselineFingerprintEntry(
     [property: JsonPropertyName("kind")] CodeSmellKind Kind,
     [property: JsonPropertyName("methodName")] string? MethodName,
     [property: JsonPropertyName("count")] int Count,
-    [property: JsonPropertyName("maxSeverity")] SmellSeverity MaxSeverity);
+    [property: JsonPropertyName("maxSeverity")] SmellSeverity MaxSeverity,
+    [property: JsonPropertyName("memberId")] string? MemberId = null);
 
 internal sealed record BaselineFile(
     [property: JsonPropertyName("schemaVersion")] int SchemaVersion,
@@ -33,7 +34,7 @@ internal sealed record BaselineFile(
 
     public static BaselineFile FromAnalysis(AnalysisResult result)
     {
-        var groups = new Dictionary<string, (int Count, SmellSeverity MaxSeverity)>(StringComparer.Ordinal);
+        var groups = new Dictionary<string, (int Count, SmellSeverity MaxSeverity, string? MemberId)>(StringComparer.Ordinal);
 
         if (result.TypeMetrics is not null)
         {
@@ -50,18 +51,19 @@ internal sealed record BaselineFile(
                     {
                         groups[key] = (
                             existing.Count + 1,
-                            MaxSeverity(existing.MaxSeverity, smell.Severity));
+                            MaxSeverity(existing.MaxSeverity, smell.Severity),
+                            existing.MemberId ?? smell.MemberId);
                     }
                     else
                     {
-                        groups[key] = (1, smell.Severity);
+                        groups[key] = (1, smell.Severity, smell.MemberId);
                     }
                 }
             }
         }
 
         var fingerprints = groups
-            .Select(pair => ParseKey(pair.Key, pair.Value.Count, pair.Value.MaxSeverity))
+            .Select(pair => ParseKey(pair.Key, pair.Value.Count, pair.Value.MaxSeverity, pair.Value.MemberId))
             .OrderBy(entry => entry.TypeId, StringComparer.Ordinal)
             .ThenBy(entry => entry.Kind)
             .ThenBy(entry => entry.MethodName ?? "", StringComparer.Ordinal)
@@ -116,7 +118,7 @@ internal sealed record BaselineFile(
     internal static string SmellKey(CodeSmellKind kind, string? methodName)
         => $"{kind}:{methodName ?? ""}";
 
-    static BaselineFingerprintEntry ParseKey(string key, int count, SmellSeverity maxSeverity)
+    static BaselineFingerprintEntry ParseKey(string key, int count, SmellSeverity maxSeverity, string? memberId = null)
     {
         var separator = key.IndexOf('|');
         if (separator <= 0 || separator >= key.Length - 1)
@@ -138,7 +140,8 @@ internal sealed record BaselineFile(
             kind,
             string.IsNullOrEmpty(methodName) ? null : methodName,
             count,
-            maxSeverity);
+            maxSeverity,
+            memberId);
     }
 
     static SmellSeverity MaxSeverity(SmellSeverity left, SmellSeverity right)

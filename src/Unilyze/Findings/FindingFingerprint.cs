@@ -7,13 +7,16 @@ namespace Unilyze.Findings;
 internal static class FindingFingerprint
 {
     internal readonly record struct OccurrenceKey(string File, string TypeName, string? MethodName, string RuleId);
+    internal readonly record struct OccurrenceKeyV2(string MemberId, string RuleId);
 
     public static AnalysisResult AssignIds(AnalysisResult result)
     {
         if (result.TypeMetrics is not { Count: > 0 })
             return result;
 
-        var occurrenceCounts = new Dictionary<OccurrenceKey, int>();
+        var v1Counts = new Dictionary<OccurrenceKey, int>();
+        var v2Counts = new Dictionary<OccurrenceKeyV2, int>();
+
         var updatedMetrics = result.TypeMetrics.Select(typeMetrics =>
         {
             if (typeMetrics.CodeSmells is not { Count: > 0 })
@@ -31,13 +34,32 @@ internal static class FindingFingerprint
                     continue;
                 }
 
-                var key = new OccurrenceKey(relativePath, smell.TypeName, smell.MethodName, ruleId);
-                occurrenceCounts.TryGetValue(key, out var occurrenceIndex);
-                occurrenceCounts[key] = occurrenceIndex + 1;
+                string id;
+                string? legacyId = null;
+                if (smell.MemberId is not null)
+                {
+                    var v2Key = new OccurrenceKeyV2(smell.MemberId, ruleId);
+                    v2Counts.TryGetValue(v2Key, out var v2Index);
+                    v2Counts[v2Key] = v2Index + 1;
+                    id = SarifFormattingHelpers.ComputeFingerprint(
+                        ruleId, smell.MemberId, v2Index);
 
-                var id = SarifFormattingHelpers.ComputeFingerprint(
-                    ruleId, relativePath, smell.TypeName, smell.MethodName, occurrenceIndex);
-                updatedSmells.Add(smell with { Id = id });
+                    var v1Key = new OccurrenceKey(relativePath, smell.TypeName, smell.MethodName, ruleId);
+                    v1Counts.TryGetValue(v1Key, out var v1Index);
+                    v1Counts[v1Key] = v1Index + 1;
+                    legacyId = SarifFormattingHelpers.ComputeFingerprint(
+                        ruleId, relativePath, smell.TypeName, smell.MethodName, v1Index);
+                }
+                else
+                {
+                    var v1Key = new OccurrenceKey(relativePath, smell.TypeName, smell.MethodName, ruleId);
+                    v1Counts.TryGetValue(v1Key, out var v1Index);
+                    v1Counts[v1Key] = v1Index + 1;
+                    id = SarifFormattingHelpers.ComputeFingerprint(
+                        ruleId, relativePath, smell.TypeName, smell.MethodName, v1Index);
+                }
+
+                updatedSmells.Add(smell with { Id = id, LegacyId = legacyId });
             }
 
             return typeMetrics with { CodeSmells = updatedSmells };

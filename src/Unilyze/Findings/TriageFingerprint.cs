@@ -109,10 +109,15 @@ internal static class TriageMatcher
 
             var updatedSmells = typeMetrics.CodeSmells.Select(smell =>
             {
-                if (smell.Id is null || !lookup.TryGetValue(smell.Id, out var entry))
+                TriageEntry? entry = null;
+                if (smell.Id is not null && lookup.TryGetValue(smell.Id, out entry))
+                    currentIds.Add(smell.Id);
+                else if (smell.LegacyId is not null && lookup.TryGetValue(smell.LegacyId, out entry))
+                    currentIds.Add(smell.LegacyId);
+
+                if (entry is null)
                     return smell;
 
-                currentIds.Add(smell.Id);
                 matched.TryGetValue(entry.Verdict, out var count);
                 matched[entry.Verdict] = count + 1;
                 return smell with { Triage = entry.Verdict };
