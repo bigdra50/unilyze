@@ -11,9 +11,24 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-06-14
+
+### Added
+
+- Source-position model: `SourceLocation` (FileRef, StartLine, EndLine) on every member kind — field, property, event, indexer, constructor, destructor, operator, and conversion operator; previously only methods carried positions. `Declarations[]` on types aggregates partial declaration locations. `SourceTable` provides integer-indexed path indirection to bound JSON growth. `SchemaVersion` field added to `AnalysisResult` ([#206](https://github.com/bigdra50/unilyze/issues/206))
+- Syntax-primary `memberId` for all member kinds: stable, purely syntactic identifier (`{typeId}|{kind}:{signature}`) covering overloads, generics, explicit-interface members, constructors, operators, and conversion operators; identical between SyntaxOnly and semantic analysis runs ([#207](https://github.com/bigdra50/unilyze/issues/207))
+- `MethodChangeKind` (Added/Removed/Changed) on `MethodDiff`, separate from the quality-level `ChangeStatus`; methods paired by `memberId` with fallback to `name:paramCount` for old snapshots ([#208](https://github.com/bigdra50/unilyze/issues/208))
+- `GitDiffService` for working-tree vs HEAD text diff with explicit unborn/untracked/deleted/no-repo state handling, async process execution with cancellation and 512KB byte cap; `GET /api/diff?fileId=` endpoint on serve ([#211](https://github.com/bigdra50/unilyze/issues/211))
+- `HeadAnalysisService` with OID-keyed HEAD analysis cache, independent OID polling (watcher excludes `.git`), and level-match gating for metric badges ([#212](https://github.com/bigdra50/unilyze/issues/212))
+- `deltaScore` surfaced as a standalone quality-risk indicator in `/api/state` (score + low/high risk counts), separate from line-level diff classification ([#213](https://github.com/bigdra50/unilyze/issues/213))
+- Per-generation 6-stage measurement breakdown (analysis/sanitize/serialize server-side) for performance-driven optimization gating ([#205](https://github.com/bigdra50/unilyze/issues/205))
+- README screenshots: type dependency graph, in-browser source viewer, and diff viewer with degradation halos
+
 ### Changed
 
 - Re-added `net9.0` as a supported target framework alongside `net8.0` and `net10.0`, reversing the 0.4.0 drop. The .NET version support policy now targets every TFM from the oldest supported LTS up to the latest LTS with no gaps; EOL is no longer an exclusion criterion, and the floor LTS is raised only once it reaches EOL ([#43](https://github.com/bigdra50/unilyze/issues/43)). **Global-tool impact:** the tool again runs on a .NET 9 runtime.
+- Diff matching (`CountChangedMethods`, `ComputeSmellChanges`) unified on `memberId` with multiset comparison; multiple same-kind findings in one member are now individually tracked instead of collapsed ([#209](https://github.com/bigdra50/unilyze/issues/209))
+- Finding fingerprint v2 (memberId-based) with backward-compatible triage matching via `LegacyId`; baseline entries gain optional `MemberId` field; no existing triage verdicts or baseline ratchets are stranded ([#210](https://github.com/bigdra50/unilyze/issues/210))
 
 ## [0.4.1] - 2026-06-13
 
