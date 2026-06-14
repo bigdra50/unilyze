@@ -99,13 +99,10 @@ internal static class CodeHealthCalculator
             Math.Round(worstDecileAverage, 1));
     }
 
-    static readonly HashSet<string> ExecutableMemberKinds =
-        ["Method", "Constructor", "Destructor", "Operator", "ConversionOperator"];
-
     static TypeMetrics ComputeSingleType(TypeNodeInfo type)
     {
         var methods = type.Members
-            .Where(m => ExecutableMemberKinds.Contains(m.MemberKind) && m.CognitiveComplexity.HasValue)
+            .Where(m => m.MemberKind == "Method" && m.CognitiveComplexity.HasValue)
             .Select(m =>
             {
                 var mi = m.HalsteadVolume.HasValue
