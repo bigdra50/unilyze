@@ -12,6 +12,8 @@ For build, test, and release information, see [README.dev.md](README.dev.md).
 
 <div><video controls src="https://github.com/user-attachments/assets/60ae2566-f961-4324-a16d-8f384b7d03fd" muted="false"></video></div>
 
+![Type dependency graph with Code Health badges](https://github.com/user-attachments/assets/9191b866-55ca-46f2-9f1d-894859d9d020)
+
 Live demo (unilyze analyzing its own source): <https://bigdra50.github.io/unilyze/demo/>
 
 Documentation: <https://bigdra50.github.io/unilyze/>
@@ -292,9 +294,13 @@ Metric-threshold smells (God Class, Long Method, coupling, cohesion, etc.), perf
 | `json` | Agent integration, programmatic use |
 | `sarif` | GitHub Code Scanning (stable fingerprints, rule help links) |
 
+![In-browser read-only source viewer](https://github.com/user-attachments/assets/2b6754c5-3b12-4eb2-8b19-e7e0f2017a0c)
+
 ## Diff Viewer
 
 `unilyze diff <before.json> <after.json> -o diff.html` overlays metric deltas on the standard viewer (change badges, `Changed only` toggle, graph halos). Regression gates, markdown PR output, and `--base-ref` workflows: [docs/ci-integration.md](./docs/ci-integration.md).
+
+![Diff viewer with degradation halos and metric badges](https://github.com/user-attachments/assets/7651a23f-2413-405d-a7e5-61d0af0b66f7)
 
 ```bash
 unilyze diff before.json after.json --fail-on-regression
