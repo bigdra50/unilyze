@@ -27,13 +27,17 @@ internal sealed record AnalysisResult(
     bool? ResolveNuget = null,
     bool? IncludeGenerated = null,
     string? TargetFramework = null,
-    double? EnergyPressure = null)
+    double? EnergyPressure = null,
+    int SchemaVersion = 0,
+    IReadOnlyList<string>? SourceTable = null)
 {
     /// <summary>
     /// Metric definition version written to JSON as <c>metricsVersion</c>.
     /// Increment when any change alters measured values (requires minor bump + CHANGELOG [metrics] entry).
     /// </summary>
     public const int CurrentMetricsVersion = 4;
+
+    public const int CurrentSchemaVersion = 1;
 }
 
 internal sealed record AssemblyInfo(
@@ -53,6 +57,7 @@ internal sealed record AssemblyInfo(
         typeof(JsonStringEnumConverter<SmellSeverity>),
         typeof(JsonStringEnumConverter<TypeRole>),
         typeof(JsonStringEnumConverter<ChangeStatus>),
+        typeof(JsonStringEnumConverter<MethodChangeKind>),
         typeof(JsonStringEnumConverter<CycleLevel>)])]
 [JsonSerializable(typeof(AnalysisResult))]
 [JsonSerializable(typeof(DiffResult))]

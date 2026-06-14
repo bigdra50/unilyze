@@ -137,6 +137,16 @@ static class SarifFormattingHelpers
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
+    public static string ComputeFingerprint(
+        string ruleId,
+        string memberId,
+        int occurrenceIndex)
+    {
+        var payload = string.Join('\0', "v2", ruleId, memberId, occurrenceIndex.ToString());
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
     static JsonObject? BuildLocation(TypeMetrics typeMetrics, CodeSmell smell, string projectPath)
     {
         if (string.IsNullOrEmpty(typeMetrics.FilePath)) return null;

@@ -50,7 +50,9 @@ internal sealed record CodeSmell(
     string? SuppressionJustification = null,
     string? Id = null,
     string? Triage = null,
-    bool? InHotPath = null);
+    bool? InHotPath = null,
+    string? MemberId = null,
+    string? LegacyId = null);
 
 internal static class CodeSmellDetector
 {

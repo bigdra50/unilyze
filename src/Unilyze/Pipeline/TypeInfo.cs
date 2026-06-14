@@ -57,7 +57,8 @@ internal sealed record TypeNodeInfo(
     int? StartLine = null,
     string? QualifiedName = null,
     string? TypeId = null,
-    TypeRole? Role = null);
+    TypeRole? Role = null,
+    IReadOnlyList<SourceLocation>? Declarations = null);
 
 internal sealed record MemberInfo(
     string Name,
@@ -74,7 +75,9 @@ internal sealed record MemberInfo(
     double? HalsteadVolume = null,
     double? HalsteadDifficulty = null,
     double? HalsteadEffort = null,
-    double? HalsteadEstimatedBugs = null);
+    double? HalsteadEstimatedBugs = null,
+    SourceLocation? Location = null,
+    string? MemberId = null);
 
 internal sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
@@ -208,9 +211,9 @@ internal static class TypeAnalyzer
             ? baseList.Types.Select(t => t.Type.ToString()).ToList()
             : [];
 
-        var members = MemberExtractor.ExtractMembers(typeDecl).ToList();
+        var members = MemberExtractor.ExtractMembers(typeDecl, typeId).ToList();
         var ctorParams = MemberExtractor.ExtractConstructorParams(typeDecl).ToList();
-        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams);
+        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams, typeId);
 
         var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
 
@@ -218,10 +221,12 @@ internal static class TypeAnalyzer
         var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
         var typeStartLine = typeSpan.StartLinePosition.Line + 1;
 
+        var typeLocation = new SourceLocation(FileRef: 0, StartLine: typeStartLine, EndLine: typeSpan.EndLinePosition.Line + 1);
+
         return new TypeNodeInfo(
             name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
             attributes, genericConstraints, null, assemblyName, filePath, isNested, typeLineCount, typeStartLine,
-            qualifiedName, typeId);
+            qualifiedName, typeId, Declarations: [typeLocation]);
     }
 
     static string GetTypeKind(TypeDeclarationSyntax typeDecl) => typeDecl switch
@@ -259,9 +264,11 @@ internal static class TypeAnalyzer
             {
                 var value = m.EqualsValue?.Value.ToString();
                 var memberType = value != null ? $"enum = {value}" : "enum";
+                var location = MemberExtractor.ComputeLocation(m);
                 return new MemberInfo(
                     m.Identifier.Text, memberType, "EnumMember", [], [],
-                    MemberExtractor.GetAttributeInfos(m.AttributeLists));
+                    MemberExtractor.GetAttributeInfos(m.AttributeLists),
+                    Location: location);
             })
             .ToList();
 
@@ -269,10 +276,12 @@ internal static class TypeAnalyzer
         var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
         var enumStartLine = enumSpan.StartLinePosition.Line + 1;
 
+        var enumLocation = new SourceLocation(FileRef: 0, StartLine: enumStartLine, EndLine: enumSpan.EndLinePosition.Line + 1);
+
         return new TypeNodeInfo(
             enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
             attributes, [], enumBaseType, assemblyName, filePath, isNested, enumLineCount, enumStartLine,
-            qualifiedName, typeId);
+            qualifiedName, typeId, Declarations: [enumLocation]);
     }
 
     static TypeNodeInfo ExtractSingleDelegateDecl(DelegateDeclarationSyntax delDecl, string assemblyName, string filePath)
@@ -307,10 +316,12 @@ internal static class TypeAnalyzer
         var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
         var delStartLine = delSpan.StartLinePosition.Line + 1;
 
+        var delLocation = new SourceLocation(FileRef: 0, StartLine: delStartLine, EndLine: delSpan.EndLinePosition.Line + 1);
+
         return new TypeNodeInfo(
             name, ns, "delegate", modifiers, null, [], members, [],
             attributes, genericConstraints, null, assemblyName, filePath, isNested, delLineCount, delStartLine,
-            qualifiedName, typeId);
+            qualifiedName, typeId, Declarations: [delLocation]);
     }
 
     // --- Phase 2: Resolve base type vs interfaces ---
@@ -347,6 +358,9 @@ internal static class TypeAnalyzer
     {
         var first = parts[0];
         var baseType = parts.Select(p => p.BaseType).FirstOrDefault(b => b is not null);
+        var declarations = parts
+            .SelectMany(p => p.Declarations ?? [])
+            .ToList();
         return first with
         {
             LineCount = parts.Sum(p => p.LineCount),
@@ -355,7 +369,8 @@ internal static class TypeAnalyzer
             Members = parts.SelectMany(p => p.Members).ToList(),
             ConstructorParams = parts.SelectMany(p => p.ConstructorParams).ToList(),
             Attributes = parts.SelectMany(p => p.Attributes).DistinctBy(a => a.Name).ToList(),
-            GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList()
+            GenericConstraints = parts.SelectMany(p => p.GenericConstraints).DistinctBy(c => c.TypeParameter).ToList(),
+            Declarations = declarations.Count > 0 ? declarations : null
         };
     }
 

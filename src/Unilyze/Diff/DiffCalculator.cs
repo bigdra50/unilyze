@@ -249,22 +249,40 @@ internal static class DiffCalculator
             if (afterByKey.TryGetValue(key, out var a))
             {
                 matched.Add(key);
-                var deltas = new List<MetricDelta<int>>
-                {
-                    new("CognitiveComplexity", b.CognitiveComplexity, a.CognitiveComplexity, a.CognitiveComplexity - b.CognitiveComplexity),
-                    new("CyclomaticComplexity", b.CyclomaticComplexity, a.CyclomaticComplexity, a.CyclomaticComplexity - b.CyclomaticComplexity),
-                    new("MaxNestingDepth", b.MaxNestingDepth, a.MaxNestingDepth, a.MaxNestingDepth - b.MaxNestingDepth),
-                    new("LineCount", b.LineCount, a.LineCount, a.LineCount - b.LineCount),
-                };
+                var deltas = BuildMethodDeltas(b, a);
                 var status = ClassifyMethodDeltas(deltas);
-                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, status, deltas));
+                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, status, deltas,
+                    MethodChangeKind.Changed, a.MemberId ?? b.MemberId));
+            }
+            else
+            {
+                diffs.Add(new MethodDiff(b.MethodName, b.ParameterCount, ChangeStatus.Unchanged, [],
+                    MethodChangeKind.Removed, b.MemberId));
+            }
+        }
+
+        foreach (var a in after)
+        {
+            var key = MethodKey(a);
+            if (!matched.Contains(key))
+            {
+                diffs.Add(new MethodDiff(a.MethodName, a.ParameterCount, ChangeStatus.Unchanged, [],
+                    MethodChangeKind.Added, a.MemberId));
             }
         }
 
         return diffs;
     }
 
-    static string MethodKey(MethodMetrics m) => $"{m.MethodName}:{m.ParameterCount}";
+    static List<MetricDelta<int>> BuildMethodDeltas(MethodMetrics b, MethodMetrics a) =>
+    [
+        new("CognitiveComplexity", b.CognitiveComplexity, a.CognitiveComplexity, a.CognitiveComplexity - b.CognitiveComplexity),
+        new("CyclomaticComplexity", b.CyclomaticComplexity, a.CyclomaticComplexity, a.CyclomaticComplexity - b.CyclomaticComplexity),
+        new("MaxNestingDepth", b.MaxNestingDepth, a.MaxNestingDepth, a.MaxNestingDepth - b.MaxNestingDepth),
+        new("LineCount", b.LineCount, a.LineCount, a.LineCount - b.LineCount),
+    ];
+
+    static string MethodKey(MethodMetrics m) => m.MemberId ?? $"{m.MethodName}:{m.ParameterCount}";
 
     static IReadOnlyList<SmellChange>? ComputeSmellChanges(
         IReadOnlyList<CodeSmell>? before, IReadOnlyList<CodeSmell>? after)
@@ -274,27 +292,54 @@ internal static class DiffCalculator
         var beforeSmells = (before ?? []).Where(SmellAggregation.CountsForDiff).ToList();
         var afterSmells = (after ?? []).Where(SmellAggregation.CountsForDiff).ToList();
 
-        var beforeKeys = new HashSet<string>(beforeSmells.Select(SmellKey));
-        var afterKeys = new HashSet<string>(afterSmells.Select(SmellKey));
+        var beforeCounts = BuildSmellMultiset(beforeSmells);
+        var afterCounts = BuildSmellMultiset(afterSmells);
 
         var changes = new List<SmellChange>();
 
         foreach (var s in beforeSmells)
         {
-            if (!afterKeys.Contains(SmellKey(s)))
-                changes.Add(new SmellChange(s, IsResolved: true));
+            var key = SmellKey(s);
+            if (afterCounts.TryGetValue(key, out var remaining) && remaining > 0)
+            {
+                afterCounts[key] = remaining - 1;
+                continue;
+            }
+            changes.Add(new SmellChange(s, IsResolved: true));
         }
 
+        var beforeRemaining = BuildSmellMultiset(beforeSmells);
         foreach (var s in afterSmells)
         {
-            if (!beforeKeys.Contains(SmellKey(s)))
-                changes.Add(new SmellChange(s, IsResolved: false));
+            var key = SmellKey(s);
+            if (beforeRemaining.TryGetValue(key, out var remaining) && remaining > 0)
+            {
+                beforeRemaining[key] = remaining - 1;
+                continue;
+            }
+            changes.Add(new SmellChange(s, IsResolved: false));
         }
 
         return changes.Count > 0 ? changes : null;
     }
 
-    static string SmellKey(CodeSmell s) => $"{s.Kind}:{s.MethodName ?? ""}";
+    static Dictionary<string, int> BuildSmellMultiset(IReadOnlyList<CodeSmell> smells)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var s in smells)
+        {
+            var key = SmellKey(s);
+            counts.TryGetValue(key, out var count);
+            counts[key] = count + 1;
+        }
+        return counts;
+    }
+
+    static string SmellKey(CodeSmell s)
+    {
+        var memberKey = s.MemberId ?? s.MethodName ?? "";
+        return $"{s.Kind}:{memberKey}";
+    }
 
     static IReadOnlyList<CodeSmell> FilterActiveSmells(IReadOnlyList<CodeSmell>? smells)
         => smells?.Where(s => s.Suppressed != true).ToList() ?? [];

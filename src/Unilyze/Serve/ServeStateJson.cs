@@ -48,11 +48,28 @@ internal static class ServeStateJson
                 writer.WriteStartObject("metrics");
                 writer.WriteNumber("analysisMillis", metrics.AnalysisMillis);
                 writer.WriteNumber("jsonSizeBytes", metrics.JsonSizeBytes);
+                if (metrics.SanitizeMillis.HasValue)
+                    writer.WriteNumber("sanitizeMillis", metrics.SanitizeMillis.Value);
+                if (metrics.SerializeMillis.HasValue)
+                    writer.WriteNumber("serializeMillis", metrics.SerializeMillis.Value);
                 writer.WriteEndObject();
             }
             else
             {
                 writer.WriteNull("metrics");
+            }
+
+            if (state.DeltaScore is { } delta)
+            {
+                writer.WriteStartObject("deltaScore");
+                writer.WriteNumber("score", delta.Score);
+                writer.WriteNumber("lowRiskCount", delta.LowRiskCount);
+                writer.WriteNumber("highRiskCount", delta.HighRiskCount);
+                writer.WriteEndObject();
+            }
+            else
+            {
+                writer.WriteNull("deltaScore");
             }
 
             writer.WriteEndObject();

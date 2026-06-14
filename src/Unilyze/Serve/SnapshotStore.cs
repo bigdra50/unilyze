@@ -119,7 +119,8 @@ internal sealed class SnapshotStore
         _lastSuccessUtc,
         _lastErrorCode,
         _lastError,
-        _lastMetrics);
+        _lastMetrics,
+        _snapshot?.Content.DeltaScore);
 
     static TaskCompletionSource<long> CreateChangeSignal() =>
         new(TaskCreationOptions.RunContinuationsAsynchronously);

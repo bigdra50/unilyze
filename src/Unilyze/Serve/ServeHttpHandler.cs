@@ -26,14 +26,16 @@ internal sealed class ServeHttpHandler
     readonly ServeAuth _auth;
     readonly SnapshotStore _store;
     readonly string _title;
+    readonly string _projectRoot;
     readonly object _longPollGate = new();
     readonly LinkedList<CancellationTokenSource> _activeLongPolls = new();
 
-    public ServeHttpHandler(ServeAuth auth, SnapshotStore store, string title)
+    public ServeHttpHandler(ServeAuth auth, SnapshotStore store, string title, string projectRoot)
     {
         _auth = auth;
         _store = store;
         _title = title;
+        _projectRoot = projectRoot;
     }
 
     public async Task HandleAsync(HttpListenerContext context, CancellationToken cancellationToken)
@@ -137,8 +139,10 @@ internal sealed class ServeHttpHandler
             case "/api/source":
                 HandleSource(context);
                 break;
+            case "/api/diff":
+                HandleDiff(context, cancellationToken);
+                break;
             case "/api/metrics":
-                // Loopback + authed view of the latest measurements (analysis time, JSON size).
                 WriteJson(context, 200, ServeStateJson.Build(_store.GetState()));
                 break;
             default:
@@ -300,6 +304,35 @@ internal sealed class ServeHttpHandler
         response.ContentLength64 = body.Length;
         response.OutputStream.Write(body, 0, body.Length);
         response.OutputStream.Close();
+    }
+
+    void HandleDiff(HttpListenerContext context, CancellationToken cancellationToken)
+    {
+        var snapshot = _store.Current;
+        if (snapshot is null)
+        {
+            WriteStatus(context, 503, "No snapshot yet");
+            return;
+        }
+
+        var fileId = context.Request.QueryString["fileId"];
+        if (string.IsNullOrEmpty(fileId))
+        {
+            WriteStatus(context, 400, "Missing fileId");
+            return;
+        }
+
+        if (!snapshot.Content.FileIdToAbsolutePath.TryGetValue(fileId, out var absolutePath))
+        {
+            WriteStatus(context, 404, "Unknown fileId");
+            return;
+        }
+
+        var diffService = new GitDiffService(_projectRoot);
+        var result = diffService.GetFileDiff(absolutePath, cancellationToken);
+        var json = $"{{\"state\":\"{result.State.ToString().ToLowerInvariant()}\","
+                 + $"\"diff\":{System.Text.Json.JsonSerializer.Serialize(result.Diff)}}}";
+        WriteJson(context, 200, json);
     }
 
     static long ParseAfter(string? raw) =>
