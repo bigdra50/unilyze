@@ -1902,6 +1902,7 @@ function graphNodesForSearch(typeKeys,nsPaths){
 function applyGraphSearchHighlight(matchedEles,fit){
   cy.elements().addClass('dim');
   matchedEles.removeClass('dim').addClass('hl');
+  matchedEles.ancestors().removeClass('dim');
   matchedEles.connectedEdges().filter(e=>e.style('display')!=='none').removeClass('dim');
   matchedEles.connectedEdges().connectedNodes().filter(n=>n.style('display')!=='none').removeClass('dim');
   if(fit&&matchedEles.length) cy.animate({fit:{eles:matchedEles,padding:60},duration:250});
