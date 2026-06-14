@@ -15,6 +15,8 @@ internal enum ServePhase
 /// <summary>Per-generation measurements, surfaced so Phase 2 perf work is data-driven.</summary>
 internal sealed record ServeAnalysisMetrics(double AnalysisMillis, int JsonSizeBytes);
 
+internal sealed record ServeDeltaScore(double Score, int LowRiskCount, int HighRiskCount);
+
 /// <summary>
 /// The heavy, generation-independent product of one successful analysis. The store wraps
 /// it with a generation number when it is published, producing a <see cref="ServeSnapshot"/>.
@@ -26,7 +28,8 @@ internal sealed record ServeSnapshotContent(
     ServeAnalysisMetrics Metrics,
     IReadOnlyDictionary<string, string> FileIdToAbsolutePath,
     IReadOnlyDictionary<string, string> FileIdToDisplayPath,
-    IReadOnlyList<string> AllowedSourceRoots);
+    IReadOnlyList<string> AllowedSourceRoots,
+    ServeDeltaScore? DeltaScore = null);
 
 /// <summary>An immutable successful snapshot, tagged with the generation it was published at.</summary>
 internal sealed record ServeSnapshot(long Generation, ServeSnapshotContent Content)
@@ -49,4 +52,5 @@ internal sealed record ServeStateView(
     DateTimeOffset? LastSuccessUtc,
     string? LastErrorCode,
     string? LastError,
-    ServeAnalysisMetrics? LastMetrics);
+    ServeAnalysisMetrics? LastMetrics,
+    ServeDeltaScore? DeltaScore = null);

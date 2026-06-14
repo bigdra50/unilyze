@@ -55,6 +55,19 @@ internal static class ServeStateJson
                 writer.WriteNull("metrics");
             }
 
+            if (state.DeltaScore is { } delta)
+            {
+                writer.WriteStartObject("deltaScore");
+                writer.WriteNumber("score", delta.Score);
+                writer.WriteNumber("lowRiskCount", delta.LowRiskCount);
+                writer.WriteNumber("highRiskCount", delta.HighRiskCount);
+                writer.WriteEndObject();
+            }
+            else
+            {
+                writer.WriteNull("deltaScore");
+            }
+
             writer.WriteEndObject();
         }
 
