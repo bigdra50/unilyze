@@ -13,7 +13,11 @@ internal enum ServePhase
 }
 
 /// <summary>Per-generation measurements, surfaced so Phase 2 perf work is data-driven.</summary>
-internal sealed record ServeAnalysisMetrics(double AnalysisMillis, int JsonSizeBytes);
+internal sealed record ServeAnalysisMetrics(
+    double AnalysisMillis,
+    int JsonSizeBytes,
+    double? SanitizeMillis = null,
+    double? SerializeMillis = null);
 
 internal sealed record ServeDeltaScore(double Score, int LowRiskCount, int HighRiskCount);
 

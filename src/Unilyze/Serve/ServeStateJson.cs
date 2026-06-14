@@ -48,6 +48,10 @@ internal static class ServeStateJson
                 writer.WriteStartObject("metrics");
                 writer.WriteNumber("analysisMillis", metrics.AnalysisMillis);
                 writer.WriteNumber("jsonSizeBytes", metrics.JsonSizeBytes);
+                if (metrics.SanitizeMillis.HasValue)
+                    writer.WriteNumber("sanitizeMillis", metrics.SanitizeMillis.Value);
+                if (metrics.SerializeMillis.HasValue)
+                    writer.WriteNumber("serializeMillis", metrics.SerializeMillis.Value);
                 writer.WriteEndObject();
             }
             else

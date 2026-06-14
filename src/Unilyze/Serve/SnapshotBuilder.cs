@@ -32,15 +32,20 @@ internal sealed class SnapshotBuilder
         var result = RunAnalysis();
         var analysisMillis = sw.Elapsed.TotalMilliseconds;
 
+        sw.Restart();
         var sanitized = SnapshotSanitizer.Sanitize(result, [_projectRoot]);
+        var sanitizeMillis = sw.Elapsed.TotalMilliseconds;
+
+        sw.Restart();
         var json = JsonSerializer.Serialize(sanitized.Result, AnalysisJsonContext.Default.AnalysisResult);
         var bytes = Encoding.UTF8.GetBytes(json);
+        var serializeMillis = sw.Elapsed.TotalMilliseconds;
 
         return new ServeSnapshotContent(
             JsonBytes: bytes,
             ETag: ComputeETag(bytes),
             AnalyzedAtUtc: DateTimeOffset.UtcNow,
-            Metrics: new ServeAnalysisMetrics(analysisMillis, bytes.Length),
+            Metrics: new ServeAnalysisMetrics(analysisMillis, bytes.Length, sanitizeMillis, serializeMillis),
             FileIdToAbsolutePath: sanitized.FileIdToAbsolutePath,
             FileIdToDisplayPath: sanitized.FileIdToDisplayPath,
             AllowedSourceRoots: sanitized.AllowedSourceRoots);
