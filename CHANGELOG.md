@@ -11,6 +11,13 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-14
+
+### Added
+
+- Search stepper navigation: `◀ N / M ▶` control next to filter chips steps through individual search matches with zoom-to-node, detail panel open, and automatic namespace expansion for collapsed targets ([#219](https://github.com/bigdra50/unilyze/pull/219))
+- Search highlight styles: `.hl` (blue border for all matches), `.hl-focus` (gold border + overlay for current stepper target), and ancestor compound un-dimming so type nodes inside namespaces are fully visible ([#219](https://github.com/bigdra50/unilyze/pull/219))
+
 ## [0.5.0] - 2026-06-14
 
 ### Added
