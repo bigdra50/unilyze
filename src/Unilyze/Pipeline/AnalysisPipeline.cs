@@ -156,23 +156,26 @@ internal static class AnalysisPipeline
     static (List<string> Table, IReadOnlyList<TypeNodeInfo> Types) BuildSourceTableAndFixRefs(
         IReadOnlyList<TypeNodeInfo> types)
     {
-        var pathToIndex = new Dictionary<string, int>(StringComparer.Ordinal);
+        var allPaths = new HashSet<string>(StringComparer.Ordinal);
         foreach (var type in types)
         {
             if (!string.IsNullOrEmpty(type.FilePath))
-                pathToIndex.TryAdd(type.FilePath, pathToIndex.Count);
+                allPaths.Add(type.FilePath);
             foreach (var m in type.Members)
                 if (!string.IsNullOrEmpty(m.SourceFile))
-                    pathToIndex.TryAdd(m.SourceFile, pathToIndex.Count);
+                    allPaths.Add(m.SourceFile);
             if (type.Declarations is not null)
                 foreach (var d in type.Declarations)
                     if (!string.IsNullOrEmpty(d.SourceFile))
-                        pathToIndex.TryAdd(d.SourceFile, pathToIndex.Count);
+                        allPaths.Add(d.SourceFile);
         }
 
-        var table = new string[pathToIndex.Count];
-        foreach (var (path, index) in pathToIndex)
-            table[index] = path;
+        var sortedPaths = allPaths.OrderBy(p => p, StringComparer.Ordinal).ToList();
+        var pathToIndex = new Dictionary<string, int>(StringComparer.Ordinal);
+        for (var i = 0; i < sortedPaths.Count; i++)
+            pathToIndex[sortedPaths[i]] = i;
+
+        var table = sortedPaths;
 
         int ResolveRef(string? path) =>
             !string.IsNullOrEmpty(path) && pathToIndex.TryGetValue(path, out var idx) ? idx : 0;

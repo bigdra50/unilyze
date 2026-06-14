@@ -4599,7 +4599,7 @@
           "endLine": 9
         },
         {
-          "fileRef": 19,
+          "fileRef": 20,
           "startLine": 6,
           "endLine": 6
         }
@@ -4989,7 +4989,7 @@
           "halsteadEffort": 0,
           "halsteadEstimatedBugs": 0,
           "location": {
-            "fileRef": 20,
+            "fileRef": 19,
             "startLine": 5,
             "endLine": 5
           },
@@ -5017,7 +5017,7 @@
           "halsteadEffort": 0,
           "halsteadEstimatedBugs": 0,
           "location": {
-            "fileRef": 20,
+            "fileRef": 19,
             "startLine": 6,
             "endLine": 6
           },
@@ -5045,7 +5045,7 @@
           "halsteadEffort": 0,
           "halsteadEstimatedBugs": 0,
           "location": {
-            "fileRef": 20,
+            "fileRef": 19,
             "startLine": 7,
             "endLine": 7
           },
@@ -5065,7 +5065,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 3,
           "endLine": 8
         }
@@ -5093,7 +5093,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 10,
           "endLine": 10
         }
@@ -5121,7 +5121,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 12,
           "endLine": 12
         }
@@ -5149,7 +5149,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 14,
           "endLine": 14
         }
@@ -5177,7 +5177,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 16,
           "endLine": 16
         }
@@ -5205,7 +5205,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 18,
           "endLine": 18
         }
@@ -5231,7 +5231,7 @@
           "attributes": [],
           "lineCount": 0,
           "location": {
-            "fileRef": 20,
+            "fileRef": 19,
             "startLine": 22,
             "endLine": 22
           },
@@ -5251,7 +5251,7 @@
       "role": "PlainCSharp",
       "declarations": [
         {
-          "fileRef": 20,
+          "fileRef": 19,
           "startLine": 20,
           "endLine": 23
         }
@@ -5284,7 +5284,7 @@
           "halsteadEffort": 308,
           "halsteadEstimatedBugs": 0.015202414034698918,
           "location": {
-            "fileRef": 19,
+            "fileRef": 20,
             "startLine": 13,
             "endLine": 19
           },
@@ -5304,7 +5304,7 @@
       "role": "MonoBehaviour",
       "declarations": [
         {
-          "fileRef": 19,
+          "fileRef": 20,
           "startLine": 11,
           "endLine": 20
         }
@@ -9644,8 +9644,8 @@
     "/golden-fixture/Assets/Scripts/SerializedRefBase.cs",
     "/golden-fixture/Assets/Scripts/SerializedRefConcrete.cs",
     "/golden-fixture/Assets/Scripts/UnityEngineStubs.cs",
-    "/golden-fixture/Assets/Scripts/UnityHotPathTarget.cs",
     "/golden-fixture/Assets/Scripts/UnityEntitiesStubs.cs",
+    "/golden-fixture/Assets/Scripts/UnityHotPathTarget.cs",
     "/golden-fixture/Assets/Scripts/VContainerStubs.cs",
     "/golden-fixture/Assets/Scripts/WeakTemporizationTarget.cs"
   ]
