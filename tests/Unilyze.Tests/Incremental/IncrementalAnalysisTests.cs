@@ -280,6 +280,34 @@ public sealed class IncrementalAnalysisTests : IDisposable
             ?? throw new InvalidOperationException("Invalid JSON");
         root.Remove("analyzedAt");
         root.Remove("toolVersion");
+
+        var sourceTable = root["sourceTable"]?.AsArray();
+        if (sourceTable is not null)
+        {
+            var pathByIndex = new Dictionary<int, string>();
+            for (var i = 0; i < sourceTable.Count; i++)
+                pathByIndex[i] = sourceTable[i]?.GetValue<string>() ?? "";
+
+            void ResolveFileRef(JsonNode? node)
+            {
+                if (node is JsonObject obj && obj.ContainsKey("fileRef"))
+                {
+                    var idx = obj["fileRef"]?.GetValue<int>() ?? 0;
+                    obj["fileRef"] = pathByIndex.GetValueOrDefault(idx, "");
+                }
+            }
+
+            if (root["types"]?.AsArray() is { } types)
+                foreach (var type in types)
+                {
+                    if (type?["declarations"]?.AsArray() is { } decls)
+                        foreach (var d in decls) ResolveFileRef(d);
+                    if (type?["members"]?.AsArray() is { } members)
+                        foreach (var m in members)
+                            if (m?["location"] is { } loc) ResolveFileRef(loc);
+                }
+        }
+
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
