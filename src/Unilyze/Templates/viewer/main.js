@@ -995,8 +995,8 @@ cy = cytoscape({
     }},
     {selector:'node:selected',style:{'border-width':2.5,'border-color':'#58a6ff'}},
     {selector:'.dim',style:{'opacity':.10}},
-    {selector:'.hl',style:{'opacity':1,'border-width':2.5,'border-color':'#58a6ff','z-index':999,'overlay-color':'#58a6ff','overlay-opacity':.08,'overlay-padding':4}},
-    {selector:'.hl-focus',style:{'opacity':1,'border-width':4,'border-color':'#f0e68c','z-index':1000,'overlay-color':'#f0e68c','overlay-opacity':.15,'overlay-padding':8,'text-outline-color':'#f0e68c','text-outline-width':1}},
+    {selector:'.hl',style:{'opacity':1,'border-width':2.5,'border-color':'#58a6ff','z-index':999}},
+    {selector:'.hl-focus',style:{'opacity':1,'border-width':4,'border-color':'#f0e68c','z-index':1000,'overlay-color':'#f0e68c','overlay-opacity':.12,'overlay-padding':6}},
     {selector:'.cycle',style:{'border-color':'#f97583','border-width':3,'opacity':1,'z-index':999}},
     {selector:'.cycle-edge',style:{'line-color':'#f97583','target-arrow-color':'#f97583','opacity':1,'width':2.5,'z-index':999}},
     {selector:'node[diffBucket="added"]',style:{
