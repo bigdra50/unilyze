@@ -103,14 +103,14 @@ internal static class AnalysisPipeline
             discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
 
-        var (sourceTable, typesWithFileRefs) = BuildSourceTableAndFixRefs(resolvedTypes);
-
         if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
         {
             var manifest = SyntaxIncrementalCollector.BuildManifest(
-                discover.ProjectRoot, incrementalCollect, finalMetrics, typesWithFileRefs);
+                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);
             SyntaxCacheStore.Save(discover.ProjectRoot, manifest);
         }
+
+        var (sourceTable, typesWithFileRefs) = BuildSourceTableAndFixRefs(resolvedTypes);
 
         var profileField = config.Profile == SmellThresholdProfiles.DefaultProfileName
             ? null
