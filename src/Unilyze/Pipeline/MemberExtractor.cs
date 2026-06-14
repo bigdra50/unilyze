@@ -32,110 +32,131 @@ internal static class MemberExtractor
     {
         foreach (var member in typeDecl.Members)
         {
-            switch (member)
-            {
-                case FieldDeclarationSyntax field:
-                    var fieldType = field.Declaration.Type.ToString();
-                    var fieldModifiers = GetModifiers(field.Modifiers);
-                    var fieldAttrs = GetAttributeInfos(field.AttributeLists);
-                    foreach (var variable in field.Declaration.Variables)
-                    {
-                        var location = ComputeLocation(variable);
-                        var fieldMemberId = typeId is not null
-                            ? MemberIdentity.CreateFieldId(typeId, variable.Identifier.Text)
-                            : null;
-                        yield return new MemberInfo(
-                            variable.Identifier.Text, fieldType, "Field",
-                            fieldModifiers, [], fieldAttrs, Location: location,
-                            MemberId: fieldMemberId);
-                    }
-                    break;
-
-                case PropertyDeclarationSyntax prop:
-                    var propLocation = ComputeLocation(prop);
-                    var propMemberId = typeId is not null
-                        ? MemberIdentity.CreatePropertyId(typeId, prop.Identifier.Text)
-                        : null;
-                    yield return new MemberInfo(
-                        prop.Identifier.Text, prop.Type.ToString(), "Property",
-                        GetModifiers(prop.Modifiers), [], GetAttributeInfos(prop.AttributeLists),
-                        Location: propLocation, MemberId: propMemberId);
-                    break;
-
-                case MethodDeclarationSyntax method:
-                    yield return CreateMethodMember(method, typeId);
-                    break;
-
-                case ConstructorDeclarationSyntax ctor:
-                    yield return CreateConstructorMember(ctor, typeId);
-                    break;
-
-                case DestructorDeclarationSyntax dtor:
-                    yield return CreateDestructorMember(dtor, typeId);
-                    break;
-
-                case OperatorDeclarationSyntax op:
-                    yield return CreateOperatorMember(op, typeId);
-                    break;
-
-                case ConversionOperatorDeclarationSyntax conv:
-                    yield return CreateConversionOperatorMember(conv, typeId);
-                    break;
-
-                case EventFieldDeclarationSyntax eventField:
-                    var eventType = eventField.Declaration.Type.ToString();
-                    var eventModifiers = GetModifiers(eventField.Modifiers);
-                    var eventAttrs = GetAttributeInfos(eventField.AttributeLists);
-                    foreach (var variable in eventField.Declaration.Variables)
-                    {
-                        var location = ComputeLocation(variable);
-                        var eventMemberId = typeId is not null
-                            ? MemberIdentity.CreateEventId(typeId, variable.Identifier.Text)
-                            : null;
-                        yield return new MemberInfo(
-                            variable.Identifier.Text, eventType, "Event",
-                            eventModifiers, [], eventAttrs, Location: location,
-                            MemberId: eventMemberId);
-                    }
-                    break;
-
-                case EventDeclarationSyntax eventDecl:
-                    var evtLocation = ComputeLocation(eventDecl);
-                    var evtMemberId = typeId is not null
-                        ? MemberIdentity.CreateEventId(typeId, eventDecl.Identifier.Text)
-                        : null;
-                    yield return new MemberInfo(
-                        eventDecl.Identifier.Text, eventDecl.Type.ToString(), "Event",
-                        GetModifiers(eventDecl.Modifiers), [],
-                        GetAttributeInfos(eventDecl.AttributeLists),
-                        Location: evtLocation, MemberId: evtMemberId);
-                    break;
-
-                case IndexerDeclarationSyntax indexer:
-                    var indexParams = indexer.ParameterList.Parameters
-                        .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-                        .ToList();
-                    var idxLocation = ComputeLocation(indexer);
-                    var idxMemberId = typeId is not null
-                        ? MemberIdentity.CreateIndexerId(typeId, indexer)
-                        : null;
-                    yield return new MemberInfo(
-                        "this[]", indexer.Type.ToString(), "Indexer",
-                        GetModifiers(indexer.Modifiers), indexParams,
-                        GetAttributeInfos(indexer.AttributeLists),
-                        Location: idxLocation, MemberId: idxMemberId);
-                    break;
-            }
+            foreach (var extracted in ExtractSingleMember(member, typeId))
+                yield return extracted;
         }
+    }
+
+    static IEnumerable<MemberInfo> ExtractSingleMember(MemberDeclarationSyntax member, string? typeId) => member switch
+    {
+        FieldDeclarationSyntax field => ExtractFieldMembers(field, typeId),
+        PropertyDeclarationSyntax prop => [CreatePropertyMember(prop, typeId)],
+        MethodDeclarationSyntax method => [CreateMethodMember(method, typeId)],
+        ConstructorDeclarationSyntax ctor => [CreateExecutableMember(ctor, ctor.Identifier.Text + ".ctor", "void", "Constructor", ctor.ParameterList, ctor.Modifiers, ctor.AttributeLists, typeId is not null ? MemberIdentity.CreateConstructorId(typeId, ctor) : null)],
+        DestructorDeclarationSyntax dtor => [CreateExecutableMember(dtor, "~" + dtor.Identifier.Text, "void", "Destructor", null, dtor.Modifiers, dtor.AttributeLists, typeId is not null ? MemberIdentity.CreateDestructorId(typeId) : null)],
+        OperatorDeclarationSyntax op => [CreateExecutableMember(op, MemberBodyEnumerator.GetOperatorMemberName(op), op.ReturnType.ToString(), "Operator", op.ParameterList, op.Modifiers, op.AttributeLists, typeId is not null ? MemberIdentity.CreateOperatorId(typeId, op) : null)],
+        ConversionOperatorDeclarationSyntax conv => [CreateConversionOperatorMember(conv, typeId)],
+        EventFieldDeclarationSyntax eventField => ExtractEventFieldMembers(eventField, typeId),
+        EventDeclarationSyntax eventDecl => [CreateEventMember(eventDecl, typeId)],
+        IndexerDeclarationSyntax indexer => [CreateIndexerMember(indexer, typeId)],
+        _ => []
+    };
+
+    static IEnumerable<MemberInfo> ExtractFieldMembers(FieldDeclarationSyntax field, string? typeId)
+    {
+        var fieldType = field.Declaration.Type.ToString();
+        var modifiers = GetModifiers(field.Modifiers);
+        var attrs = GetAttributeInfos(field.AttributeLists);
+        foreach (var variable in field.Declaration.Variables)
+        {
+            var location = ComputeLocation(variable);
+            var memberId = typeId is not null ? MemberIdentity.CreateFieldId(typeId, variable.Identifier.Text) : null;
+            yield return new MemberInfo(variable.Identifier.Text, fieldType, "Field", modifiers, [], attrs, Location: location, MemberId: memberId);
+        }
+    }
+
+    static MemberInfo CreatePropertyMember(PropertyDeclarationSyntax prop, string? typeId) =>
+        new(prop.Identifier.Text, prop.Type.ToString(), "Property",
+            GetModifiers(prop.Modifiers), [], GetAttributeInfos(prop.AttributeLists),
+            Location: ComputeLocation(prop),
+            MemberId: typeId is not null ? MemberIdentity.CreatePropertyId(typeId, prop.Identifier.Text) : null);
+
+    static IEnumerable<MemberInfo> ExtractEventFieldMembers(EventFieldDeclarationSyntax eventField, string? typeId)
+    {
+        var eventType = eventField.Declaration.Type.ToString();
+        var modifiers = GetModifiers(eventField.Modifiers);
+        var attrs = GetAttributeInfos(eventField.AttributeLists);
+        foreach (var variable in eventField.Declaration.Variables)
+        {
+            var location = ComputeLocation(variable);
+            var memberId = typeId is not null ? MemberIdentity.CreateEventId(typeId, variable.Identifier.Text) : null;
+            yield return new MemberInfo(variable.Identifier.Text, eventType, "Event", modifiers, [], attrs, Location: location, MemberId: memberId);
+        }
+    }
+
+    static MemberInfo CreateEventMember(EventDeclarationSyntax eventDecl, string? typeId) =>
+        new(eventDecl.Identifier.Text, eventDecl.Type.ToString(), "Event",
+            GetModifiers(eventDecl.Modifiers), [], GetAttributeInfos(eventDecl.AttributeLists),
+            Location: ComputeLocation(eventDecl),
+            MemberId: typeId is not null ? MemberIdentity.CreateEventId(typeId, eventDecl.Identifier.Text) : null);
+
+    static MemberInfo CreateIndexerMember(IndexerDeclarationSyntax indexer, string? typeId)
+    {
+        var indexParams = indexer.ParameterList.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList();
+        return new MemberInfo("this[]", indexer.Type.ToString(), "Indexer",
+            GetModifiers(indexer.Modifiers), indexParams, GetAttributeInfos(indexer.AttributeLists),
+            Location: ComputeLocation(indexer),
+            MemberId: typeId is not null ? MemberIdentity.CreateIndexerId(typeId, indexer) : null);
+    }
+
+    internal static MemberInfo CreateMethodMember(MethodDeclarationSyntax method, string? typeId = null)
+    {
+        var methodParams = method.ParameterList.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList();
+        var memberId = typeId is not null ? MemberIdentity.CreateMethodId(typeId, method) : null;
+        return CreateBodyBearingMember(method, method.Identifier.Text, method.ReturnType.ToString(), "Method",
+            methodParams, method.Modifiers, method.AttributeLists, memberId);
+    }
+
+    static MemberInfo CreateConversionOperatorMember(ConversionOperatorDeclarationSyntax conv, string? typeId)
+    {
+        var name = conv.ImplicitOrExplicitKeyword.IsKind(SyntaxKind.ImplicitKeyword) ? "op_Implicit" : "op_Explicit";
+        var memberId = typeId is not null ? MemberIdentity.CreateConversionOperatorId(typeId, conv) : null;
+        return CreateExecutableMember(conv, name, conv.Type.ToString(), "ConversionOperator",
+            conv.ParameterList, conv.Modifiers, conv.AttributeLists, memberId);
+    }
+
+    static MemberInfo CreateExecutableMember(
+        MemberDeclarationSyntax node, string name, string returnType, string memberKind,
+        ParameterListSyntax? parameterList, SyntaxTokenList modifiers,
+        SyntaxList<AttributeListSyntax> attributeLists, string? memberId)
+    {
+        var parameters = parameterList?.Parameters
+            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
+            .ToList() ?? [];
+        return CreateBodyBearingMember(node, name, returnType, memberKind,
+            parameters, modifiers, attributeLists, memberId);
+    }
+
+    static MemberInfo CreateBodyBearingMember(
+        SyntaxNode node, string name, string returnType, string memberKind,
+        IReadOnlyList<ParameterInfo> parameters, SyntaxTokenList modifiers,
+        SyntaxList<AttributeListSyntax> attributeLists, string? memberId)
+    {
+        var bodyNode = node switch
+        {
+            BaseMethodDeclarationSyntax m => (SyntaxNode?)m.Body ?? m.ExpressionBody,
+            _ => null
+        };
+        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
+        var span = node.GetLocation().GetLineSpan();
+        var lineCount = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
+        var startLine = span.StartLinePosition.Line + 1;
+        return new MemberInfo(name, returnType, memberKind,
+            GetModifiers(modifiers), parameters, GetAttributeInfos(attributeLists),
+            cogCC, cycCC, nestDepth, lineCount, startLine,
+            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
+            ComputeLocation(node), memberId);
     }
 
     internal static IEnumerable<string> ExtractConstructorParams(TypeDeclarationSyntax typeDecl)
     {
         foreach (var ctor in typeDecl.Members.OfType<ConstructorDeclarationSyntax>())
-        {
             foreach (var param in ctor.ParameterList.Parameters)
                 yield return param.Type?.ToString() ?? "unknown";
-        }
     }
 
     internal static IReadOnlyList<GenericConstraintInfo> ExtractGenericConstraints(TypeDeclarationSyntax typeDecl)
@@ -147,115 +168,12 @@ internal static class MemberExtractor
             .ToList();
     }
 
-    internal static MemberInfo CreateMethodMember(MethodDeclarationSyntax method, string? typeId = null)
-    {
-        var methodParams = method.ParameterList.Parameters
-            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-            .ToList();
-        var bodyNode = (SyntaxNode?)method.Body ?? method.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
-        var methodSpan = method.GetLocation().GetLineSpan();
-        var methodLineCount = methodSpan.EndLinePosition.Line - methodSpan.StartLinePosition.Line + 1;
-        var methodStartLine = methodSpan.StartLinePosition.Line + 1;
-        var location = ComputeLocation(method);
-        var memberId = typeId is not null ? MemberIdentity.CreateMethodId(typeId, method) : null;
-        return new MemberInfo(
-            method.Identifier.Text, method.ReturnType.ToString(), "Method",
-            GetModifiers(method.Modifiers), methodParams,
-            GetAttributeInfos(method.AttributeLists), cogCC, cycCC, nestDepth, methodLineCount, methodStartLine,
-            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
-            location, memberId);
-    }
-
-    static MemberInfo CreateConstructorMember(ConstructorDeclarationSyntax ctor, string? typeId = null)
-    {
-        var ctorParams = ctor.ParameterList.Parameters
-            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-            .ToList();
-        var bodyNode = (SyntaxNode?)ctor.Body ?? ctor.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
-        var span = ctor.GetLocation().GetLineSpan();
-        var lineCount = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
-        var startLine = span.StartLinePosition.Line + 1;
-        var location = ComputeLocation(ctor);
-        var memberId = typeId is not null ? MemberIdentity.CreateConstructorId(typeId, ctor) : null;
-        return new MemberInfo(
-            ctor.Identifier.Text + ".ctor", "void", "Constructor",
-            GetModifiers(ctor.Modifiers), ctorParams,
-            GetAttributeInfos(ctor.AttributeLists), cogCC, cycCC, nestDepth, lineCount, startLine,
-            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
-            location, memberId);
-    }
-
-    static MemberInfo CreateDestructorMember(DestructorDeclarationSyntax dtor, string? typeId = null)
-    {
-        var bodyNode = (SyntaxNode?)dtor.Body ?? dtor.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
-        var span = dtor.GetLocation().GetLineSpan();
-        var lineCount = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
-        var startLine = span.StartLinePosition.Line + 1;
-        var location = ComputeLocation(dtor);
-        var memberId = typeId is not null ? MemberIdentity.CreateDestructorId(typeId) : null;
-        return new MemberInfo(
-            "~" + dtor.Identifier.Text, "void", "Destructor",
-            GetModifiers(dtor.Modifiers), [],
-            GetAttributeInfos(dtor.AttributeLists), cogCC, cycCC, nestDepth, lineCount, startLine,
-            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
-            location, memberId);
-    }
-
-    static MemberInfo CreateOperatorMember(OperatorDeclarationSyntax op, string? typeId = null)
-    {
-        var opParams = op.ParameterList.Parameters
-            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-            .ToList();
-        var bodyNode = (SyntaxNode?)op.Body ?? op.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
-        var span = op.GetLocation().GetLineSpan();
-        var lineCount = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
-        var startLine = span.StartLinePosition.Line + 1;
-        var name = MemberBodyEnumerator.GetOperatorMemberName(op);
-        var location = ComputeLocation(op);
-        var memberId = typeId is not null ? MemberIdentity.CreateOperatorId(typeId, op) : null;
-        return new MemberInfo(
-            name, op.ReturnType.ToString(), "Operator",
-            GetModifiers(op.Modifiers), opParams,
-            GetAttributeInfos(op.AttributeLists), cogCC, cycCC, nestDepth, lineCount, startLine,
-            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
-            location, memberId);
-    }
-
-    static MemberInfo CreateConversionOperatorMember(ConversionOperatorDeclarationSyntax conv, string? typeId = null)
-    {
-        var convParams = conv.ParameterList.Parameters
-            .Select(p => new ParameterInfo(p.Identifier.Text, p.Type?.ToString() ?? "unknown"))
-            .ToList();
-        var bodyNode = (SyntaxNode?)conv.Body ?? conv.ExpressionBody;
-        var (cogCC, cycCC, nestDepth, halstead) = MethodMetricsCalculator.Calculate(bodyNode);
-        var span = conv.GetLocation().GetLineSpan();
-        var lineCount = span.EndLinePosition.Line - span.StartLinePosition.Line + 1;
-        var startLine = span.StartLinePosition.Line + 1;
-        var name = conv.ImplicitOrExplicitKeyword.IsKind(SyntaxKind.ImplicitKeyword)
-            ? "op_Implicit"
-            : "op_Explicit";
-        var location = ComputeLocation(conv);
-        var memberId = typeId is not null ? MemberIdentity.CreateConversionOperatorId(typeId, conv) : null;
-        return new MemberInfo(
-            name, conv.Type.ToString(), "ConversionOperator",
-            GetModifiers(conv.Modifiers), convParams,
-            GetAttributeInfos(conv.AttributeLists), cogCC, cycCC, nestDepth, lineCount, startLine,
-            halstead.Volume, halstead.Difficulty, halstead.Effort, halstead.EstimatedBugs,
-            location, memberId);
-    }
-
     internal static SourceLocation? ComputeLocation(SyntaxNode node)
     {
         var span = node.GetLocation().GetLineSpan();
         if (!span.IsValid)
             return null;
-        var startLine = span.StartLinePosition.Line + 1;
-        var endLine = span.EndLinePosition.Line + 1;
-        return new SourceLocation(FileRef: 0, StartLine: startLine, EndLine: endLine);
+        return new SourceLocation(FileRef: 0, StartLine: span.StartLinePosition.Line + 1, EndLine: span.EndLinePosition.Line + 1);
     }
 
     internal static IReadOnlyList<string> GetModifiers(SyntaxTokenList modifiers)
@@ -277,7 +195,6 @@ internal static class MemberExtractor
                     args[key] = arg.Expression.ToString();
                 }
             }
-
             return new AttributeInfo(a.Name.ToString(), args);
         }).ToList();
     }
