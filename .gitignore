@@ -18,3 +18,4 @@ artifacts/
 tests/fixtures/golden/Golden.csproj
 implementation-notes.html
 tests/**/TestResults/
+tasks/lessons.md
