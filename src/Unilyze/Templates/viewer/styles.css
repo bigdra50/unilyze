@@ -29,6 +29,12 @@ body{
 .search::placeholder{color:var(--dim)}
 .filter-chip{font-size:10px;padding:3px 8px}
 body.offline-mode .filter-chip{display:none}
+.search-stepper{display:inline-flex;align-items:center;gap:2px;margin-left:4px;font-size:11px;color:var(--dim)}
+.search-stepper.hidden{display:none}
+.ss-btn{background:none;border:1px solid var(--border);border-radius:3px;color:var(--dim);cursor:pointer;padding:1px 5px;font-size:10px;line-height:1}
+.ss-btn:hover{color:var(--text);border-color:var(--dim)}
+.ss-pos{min-width:40px;text-align:center;font-variant-numeric:tabular-nums}
+body.offline-mode .search-stepper{display:none}
 .btn{
   background:var(--bg);border:1px solid var(--border);border-radius:5px;
   padding:4px 10px;color:var(--dim);font-family:var(--font);font-size:11px;
