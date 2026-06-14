@@ -124,13 +124,13 @@ internal static class AnalysisPipeline
             ? EnergyPressureCalculator.ForGate(finalMetrics, excludeBaselined: false).Pressure
             : null;
 
-        var sourceTable = BuildSourceTable(resolvedTypes);
+        var (sourceTable, typesWithFileRefs) = BuildSourceTableAndFixRefs(resolvedTypes);
 
         var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
             DateTimeOffset.UtcNow,
             assemblyInfos,
-            resolvedTypes,
+            typesWithFileRefs,
             deps,
             finalMetrics,
             compile.AnalysisLevel,
@@ -153,18 +153,47 @@ internal static class AnalysisPipeline
         return FindingFingerprint.AssignIds(result);
     }
 
-    static List<string> BuildSourceTable(IReadOnlyList<TypeNodeInfo> types)
+    static (List<string> Table, IReadOnlyList<TypeNodeInfo> Types) BuildSourceTableAndFixRefs(
+        IReadOnlyList<TypeNodeInfo> types)
     {
-        var paths = new Dictionary<string, int>(StringComparer.Ordinal);
+        var pathToIndex = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var type in types)
         {
-            if (!string.IsNullOrEmpty(type.FilePath) && !paths.ContainsKey(type.FilePath))
-                paths[type.FilePath] = paths.Count;
+            if (!string.IsNullOrEmpty(type.FilePath))
+                pathToIndex.TryAdd(type.FilePath, pathToIndex.Count);
+            foreach (var m in type.Members)
+                if (!string.IsNullOrEmpty(m.SourceFile))
+                    pathToIndex.TryAdd(m.SourceFile, pathToIndex.Count);
+            if (type.Declarations is not null)
+                foreach (var d in type.Declarations)
+                    if (!string.IsNullOrEmpty(d.SourceFile))
+                        pathToIndex.TryAdd(d.SourceFile, pathToIndex.Count);
         }
 
-        var table = new string[paths.Count];
-        foreach (var (path, index) in paths)
+        var table = new string[pathToIndex.Count];
+        foreach (var (path, index) in pathToIndex)
             table[index] = path;
-        return [..table];
+
+        int ResolveRef(string? path) =>
+            !string.IsNullOrEmpty(path) && pathToIndex.TryGetValue(path, out var idx) ? idx : 0;
+
+        var updated = types.Select(type =>
+        {
+            var members = type.Members.Select(m =>
+            {
+                var memberFileRef = ResolveRef(m.SourceFile ?? type.FilePath);
+                return m.Location is not null
+                    ? m with { Location = m.Location with { FileRef = memberFileRef }, SourceFile = null }
+                    : m with { SourceFile = null };
+            }).ToList();
+
+            var declarations = type.Declarations?.Select(d =>
+                d with { FileRef = ResolveRef(d.SourceFile ?? type.FilePath), SourceFile = null }
+            ).ToList();
+
+            return type with { Members = members, Declarations = declarations };
+        }).ToList();
+
+        return ([..table], updated);
     }
 }
