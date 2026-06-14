@@ -2054,6 +2054,45 @@ function wireFilterChips(onChange){
   });
 }
 
+// --- Search Stepper ---
+let searchMatchEles=[];
+let searchMatchIndex=-1;
+const stepperEl=document.getElementById('sStepper');
+const stepperPos=document.getElementById('sPos');
+
+function updateStepper(){
+  if(searchMatchEles.length===0){
+    stepperEl.classList.add('hidden');
+    return;
+  }
+  stepperEl.classList.remove('hidden');
+  stepperPos.textContent=(searchMatchIndex+1)+' / '+searchMatchEles.length;
+}
+
+function focusMatch(index){
+  if(searchMatchEles.length===0) return;
+  searchMatchIndex=((index%searchMatchEles.length)+searchMatchEles.length)%searchMatchEles.length;
+  updateStepper();
+  const ele=searchMatchEles[searchMatchIndex];
+  ele.emit('tap');
+  cy.animate({center:{eles:ele},zoom:Math.max(cy.zoom(),1.0),duration:200});
+}
+
+const origRunGraphSearch=runGraphSearch;
+runGraphSearch=function(){
+  origRunGraphSearch();
+  const query=document.getElementById('q')?.value||'';
+  if(!hasActiveSearch(query)){searchMatchEles=[];searchMatchIndex=-1;updateStepper();return}
+  const {typeKeys}=collectSearchMatches(query);
+  searchMatchEles=typeKeys.map(tk=>cy.getElementById('t:'+tk)).filter(n=>!n.empty());
+  searchMatchIndex=searchMatchEles.length>0?0:-1;
+  updateStepper();
+  if(searchMatchEles.length>0) focusMatch(0);
+};
+
+document.getElementById('sPrev')?.addEventListener('click',()=>focusMatch(searchMatchIndex-1));
+document.getElementById('sNext')?.addEventListener('click',()=>focusMatch(searchMatchIndex+1));
+
 document.getElementById('q').addEventListener('input',scheduleGraphSearch);
 wireFilterChips(scheduleGraphSearch);
 installViewerKeyboard({offline:false});
