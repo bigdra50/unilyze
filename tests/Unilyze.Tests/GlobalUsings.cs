@@ -15,6 +15,7 @@ global using Unilyze.Output;
 global using Unilyze.Pipeline;
 global using Unilyze.Query;
 global using Unilyze.Runners;
+global using Unilyze.Serve;
 global using Unilyze.Unity;
 global using Unilyze.Tests.Helpers;
 global using Unilyze.Tests.Runners;

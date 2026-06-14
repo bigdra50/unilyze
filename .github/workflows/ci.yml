@@ -136,3 +136,46 @@ jobs:
 
       - name: Release smoke
         run: bash ./scripts/release-smoke.sh --package-source ./artifacts/nupkg --version "${{ steps.package.outputs.version }}"
+
+  # Render the serve viewer in headless Chromium (Playwright): fail on any console/page
+  # error or missing key element, and upload screenshots of each screen for visual review.
+  # Smoke + artifacts (not pixel-diff), so it is stable across fonts/OS.
+  viewer-screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build CLI
+        run: dotnet build src/Unilyze/Unilyze.csproj -c Release -f net10.0
+
+      - name: Install Playwright + Chromium
+        working-directory: scripts/viewer-screenshots
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+
+      - name: Capture viewer screenshots (smoke gate)
+        working-directory: scripts/viewer-screenshots
+        env:
+          UNILYZE_DLL: ${{ github.workspace }}/src/Unilyze/bin/Release/net10.0/Unilyze.dll
+        run: node capture.mjs
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: serve-viewer-screenshots
+          path: scripts/viewer-screenshots/out/*.png
+          if-no-files-found: warn

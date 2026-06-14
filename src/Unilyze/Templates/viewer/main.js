@@ -1,4 +1,9 @@
-const DATA = __DATA_PLACEHOLDER__;
+// DATA/DIFF are `let` so the live serve viewer can swap in a fresh snapshot via
+// applySnapshot() without a page reload. In the static `analyze -f html` output the
+// placeholder is replaced with the embedded snapshot; in serve it is `null` and the
+// snapshot arrives over the long-poll API.
+let DATA = __DATA_PLACEHOLDER__;
+const EMPTY_DATA = {types:[],dependencies:[],assemblies:[],typeMetrics:[]};
 
 function stripGenericArgs(name){
   const v=(name||'').replace(/^global::/,'').replace(/\?$/,'');
@@ -40,38 +45,46 @@ const KS = {
   'delegate':'ellipse','type':'round-rectangle'
 };
 
-// Assembly color map
-const asm = DATA.assemblies||[];
-const ac = {};
-asm.forEach((a,i)=>{ac[a.name]=PAL[i%PAL.length]});
-
-// Type lookup
-const tl = {};
-DATA.types.forEach(t=>{tl[typeKey(t)]=t});
-
-// TypeMetrics lookup
-const tm = {};
-(DATA.typeMetrics||[]).forEach(m=>{tm[metricKey(m)]=m});
+// Assembly color map / type & metric lookups — rebuilt per snapshot by buildDerivedState().
+let asm = [];
+let ac = {};
+let tl = {};
+let tm = {};
 
 // --- Diff data (snapshot comparison overlay) ---
+// Static output embeds a diff here; the live serve viewer never carries one (DIFF stays null).
 const DIFF = __DIFF_DATA_PLACEHOLDER__;
 // Metric names that are higher-is-better. Keep in sync with DiffCalculator.HigherIsBetter.
 const HIGHER_IS_BETTER = new Set(['CodeHealth','AverageMaintainabilityIndex','MinMaintainabilityIndex']);
-const dl = {}; // typeKey -> TypeDiff annotated with _bucket
+let dl = {}; // typeKey -> TypeDiff annotated with _bucket
 const diffState = { changedOnly: false };
 let cy; // Cytoscape instance (set when graph mode initializes)
 let diffChangedOnlyHandler = null; // graph-mode refresh (rebuild+layout), set after cy init
-if (DIFF) {
-  // TypeDiff.typeKey is a display-friendly qualified name (e.g. "Foo.Bar"),
-  // but the offline view's row.id uses TypeId form ("Asm::Foo.Bar"). Index both
-  // so lookups succeed regardless of which form the table row uses.
-  ['improved','degraded','unchanged','added','removed'].forEach(bucket => {
-    (DIFF[bucket]||[]).forEach(td => {
-      const annotated = Object.assign({_bucket: bucket}, td);
-      dl[td.typeKey] = annotated;
-      if (td.assembly) dl[td.assembly + '::' + td.typeKey] = annotated;
+
+function buildTypeIndexes(){
+  asm = DATA.assemblies||[];
+  ac = {};
+  asm.forEach((a,i)=>{ac[a.name]=PAL[i%PAL.length]});
+  tl = {};
+  DATA.types.forEach(t=>{tl[typeKey(t)]=t});
+  tm = {};
+  (DATA.typeMetrics||[]).forEach(m=>{tm[metricKey(m)]=m});
+  dl = {};
+  if (DIFF) {
+    // TypeDiff.typeKey is a display-friendly qualified name (e.g. "Foo.Bar"),
+    // but the offline view's row.id uses TypeId form ("Asm::Foo.Bar"). Index both
+    // so lookups succeed regardless of which form the table row uses.
+    ['improved','degraded','unchanged','added','removed'].forEach(bucket => {
+      (DIFF[bucket]||[]).forEach(td => {
+        const annotated = Object.assign({_bucket: bucket}, td);
+        dl[td.typeKey] = annotated;
+        if (td.assembly) dl[td.assembly + '::' + td.typeKey] = annotated;
+      });
     });
-  });
+  }
+}
+
+if (DIFF) {
   document.addEventListener('DOMContentLoaded', initDiffSummary);
   if (document.readyState !== 'loading') initDiffSummary();
 }
@@ -690,49 +703,71 @@ function renderOfflineReport(){
   render(searchEl.value);
 }
 
+// --- Snapshot-derived state (rebuilt per snapshot by buildDerivedState) ---
+let nsInfo = new Map();
+let nsTree = new Map();
+let commonRoot = null;
+let nsHealthMap = new Map();
+let els = [];
+let typesByNamespace = new Map();
+let dependencyElements = [];
+let hotMethods = null;
+let hotTypes = null;
+let _mc = null;
+const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
+
 // --- Namespace info (direct types per namespace) ---
-const nsInfo = new Map();
-DATA.types.forEach(t=>{
-  const ns = t.namespace||'(global)';
-  if(!nsInfo.has(ns)) nsInfo.set(ns,{typeIds:[],asmCounts:{}});
-  const info = nsInfo.get(ns);
-  info.typeIds.push('t:'+typeKey(t));
-  info.asmCounts[t.assembly]=(info.asmCounts[t.assembly]||0)+1;
-});
-nsInfo.forEach((info,ns)=>{
-  const dom=Object.entries(info.asmCounts).sort((a,b)=>b[1]-a[1])[0][0];
-  info.color=ac[dom]||'#6e7681';
-  info.assembly=dom;
-  info.count=info.typeIds.length;
-});
+function buildNamespaceInfo(){
+  nsInfo = new Map();
+  DATA.types.forEach(t=>{
+    const ns = t.namespace||'(global)';
+    if(!nsInfo.has(ns)) nsInfo.set(ns,{typeIds:[],asmCounts:{}});
+    const info = nsInfo.get(ns);
+    info.typeIds.push('t:'+typeKey(t));
+    info.asmCounts[t.assembly]=(info.asmCounts[t.assembly]||0)+1;
+  });
+  nsInfo.forEach((info,ns)=>{
+    const dom=Object.entries(info.asmCounts).sort((a,b)=>b[1]-a[1])[0][0];
+    info.color=ac[dom]||'#6e7681';
+    info.assembly=dom;
+    info.count=info.typeIds.length;
+  });
+}
 
 // --- Build namespace tree ---
-const nsTree = new Map();
-const allPaths = new Set();
-nsInfo.forEach((_,ns)=>{
-  const parts = ns.split('.');
-  for(let i=1;i<=parts.length;i++) allPaths.add(parts.slice(0,i).join('.'));
-});
-
-allPaths.forEach(path=>{
-  const parts = path.split('.');
-  const parentPath = parts.length>1 ? parts.slice(0,-1).join('.') : null;
-  const info = nsInfo.get(path);
-  nsTree.set(path,{
-    shortName: parts[parts.length-1],
-    parent: parentPath && allPaths.has(parentPath) ? parentPath : null,
-    children: new Set(),
-    directTypeCount: info ? info.count : 0,
-    descendantTypeCount: 0,
-    color: info ? info.color : null,
-    virtual: !info,
-    assembly: info ? info.assembly : null
+function buildNamespaceTree(){
+  nsTree = new Map();
+  const allPaths = new Set();
+  nsInfo.forEach((_,ns)=>{
+    const parts = ns.split('.');
+    for(let i=1;i<=parts.length;i++) allPaths.add(parts.slice(0,i).join('.'));
   });
-});
 
-nsTree.forEach((node,path)=>{
-  if(node.parent) nsTree.get(node.parent).children.add(path);
-});
+  allPaths.forEach(path=>{
+    const parts = path.split('.');
+    const parentPath = parts.length>1 ? parts.slice(0,-1).join('.') : null;
+    const info = nsInfo.get(path);
+    nsTree.set(path,{
+      shortName: parts[parts.length-1],
+      parent: parentPath && allPaths.has(parentPath) ? parentPath : null,
+      children: new Set(),
+      directTypeCount: info ? info.count : 0,
+      descendantTypeCount: 0,
+      color: info ? info.color : null,
+      virtual: !info,
+      assembly: info ? info.assembly : null
+    });
+  });
+
+  nsTree.forEach((node,path)=>{
+    if(node.parent) nsTree.get(node.parent).children.add(path);
+  });
+
+  const roots=[];
+  nsTree.forEach((n,p)=>{if(!n.parent)roots.push(p)});
+  roots.forEach(r=>{computeDesc(r);inheritColor(r)});
+  commonRoot=roots.length===1?roots[0]:null;
+}
 
 function computeDesc(path){
   const n=nsTree.get(path); let c=n.directTypeCount;
@@ -753,14 +788,7 @@ function inheritColor(path){
   }
 }
 
-const roots=[];
-nsTree.forEach((n,p)=>{if(!n.parent)roots.push(p)});
-roots.forEach(r=>{computeDesc(r);inheritColor(r)});
-
-const commonRoot=roots.length===1?roots[0]:null;
-
 // --- Namespace health aggregates ---
-const nsHealthMap = new Map();
 function collectDescendantTypes(path){
   const names=[];
   const info=nsInfo.get(path);
@@ -769,60 +797,34 @@ function collectDescendantTypes(path){
   if(n) n.children.forEach(ch=>names.push(...collectDescendantTypes(ch)));
   return names;
 }
-nsTree.forEach((_,path)=>{
-  const typeNames=collectDescendantTypes(path);
-  const scores=typeNames.map(n=>tm[n]?.codeHealth).filter(s=>s!=null);
-  if(!scores.length){nsHealthMap.set(path,null);return}
-  const sorted=[...scores].sort((a,b)=>a-b);
-  const worst=typeNames
-    .map(n=>({name:n,h:tm[n]?.codeHealth}))
-    .filter(x=>x.h!=null)
-    .sort((a,b)=>a.h-b.h)
-    .slice(0,5);
-  nsHealthMap.set(path,{
-    min:sorted[0], max:sorted[sorted.length-1],
-    avg:+(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1),
-    total:scores.length,
-    low:scores.filter(s=>s<7).length,
-    crit:scores.filter(s=>s<4).length,
-    worst:worst
+function buildNamespaceHealth(){
+  nsHealthMap = new Map();
+  nsTree.forEach((_,path)=>{
+    const typeNames=collectDescendantTypes(path);
+    const scores=typeNames.map(n=>tm[n]?.codeHealth).filter(s=>s!=null);
+    if(!scores.length){nsHealthMap.set(path,null);return}
+    const sorted=[...scores].sort((a,b)=>a-b);
+    const worst=typeNames
+      .map(n=>({name:n,h:tm[n]?.codeHealth}))
+      .filter(x=>x.h!=null)
+      .sort((a,b)=>a.h-b.h)
+      .slice(0,5);
+    nsHealthMap.set(path,{
+      min:sorted[0], max:sorted[sorted.length-1],
+      avg:+(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1),
+      total:scores.length,
+      low:scores.filter(s=>s<7).length,
+      crit:scores.filter(s=>s<4).length,
+      worst:worst
+    });
   });
-});
+}
 
-performance.mark('unilyze-element-index-start');
-
-// --- Cytoscape elements and lazy type indexes ---
-const els=[];
-
-// For each tree node: summary + compound pair
-nsTree.forEach((node,path)=>{
-  els.push({group:'nodes',data:{
-    id:'ns:'+path, label:node.shortName+'  ('+node.descendantTypeCount+')',
-    fullLabel:path, shortName:node.shortName,
-    nodeType:'namespace', tc:node.descendantTypeCount, color:node.color,
-    assembly:node.assembly||'', virtual:node.virtual
-  }});
-  els.push({group:'nodes',data:{
-    id:'cp:'+path, label:node.shortName, fullLabel:path, shortName:node.shortName,
-    nodeType:'compound', color:node.color, assembly:node.assembly||'',
-    virtual:node.virtual
-  }});
-});
-
-const typesByNamespace=new Map();
-let _mc=null;
-const _mf={type:'normal 10px "Cascadia Code","Fira Code","Consolas",monospace',ns:'600 12px "Cascadia Code","Fira Code","Consolas",monospace'};
 function _mw(label,font){
   if(!_mc) return undefined;
   _mc.font=font;
   return Math.ceil(_mc.measureText(label).width)+8;
 }
-DATA.types.forEach(t=>{
-  const tk=typeKey(t);
-  const ns=t.namespace||'(global)';
-  if(!typesByNamespace.has(ns)) typesByNamespace.set(ns,[]);
-  typesByNamespace.get(ns).push(t);
-});
 
 function typeNodeElement(t){
   const tk=typeKey(t);
@@ -850,35 +852,81 @@ const _edgeVis=new Map();
 Object.keys(DC).forEach(k=>_edgeVis.set(k,true));
 let _edgeStyleMode='elk';
 
-// Type-level edge descriptors (namespace meta-edges are built from DATA.dependencies)
-const _pairCount=new Map();
-DATA.dependencies.forEach((d,i)=>{
-  const fromId=depFromId(d), toId=depToId(d);
-  if(!tl[fromId]||!tl[toId]) return;
-  const pk=[fromId,toId].sort().join('|');
-  const idx=_pairCount.get(pk)||0;
-  _pairCount.set(pk,idx+1);
-});
-const _pairIdx=new Map();
-const dependencyElements=[];
-DATA.dependencies.forEach((d,i)=>{
-  const fromId=depFromId(d), toId=depToId(d);
-  if(!tl[fromId]||!tl[toId]) return;
-  const st=DS[d.kind]||{s:'solid',w:1,a:'vee'};
-  const pk=[fromId,toId].sort().join('|');
-  const total=_pairCount.get(pk)||1;
-  const ci=_pairIdx.get(pk)||0;
-  _pairIdx.set(pk,ci+1);
-  const step=25;
-  const cpd=total<=1?0:(-((total-1)*step)/2+ci*step);
-  dependencyElements.push({group:'edges',data:{
-    id:'e'+i, source:'t:'+fromId, target:'t:'+toId,
-    kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a,
-    cpd:[cpd], opa:EO[d.kind]||.45, fromId, toId
-  }});
-});
-performance.mark('unilyze-element-index-end');
-performance.measure('unilyze-element-index','unilyze-element-index-start','unilyze-element-index-end');
+// --- Cytoscape elements and lazy type indexes ---
+function buildElements(){
+  performance.mark('unilyze-element-index-start');
+  els = [];
+  // For each tree node: summary + compound pair
+  nsTree.forEach((node,path)=>{
+    els.push({group:'nodes',data:{
+      id:'ns:'+path, label:node.shortName+'  ('+node.descendantTypeCount+')',
+      fullLabel:path, shortName:node.shortName,
+      nodeType:'namespace', tc:node.descendantTypeCount, color:node.color,
+      assembly:node.assembly||'', virtual:node.virtual
+    }});
+    els.push({group:'nodes',data:{
+      id:'cp:'+path, label:node.shortName, fullLabel:path, shortName:node.shortName,
+      nodeType:'compound', color:node.color, assembly:node.assembly||'',
+      virtual:node.virtual
+    }});
+  });
+
+  typesByNamespace = new Map();
+  DATA.types.forEach(t=>{
+    const ns=t.namespace||'(global)';
+    if(!typesByNamespace.has(ns)) typesByNamespace.set(ns,[]);
+    typesByNamespace.get(ns).push(t);
+  });
+
+  // Type-level edge descriptors (namespace meta-edges are built from DATA.dependencies)
+  const _pairCount=new Map();
+  DATA.dependencies.forEach((d,i)=>{
+    const fromId=depFromId(d), toId=depToId(d);
+    if(!tl[fromId]||!tl[toId]) return;
+    const pk=[fromId,toId].sort().join('|');
+    const idx=_pairCount.get(pk)||0;
+    _pairCount.set(pk,idx+1);
+  });
+  const _pairIdx=new Map();
+  dependencyElements=[];
+  DATA.dependencies.forEach((d,i)=>{
+    const fromId=depFromId(d), toId=depToId(d);
+    if(!tl[fromId]||!tl[toId]) return;
+    const st=DS[d.kind]||{s:'solid',w:1,a:'vee'};
+    const pk=[fromId,toId].sort().join('|');
+    const total=_pairCount.get(pk)||1;
+    const ci=_pairIdx.get(pk)||0;
+    _pairIdx.set(pk,ci+1);
+    const step=25;
+    const cpd=total<=1?0:(-((total-1)*step)/2+ci*step);
+    dependencyElements.push({group:'edges',data:{
+      id:'e'+i, source:'t:'+fromId, target:'t:'+toId,
+      kind:d.kind, color:DC[d.kind]||'#6e7681', ls:st.s, w:st.w, ar:st.a,
+      cpd:[cpd], opa:EO[d.kind]||.45, fromId, toId
+    }});
+  });
+  performance.mark('unilyze-element-index-end');
+  performance.measure('unilyze-element-index','unilyze-element-index-start','unilyze-element-index-end');
+}
+
+// Recompute every snapshot-derived structure for the current DATA/DIFF.
+function buildDerivedState(data){
+  DATA = data || EMPTY_DATA;
+  DATA.types = DATA.types || [];
+  DATA.dependencies = DATA.dependencies || [];
+  DATA.assemblies = DATA.assemblies || [];
+  DATA.typeMetrics = DATA.typeMetrics || [];
+  buildTypeIndexes();
+  buildNamespaceInfo();
+  buildNamespaceTree();
+  buildNamespaceHealth();
+  buildElements();
+  hotMethods = null;
+  hotTypes = null;
+}
+
+// Build the initial derived state from the embedded/empty snapshot before cy init.
+buildDerivedState(DATA);
 
 // --- Init Cytoscape (deferred until fonts are ready when supported) ---
 const fontReady=document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve();
@@ -963,6 +1011,8 @@ cy = cytoscape({
   layout:{name:'preset'},
   wheelSensitivity:.3,minZoom:.08,maxZoom:5
 });
+// Expose the instance for end-to-end screenshot tests (harmless in normal use).
+window.unilyzeCy = cy;
 
 // --- Middle-button pan ---
 {
@@ -1132,6 +1182,14 @@ function rebuild(){
     const additions=desiredTypes
       .filter(t=>cy.getElementById('t:'+typeKey(t)).empty())
       .map(typeNodeElement);
+    desiredTypes.forEach(t=>{
+      const node=cy.getElementById('t:'+typeKey(t));
+      if(node.empty()) return;
+      const element=typeNodeElement(t);
+      updateNodeData(node,element.data);
+      const parentId=element.data.parent;
+      if(!node.parent().length||node.parent().id()!==parentId) node.move({parent:parentId});
+    });
     if(additions.length) cy.add(additions);
     materializedNamespaces.add(ns);
   });
@@ -1177,25 +1235,29 @@ let _layoutEngine='elk';
 let _layoutRequest=0;
 let _elkWorkerUrl=null;
 
-function layout(){
+function layout(fit=true){
   const vis=cy.elements().filter(e=>e.style('display')!=='none');
   if(_layoutEngine==='elk'&&typeof ELK!=='undefined'){
-    void layoutElk(vis);
+    void layoutElk(vis,fit);
   } else {
-    layoutDagre(vis);
+    layoutDagre(vis,fit);
   }
 }
 
 diffChangedOnlyHandler=function(){rebuild();layout();};
 
-function layoutDagre(vis){
+function layoutDagre(vis,fit=true){
   vis.layout({
     name:'dagre',rankDir:'TB',nodeSep:80,rankSep:100,edgeSep:30,
-    animate:true,animationDuration:250,fit:true,padding:40
+    animate:true,animationDuration:250,fit:fit,padding:40
   }).run();
 }
 
 function elkWorkerUrl(){
+  // serve runs ELK on the main thread (no cross-origin blob worker) so a strict
+  // CSP and an embedded same-origin ELK suffice; the static file:// output keeps the
+  // unpkg blob worker for parity with its existing offline behavior.
+  if(window.__UNILYZE_ELK_MAIN_THREAD__) return null;
   if(_elkWorkerUrl) return _elkWorkerUrl;
   const source='importScripts("https://unpkg.com/elkjs@0.9.3/lib/elk-worker.min.js");';
   _elkWorkerUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
@@ -1246,13 +1308,14 @@ function elkPositions(graph){
   return positions;
 }
 
-async function layoutElk(vis){
+async function layoutElk(vis,fit=true){
   const request=++_layoutRequest;
   performance.mark('unilyze-layout-start');
   const graph=buildElkGraph(vis);
   let result;
+  const wurl=elkWorkerUrl();
   try{
-    result=await new ELK({workerUrl:elkWorkerUrl()}).layout(graph);
+    result=await (wurl?new ELK({workerUrl:wurl}):new ELK()).layout(graph);
   }catch(workerError){
     console.warn('Unilyze ELK worker unavailable; using main-thread ELK.',workerError);
     try{
@@ -1266,7 +1329,7 @@ async function layoutElk(vis){
   if(request!==_layoutRequest) return;
   vis.layout({
     name:'preset',positions:elkPositions(result),
-    animate:true,animationDuration:250,fit:true,padding:40
+    animate:true,animationDuration:250,fit:fit,padding:40
   }).run();
   performance.mark('unilyze-layout-end');
   performance.measure('unilyze-layout','unilyze-layout-start','unilyze-layout-end');
@@ -1405,7 +1468,10 @@ function rebuildBadges(){
     // Phase 3: render
     items.forEach(bd=>{
       const isCluster=bd.count>1;
-      if(!isCluster&&!badgeLodVisible(bd.score, zoom)) return;
+      // LOD-hide healthy badges only when there is real clutter to reduce. Sparse views
+      // (<=3 badges, e.g. the collapsed root) are not clustered, so hiding them by LOD would
+      // make badges vanish entirely below zoom 0.5 with no fallback — keep them visible.
+      if(!isCluster&&raw.length>3&&!badgeLodVisible(bd.score, zoom)) return;
 
       const b=document.createElement('div');
       b.className=isCluster?'hb hb-cluster':(bd.isNs?'hb hb-ns':'hb');
@@ -1565,6 +1631,10 @@ cy.on('tap','node[nodeType="type"]',e=>{
   h+=esc(t.name)+'</h2>';
   h+='<div class="meta">'+esc(t.kind)+' &middot; '+esc(t.assembly)+'</div>';
   if(t.namespace)h+='<div class="meta">'+esc(t.namespace)+'</div>';
+  // serve mode exposes an opaque fileId in t.filePath; offer in-browser read-only source.
+  if(typeof window.unilyzeFetchSource==='function'&&t.filePath){
+    h+='<div class="meta"><button class="src-btn" data-fileid="'+escAttr(t.filePath)+'" data-line="'+(t.startLine||1)+'">View source</button></div>';
+  }
 
   if(mx){
     const hcol=healthColor(mx.codeHealth);
@@ -1684,6 +1754,74 @@ cy.on('tap','node[nodeType="namespace"],node[nodeType="compound"]',e=>{
 
 cy.on('tap',e=>{if(e.target===cy)dp.classList.add('hidden')});
 document.getElementById('cls').onclick=()=>dp.classList.add('hidden');
+
+// --- In-browser read-only source view (serve mode only) ---
+// The body is rendered with textContent ONLY (never innerHTML) and the server supplies
+// content via the fileId allowlist, so no markup or absolute path reaches the DOM.
+const _sp=document.getElementById('sp');
+const _spBody=document.getElementById('spBody');
+const _spPath=document.getElementById('spPath');
+
+// Lightweight C# syntax highlighter. Tokens are emitted as <span> whose text is set via
+// textContent only (gaps as text nodes) — the source is never passed through innerHTML, so
+// the textContent-only safety guarantee of the source view holds.
+const _CS_KEYWORDS=new Set(('abstract as async await base bool break byte case catch char checked class const continue '
+  +'decimal default delegate do double else enum event explicit extern false finally fixed float for foreach get goto if '
+  +'implicit in init int interface internal is lock long nameof namespace new null object operator out override params '
+  +'partial private protected public readonly record ref required return sbyte sealed set short sizeof stackalloc static '
+  +'string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using var virtual void volatile '
+  +'when where while with yield').split(' '));
+const _CS_RE=/(\/\*[\s\S]*?\*\/)|(\/\/[^\n]*)|([@$]{0,2}"(?:""|\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(#[^\n]*)|(\b0[xX][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.\d+)?(?:[eE][+-]?\d+)?[fFdDmMuUlL]*\b)|([A-Za-z_][A-Za-z0-9_]*)/g;
+function appendHighlightedCSharp(el,text){
+  el.textContent='';
+  _CS_RE.lastIndex=0;
+  let last=0,m;
+  while((m=_CS_RE.exec(text))){
+    if(m.index>last) el.appendChild(document.createTextNode(text.slice(last,m.index)));
+    let cls=null;
+    if(m[1]||m[2]) cls='tok-comment';
+    else if(m[3]) cls='tok-string';
+    else if(m[4]) cls='tok-preproc';
+    else if(m[5]) cls='tok-number';
+    else if(m[6]){ if(_CS_KEYWORDS.has(m[0])) cls='tok-keyword'; else if(/^[A-Z]/.test(m[0])) cls='tok-type'; }
+    if(cls){ const s=document.createElement('span'); s.className=cls; s.textContent=m[0]; el.appendChild(s); }
+    else el.appendChild(document.createTextNode(m[0]));
+    last=_CS_RE.lastIndex;
+    if(_CS_RE.lastIndex===m.index) _CS_RE.lastIndex++; // guard against zero-length matches
+  }
+  if(last<text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
+
+async function openSource(fileId,startLine){
+  if(!_sp||typeof window.unilyzeFetchSource!=='function') return;
+  const request=++_sourceRequest;
+  try{
+    const r=await window.unilyzeFetchSource(fileId);
+    if(request!==_sourceRequest) return;
+    if(_spPath) _spPath.textContent=r.path||'';
+    if(_spBody){
+      if(/\.cs$/i.test(r.path||'')) appendHighlightedCSharp(_spBody,r.text);
+      else _spBody.textContent=r.text;
+      _sp.classList.remove('hidden');
+      const ln=Math.max(1,(startLine|0)||1);
+      const lh=parseFloat(getComputedStyle(_spBody).lineHeight)||16;
+      _spBody.scrollTop=(ln-1)*lh;
+    }
+  }catch(err){
+    if(request!==_sourceRequest) return;
+    if(_spBody){ _spBody.textContent='Failed to load source: '+err.message; _sp.classList.remove('hidden'); }
+  }
+}
+if(dc) dc.addEventListener('click',e=>{
+  const b=e.target.closest('.src-btn');
+  if(b) openSource(b.dataset.fileid, parseInt(b.dataset.line,10));
+});
+const _spClose=document.getElementById('spClose');
+let _sourceRequest=0;
+if(_spClose) _spClose.onclick=()=>{
+  _sourceRequest++;
+  if(_sp) _sp.classList.add('hidden');
+};
 
 // --- Search UX (#75): helpers shared with offline keyboard handling ---
 const SEARCH_EXPAND_CAP=50;
@@ -1979,20 +2117,21 @@ document.getElementById('bFit').onclick=()=>{
 document.getElementById('bLay').onclick=()=>{rebuild();layout()};
 
 // --- Legend ---
-(function(){
+function renderLegend(){
   let h='<b>Assemblies</b> ';
   asm.forEach(a=>{
     const c=ac[a.name]||'#6e7681';
     const s=a.name.split('.').pop();
-    h+='<div class="li"><div class="sw" style="background:'+c+'"></div>'+s+'</div>';
+    h+='<div class="li"><div class="sw" style="background:'+c+'"></div>'+esc(s)+'</div>';
   });
   h+='<div class="sep" style="width:1px;height:14px;background:#1e2538"></div><b>Edges</b> ';
   Object.entries(DC).forEach(([k,c])=>{
     const d=DS[k]||{s:'solid'};
-    h+='<div class="li"><div class="el" style="border-bottom:2px '+d.s+' '+c+'"></div>'+k+'</div>';
+    h+='<div class="li"><div class="el" style="border-bottom:2px '+d.s+' '+c+'"></div>'+esc(k)+'</div>';
   });
   document.getElementById('lg').innerHTML=h;
-})();
+}
+renderLegend();
 
 let stText=DATA.types.length+' types \u00b7 '+DATA.dependencies.length+' deps \u00b7 '+asm.length+' assemblies';
 const asmWithHealth=asm.filter(a=>a.healthMetrics);
@@ -2164,7 +2303,6 @@ function navigateToType(typeName){
 }
 
 // --- Feature 1: Hotspot Panel ---
-let hotMethods=null,hotTypes=null;
 function buildHotspots(){
   if(hotMethods) return;
   hotMethods=[];
@@ -2433,5 +2571,92 @@ document.getElementById('cycList').addEventListener('click',e=>{
   const item=e.target.closest('.cyc-item');
   if(item&&item.dataset.type) navigateToType(item.dataset.type);
 });
+
+// --- Live snapshot application (serve mode) ---
+// Reconcile the namespace summary/compound nodes that cy was seeded with; rebuild()
+// then reconciles type nodes + edges incrementally. No cy.destroy(), no reload.
+function updateNodeData(node,data){
+  const next=Object.assign({},data);
+  delete next.parent;
+  Object.keys(node.data()).forEach(key=>{
+    if(key!=='id'&&key!=='parent'&&!Object.prototype.hasOwnProperty.call(next,key))
+      node.removeData(key);
+  });
+  node.data(next);
+}
+
+function reconcileNamespaceNodes(){
+  const desiredIds=new Set(els.map(e=>e.data.id));
+  cy.nodes('[nodeType="namespace"],[nodeType="compound"]').forEach(n=>{
+    if(!desiredIds.has(n.id())) n.remove();
+  });
+  const existing=new Set(cy.nodes().map(n=>n.id()));
+  els.forEach(e=>{
+    const node=cy.getElementById(e.data.id);
+    if(node.empty()) return;
+    const d=Object.assign({},e.data);
+    if(_mc&&d.label!=null) d.nw=_mw(d.label, d.nodeType==='namespace'?_mf.ns:_mf.type);
+    updateNodeData(node,d);
+  });
+  const additions=els.filter(e=>!existing.has(e.data.id)).map(e=>{
+    const d=Object.assign({},e.data);
+    if(_mc&&d.label!=null) d.nw=_mw(d.label, d.nodeType==='namespace'?_mf.ns:_mf.type);
+    return {group:'nodes',data:d};
+  });
+  if(additions.length) cy.add(additions);
+}
+
+function refreshStats(){
+  stText=DATA.types.length+' types · '+DATA.dependencies.length+' deps · '+asm.length+' assemblies';
+  const awh=asm.filter(a=>a.healthMetrics);
+  if(awh.length){
+    const avgH=(awh.reduce((s,a)=>s+a.healthMetrics.averageCodeHealth,0)/awh.length).toFixed(1);
+    stText+=' · Health: '+avgH;
+  }
+  if(cycles.length) stText+=' · '+cycles.length+' cycle'+(cycles.length>1?'s':'');
+  document.getElementById('st').textContent=stText;
+}
+
+function closeSnapshotPanels(){
+  dp.classList.add('hidden');
+  _sourceRequest++;
+  if(_sp) _sp.classList.add('hidden');
+}
+
+function refreshOpenSnapshotPanels(){
+  const hotspotPanel=document.getElementById('hp');
+  if(!hotspotPanel.classList.contains('hidden')){
+    const tab=document.querySelector('.lp-tab.active[data-panel="hp"]')?.dataset.tab||'methods';
+    renderHotspots(tab,document.getElementById('hpSort').value);
+  }
+  if(!document.getElementById('cycp').classList.contains('hidden')) renderCyclePanel();
+  if(!document.getElementById('asmOv').classList.contains('hidden')) renderAsmModal();
+}
+
+let _snapshotApplied=false;
+function applySnapshot(data){
+  performance.mark('unilyze-apply-start');
+  closeSnapshotPanels();
+  buildDerivedState(data);
+  if(!cy) return;
+  [...expanded].forEach(ns=>{if(!nsTree.has(ns)) expanded.delete(ns)});
+  clearCycleHighlight();
+  detectCycles();
+  reconcileNamespaceNodes();
+  rebuild();
+  const isFirst=!_snapshotApplied;
+  _snapshotApplied=true;
+  layout(isFirst); // fit to frame the first snapshot; preserve viewport on later updates
+  renderLegend();
+  refreshStats();
+  refreshOpenSnapshotPanels();
+  markBadgesDirty(); rebuildBadges();
+  if(document.getElementById('q')) runGraphSearch();
+  performance.mark('unilyze-apply-end');
+  performance.measure('unilyze-apply','unilyze-apply-start','unilyze-apply-end');
+  const entry=performance.getEntriesByName('unilyze-apply').pop();
+  if(typeof window.__unilyzeOnApply==='function'&&entry) window.__unilyzeOnApply(entry.duration);
+}
+window.unilyzeApplySnapshot=applySnapshot;
 
 }); // end document.fonts.ready

@@ -63,7 +63,15 @@ internal static class SyntaxCacheStore
         {
             var json = JsonSerializer.Serialize(manifest, SyntaxCacheJsonContext.Default.SyntaxCacheManifest);
             File.WriteAllText(tempPath, json);
-            File.Move(tempPath, manifestPath, overwrite: true);
+            ReplaceManifest(tempPath, manifestPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Persisting the cache is a best-effort optimization, not a correctness
+            // requirement. Concurrent analyses on Windows can transiently hold the
+            // manifest open (an open read handle blocks the atomic replace, surfacing
+            // as "Access to the path is denied"), so a write that loses the race must
+            // never fail the analysis itself.
         }
         finally
         {
@@ -71,6 +79,28 @@ internal static class SyntaxCacheStore
             {
                 try { File.Delete(tempPath); }
                 catch (IOException) { /* best effort */ }
+                catch (UnauthorizedAccessException) { /* best effort */ }
+            }
+        }
+    }
+
+    // The temp-then-rename keeps the manifest atomic (readers see either the old or
+    // new file, never a partial write). On Windows the rename can still lose a race
+    // against another process that has the manifest open, so retry briefly before
+    // letting the caller treat it as a best-effort miss.
+    static void ReplaceManifest(string tempPath, string manifestPath)
+    {
+        const int maxAttempts = 5;
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.Move(tempPath, manifestPath, overwrite: true);
+                return;
+            }
+            catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException) && attempt < maxAttempts)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(20 * attempt));
             }
         }
     }

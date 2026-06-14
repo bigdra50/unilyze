@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- Per-start session token, embedded in the no-store HTML (never the URL). -->
+<meta name="unilyze-token" content="__TOKEN__">
+<title>__TITLE__ — unilyze serve</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="toolbar">
+  <h1>__TITLE__</h1><div class="sep"></div>
+  <input type="text" class="search" placeholder="Search types...  ( / )" id="q" title="Search types by name or namespace">
+  <button class="btn filter-chip" id="fLowHealth" title="Types with Code Health below 7">Health &lt; 7</button>
+  <button class="btn filter-chip" id="fSmells" title="Types with one or more code smells">Smells</button>
+  <button class="btn filter-chip" id="fCycles" title="Types participating in circular dependencies">Cycles</button>
+  <button class="btn" id="bExp">Expand All</button>
+  <button class="btn" id="bCol">Collapse All</button>
+  <button class="btn" id="bFit">Fit</button>
+  <button class="btn" id="bLay">Re-layout</button>
+  <div class="sep"></div>
+  <button class="btn" id="bHot">Hotspots</button>
+  <button class="btn" id="bCyc">Cycles</button>
+  <button class="btn" id="bAsm">Assemblies</button>
+  <div class="sep"></div>
+  <select class="btn" id="edgeStyle" style="padding:3px 6px"><option value="bezier">Bezier</option><option value="taxi">Taxi</option><option value="elk" selected>ELK</option></select>
+  <button class="btn active" id="bEdge">Edges</button>
+  <div class="spacer"></div>
+  <span class="stats" id="st"></span>
+</div>
+<div class="serve-status" id="serveStatus" title="Live analysis status">
+  <span class="ss-dot" id="ssDot"></span>
+  <span class="ss-text" id="ssText">connecting…</span>
+  <span class="ss-gen" id="ssGen"></span>
+  <span class="ss-time" id="ssTime"></span>
+</div>
+<div class="stale-banner hidden" id="staleBanner"></div>
+<div class="main">
+  <div class="left-panel hidden" id="hp">
+    <div class="lp-header">
+      <div class="lp-tabs">
+        <button class="lp-tab active" data-panel="hp" data-tab="methods">Methods</button>
+        <button class="lp-tab" data-panel="hp" data-tab="types">Types</button>
+      </div>
+      <select class="lp-sort" id="hpSort">
+        <option value="cogcc">Sort by CogCC</option>
+        <option value="cyccc">Sort by CycCC</option>
+        <option value="health">Sort by Health</option>
+        <option value="loc">Sort by LOC</option>
+        <option value="nest">Sort by Nesting</option>
+      </select>
+    </div>
+    <div class="lp-list" id="hpList"></div>
+  </div>
+  <div class="left-panel hidden" id="cycp">
+    <div class="lp-header">
+      <div style="font-size:13px;font-weight:600;color:#f97583">Circular Dependencies</div>
+    </div>
+    <div class="lp-list" id="cycList"></div>
+  </div>
+  <div id="cy"></div>
+  <div id="badges"></div>
+  <div class="panel hidden" id="dp">
+    <button class="close-btn" id="cls">&times;</button>
+    <div id="dc"></div>
+  </div>
+  <div class="source-panel hidden" id="sp">
+    <div class="source-header">
+      <span class="source-path" id="spPath"></span>
+      <button class="close-btn" id="spClose">&times;</button>
+    </div>
+    <pre class="source-body" id="spBody"></pre>
+  </div>
+</div>
+<div class="legend" id="lg"></div>
+<div class="tip" id="tip"></div>
+<div class="btip" id="btip"></div>
+<div class="edge-filter" id="efPanel"></div>
+<div class="modal-overlay hidden" id="asmOv">
+  <div class="modal"><div id="asmContent"></div></div>
+</div>
+
+<!-- serve delivers every script as a same-origin resource so script-src 'self' applies -->
+<script src="/static/vendor/cytoscape.min.js"></script>
+<script src="/static/vendor/dagre.min.js"></script>
+<script src="/static/vendor/cytoscape-dagre.js"></script>
+<!-- Embedded ELK (EPL-2.0), same-origin so script-src 'self' applies; runs main-thread (no blob worker, no unpkg). -->
+<script src="/static/vendor/elk.bundled.js"></script>
+<script src="/static/main.js"></script>
+<script src="/static/serve-client.js"></script>
+</body>
+</html>
