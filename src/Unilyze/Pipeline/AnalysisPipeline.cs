@@ -103,10 +103,12 @@ internal static class AnalysisPipeline
             discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
 
+        var (sourceTable, typesWithFileRefs) = BuildSourceTableAndFixRefs(resolvedTypes);
+
         if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
         {
             var manifest = SyntaxIncrementalCollector.BuildManifest(
-                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);
+                discover.ProjectRoot, incrementalCollect, finalMetrics, typesWithFileRefs);
             SyntaxCacheStore.Save(discover.ProjectRoot, manifest);
         }
 
@@ -123,8 +125,6 @@ internal static class AnalysisPipeline
         var energyPressure = discover.ProjectKind == "unity"
             ? EnergyPressureCalculator.ForGate(finalMetrics, excludeBaselined: false).Pressure
             : null;
-
-        var (sourceTable, typesWithFileRefs) = BuildSourceTableAndFixRefs(resolvedTypes);
 
         var result = new AnalysisResult(
             Path.GetFullPath(options.Path),
