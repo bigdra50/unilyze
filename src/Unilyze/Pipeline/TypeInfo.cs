@@ -77,7 +77,8 @@ internal sealed record MemberInfo(
     double? HalsteadEffort = null,
     double? HalsteadEstimatedBugs = null,
     SourceLocation? Location = null,
-    string? MemberId = null);
+    string? MemberId = null,
+    string? SourceFile = null);
 
 internal sealed record AnalyzeDirectoryResult(
     IReadOnlyList<TypeNodeInfo> Types,
@@ -211,9 +212,10 @@ internal static class TypeAnalyzer
             ? baseList.Types.Select(t => t.Type.ToString()).ToList()
             : [];
 
-        var members = MemberExtractor.ExtractMembers(typeDecl, typeId).ToList();
+        var rawMembers = MemberExtractor.ExtractMembers(typeDecl, typeId).ToList();
         var ctorParams = MemberExtractor.ExtractConstructorParams(typeDecl).ToList();
-        MemberExtractor.AddRecordParameters(typeDecl, members, ctorParams, typeId);
+        MemberExtractor.AddRecordParameters(typeDecl, rawMembers, ctorParams, typeId);
+        var members = rawMembers.Select(m => m with { SourceFile = filePath }).ToList();
 
         var (baseType, interfaces) = SplitBaseList(baseListItems, typeDecl is InterfaceDeclarationSyntax);
 
@@ -221,7 +223,7 @@ internal static class TypeAnalyzer
         var typeLineCount = typeSpan.EndLinePosition.Line - typeSpan.StartLinePosition.Line + 1;
         var typeStartLine = typeSpan.StartLinePosition.Line + 1;
 
-        var typeLocation = new SourceLocation(FileRef: 0, StartLine: typeStartLine, EndLine: typeSpan.EndLinePosition.Line + 1);
+        var typeLocation = new SourceLocation(FileRef: 0, StartLine: typeStartLine, EndLine: typeSpan.EndLinePosition.Line + 1, SourceFile: filePath);
 
         return new TypeNodeInfo(
             name, ns, kind, modifiers, baseType, interfaces, members, ctorParams,
@@ -276,7 +278,7 @@ internal static class TypeAnalyzer
         var enumLineCount = enumSpan.EndLinePosition.Line - enumSpan.StartLinePosition.Line + 1;
         var enumStartLine = enumSpan.StartLinePosition.Line + 1;
 
-        var enumLocation = new SourceLocation(FileRef: 0, StartLine: enumStartLine, EndLine: enumSpan.EndLinePosition.Line + 1);
+        var enumLocation = new SourceLocation(FileRef: 0, StartLine: enumStartLine, EndLine: enumSpan.EndLinePosition.Line + 1, SourceFile: filePath);
 
         return new TypeNodeInfo(
             enumDecl.Identifier.Text, ns, "enum", modifiers, null, [], enumMembers, [],
@@ -316,7 +318,7 @@ internal static class TypeAnalyzer
         var delLineCount = delSpan.EndLinePosition.Line - delSpan.StartLinePosition.Line + 1;
         var delStartLine = delSpan.StartLinePosition.Line + 1;
 
-        var delLocation = new SourceLocation(FileRef: 0, StartLine: delStartLine, EndLine: delSpan.EndLinePosition.Line + 1);
+        var delLocation = new SourceLocation(FileRef: 0, StartLine: delStartLine, EndLine: delSpan.EndLinePosition.Line + 1, SourceFile: filePath);
 
         return new TypeNodeInfo(
             name, ns, "delegate", modifiers, null, [], members, [],
