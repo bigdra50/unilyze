@@ -11,6 +11,14 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-06-15
+
+### Fixed
+
+- `SourceLocation.FileRef` now correctly indexes each member's source file instead of always being 0; partial type members from different files get distinct FileRef values ([#220](https://github.com/bigdra50/unilyze/pull/220)). Closes [#204](https://github.com/bigdra50/unilyze/issues/204)
+- SourceTable paths sorted by ordinal comparison for stable FileRef across incremental and full runs
+- Incremental test comparison normalizes FileRef to path strings to absorb parallel parse ordering differences
+
 ## [0.5.1] - 2026-06-14
 
 ### Added
