@@ -4,7 +4,7 @@
 [![Code Health](https://raw.githubusercontent.com/bigdra50/unilyze/badges/codehealth.svg)](./docs/metrics.md)
 [![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
 
-**Free, zero-setup static analysis for Unity — agent-first by design.** unilyze runs on `.cs` files and `.asmdef` alone (no MSBuild/sln required), computes churn × complexity hotspots from git history, and ships skills plus a self-documenting CLI (`metrics`, `schema`, `query`) for AI coding workflows. General C# projects are supported via `.csproj` discovery and semantic analysis when a solution is present.
+**C# static analysis that runs on `.cs` and `.asmdef` alone — no MSBuild or sln required.** Computes churn × complexity hotspots from git history, live-updates metrics in the browser on save (`unilyze serve`), and ships a self-documenting CLI (`metrics`, `schema`, `query`) with bundled AI agent skills. General C# projects are supported via `.csproj` discovery and semantic analysis when a solution is present.
 
 For build, test, and release information, see [README.dev.md](README.dev.md).
 
@@ -141,29 +141,11 @@ Full workflow YAML, input table, and `badges.yml` publishing pattern: [docs/ci-i
 
 ## Why unilyze
 
-unilyze targets teams that want **commercial-grade metrics and agent workflows without Unity/MSBuild setup cost or per-seat licensing**. The table below compares four axes that matter for Unity game code and AI-assisted refactoring (pricing as of 2026-06 — verify on vendor sites before budgeting).
-
 | | unilyze | NDepend | SonarQube | CodeScene | Qodana |
 |---|---|---|---|---|---|
-| **Price** | Free (MIT) | ~€399/seat/yr (Developer)[^ndepend] | ~$2,500/yr (Server Developer, 100K LOC)[^sonar] | from €18/active author/mo[^codescene] | €90/contributor/yr (Ultimate, 3-seat min)[^qodana] |
-| **Unity setup** | Zero setup: `.cs`/`.asmdef` alone, Unity DLLs resolved progressively | VS solution / compiled assemblies required[^ndepend-feat] | MSBuild project required (SonarScanner for .NET)[^sonar] | Git repo + service onboarding; no Unity-specific analysis[^codescene-hs] | `.sln`/`.csproj` pre-generated (Rider sync script)[^qodana-unity] |
-| **Churn × complexity hotspots** | `unilyze hotspot`, free; method-level via `--methods` | None (trend baselines only)[^ndepend-feat] | None ("Security Hotspot" is unrelated)[^sonar] | File-level; function-level in paid X-Ray[^codescene-hs] | None |
-| **Agent integration** | Bundled skills (Claude/Codex/Cursor/Gemini/Windsurf), self-documenting CLI (`metrics`/`schema`/`query`), stable JSON; MCP on roadmap | [NDepend MCP][^ndepend-mcp] | [SonarQube MCP Server (GA)][^sonar-mcp] | [CodeScene MCP][^codescene-mcp] | None found in survey |
-
-[^ndepend]: [NDepend purchase](https://www.ndepend.com/purchase)
-[^ndepend-feat]: [NDepend features](https://www.ndepend.com/features)
-[^sonar]: [SonarQube pricing in 2026 (dev.to)](https://dev.to/sonarsource/sonarqube-pricing-in-2026-community-developer-enterprise-and-cloud-costs-explained-4e8p)
-[^codescene]: [CodeScene pricing](https://codescene.com/pricing)
-[^codescene-hs]: [CodeScene hotspots](https://codescene.io/docs/guides/technical/hotspots.html)
-[^qodana]: [Qodana pricing](https://www.jetbrains.com/help/qodana/pricing.html)
-[^qodana-unity]: [Qodana Unity](https://www.jetbrains.com/help/qodana/unity.html)
-[^ndepend-mcp]: [NDepend MCP](https://github.com/ndepend/ndepend-mcp)
-[^sonar-mcp]: [SonarQube MCP Server](https://github.com/SonarSource/sonarqube-mcp-server)
-[^codescene-mcp]: [CodeScene MCP Server](https://github.com/codescene-oss/codescene-mcp-server)
-
-Free alternatives[^free-alt] (SonarQube Community Build, Qodana Community for .NET, Roslynator, Microsoft.CodeAnalysis.Metrics) lack Unity-specific hot-path detectors, asmdef-first discovery, and bundled agent skills.
-
-[^free-alt]: See [Roslynator CLI](https://josefpihrt.github.io/docs/roslynator/cli) and vendor community editions; pricing links above are paid tiers.
+| **Unity setup** | `.cs`/`.asmdef` alone, Unity DLLs resolved progressively | VS solution / compiled assemblies required | MSBuild project required (SonarScanner for .NET) | Git repo + service onboarding; no Unity-specific analysis | `.sln`/`.csproj` pre-generated (Rider sync script) |
+| **Churn × complexity hotspots** | `unilyze hotspot`; method-level via `--methods` | None (trend baselines only) | None ("Security Hotspot" is unrelated) | File-level; function-level in X-Ray | None |
+| **Agent integration** | Bundled skills (Claude/Codex/Cursor/Gemini/Windsurf), self-documenting CLI (`metrics`/`schema`/`query`), stable JSON | [NDepend MCP](https://github.com/ndepend/ndepend-mcp) | [SonarQube MCP Server](https://github.com/SonarSource/sonarqube-mcp-server) | [CodeScene MCP](https://github.com/codescene-oss/codescene-mcp-server) | None found in survey |
 
 ## Analysis Levels
 
