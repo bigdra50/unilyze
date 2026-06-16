@@ -3,6 +3,8 @@
 [![CI](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml/badge.svg)](https://github.com/bigdra50/unilyze/actions/workflows/ci.yml)
 [![Code Health](https://raw.githubusercontent.com/bigdra50/unilyze/badges/codehealth.svg)](./docs/metrics.md)
 [![NuGet](https://img.shields.io/nuget/v/Unilyze.svg)](https://www.nuget.org/packages/Unilyze)
+[![Homebrew](https://img.shields.io/github/v/release/bigdra50/unilyze?logo=homebrew&label=homebrew)](#quick-start)
+[![Scoop](https://img.shields.io/badge/dynamic/json?url=https://github.com/bigdra50/unilyze/releases/latest/download/unilyze.json&query=$.version&logo=scoop&label=scoop)](#quick-start)
 
 **C# static analysis that runs on `.cs` and `.asmdef` alone — no MSBuild or sln required.** Computes churn × complexity hotspots from git history, live-updates metrics in the browser on save (`unilyze serve`), and ships a self-documenting CLI (`metrics`, `schema`, `query`) with bundled AI agent skills. General C# projects are supported via `.csproj` discovery and semantic analysis when a solution is present.
 
