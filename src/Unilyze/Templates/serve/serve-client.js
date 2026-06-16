@@ -44,6 +44,13 @@
     var data = await res.json();
     await Promise.resolve(window.unilyzeApplySnapshot(data));
     etag = nextEtag;
+    // The server lists the blocks the user just edited (opaque fileIds). Pan/highlight
+    // them so the live update draws the eye to what changed. Empty on the first snapshot.
+    var changed = res.headers.get('X-Unilyze-Changed-FileIds');
+    if (changed && typeof window.unilyzeFocusChanged === 'function') {
+      var ids = changed.split(',').filter(function (id) { return id; });
+      if (ids.length) window.unilyzeFocusChanged(ids);
+    }
     return true;
   }
 

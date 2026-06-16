@@ -50,6 +50,76 @@ public sealed class ServeChangeDetectionTests : IDisposable
     }
 
     [Fact]
+    public void ComputeStamps_KeysRelevantFilesByRelativePath()
+    {
+        File.WriteAllText(Path.Combine(_root, "A.cs"), "class A {}");
+        Directory.CreateDirectory(Path.Combine(_root, "obj"));
+        File.WriteAllText(Path.Combine(_root, "obj", "G.cs"), "class G {}");
+
+        var stamps = ServeInputFingerprint.ComputeStamps(_root);
+
+        Assert.Contains("A.cs", stamps.Keys);
+        Assert.DoesNotContain("obj/G.cs", stamps.Keys); // excluded directory
+    }
+
+    [Fact]
+    public void ComputeStamps_StampChangesWhenFileEdited()
+    {
+        var file = Path.Combine(_root, "A.cs");
+        File.WriteAllText(file, "class A {}");
+        var before = ServeInputFingerprint.ComputeStamps(_root)["A.cs"];
+
+        File.WriteAllText(file, "class A { public int X; }");
+        File.SetLastWriteTimeUtc(file, DateTime.UtcNow.AddSeconds(5));
+
+        Assert.NotEqual(before, ServeInputFingerprint.ComputeStamps(_root)["A.cs"]);
+    }
+
+    [Fact]
+    public void ChangedFiles_FirstBuild_ReportsNothing()
+    {
+        var current = ServeInputFingerprint.ComputeStamps(_root);
+        var display = new Dictionary<string, string> { ["f0"] = "A.cs" };
+
+        Assert.Empty(ServeChangedFiles.Detect(null, current, display));
+    }
+
+    [Fact]
+    public void ChangedFiles_MapsEditedSourceToFileId()
+    {
+        var previous = new Dictionary<string, string>
+        {
+            ["Assets/Scripts/Foo.cs"] = "100|1",
+            ["Assets/Scripts/Bar.cs"] = "200|1",
+        };
+        var current = new Dictionary<string, string>
+        {
+            ["Assets/Scripts/Foo.cs"] = "140|2", // edited
+            ["Assets/Scripts/Bar.cs"] = "200|1", // unchanged
+        };
+        var display = new Dictionary<string, string>
+        {
+            ["f0"] = "Assets/Scripts/Foo.cs",
+            ["f1"] = "Assets/Scripts/Bar.cs",
+        };
+
+        var changed = ServeChangedFiles.Detect(previous, current, display);
+
+        Assert.Equal(["f0"], changed);
+    }
+
+    [Fact]
+    public void ChangedFiles_IgnoresChangedInputsWithoutAFileId()
+    {
+        // A .meta / .csproj edit changes inputs but maps to no analyzed block.
+        var previous = new Dictionary<string, string> { ["App.csproj"] = "1|1" };
+        var current = new Dictionary<string, string> { ["App.csproj"] = "2|2" };
+        var display = new Dictionary<string, string> { ["f0"] = "Assets/Scripts/Foo.cs" };
+
+        Assert.Empty(ServeChangedFiles.Detect(previous, current, display));
+    }
+
+    [Fact]
     public void Fingerprint_ChangesWhenSourceEdited()
     {
         var file = Path.Combine(_root, "A.cs");

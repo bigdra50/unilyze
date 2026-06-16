@@ -20,6 +20,11 @@ internal sealed class SnapshotBuilder
     readonly ServeOptions _options;
     readonly string _projectRoot;
 
+    // Input stamps captured at the previous build, diffed on the next build to learn which
+    // source files the user edited. Only touched on the single analysis worker thread
+    // (AnalysisCoordinator.Loop), so no synchronization is needed.
+    IReadOnlyDictionary<string, string>? _previousStamps;
+
     public SnapshotBuilder(ServeOptions options)
     {
         _options = options;
@@ -41,6 +46,8 @@ internal sealed class SnapshotBuilder
         var bytes = Encoding.UTF8.GetBytes(json);
         var serializeMillis = sw.Elapsed.TotalMilliseconds;
 
+        var changedFileIds = DetectChangedFileIds(sanitized.FileIdToDisplayPath);
+
         return new ServeSnapshotContent(
             JsonBytes: bytes,
             ETag: ComputeETag(bytes),
@@ -48,7 +55,20 @@ internal sealed class SnapshotBuilder
             Metrics: new ServeAnalysisMetrics(analysisMillis, bytes.Length, sanitizeMillis, serializeMillis),
             FileIdToAbsolutePath: sanitized.FileIdToAbsolutePath,
             FileIdToDisplayPath: sanitized.FileIdToDisplayPath,
-            AllowedSourceRoots: sanitized.AllowedSourceRoots);
+            AllowedSourceRoots: sanitized.AllowedSourceRoots,
+            ChangedFileIds: changedFileIds);
+    }
+
+    /// <summary>
+    /// Captures the current input stamps and diffs them against the previous build via
+    /// <see cref="ServeChangedFiles.Detect"/> to learn which source blocks the user edited.
+    /// </summary>
+    IReadOnlyList<string> DetectChangedFileIds(IReadOnlyDictionary<string, string> fileIdToDisplayPath)
+    {
+        var current = ServeInputFingerprint.ComputeStamps(_projectRoot);
+        var previous = _previousStamps;
+        _previousStamps = current;
+        return ServeChangedFiles.Detect(previous, current, fileIdToDisplayPath);
     }
 
     public IReadOnlyList<string> ResolveWatchedInputPaths()

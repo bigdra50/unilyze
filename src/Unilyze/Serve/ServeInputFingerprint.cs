@@ -15,9 +15,9 @@ internal static class ServeInputFingerprint
         string projectRoot,
         IReadOnlyCollection<string>? explicitInputPaths = null)
     {
-        var entries = new List<string>();
-        EnumerateRelevantFiles(projectRoot, entries);
-        AppendExplicitInputs(projectRoot, explicitInputPaths, entries);
+        var entries = ComputeStamps(projectRoot, explicitInputPaths)
+            .Select(stamp => stamp.Key + "|" + stamp.Value)
+            .ToList();
         entries.Sort(StringComparer.Ordinal);
 
         using var sha = SHA256.Create();
@@ -25,10 +25,26 @@ internal static class ServeInputFingerprint
         return Convert.ToHexString(bytes);
     }
 
+    /// <summary>
+    /// The per-input stamp map underlying <see cref="Compute"/>: key = a stable input
+    /// identity (project-relative path for files, <c>explicit:&lt;name&gt;</c> for external
+    /// inputs), value = <c>size|mtimeTicks</c> (or <c>missing</c>/<c>unavailable</c>).
+    /// serve diffs two stamp maps across successive analyses to learn which files changed.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> ComputeStamps(
+        string projectRoot,
+        IReadOnlyCollection<string>? explicitInputPaths = null)
+    {
+        var stamps = new Dictionary<string, string>(StringComparer.Ordinal);
+        EnumerateRelevantFiles(projectRoot, stamps);
+        AppendExplicitInputs(projectRoot, explicitInputPaths, stamps);
+        return stamps;
+    }
+
     static void AppendExplicitInputs(
         string projectRoot,
         IReadOnlyCollection<string>? explicitInputPaths,
-        List<string> entries)
+        Dictionary<string, string> stamps)
     {
         if (explicitInputPaths is not { Count: > 0 })
             return;
@@ -40,18 +56,18 @@ internal static class ServeInputFingerprint
             {
                 var info = new FileInfo(fullPath);
                 var name = Path.GetRelativePath(projectRoot, fullPath).Replace('\\', '/');
-                entries.Add(info.Exists
-                    ? $"explicit:{name}|{info.Length}|{info.LastWriteTimeUtc.Ticks}"
-                    : $"explicit:{name}|missing");
+                stamps["explicit:" + name] = info.Exists
+                    ? $"{info.Length}|{info.LastWriteTimeUtc.Ticks}"
+                    : "missing";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                entries.Add($"explicit:{fullPath}|unavailable");
+                stamps["explicit:" + fullPath] = "unavailable";
             }
         }
     }
 
-    static void EnumerateRelevantFiles(string projectRoot, List<string> entries)
+    static void EnumerateRelevantFiles(string projectRoot, Dictionary<string, string> stamps)
     {
         if (!Directory.Exists(projectRoot))
             return;
@@ -75,7 +91,7 @@ internal static class ServeInputFingerprint
             {
                 var info = new FileInfo(file);
                 var rel = Path.GetRelativePath(projectRoot, file).Replace('\\', '/');
-                entries.Add($"{rel}|{info.Length}|{info.LastWriteTimeUtc.Ticks}");
+                stamps[rel] = $"{info.Length}|{info.LastWriteTimeUtc.Ticks}";
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
