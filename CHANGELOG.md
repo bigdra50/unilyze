@@ -11,6 +11,10 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+### Changed
+
+- `unilyze serve` re-analyzes warm edits incrementally at the resolved semantic level: a source edit re-enriches only the changed types, while a structural change (signature / type-set / global-using change, or a file add/delete) re-enriches everything. The dependency graph and global aggregation are always rebuilt full, so the live snapshot is byte-identical to a full analysis. `--incremental` now accelerates every analysis level, not just `--level syntax` ([#216](https://github.com/bigdra50/unilyze/issues/216))
+
 ## [0.5.3] - 2026-06-16
 
 ### Added
