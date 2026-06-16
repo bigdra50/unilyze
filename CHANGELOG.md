@@ -11,6 +11,16 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-06-16
+
+### Added
+
+- `unilyze serve` pans to and highlights the type blocks whose source changed on each live update: after an edit re-analyzes, the viewer expands ancestors, fits the changed nodes, and pulses an amber `.hl-changed` halo. Changed source files are mapped to opaque fileIds via the `X-Unilyze-Changed-FileIds` snapshot header; the initial load and config / `.meta` / `.csproj` edits never trigger a spurious focus ([#221](https://github.com/bigdra50/unilyze/pull/221))
+
+### Fixed
+
+- `unilyze serve` now opens the live viewer in a browser. `TryOpenInBrowser` no longer rewrites the loopback `http://127.0.0.1:PORT/` URL into a bogus `file://` path (broken since the serve MVP [#202](https://github.com/bigdra50/unilyze/issues/202)); absolute http/https URLs pass through unchanged while the local HTML paths used by analyze/trend/diff keep the `file://` behavior ([#221](https://github.com/bigdra50/unilyze/pull/221))
+
 ## [0.5.2] - 2026-06-15
 
 ### Fixed
