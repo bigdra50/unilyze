@@ -119,12 +119,28 @@ async function main() {
       await page.screenshot({ path: join(outDir, '03-source.png') });
     }
 
-    // (4) Stale state: a genuine analysis failure must keep the prior snapshot + show the banner.
+    // (4) Live edit -> focus the changed block. Editing a source file triggers a re-analysis;
+    // the next snapshot reports the changed fileId and the viewer pans/highlights its types.
+    writeFileSync(join(projectDir, 'Domain', 'Entities.cs'), `namespace Shop.Domain;
+public interface IRepository<T> { T? Get(int id); }
+public class Product { public int Id; public string Name = ""; public Money Price = new(); }
+public class Money { public decimal Amount; public string Currency = "USD"; public decimal Tax; public decimal WithTax() => Amount + Tax; }
+public class Order { public Product[] Items = System.Array.Empty<Product>(); public Money Total() => new(); }
+public class ProductRepository : IRepository<Product> { public Product? Get(int id) => new(); }
+`);
+    await page.waitForFunction(
+      () => window.unilyzeCy && window.unilyzeCy.elements('.hl-changed').length > 0,
+      { timeout: 30000 }
+    ).catch(() => fail('changed block was not highlighted after a live edit'));
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: join(outDir, '04-edit-focus.png') });
+
+    // (5) Stale state: a genuine analysis failure must keep the prior snapshot + show the banner.
     try { symlinkSync(join(tmpdir(), 'unilyze-missing-' + Date.now() + '.cs'), join(projectDir, 'Broken.cs')); } catch { /* ignore */ }
     await page.waitForSelector('#staleBanner:not(.hidden)', { timeout: 30000 })
       .catch(() => fail('stale banner did not appear after analysis failure'));
     await page.waitForTimeout(500);
-    await page.screenshot({ path: join(outDir, '04-stale.png') });
+    await page.screenshot({ path: join(outDir, '05-stale.png') });
 
     if (consoleErrors.length) fail('console/page errors: ' + consoleErrors.join(' | '));
   } finally {

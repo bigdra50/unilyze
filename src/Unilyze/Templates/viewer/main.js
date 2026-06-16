@@ -997,6 +997,7 @@ cy = cytoscape({
     {selector:'.dim',style:{'opacity':.10}},
     {selector:'.hl',style:{'opacity':1,'border-width':2.5,'border-color':'#58a6ff','z-index':999}},
     {selector:'.hl-focus',style:{'opacity':1,'border-width':4,'border-color':'#f0e68c','z-index':1000,'overlay-color':'#f0e68c','overlay-opacity':.12,'overlay-padding':6}},
+    {selector:'.hl-changed',style:{'opacity':1,'border-width':4,'border-color':'#ffa657','z-index':1001,'overlay-color':'#ffa657','overlay-opacity':.18,'overlay-padding':8}},
     {selector:'.cycle',style:{'border-color':'#f97583','border-width':3,'opacity':1,'z-index':999}},
     {selector:'.cycle-edge',style:{'line-color':'#f97583','target-arrow-color':'#f97583','opacity':1,'width':2.5,'z-index':999}},
     {selector:'node[diffBucket="added"]',style:{
@@ -2723,5 +2724,43 @@ function applySnapshot(data){
   if(typeof window.__unilyzeOnApply==='function'&&entry) window.__unilyzeOnApply(entry.duration);
 }
 window.unilyzeApplySnapshot=applySnapshot;
+
+// --- Live edit focus (serve) ---
+// After a snapshot swap, serve tells us which source files the user just edited (opaque
+// fileIds). Pan/zoom to the matching type blocks and pulse them so the eye lands on the
+// change. Reuses navigateToType's expand→layout→fit pattern, generalized to a set.
+let _changedHlTimer=null;
+function focusChanged(fileIds){
+  if(!cy||!Array.isArray(fileIds)||!fileIds.length) return;
+  const idSet=new Set(fileIds);
+  const keys=Object.entries(tl).filter(([,t])=>t&&t.filePath&&idSet.has(t.filePath)).map(([tk])=>tk);
+  if(!keys.length) return;
+  let expandedAdded=false;
+  keys.forEach(tk=>{
+    const ns=tl[tk].namespace||'(global)';
+    const before=expanded.size;
+    expandNamespaceAncestors(ns,expanded);
+    expanded.add(ns);
+    if(expanded.size!==before) expandedAdded=true;
+  });
+  const focusNow=()=>{
+    cy.elements().removeClass('hl-changed');
+    let nodes=cy.collection();
+    keys.forEach(tk=>{const n=cy.getElementById('t:'+tk);if(!n.empty()) nodes=nodes.union(n)});
+    if(nodes.empty()) return;
+    nodes.addClass('hl-changed');
+    cy.animate({fit:{eles:nodes,padding:120},duration:300});
+    clearTimeout(_changedHlTimer);
+    _changedHlTimer=setTimeout(()=>cy.elements().removeClass('hl-changed'),3000);
+  };
+  // Run the focus after the layout settles (applySnapshot's, or a fresh one when we had to
+  // expand a collapsed namespace). layoutstop may have already fired, so a timeout backstops.
+  if(expandedAdded){rebuild();layout();}
+  let done=false;
+  const run=()=>{if(done)return;done=true;focusNow()};
+  cy.one('layoutstop',()=>setTimeout(run,50));
+  setTimeout(run,expandedAdded?500:350);
+}
+window.unilyzeFocusChanged=focusChanged;
 
 }); // end document.fonts.ready

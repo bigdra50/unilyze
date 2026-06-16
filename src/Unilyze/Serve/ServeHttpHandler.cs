@@ -240,6 +240,12 @@ internal sealed class ServeHttpHandler
             return;
         }
 
+        // Tell the live viewer which blocks the user just edited so it can pan/highlight
+        // them. Opaque fileIds only (same scrubbing as the JSON); same-origin fetch reads
+        // this header without CORS exposure, like X-Unilyze-Source-Path on /api/source.
+        if (snapshot.Content.ChangedFileIds is { Count: > 0 } changedFileIds)
+            response.Headers["X-Unilyze-Changed-FileIds"] = string.Join(',', changedFileIds);
+
         response.StatusCode = 200;
         response.ContentType = "application/json; charset=utf-8";
         response.ContentLength64 = snapshot.JsonBytes.Length;

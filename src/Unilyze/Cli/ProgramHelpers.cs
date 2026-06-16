@@ -231,11 +231,11 @@ internal static class ProgramHelpers
         return 0;
     }
 
-    public static void TryOpenInBrowser(string path)
+    public static void TryOpenInBrowser(string pathOrUrl)
     {
         try
         {
-            var url = "file://" + Path.GetFullPath(path);
+            var url = ResolveOpenTarget(pathOrUrl);
             if (OperatingSystem.IsMacOS())
                 System.Diagnostics.Process.Start("open", url)?.Dispose();
             else if (OperatingSystem.IsWindows())
@@ -247,6 +247,21 @@ internal static class ProgramHelpers
         {
             Console.Error.WriteLine($"Warning: Failed to open browser automatically: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Resolves a path-or-URL into a target the OS browser launcher accepts. An absolute
+    /// http/https URL (e.g. the <c>serve</c> loopback address) passes through unchanged;
+    /// anything else is treated as a local filesystem path and turned into a file:// URL.
+    /// Without this split, serve's <c>http://127.0.0.1:PORT/</c> would be mangled by
+    /// <see cref="Path.GetFullPath(string)"/> into a bogus <c>file://.../http:/...</c> path.
+    /// </summary>
+    public static string ResolveOpenTarget(string pathOrUrl)
+    {
+        if (Uri.TryCreate(pathOrUrl, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            return pathOrUrl;
+        return "file://" + Path.GetFullPath(pathOrUrl);
     }
     public static ReferenceAnalysisSettings LoadReferenceAnalysisSettings(
         string projectRoot,

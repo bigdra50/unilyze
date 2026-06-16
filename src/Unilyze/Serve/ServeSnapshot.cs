@@ -33,7 +33,10 @@ internal sealed record ServeSnapshotContent(
     IReadOnlyDictionary<string, string> FileIdToAbsolutePath,
     IReadOnlyDictionary<string, string> FileIdToDisplayPath,
     IReadOnlyList<string> AllowedSourceRoots,
-    ServeDeltaScore? DeltaScore = null);
+    ServeDeltaScore? DeltaScore = null,
+    // Opaque fileIds whose source the user edited since the previous snapshot, so the live
+    // viewer can pan/highlight the changed blocks. Empty on the first snapshot (no baseline).
+    IReadOnlyList<string>? ChangedFileIds = null);
 
 /// <summary>An immutable successful snapshot, tagged with the generation it was published at.</summary>
 internal sealed record ServeSnapshot(long Generation, ServeSnapshotContent Content)
