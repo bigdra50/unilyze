@@ -33,6 +33,8 @@ internal static class SyntaxIncrementalSemanticPhase
 
         var config = options.EffectiveAnalysisConfig;
         var typesToReEnrich = DetermineTypesToReEnrich(allTypes, collect);
+        options.EffectiveLog.Info(
+            $"[incremental] re-enrich types: {typesToReEnrich.Count}/{allTypes.Count}");
         var metricsByTypeId = new Dictionary<string, TypeMetrics>(StringComparer.Ordinal);
 
         var reEnrichBaseMetrics = new List<TypeMetrics>();
@@ -79,6 +81,12 @@ internal static class SyntaxIncrementalSemanticPhase
         IReadOnlyList<TypeNodeInfo> allTypes,
         SyntaxIncrementalCollectResult collect)
     {
+        // A structural change (signature/type-set/global-using/file add or delete) can shift
+        // name resolution for body-callers the declaration dependency graph never captures, so
+        // the only correctness-safe answer is to re-enrich every type.
+        if (collect.RequiresFullReEnrich)
+            return new HashSet<string>(allTypes.Select(TypeIdentity.GetTypeId), StringComparer.Ordinal);
+
         var reparsedFiles = new HashSet<string>(
             collect.ReparsedFiles.Select(Path.GetFullPath),
             StringComparer.Ordinal);

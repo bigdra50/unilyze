@@ -39,13 +39,6 @@ internal static class AnalysisPipeline
 
     static AnalysisResult Build(AnalysisBuildOptions options)
     {
-        if (options.Incremental && options.RequestedLevel != AnalysisLevel.Syntax)
-        {
-            options.EffectiveLog.Warning(
-                "--incremental currently accelerates syntax-level analysis only; running full analysis");
-            options = options with { Incremental = false };
-        }
-
         try
         {
             return BuildCore(options);
@@ -85,7 +78,7 @@ internal static class AnalysisPipeline
         List<TypeDependency> deps;
         List<TypeMetrics> typeMetrics;
         IReadOnlyDictionary<string, CouplingInfo> couplingMap;
-        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } collect)
+        if (options.UseIncrementalCache && SyntaxIncrementalState.Current is { } collect)
         {
             (resolvedTypes, deps, typeMetrics, couplingMap) = SyntaxIncrementalSemanticPhase.Run(
                 allTypes, allSyntaxTrees, compile.CompilationResult, options, collect, discover);
@@ -103,7 +96,7 @@ internal static class AnalysisPipeline
             discover, resolvedTypes, deps, typeMetrics, couplingMap, config.DisableCycles);
         log.PhaseCompleted("aggregate", sw.Elapsed);
 
-        if (options.UseSyntaxIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
+        if (options.UseIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
         {
             var manifest = SyntaxIncrementalCollector.BuildManifest(
                 discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);

@@ -3,6 +3,7 @@ using Unilyze.Metrics;
 using Unilyze.Pipeline;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Unilyze.Incremental;
 
@@ -56,6 +57,15 @@ internal static class SyntaxIncrementalCollector
             scannedFiles, rawTypesByFile, existing?.KnownInterfacesHashesByAssembly, filesToParse, reparsedFiles, log);
         ParseFiles(filesToParse, rawTypesByFile, syntaxTrees, parseOptions, scannedFiles, reparsedFiles, log);
 
+        // At a semantic level the syntax trees back a real CSharpCompilation, so the cached
+        // (unchanged) files must contribute trees too — otherwise every cached type's
+        // SemanticModel cannot resolve symbols declared in the files we skipped, corrupting
+        // CBO/DIT/RFC for the whole project. Parse them for trees only; they stay out of
+        // reparsedFiles so they are never marked for re-enrichment.
+        if (options.RequestedLevel != AnalysisLevel.Syntax)
+            CompleteSyntaxTreeSet(
+                scannedFiles, syntaxTrees, reparsedFiles, parseOptions, options.EffectiveMaxParallelism);
+
         var mergedRawTypes = rawTypesByFile.Values
             .SelectMany(types => types)
             .OrderBy(t => t.FilePath, StringComparer.Ordinal)
@@ -64,11 +74,22 @@ internal static class SyntaxIncrementalCollector
         var mergedTypes = TypeAnalyzer.ApplySyntaxPostProcessing(mergedRawTypes).ToList();
         var knownInterfacesHashes = ComputeKnownInterfacesHashes(mergedRawTypes, scannedFiles);
 
+        var isSemantic = options.RequestedLevel != AnalysisLevel.Syntax;
+        var globalUsingsHashes = isSemantic
+            ? ComputeGlobalUsingsHashes(scannedFiles, syntaxTrees)
+            : new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // The body-only fast path is only sound at a semantic level once a cache exists; the
+        // cold/no-cache path reparses everything (so SEED already covers every type).
+        var requiresFullReEnrich = isSemantic && existing is not null && HasStructuralChange(
+            existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes, log);
+
         var manifestDraft = new SyntaxCacheManifest(
             SyntaxCacheFingerprint.SchemaVersion,
             fingerprint,
             knownInterfacesHashes,
-            []);
+            [],
+            globalUsingsHashes);
 
         return new SyntaxIncrementalCollectResult(
             mergedTypes,
@@ -76,8 +97,102 @@ internal static class SyntaxIncrementalCollector
             rawTypesByFile,
             cachedEnrichment,
             reparsedFiles,
-            manifestDraft);
+            manifestDraft,
+            requiresFullReEnrich);
     }
+
+    static bool HasStructuralChange(
+        SyntaxCacheManifest existing,
+        IReadOnlyDictionary<string, SyntaxCacheFileEntry> existingByPath,
+        IReadOnlyList<FileScanEntry> scannedFiles,
+        IReadOnlySet<string> reparsedFiles,
+        IReadOnlyDictionary<string, IReadOnlyList<TypeNodeInfo>> rawTypesByFile,
+        IReadOnlyDictionary<string, string> currentGlobalUsingsHashes,
+        IAnalysisLogSink log)
+    {
+        var scannedByRelative = scannedFiles.ToDictionary(f => f.RelativePath, f => f, StringComparer.Ordinal);
+
+        if (scannedFiles.Any(f => !existingByPath.ContainsKey(f.RelativePath)))
+            return LogFullReEnrich(log, "a source file was added");
+        if (existing.Files.Any(e => !scannedByRelative.ContainsKey(e.RelativePath)))
+            return LogFullReEnrich(log, "a source file was deleted");
+
+        foreach (var file in scannedFiles)
+        {
+            if (!reparsedFiles.Contains(file.AbsolutePath))
+                continue;
+            if (!existingByPath.TryGetValue(file.RelativePath, out var oldEntry)
+                || !rawTypesByFile.TryGetValue(file.AbsolutePath, out var newRawTypes))
+                continue;
+            if (StructuralChangeDetector.FileStructureChanged(oldEntry.RawTypes, newRawTypes))
+                return LogFullReEnrich(log, $"declaration shape changed in {file.RelativePath}");
+        }
+
+        var cachedGlobalUsings = existing.GlobalUsingsHashesByAssembly
+            ?? new Dictionary<string, string>(StringComparer.Ordinal);
+        if (GlobalUsingsChanged(cachedGlobalUsings, currentGlobalUsingsHashes))
+            return LogFullReEnrich(log, "the global using set changed");
+
+        return false;
+    }
+
+    static bool LogFullReEnrich(IAnalysisLogSink log, string reason)
+    {
+        log.Info($"[incremental] full re-enrich: {reason}");
+        return true;
+    }
+
+    static bool GlobalUsingsChanged(
+        IReadOnlyDictionary<string, string> cached,
+        IReadOnlyDictionary<string, string> current)
+    {
+        if (cached.Count != current.Count)
+            return true;
+        foreach (var (assembly, hash) in cached)
+        {
+            if (!current.TryGetValue(assembly, out var currentHash)
+                || !string.Equals(hash, currentHash, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
+
+    static Dictionary<string, string> ComputeGlobalUsingsHashes(
+        IReadOnlyList<FileScanEntry> scannedFiles,
+        IReadOnlyList<SyntaxTree> syntaxTrees)
+    {
+        var assemblyByPath = scannedFiles.ToDictionary(
+            f => f.AbsolutePath, f => f.Assembly, StringComparer.Ordinal);
+        var byAssembly = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+
+        foreach (var tree in syntaxTrees)
+        {
+            var path = Path.GetFullPath(tree.FilePath);
+            if (!assemblyByPath.TryGetValue(path, out var assembly)
+                || tree.GetRoot() is not CompilationUnitSyntax root)
+                continue;
+
+            foreach (var directive in root.Usings)
+            {
+                if (!directive.GlobalKeyword.IsKind(SyntaxKind.GlobalKeyword))
+                    continue;
+                if (!byAssembly.TryGetValue(assembly, out var list))
+                {
+                    list = [];
+                    byAssembly[assembly] = list;
+                }
+                list.Add(NormalizeUsingDirective(directive));
+            }
+        }
+
+        var hashes = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (assembly, usings) in byAssembly)
+            hashes[assembly] = SyntaxCacheFingerprint.HashStrings(usings.OrderBy(u => u, StringComparer.Ordinal));
+        return hashes;
+    }
+
+    static string NormalizeUsingDirective(UsingDirectiveSyntax directive) =>
+        string.Join(' ', directive.ToString().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
     public static SyntaxCacheManifest BuildManifest(
         string projectRoot,
@@ -187,6 +302,31 @@ internal static class SyntaxIncrementalCollector
             reparsedFiles.Add(absolutePath);
             log.Info($"[incremental] re-parsed: {scan.RelativePath}");
         }
+    }
+
+    static void CompleteSyntaxTreeSet(
+        IReadOnlyList<FileScanEntry> scannedFiles,
+        List<SyntaxTree> syntaxTrees,
+        IReadOnlySet<string> reparsedFiles,
+        CSharpParseOptions parseOptions,
+        int maxParallelism)
+    {
+        var treedPaths = new HashSet<string>(
+            syntaxTrees.Select(t => t.FilePath), StringComparer.Ordinal);
+
+        var toParse = scannedFiles
+            .Where(e => !reparsedFiles.Contains(e.AbsolutePath) && !treedPaths.Contains(e.AbsolutePath))
+            .ToList();
+
+        // Match the full collector's parallel parse: a sequential reparse of the cached files
+        // here would erase much of the enrichment-elision win on a large project.
+        var parsed = new System.Collections.Concurrent.ConcurrentBag<SyntaxTree>();
+        Parallel.ForEach(toParse, new ParallelOptions { MaxDegreeOfParallelism = maxParallelism }, entry =>
+        {
+            var (tree, _) = TypeAnalyzer.ParseSingleFile(entry.AbsolutePath, entry.Assembly, parseOptions);
+            parsed.Add(tree);
+        });
+        syntaxTrees.AddRange(parsed);
     }
 
     static void ExpandPartialInvalidations(

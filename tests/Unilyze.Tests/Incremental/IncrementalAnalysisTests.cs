@@ -51,12 +51,12 @@ public sealed class IncrementalAnalysisTests : IDisposable
     }
 
     [Fact]
-    public void IncrementalWithoutSyntaxLevel_WarnsAndIgnoresCache()
+    public void IncrementalAtSemanticLevel_BuildsCacheWithoutWarning()
     {
         var (exitCode, _, stderr) = Run("-p", _projectRoot, "--incremental", "-f", "json");
         Assert.Equal(0, exitCode);
-        Assert.Contains("syntax-level analysis only", stderr);
-        Assert.False(Directory.Exists(SyntaxCacheStore.GetCacheDirectory(_projectRoot)));
+        Assert.DoesNotContain("syntax-level analysis only", stderr);
+        Assert.True(Directory.Exists(SyntaxCacheStore.GetCacheDirectory(_projectRoot)));
     }
 
     [Theory]

@@ -10,7 +10,8 @@ internal sealed record SyntaxCacheManifest(
     int SchemaVersion,
     string Fingerprint,
     IReadOnlyDictionary<string, string> KnownInterfacesHashesByAssembly,
-    IReadOnlyList<SyntaxCacheFileEntry> Files);
+    IReadOnlyList<SyntaxCacheFileEntry> Files,
+    IReadOnlyDictionary<string, string>? GlobalUsingsHashesByAssembly = null);
 
 internal sealed record SyntaxCacheFileEntry(
     string RelativePath,
@@ -29,7 +30,10 @@ internal sealed record SyntaxIncrementalCollectResult(
     IReadOnlyDictionary<string, IReadOnlyList<TypeNodeInfo>> RawTypesByFile,
     IReadOnlyDictionary<string, SyntaxCacheEnrichedType> CachedEnrichmentByTypeId,
     IReadOnlySet<string> ReparsedFiles,
-    SyntaxCacheManifest ManifestDraft);
+    SyntaxCacheManifest ManifestDraft,
+    // When true a structural change (signature/type-set/global-using/file add or delete) means
+    // the body-only fast path is unsafe at a semantic level, so every type is re-enriched.
+    bool RequiresFullReEnrich = false);
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

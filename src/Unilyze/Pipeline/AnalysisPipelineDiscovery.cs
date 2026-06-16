@@ -75,7 +75,7 @@ internal static class AnalysisPipelineDiscovery
     public static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypes(
         PipelineDiscoverState discover, AnalysisBuildOptions options)
     {
-        if (options.UseSyntaxIncrementalCache)
+        if (options.UseIncrementalCache)
             return CollectTypesIncremental(discover, options);
 
         return CollectTypesFull(discover, options);
