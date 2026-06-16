@@ -369,4 +369,31 @@ public sealed class ProgramHelpersTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    // --- ResolveOpenTarget ---
+
+    [Theory]
+    [InlineData("http://127.0.0.1:8765/")]
+    [InlineData("http://localhost:5000/index.html")]
+    [InlineData("https://example.com/report")]
+    public void ResolveOpenTarget_HttpUrl_PassesThroughUnchanged(string url)
+    {
+        // serve hands an http loopback URL; it must not be mangled into a file:// path.
+        Assert.Equal(url, ProgramHelpers.ResolveOpenTarget(url));
+    }
+
+    [Fact]
+    public void ResolveOpenTarget_RelativeLocalPath_BecomesFileUrl()
+    {
+        var resolved = ProgramHelpers.ResolveOpenTarget("report.html");
+        Assert.Equal("file://" + Path.GetFullPath("report.html"), resolved);
+        Assert.StartsWith("file://", resolved);
+    }
+
+    [Fact]
+    public void ResolveOpenTarget_AbsoluteLocalPath_BecomesFileUrl()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "unilyze-report.html");
+        Assert.Equal("file://" + Path.GetFullPath(path), ProgramHelpers.ResolveOpenTarget(path));
+    }
 }
