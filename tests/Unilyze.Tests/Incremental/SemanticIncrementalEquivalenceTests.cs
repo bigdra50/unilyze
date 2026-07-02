@@ -29,6 +29,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     [InlineData("body-only")]
     [InlineData("signature-change")]
     [InlineData("member-signature-modify")]
+    [InlineData("member-add")]
     [InlineData("base-class-change")]
     [InlineData("global-using-add")]
     [InlineData("global-using-modify")]
@@ -90,6 +91,25 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
         Assert.Contains("[incremental] re-enrich types: 2/", stderr);
         Assert.Contains("(rdi: sig=1 members=0 base=0 using=0)", stderr);
+    }
+
+    // Δmembers(B) (design doc §4.3 Phase B): MemberAddHost gains a new member (Extra) — the
+    // member SET changes, unlike MemberSignatureModify_ReEnrichesSeedAndRDeps's pure signature
+    // edit — so this exercises the Δmembers path specifically (RDeps(B ∪ InhDesc(B)), not
+    // RDeps(B)). MemberAddDependent.cs (never touched) calls MemberAddHost.Compute from a method
+    // body, so its cached UsedTypes(MemberAddDependent) records MemberAddHost — RDeps(MemberAddHost)
+    // must include it, or its cached metrics could go stale relative to a full run.
+    [Fact]
+    public void MemberAdd_ReEnrichesSeedAndRDeps()
+    {
+        Analyze(incremental: true); // seed cache
+        ApplyMutation("member-add");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
+        Assert.Contains("[incremental] re-enrich types: 2/", stderr);
+        Assert.Contains("(rdi: sig=0 members=1 base=0 using=0)", stderr);
     }
 
     // Regression coverage for the pre-#222-merge correctness hole (design doc §2): an alias
@@ -252,6 +272,25 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
                 public int Run(SigHost host) => host.Compute(3);
             }
             """);
+
+        // Member-add fixture (design doc §4.3 Phase B): same shape as Sig{Host,Dependent} above,
+        // but the mutation adds a member (Δmembers) instead of modifying a signature (Δsig).
+        File.WriteAllText(Path.Combine(_projectRoot, "MemberAddHost.cs"), """
+            namespace Sample;
+
+            public class MemberAddHost
+            {
+                public int Compute(int x) => x * 2;
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "MemberAddDependent.cs"), """
+            namespace Sample;
+
+            public class MemberAddDependent
+            {
+                public int Run(MemberAddHost host) => host.Compute(3);
+            }
+            """);
     }
 
     void ApplyMutation(string mutation)
@@ -295,6 +334,19 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
                     public class SigHost
                     {
                         public int Compute(long x) => (int)x * 2;
+                    }
+                    """);
+                break;
+            case "member-add":
+                // Add a new member (Extra) to MemberAddHost — the member SET changes, so this
+                // classifies as Δmembers(MemberAddHost) rather than Δsig.
+                File.WriteAllText(Path.Combine(_projectRoot, "MemberAddHost.cs"), """
+                    namespace Sample;
+
+                    public class MemberAddHost
+                    {
+                        public int Compute(int x) => x * 2;
+                        public int Extra() => 1;
                     }
                     """);
                 break;

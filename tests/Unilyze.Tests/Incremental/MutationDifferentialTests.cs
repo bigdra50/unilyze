@@ -16,17 +16,20 @@ namespace Unilyze.Tests.Incremental;
 // base / retargeted using). Through Phase 0 every step fell back to a full re-enrich under the v1
 // detector (StructuralChangeDetector + SyntaxIncrementalCollector.HasStructuralChange) —
 // full/incremental equivalence held trivially. Phase A2 (design doc §4.3) replaced that blanket
-// fallback with per-type delta classification: retarget-alias now resolves through the precise
-// Δusing(F) path (SEED ∪ RDeps(F's types)) instead of a full re-enrich; add-member/add-operator/
-// add-extension/change-base/add-conversion are member-add or base-change deltas, which still fall
-// back to full until Phase B lands Δmembers/Δbase precision. Either way, this harness is the
-// regression gate that catches an under-invalidation bug the moment it would first appear in an
-// editing session (§7.2 "any divergence here is a P0").
+// fallback with per-type delta classification: retarget-alias resolves through the precise
+// Δusing(F) path (SEED ∪ RDeps(F's types)) instead of a full re-enrich. Phase B (design doc §4.3,
+// gated on THIS harness) replaced the remaining member-add/base-change full fallback with
+// RDeps(B ∪ InhDesc(B)) / InhDesc(B) ∪ RDeps(B ∪ InhDesc(B)) — add-member/add-operator/
+// add-extension/change-base/add-conversion above now flow through that precise path too. The
+// hazard steps below (add-base-member-captures-derived-receiver onward) are Phase B's REQUIRED
+// gate (§6): each targets a specific binding-capture risk the closure exists for — a receiver
+// statically typed as a DESCENDANT of the changed type, which the declaration dependency graph
+// alone (no closure) would miss. Either way, this harness is the regression gate that catches an
+// under-invalidation bug the moment it would first appear in an editing session (§7.2 "any
+// divergence here is a P0").
 //
 // To add a mutation: append a MutationStep to MutationSequence with a Name and an
-// Apply(projectRoot) file-rewrite. Phase B's hazard list (interface default member add, member
-// hide via `new`, collection-initializer Add capture, foreach/await/deconstruct pattern member
-// add, ...) plugs in the same way — no harness changes needed, just new steps.
+// Apply(projectRoot) file-rewrite, and any needed fixture files in WriteBaselineFixture.
 public sealed class MutationDifferentialTests : IDisposable
 {
     readonly string _projectRoot;
@@ -119,6 +122,137 @@ public sealed class MutationDifferentialTests : IDisposable
                 public int Value { get; set; }
 
                 public static implicit operator int(ConversionHost c) => c.Value;
+            }
+            """)),
+
+        // ---- Phase B hazard list (design doc §6, REQUIRED gate for Δmembers/Δbase precision).
+        // Each step below is a binding-capture risk that only the InhDesc(B) closure — not RDeps(B)
+        // alone — can catch: a caller's receiver is statically typed as a DESCENDANT of the type
+        // whose member set/base list changes, so the caller's recorded UsedTypes never mentions B
+        // itself. ----
+
+        // CapCaptureCaller holds a CapDerived-typed receiver and calls the extension method
+        // Widen() (no instance Widen exists on CapBase/CapDerived yet). Adding an instance Widen()
+        // to CapBase captures that call: member resolution prefers instance members over extension
+        // methods, so CapCaptureCaller.Use rebinds from CapExtensions.Widen to CapBase.Widen. This
+        // is Δmembers(CapBase); catching CapCaptureCaller (which only ever mentions CapDerived, not
+        // CapBase) requires RDeps(CapDerived) via InhDesc(CapBase) ∋ CapDerived.
+        new("add-base-member-captures-derived-receiver",
+            projectRoot => File.WriteAllText(Path.Combine(projectRoot, "CapCaptureHost.cs"), """
+            namespace Sample;
+
+            public class CapBase
+            {
+                public int Widen() => 2;
+            }
+
+            public class CapDerived : CapBase { }
+
+            public static class CapExtensions
+            {
+                public static int Widen(this CapDerived d) => 1;
+            }
+            """)),
+
+        // DimCaller has both an IDim-typed caller and a DimImpl (implementing-type)-typed caller.
+        // Adding a default interface method to IDim is Δmembers(IDim); DimImplCaller (which only
+        // ever mentions DimImpl, never IDim by name) needs RDeps(DimImpl) via
+        // InhDesc(IDim) ∋ DimImpl to be swept in.
+        new("add-interface-default-member", projectRoot => File.WriteAllText(Path.Combine(projectRoot, "DimHost.cs"), """
+            namespace Sample;
+
+            public interface IDim
+            {
+                int Existing();
+                int Added() => 42;
+            }
+
+            public class DimImpl : IDim
+            {
+                public int Existing() => 1;
+            }
+            """)),
+
+        // HideCaller has both a HideBase-typed caller and a HideDerived-typed caller, both calling
+        // M(). Before this mutation both calls bind to HideBase.M (HideDerived has no member of its
+        // own yet). Adding `new int M()` to HideDerived hides HideBase.M for HideDerived-typed
+        // receivers only — HideCaller.UseDerived rebinds while HideCaller.UseBase does not. This is
+        // Δmembers(HideDerived) directly (HideDerived IS the changed type), so no closure is needed
+        // to catch HideCaller — a baseline check that the non-static-class Δmembers path alone
+        // (from Phase B's core rule, not the extension carve-out) stays correct.
+        new("hide-base-member", projectRoot => File.WriteAllText(Path.Combine(projectRoot, "HideHost.cs"), """
+            namespace Sample;
+
+            public class HideBase
+            {
+                public int M() => 1;
+            }
+
+            public class HideDerived : HideBase
+            {
+                public new int M() => 2;
+            }
+            """)),
+
+        // OverloadShiftConsumer.ResolveDerived passes an OverloadShiftDerived-typed argument to an
+        // overloaded Describe(object)/Describe(int) pair; before this mutation it binds
+        // Describe(object) (no conversion to int exists). Adding an implicit conversion operator to
+        // OverloadShiftBase (NOT OverloadShiftDerived) is Δmembers(OverloadShiftBase); C# applies a
+        // base class's user-defined conversion to derived-typed operands, so ResolveDerived rebinds
+        // to Describe(int) — but OverloadShiftConsumer only ever mentions OverloadShiftDerived, so
+        // catching it needs RDeps(OverloadShiftDerived) via InhDesc(OverloadShiftBase).
+        new("add-implicit-conversion-shifts-overload",
+            projectRoot => File.WriteAllText(Path.Combine(projectRoot, "OverloadShiftBase.cs"), """
+            namespace Sample;
+
+            public class OverloadShiftBase
+            {
+                public int Value { get; set; }
+
+                public static implicit operator int(OverloadShiftBase b) => b.Value;
+            }
+
+            public class OverloadShiftDerived : OverloadShiftBase { }
+            """)),
+
+        // CollCaller builds a CollBox via a collection initializer `{ 1, 2, 3 }`; before this
+        // mutation CollBox has only Add(object), so each int literal binds through a boxing
+        // conversion. Adding an Add(int) overload is Δmembers(CollBox); CollCaller's initializer
+        // rebinds to the non-boxing overload, changing its recorded boxing occurrences.
+        new("add-collection-initializer-add", projectRoot => File.WriteAllText(Path.Combine(projectRoot, "CollHost.cs"), """
+            namespace Sample;
+
+            using System.Collections;
+            using System.Collections.Generic;
+
+            public class CollBox : IEnumerable
+            {
+                readonly List<object> _items = new();
+                public void Add(object x) => _items.Add(x);
+                public void Add(int x) => _items.Add(x);
+                public IEnumerator GetEnumerator() => _items.GetEnumerator();
+            }
+            """)),
+
+        // FeCaller iterates a FeBag with `foreach`; before this mutation FeBag has no instance
+        // GetEnumerator, so the loop binds through the extension GetEnumerator in FeExtensions.
+        // Adding an instance GetEnumerator directly to FeBag is Δmembers(FeBag) and captures the
+        // foreach binding away from the extension (instance members win over extension methods for
+        // the enumerator pattern too).
+        new("add-foreach-pattern-member", projectRoot => File.WriteAllText(Path.Combine(projectRoot, "FePatternHost.cs"), """
+            namespace Sample;
+
+            using System.Collections.Generic;
+
+            public class FeBag
+            {
+                public List<int> Items = new() { 1, 2, 3 };
+                public IEnumerator<int> GetEnumerator() => Items.GetEnumerator();
+            }
+
+            public static class FeExtensions
+            {
+                public static IEnumerator<int> GetEnumerator(this FeBag bag) => bag.Items.GetEnumerator();
             }
             """)),
     ];
@@ -217,6 +351,145 @@ public sealed class MutationDifferentialTests : IDisposable
                 public static string Describe(int i) => "int";
 
                 public static string Resolve(ConversionHost c) => Describe(c);
+            }
+            """);
+
+        // ---- Phase B hazard fixtures (paired with the mutation steps above). ----
+        File.WriteAllText(Path.Combine(_projectRoot, "CapCaptureHost.cs"), """
+            namespace Sample;
+
+            public class CapBase { }
+
+            public class CapDerived : CapBase { }
+
+            public static class CapExtensions
+            {
+                public static int Widen(this CapDerived d) => 1;
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "CapCaptureCaller.cs"), """
+            namespace Sample;
+
+            public class CapCaptureCaller
+            {
+                public int Use(CapDerived d) => d.Widen();
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(_projectRoot, "DimHost.cs"), """
+            namespace Sample;
+
+            public interface IDim
+            {
+                int Existing();
+            }
+
+            public class DimImpl : IDim
+            {
+                public int Existing() => 1;
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "DimCaller.cs"), """
+            namespace Sample;
+
+            public class DimCaller
+            {
+                public int UseViaInterface(IDim x) => x.Existing();
+                public int UseViaImplementation(DimImpl x) => x.Existing();
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(_projectRoot, "HideHost.cs"), """
+            namespace Sample;
+
+            public class HideBase
+            {
+                public int M() => 1;
+            }
+
+            public class HideDerived : HideBase { }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "HideCaller.cs"), """
+            namespace Sample;
+
+            public class HideCaller
+            {
+                public int UseBase(HideBase b) => b.M();
+                public int UseDerived(HideDerived d) => d.M();
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(_projectRoot, "OverloadShiftBase.cs"), """
+            namespace Sample;
+
+            public class OverloadShiftBase
+            {
+                public int Value { get; set; }
+            }
+
+            public class OverloadShiftDerived : OverloadShiftBase { }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "OverloadShiftConsumer.cs"), """
+            namespace Sample;
+
+            public static class OverloadShiftConsumer
+            {
+                public static string Describe(object o) => "object";
+                public static string Describe(int i) => "int";
+
+                public static string ResolveDerived(OverloadShiftDerived d) => Describe(d);
+                public static string ResolveDirect() => Describe(42);
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(_projectRoot, "CollHost.cs"), """
+            namespace Sample;
+
+            using System.Collections;
+            using System.Collections.Generic;
+
+            public class CollBox : IEnumerable
+            {
+                readonly List<object> _items = new();
+                public void Add(object x) => _items.Add(x);
+                public IEnumerator GetEnumerator() => _items.GetEnumerator();
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "CollCaller.cs"), """
+            namespace Sample;
+
+            public class CollCaller
+            {
+                public CollBox Build() => new CollBox { 1, 2, 3 };
+            }
+            """);
+
+        File.WriteAllText(Path.Combine(_projectRoot, "FePatternHost.cs"), """
+            namespace Sample;
+
+            using System.Collections.Generic;
+
+            public class FeBag
+            {
+                public List<int> Items = new() { 1, 2, 3 };
+            }
+
+            public static class FeExtensions
+            {
+                public static IEnumerator<int> GetEnumerator(this FeBag bag) => bag.Items.GetEnumerator();
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "FeCaller.cs"), """
+            namespace Sample;
+
+            public class FeCaller
+            {
+                public int Sum(FeBag bag)
+                {
+                    var total = 0;
+                    foreach (var x in bag) total += x;
+                    return total;
+                }
             }
             """);
     }
