@@ -1,0 +1,11 @@
+// Self-analysis config for the CI badge / SARIF runs (`-p src/Unilyze` resolves the
+// project root to this directory). UNI011/012/013 are Unity hot-path performance rules
+// (boxing / closure capture / params-array allocation); applied to this CLI analyzer
+// they are true-but-irrelevant and were ~40% of the code-scanning alert volume.
+{
+  "rules": {
+    "UNI011": "off",
+    "UNI012": "off",
+    "UNI013": "off"
+  }
+}

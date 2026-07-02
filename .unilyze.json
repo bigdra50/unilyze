@@ -1,7 +1,15 @@
 // Self-analysis config: measure production code only.
 // Test fixtures grow with coverage and would dominate the worst-type badge color.
+// UNI011/012/013 (boxing / closure / params-array) are Unity hot-path rules —
+// true-but-irrelevant for a CLI analyzer; keep repo-root runs consistent with
+// the src/Unilyze/.unilyze.json the CI badge/SARIF runs read.
 {
   "excludeDirs": [
     "tests"
-  ]
+  ],
+  "rules": {
+    "UNI011": "off",
+    "UNI012": "off",
+    "UNI013": "off"
+  }
 }
