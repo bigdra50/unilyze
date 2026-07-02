@@ -302,12 +302,12 @@ internal static class SemanticEnricher
             TypeDeclarationSyntax typeDecl,
             SemanticModel model)
         {
-            var methodDeclsByName = BuildMethodDeclLookup(typeDecl);
+            var methodDeclsById = BuildMethodDeclLookup(typeDecl, TypeIdentity.GetTypeId(metrics));
             var anyChanged = false;
             var updatedMethods = new List<MethodMetrics>(metrics.Methods.Count);
             foreach (var mm in metrics.Methods)
             {
-                var updated = RecalculateMethodCycCC(mm, methodDeclsByName, model);
+                var updated = RecalculateMethodCycCC(mm, methodDeclsById, model);
                 anyChanged |= !ReferenceEquals(updated, mm);
                 updatedMethods.Add(updated);
             }
@@ -329,23 +329,27 @@ internal static class SemanticEnricher
             };
         }
 
-        static Dictionary<string, MethodDeclarationSyntax> BuildMethodDeclLookup(TypeDeclarationSyntax typeDecl)
+        // Key by the syntactic memberId (typeId|Method:signature), not the bare name, so
+        // overloads bind to their own declaration. Keying by name made every overload pick up
+        // the first declaration's body, skewing the CycCC this class emits.
+        static Dictionary<string, MethodDeclarationSyntax> BuildMethodDeclLookup(
+            TypeDeclarationSyntax typeDecl, string typeId)
         {
-            var methodDeclsByName = new Dictionary<string, MethodDeclarationSyntax>();
+            var methodDeclsById = new Dictionary<string, MethodDeclarationSyntax>(StringComparer.Ordinal);
             foreach (var member in typeDecl.Members)
             {
                 if (member is MethodDeclarationSyntax method)
-                    methodDeclsByName.TryAdd(method.Identifier.Text, method);
+                    methodDeclsById.TryAdd(MemberIdentity.CreateMethodId(typeId, method), method);
             }
-            return methodDeclsByName;
+            return methodDeclsById;
         }
 
         static MethodMetrics RecalculateMethodCycCC(
             MethodMetrics mm,
-            Dictionary<string, MethodDeclarationSyntax> methodDeclsByName,
+            Dictionary<string, MethodDeclarationSyntax> methodDeclsById,
             SemanticModel model)
         {
-            if (!methodDeclsByName.TryGetValue(mm.MethodName, out var methodDecl))
+            if (mm.MemberId is null || !methodDeclsById.TryGetValue(mm.MemberId, out var methodDecl))
                 return mm;
 
             var body = (SyntaxNode?)methodDecl.Body ?? methodDecl.ExpressionBody;

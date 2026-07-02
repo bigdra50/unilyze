@@ -15,6 +15,10 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 - `unilyze serve` re-analyzes warm edits incrementally at the resolved semantic level: a source edit re-enriches only the changed types, while a structural change (signature / type-set / global-using change, or a file add/delete) re-enriches everything. The dependency graph and global aggregation are always rebuilt full, so the live snapshot is byte-identical to a full analysis. `--incremental` now accelerates every analysis level, not just `--level syntax` ([#216](https://github.com/bigdra50/unilyze/issues/216))
 
+### Fixed
+
+- **[metrics]** Semantic cyclomatic-complexity recalculation now binds each overloaded method to its own declaration instead of the first match by name; a complex overload's CycCC no longer collapses to a simpler overload's value. Affects `cyclomaticComplexity` / `maxCyclomaticComplexity` / `averageCyclomaticComplexity` for any type with overloaded methods ([#223](https://github.com/bigdra50/unilyze/pull/223))
+- `badge` no longer runs a redundant full project analysis per invocation; `BadgeRunner.Run` computed and discarded a second `AnalysisPipeline.Build`, so every badge run analyzed the project twice. Badge output is unchanged ([#223](https://github.com/bigdra50/unilyze/pull/223))
 ## [0.5.3] - 2026-06-16
 
 ### Added
