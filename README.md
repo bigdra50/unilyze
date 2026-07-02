@@ -171,6 +171,8 @@ Requirements and limits:
 
 The cache directory includes `.unilyze/cache/.gitignore` containing `*` (auto-created).
 
+`unilyze serve` always analyzes at the semantic level with the incremental cache warm; pass `serve --verify-incremental <N>` to additionally run a full analysis every N generations and log any divergence to stderr (off by default — it doubles analysis cost on the sampled generations).
+
 ## Configuration
 
 Settings merge additively from global config (`~/.config/unilyze/config.json`), project `.unilyze.json`, and CLI flags.

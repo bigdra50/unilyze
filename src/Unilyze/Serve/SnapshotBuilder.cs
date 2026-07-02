@@ -16,6 +16,11 @@ namespace Unilyze.Serve;
 /// is identical to a non-incremental run) and turns it into a serve snapshot. The analysis path
 /// mirrors the one-shot <c>analyze</c> command (config merge, reference resolution, baseline,
 /// triage) so the live view matches what <c>analyze</c> would produce.
+///
+/// When <see cref="ServeOptions.VerifyIncrementalEveryN"/> is set, every Nth <see cref="Build"/>
+/// call additionally runs a full (non-incremental) analysis and diffs it against the incremental
+/// one via <see cref="ServeVerifyIncremental"/> (design doc §7.3), logging any divergence to
+/// stderr. Off by default and never affects the served result.
 /// </summary>
 internal sealed class SnapshotBuilder
 {
@@ -27,6 +32,13 @@ internal sealed class SnapshotBuilder
     // (AnalysisCoordinator.Loop), so no synchronization is needed.
     IReadOnlyDictionary<string, string>? _previousStamps;
 
+    // "Generation" for --verify-incremental purposes: this builder's own call count, incremented
+    // once per Build(). Deliberately independent of SnapshotStore's published-snapshot Generation
+    // (which only advances on success) — sampling by call count is simpler to reason about and
+    // keeps this class decoupled from the store. Only touched on the single analysis worker
+    // thread, like _previousStamps above.
+    int _generationCount;
+
     public SnapshotBuilder(ServeOptions options)
     {
         _options = options;
@@ -36,8 +48,12 @@ internal sealed class SnapshotBuilder
     public ServeSnapshotContent Build()
     {
         var sw = Stopwatch.StartNew();
-        var result = RunAnalysis();
-        var analysisMillis = sw.Elapsed.TotalMilliseconds;
+        var rawResult = RunAnalysis(incremental: true);
+        var result = ApplyBaselineAndTriage(rawResult);
+        var analysisMillis = sw.Elapsed.TotalMilliseconds; // excludes shadow verification below
+
+        _generationCount++;
+        MaybeRunShadowVerification(rawResult);
 
         sw.Restart();
         var sanitized = SnapshotSanitizer.Sanitize(result, [_projectRoot]);
@@ -89,14 +105,21 @@ internal sealed class SnapshotBuilder
         return paths;
     }
 
-    AnalysisResult RunAnalysis()
+    // `incremental` selects the analysis path only: RunAnalysis always returns the RAW pipeline
+    // result, before baseline/triage post-processing. Build() applies baseline/triage itself, once,
+    // to the primary (incremental: true) result — MaybeRunShadowVerification below compares two
+    // RAW results, so an active baseline/triage file never shows up as a false-positive divergence
+    // (baseline/triage application is deterministic post-processing outside RDI's invalidation
+    // scope; comparing before it also means the shadow run never depends on baseline/triage file
+    // I/O succeeding a second time).
+    AnalysisResult RunAnalysis(bool incremental)
     {
         var config = UnilyzeConfig.LoadMerged(_projectRoot, _options.ExcludeDirs, _options.Profile);
         var referenceOpts = BuildReferenceOpts();
         var referenceSettings = ProgramHelpers.LoadReferenceAnalysisSettings(_projectRoot, referenceOpts);
         var resolved = config.ResolveAnalysisConfig();
 
-        var result = AnalysisPipeline.Build(
+        return AnalysisPipeline.Build(
             _options.Path, _options.Prefix, _options.Assembly, config.ExcludeDirs, _options.RequestedLevel,
             excludeGeneratedCode: !config.DisableGeneratedCodeExcludes,
             applyAnyDepthExcludes: !config.DisableDefaultExcludes,
@@ -106,7 +129,39 @@ internal sealed class SnapshotBuilder
             resolveNuget: referenceSettings.ResolveNuget,
             includeGenerated: referenceSettings.IncludeGenerated,
             targetFramework: referenceSettings.TargetFramework,
-            incremental: true);
+            incremental: incremental);
+    }
+
+    // Shadow verification (design doc §7.3): opt-in (ServeOptions.VerifyIncrementalEveryN is null
+    // by default), and — even when enabled — sampled every N generations so the extra full
+    // analysis doesn't double the cost of every warm edit. Never throws and never affects the
+    // primary (incremental) result being served: a divergence is a diagnostic signal for the
+    // person running serve with this flag on, not a serving failure.
+    void MaybeRunShadowVerification(AnalysisResult rawIncrementalResult)
+    {
+        if (_options.VerifyIncrementalEveryN is not { } everyN || everyN <= 0)
+            return;
+        if (_generationCount % everyN != 0)
+            return;
+
+        try
+        {
+            var rawFullResult = RunAnalysis(incremental: false);
+            var report = ServeVerifyIncremental.Compare(rawFullResult, rawIncrementalResult);
+            if (report.Diverged)
+                Console.Error.WriteLine($"[incremental] DIVERGENCE: {string.Join(", ", report.TypeIds)}");
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            // The shadow run is a diagnostic safety net — its own failure must never affect the
+            // primary snapshot Build() already computed from the incremental result.
+            Console.Error.WriteLine($"[incremental] shadow verification failed: {ex.Message}");
+        }
+    }
+
+    AnalysisResult ApplyBaselineAndTriage(AnalysisResult result)
+    {
+        var config = UnilyzeConfig.LoadMerged(_projectRoot, _options.ExcludeDirs, _options.Profile);
 
         var baselinePath = config.Baseline;
         if (baselinePath is not null)

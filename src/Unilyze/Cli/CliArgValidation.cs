@@ -147,7 +147,7 @@ internal static class CliArgValidation
     static readonly HashSet<string> ServeValueOptions = new(StringComparer.Ordinal)
     {
         "-p", "--path", "--port", "--level", "--profile", "--exclude-dir", "-a", "--assembly",
-        "--prefix", "--tfm",
+        "--prefix", "--tfm", "--verify-incremental",
     };
 
     static readonly HashSet<string> ServeBooleanOptions = new(StringComparer.Ordinal)
