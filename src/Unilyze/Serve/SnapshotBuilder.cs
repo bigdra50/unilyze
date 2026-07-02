@@ -10,10 +10,12 @@ using Unilyze.Pipeline;
 namespace Unilyze.Serve;
 
 /// <summary>
-/// Runs one full analysis (Phase 1 is always <c>incremental:false</c> — incremental is
-/// syntax-only) and turns the result into a serve snapshot. The analysis path mirrors the
-/// one-shot <c>analyze</c> command (config merge, reference resolution, baseline, triage)
-/// so the live view matches what <c>analyze</c> would produce.
+/// Runs one analysis (<c>incremental:true</c>: a warm edit re-enriches only the changed types
+/// at the resolved semantic level, falling back to a full re-enrich on any structural change;
+/// the dependency/coupling graph and global aggregation are always rebuilt full, so the result
+/// is identical to a non-incremental run) and turns it into a serve snapshot. The analysis path
+/// mirrors the one-shot <c>analyze</c> command (config merge, reference resolution, baseline,
+/// triage) so the live view matches what <c>analyze</c> would produce.
 /// </summary>
 internal sealed class SnapshotBuilder
 {
@@ -104,7 +106,7 @@ internal sealed class SnapshotBuilder
             resolveNuget: referenceSettings.ResolveNuget,
             includeGenerated: referenceSettings.IncludeGenerated,
             targetFramework: referenceSettings.TargetFramework,
-            incremental: false);
+            incremental: true);
 
         var baselinePath = config.Baseline;
         if (baselinePath is not null)

@@ -36,6 +36,8 @@ internal sealed record AnalysisBuildOptions(
 
     public int EffectiveMaxParallelism => UnilyzeConfig.ResolveMaxParallelism(MaxParallelism);
 
-    public bool UseSyntaxIncrementalCache =>
-        Incremental && RequestedLevel == AnalysisLevel.Syntax;
+    // Incremental enrichment now applies at every analysis level: at syntax level it reuses
+    // per-type syntactic metrics, at semantic levels it reuses per-type cohesion/smell payloads
+    // while the dependency/coupling graph and global aggregation are always rebuilt full.
+    public bool UseIncrementalCache => Incremental;
 }

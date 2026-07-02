@@ -10,7 +10,12 @@ namespace Unilyze.Incremental;
 
 internal static class SyntaxCacheFingerprint
 {
-    public const int SchemaVersion = 1;
+    // v2: manifest gained per-assembly global-using hashes and the fingerprint folds in the
+    // resolved reference set / TFM / analysis level for semantic-incremental keying.
+    // v3: each file entry gained a per-file (non-global) using-directive hash, closing the hole
+    // where a using retarget (e.g. an alias pointing at a different type) was invisible to
+    // HasStructuralChange and fell through to the body-only fast path.
+    public const int SchemaVersion = 3;
 
     public static string ComputeGlobalFingerprint(
         PipelineDiscoverState discover,
@@ -38,7 +43,35 @@ internal static class SyntaxCacheFingerprint
         builder.AppendJoin('\0', targets
             .OrderBy(t => t.Name, StringComparer.Ordinal)
             .Select(t => $"{t.Name}|{Path.GetFullPath(t.Directory)}|{string.Join(',', t.ExcludeDirectories ?? [])}"));
+        builder.Append('\0');
+        // Semantic-level metrics (CBO/DIT/RFC and the smell detectors) bind against the
+        // resolved reference set, the selected target framework, and the analysis level.
+        // None of those are file-content signals, so a stale syntax-level manifest (or a
+        // manifest built against a different reference set/TFM/level) must not be reused.
+        builder.Append(SerializeReferences(discover.ResolvedReferences)).Append('\0');
+        builder.Append(discover.SelectedTargetFramework ?? string.Empty).Append('\0');
+        builder.Append(options.EffectiveCap);
         return HashUtf8(builder.ToString());
+    }
+
+    static string SerializeReferences(ResolvedDlls resolved)
+    {
+        var entries = resolved.Paths
+            .OrderBy(p => p, StringComparer.Ordinal)
+            .Select(p => $"{p}|{TryGetFileLength(p)}");
+        return $"{resolved.Level}\0{string.Join('\0', entries)}";
+    }
+
+    static long TryGetFileLength(string path)
+    {
+        try
+        {
+            return new FileInfo(path).Length;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return -1;
+        }
     }
 
     public static string HashFileContent(string filePath)
@@ -47,6 +80,9 @@ internal static class SyntaxCacheFingerprint
         var hash = SHA256.HashData(stream);
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
+
+    public static string HashStrings(IEnumerable<string> values) =>
+        HashUtf8(string.Join('\0', values));
 
     public static string HashKnownInterfaces(IReadOnlyList<TypeNodeInfo> rawTypes)
     {
