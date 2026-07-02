@@ -35,9 +35,10 @@ internal static class SyntaxIncrementalSemanticPhase
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
 
         var config = options.EffectiveAnalysisConfig;
-        var typesToReEnrich = DetermineTypesToReEnrich(allTypes, collect);
+        var (typesToReEnrich, reEnrichLogSuffix) = DetermineTypesToReEnrich(allTypes, collect, options.EffectiveLog);
+        var logSuffix = reEnrichLogSuffix is null ? "" : $" {reEnrichLogSuffix}";
         options.EffectiveLog.Info(
-            $"[incremental] re-enrich types: {typesToReEnrich.Count}/{allTypes.Count}");
+            $"[incremental] re-enrich types: {typesToReEnrich.Count}/{allTypes.Count}{logSuffix}");
         var metricsByTypeId = new Dictionary<string, TypeMetrics>(StringComparer.Ordinal);
         var usedTypesByTypeId = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
 
@@ -140,15 +141,26 @@ internal static class SyntaxIncrementalSemanticPhase
             kvp => kvp.Value.FirstOrDefault()?.Assembly ?? "Assembly-CSharp",
             StringComparer.Ordinal);
 
-    static HashSet<string> DetermineTypesToReEnrich(
+    // Fraction of all types above which the precise (RDI) invalidation set collapses to a full
+    // re-enrich: bookkeeping a near-total re-enrich set is pure overhead once it stops being a
+    // meaningful elision (design doc §4.3). Tunable — revisit if a corpus shows the collapse
+    // firing on edits that should stay precise, or never firing when it should.
+    internal const double CollapseThresholdRatio = 0.6;
+
+    // internal (not private) so the collapse threshold has direct unit-test coverage without
+    // spinning up a real CLI analysis (SyntaxIncrementalSemanticPhaseTests).
+    internal static (HashSet<string> TypeIds, string? LogSuffix) DetermineTypesToReEnrich(
         IReadOnlyList<TypeNodeInfo> allTypes,
-        SyntaxIncrementalCollectResult collect)
+        SyntaxIncrementalCollectResult collect,
+        IAnalysisLogSink log)
     {
-        // A structural change (signature/type-set/global-using/file add or delete) can shift
-        // name resolution for body-callers the declaration dependency graph never captures, so
-        // the only correctness-safe answer is to re-enrich every type.
+        // A structural change with no precise rule yet (type-set/global-using/file add or
+        // delete, member add/remove, base/interface change) can shift name resolution for
+        // body-callers the declaration dependency graph never captures, so the only
+        // correctness-safe answer is to re-enrich every type. Δsig(B)/Δusing(F) are handled
+        // below via PreciseExtraReEnrichTypeIds instead of setting this flag.
         if (collect.RequiresFullReEnrich)
-            return new HashSet<string>(allTypes.Select(TypeIdentity.GetTypeId), StringComparer.Ordinal);
+            return (new HashSet<string>(allTypes.Select(TypeIdentity.GetTypeId), StringComparer.Ordinal), null);
 
         var reparsedFiles = new HashSet<string>(
             collect.ReparsedFiles.Select(Path.GetFullPath),
@@ -174,7 +186,25 @@ internal static class SyntaxIncrementalSemanticPhase
             }
         }
 
-        return typesToReEnrich;
+        if (collect.PreciseExtraReEnrichTypeIds is { Count: > 0 } extra)
+            typesToReEnrich.UnionWith(extra);
+
+        // The collapse only applies when the precise (RDI) path was engaged this generation
+        // (PreciseLogSuffix is set exactly when Δsig/Δusing deltas were classified): v1 handled
+        // those generations with a full re-enrich, so collapsing is never worse than v1. A pure
+        // body-only bulk edit (no deltas) must NEVER collapse — SEED-only is v1's proven fast
+        // path, and collapsing it would regress large structurally-clean edits.
+        if (collect.PreciseLogSuffix is not null
+            && allTypes.Count > 0
+            && typesToReEnrich.Count > CollapseThresholdRatio * allTypes.Count)
+        {
+            log.Info(
+                $"[incremental] full re-enrich: precise invalidation set {typesToReEnrich.Count}/{allTypes.Count} "
+                + $"exceeds the {CollapseThresholdRatio:P0} collapse threshold");
+            return (new HashSet<string>(allTypes.Select(TypeIdentity.GetTypeId), StringComparer.Ordinal), null);
+        }
+
+        return (typesToReEnrich, collect.PreciseLogSuffix);
     }
 
     static void AppendDiRegistrationDependencies(

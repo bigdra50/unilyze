@@ -28,6 +28,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     [Theory]
     [InlineData("body-only")]
     [InlineData("signature-change")]
+    [InlineData("member-signature-modify")]
     [InlineData("base-class-change")]
     [InlineData("global-using-add")]
     [InlineData("global-using-modify")]
@@ -72,34 +73,65 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.Contains("[incremental] full re-enrich:", stderr);
     }
 
+    // Δsig(B) (design doc §4.3): SigHost.Compute's parameter type changes (int -> long) without
+    // adding/removing any member or touching base/interfaces, so the member SET and base/interface
+    // list StructuralChangeDetector.ClassifyFileTypeDelta checks are both unchanged — a pure
+    // signature modify. SigDependent.cs (never touched by this mutation) calls SigHost.Compute
+    // from a method body, so its cached UsedTypes(SigDependent) records SigHost — RDeps(SigHost)
+    // must include it, or its cached metrics could go stale relative to a full run.
+    [Fact]
+    public void MemberSignatureModify_ReEnrichesSeedAndRDeps()
+    {
+        Analyze(incremental: true); // seed cache
+        ApplyMutation("member-signature-modify");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
+        Assert.Contains("[incremental] re-enrich types: 2/", stderr);
+        Assert.Contains("(rdi: sig=1 using=0)", stderr);
+    }
+
     // Regression coverage for the pre-#222-merge correctness hole (design doc §2): an alias
     // retarget in AliasHost.cs changes AliasX's real base chain without touching AliasX's
     // declaration signature (base type text is still "A" either way), so
     // StructuralChangeDetector alone classifies this body-only. AliasDependent.cs (unchanged,
     // cached) walks AliasX's base chain for DIT — if the using change is not independently
     // detected, its cached DIT goes stale and full/incremental diverge.
+    //
+    // Phase A2 (design doc §4.3) replaced the full-fallback this used to force with precise
+    // Δusing(F) invalidation: F's own type (AliasX, already SEED since AliasHost.cs is
+    // reparsed) plus RDeps(F's types) — AliasDependent.cs's AliasG, which used AliasX's base
+    // chain per the cached UsedTypes(AliasG) recorded in Phase A1. Renamed from
+    // AliasRetarget_ForcesFullReEnrich to match; the equivalence Theory case above is the
+    // correctness check, this Fact pins the elision signal.
     [Fact]
-    public void AliasRetarget_ForcesFullReEnrich()
+    public void AliasRetarget_ReEnrichesPreciseRDepsSet()
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("alias-retarget");
         var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
-        Assert.Contains("[incremental] full re-enrich: using directives changed in AliasHost.cs", stderr);
+        Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
+        Assert.Contains("[incremental] re-enrich types:", stderr);
+        Assert.Contains("(rdi: sig=0 using=1)", stderr);
     }
 
-    // Same hazard as AliasRetarget_ForcesFullReEnrich, but for a plain `using Ns;` retarget that
-    // changes which same-named type an unqualified base-type reference resolves to.
+    // Same hazard as AliasRetarget_ReEnrichesPreciseRDepsSet, but for a plain `using Ns;` retarget
+    // that changes which same-named type an unqualified base-type reference resolves to. Also
+    // downgraded from full to precise Δusing(F) invalidation in Phase A2.
     [Fact]
-    public void PlainUsingRetarget_ForcesFullReEnrich()
+    public void PlainUsingRetarget_ReEnrichesPreciseRDepsSet()
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("using-retarget");
         var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
-        Assert.Contains("[incremental] full re-enrich: using directives changed in PlainHost.cs", stderr);
+        Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
+        Assert.Contains("[incremental] re-enrich types:", stderr);
+        Assert.Contains("(rdi: sig=0 using=1)", stderr);
     }
 
     // Reordering/whitespace-only edits to a file's usings must not be classified as a using
@@ -200,6 +232,26 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
 
             public class PlainH : PlainY { }
             """);
+
+        // Member-signature-modify fixture: SigDependent calls SigHost.Compute from a method
+        // body (both a declaration-surface parameter type and an operation-surface invocation
+        // target), so its cached UsedTypes(SigDependent) records SigHost — RDeps(SigHost).
+        File.WriteAllText(Path.Combine(_projectRoot, "SigHost.cs"), """
+            namespace Sample;
+
+            public class SigHost
+            {
+                public int Compute(int x) => x * 2;
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "SigDependent.cs"), """
+            namespace Sample;
+
+            public class SigDependent
+            {
+                public int Run(SigHost host) => host.Compute(3);
+            }
+            """);
     }
 
     void ApplyMutation(string mutation)
@@ -224,6 +276,19 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
                     {
                         public long Seed() => 7;
                         public int Extra() => 1;
+                    }
+                    """);
+                break;
+            case "member-signature-modify":
+                // Change Compute's parameter type only (int -> long, still callable with an int
+                // literal via implicit conversion) — no member added/removed, base/interfaces
+                // untouched, so this classifies as Δsig(SigHost) rather than a full fallback.
+                File.WriteAllText(Path.Combine(_projectRoot, "SigHost.cs"), """
+                    namespace Sample;
+
+                    public class SigHost
+                    {
+                        public int Compute(long x) => (int)x * 2;
                     }
                     """);
                 break;

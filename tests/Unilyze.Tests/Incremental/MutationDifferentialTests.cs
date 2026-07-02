@@ -13,12 +13,15 @@ namespace Unilyze.Tests.Incremental;
 // stays correct as it evolves across a long edit session, not just after a single edit.
 //
 // Every mutation below is a structural change (new member / new operator / new conversion / new
-// base / retargeted using), so under the current v1 detector (StructuralChangeDetector +
-// SyntaxIncrementalCollector.HasStructuralChange) every step falls back to a full re-enrich —
-// full/incremental equivalence is expected to hold trivially today. The payoff of this harness
-// shows up once Phase A/B (design doc §6) replace that blanket fallback with precise
-// RDeps-based invalidation: these same mutations, unchanged, become the regression gate that
-// catches an under-invalidation bug (§7.2 "any divergence here is a P0").
+// base / retargeted using). Through Phase 0 every step fell back to a full re-enrich under the v1
+// detector (StructuralChangeDetector + SyntaxIncrementalCollector.HasStructuralChange) —
+// full/incremental equivalence held trivially. Phase A2 (design doc §4.3) replaced that blanket
+// fallback with per-type delta classification: retarget-alias now resolves through the precise
+// Δusing(F) path (SEED ∪ RDeps(F's types)) instead of a full re-enrich; add-member/add-operator/
+// add-extension/change-base/add-conversion are member-add or base-change deltas, which still fall
+// back to full until Phase B lands Δmembers/Δbase precision. Either way, this harness is the
+// regression gate that catches an under-invalidation bug the moment it would first appear in an
+// editing session (§7.2 "any divergence here is a P0").
 //
 // To add a mutation: append a MutationStep to MutationSequence with a Name and an
 // Apply(projectRoot) file-rewrite. Phase B's hazard list (interface default member add, member
