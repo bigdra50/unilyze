@@ -1,0 +1,34 @@
+# Dependabot version updates (Settings > Advanced Security enables the service;
+# this file controls what it watches and how often). Weekly + grouped so routine
+# bumps arrive as at most one PR per ecosystem per week; security updates ignore
+# this schedule and open immediately. Dependabot PRs never touch src/, so the
+# changelog-guard fragment check skips them by design.
+version: 2
+updates:
+  - package-ecosystem: "nuget"
+    directories:
+      - "/src/Unilyze"
+      - "/tests/Unilyze.Tests"
+      - "/scripts/docsgen"
+      - "/scripts/crossval"
+    schedule:
+      interval: "weekly"
+    groups:
+      nuget:
+        patterns: ["*"]
+
+  - package-ecosystem: "npm"
+    directory: "/scripts/viewer-screenshots"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]
