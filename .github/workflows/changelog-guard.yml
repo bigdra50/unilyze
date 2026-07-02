@@ -1,0 +1,61 @@
+name: Changelog Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  changelog-guard:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Full history so base_sha...head_sha diffs below resolve locally.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate changelog.d/ fragments
+        run: python3 scripts/changelog/assemble.py --validate
+
+      - name: Require a changelog.d/ fragment for src/ changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          if [[ ",${LABELS}," == *",no-changelog,"* ]]; then
+            echo "no-changelog label present; skipping fragment check."
+            exit 0
+          fi
+
+          changed_files=$(git diff --name-only "${BASE_SHA}...${HEAD_SHA}")
+          if ! grep -q '^src/' <<< "$changed_files"; then
+            echo "No src/ changes in this PR; skipping fragment check."
+            exit 0
+          fi
+
+          added_fragments=$(git diff --name-only --diff-filter=A "${BASE_SHA}...${HEAD_SHA}" -- 'changelog.d/*.md')
+          if [[ -n "$added_fragments" ]]; then
+            echo "changelog.d/ fragment(s) added:"
+            echo "$added_fragments"
+            exit 0
+          fi
+
+          cat <<'MSG'
+          ::error::This PR changes src/ but adds no changelog.d/ fragment.
+
+          Add one file per user-facing change:
+            changelog.d/<PR-number>.<category>.md
+
+          <category> is one of: added, changed, deprecated, removed, fixed, security.
+          The file content is the bullet text, without a leading "- ".
+          See changelog.d/README.md for the full format.
+
+          If this change has no user-facing effect, add the 'no-changelog'
+          label to this pull request instead.
+          MSG
+          exit 1

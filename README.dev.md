@@ -314,7 +314,7 @@ Related files:
 5. Confirm HTML fallback and `--no-open` are not broken
 6. Apply the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy): a patch release must not change metric values; a change to any metric definition requires at least a minor bump, a release note describing which metrics move in which direction, and a refreshed `scripts/crossval` validation in `docs/metrics.md`
 7. If you changed a metric-calculation file, verify the `metricsVersion` bump (`AnalysisResult.CurrentMetricsVersion`) and CHANGELOG `[metrics]` entry
-8. Update [CHANGELOG.md](CHANGELOG.md) before tagging (move `[Unreleased]` entries into a new `## [X.Y.Z]` section and set the release date). The publish workflow fails if this section is missing for the tagged version.
+8. Run `python3 scripts/changelog/assemble.py X.Y.Z` before tagging to bundle [changelog.d/](changelog.d/README.md) fragments (and any legacy hand-written `[Unreleased]` entries) into a new `## [X.Y.Z]` section with today's date. Review the diff, then commit `CHANGELOG.md` together with the fragment files it deleted. The publish workflow fails if this section is missing for the tagged version.
 9. After the release workflow completes, verify `brew install bigdra50/tap/unilyze` and the Scoop install command on a machine without .NET. The Homebrew tap push and the Scoop manifest URL are automated (see [Homebrew tap and Scoop manifest](#homebrew-tap-and-scoop-manifest)); no manual copy is required
 
 ## NuGet Publish

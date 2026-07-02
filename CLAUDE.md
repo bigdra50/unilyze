@@ -75,6 +75,10 @@ flaky). When adding a screen, assert its key elements and add a `page.screenshot
 
 - Commit messages: gitmoji prefix, Japanese body, one logical change per commit; reference
   issues with `Closes #N`.
+- Do not edit `CHANGELOG.md`'s `[Unreleased]` section directly. Add a
+  `changelog.d/<PR-number>.<category>.md` fragment instead (see
+  [changelog.d/README.md](changelog.d/README.md)); `scripts/changelog/assemble.py` bundles
+  fragments into a release section at tag time.
 - Match surrounding code style; the CLI dispatch lives in `src/Unilyze/Program.cs` and arg
   validation in `src/Unilyze/Cli/CliArgValidation.cs`.
 - Do not leak absolute filesystem paths to the browser (serve scrubs them to opaque
