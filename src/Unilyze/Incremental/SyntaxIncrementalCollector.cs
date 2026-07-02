@@ -82,9 +82,21 @@ internal static class SyntaxIncrementalCollector
 
         // The body-only fast path is only sound at a semantic level once a cache exists; the
         // cold/no-cache path reparses everything (so SEED already covers every type).
-        var requiresFullReEnrich = isSemantic && existing is not null && HasStructuralChange(
-            existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes,
-            usingsHashByFile, log);
+        bool requiresFullReEnrich;
+        IReadOnlySet<string> preciseExtraReEnrichTypeIds;
+        string? preciseLogSuffix;
+        if (isSemantic && existing is not null)
+        {
+            (requiresFullReEnrich, preciseExtraReEnrichTypeIds, preciseLogSuffix) = ClassifyInvalidation(
+                existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes,
+                usingsHashByFile, log);
+        }
+        else
+        {
+            requiresFullReEnrich = false;
+            preciseExtraReEnrichTypeIds = EmptyTypeIdSet;
+            preciseLogSuffix = null;
+        }
 
         var manifestDraft = new SyntaxCacheManifest(
             SyntaxCacheFingerprint.SchemaVersion,
@@ -101,10 +113,25 @@ internal static class SyntaxIncrementalCollector
             reparsedFiles,
             manifestDraft,
             requiresFullReEnrich,
-            usingsHashByFile);
+            usingsHashByFile,
+            preciseExtraReEnrichTypeIds,
+            preciseLogSuffix);
     }
 
-    static bool HasStructuralChange(
+    static readonly IReadOnlySet<string> EmptyTypeIdSet = new HashSet<string>(StringComparer.Ordinal);
+
+    // Per-generation invalidation classification (design doc §4.3). Replaces the old binary
+    // "any structural change -> full" verdict with three outcomes:
+    //   - full fallback (file add/delete, member add/remove, base/interface change, type
+    //     add/delete within a file, global using change) — unchanged from v1, still logged via
+    //     LogFullReEnrich with the same reason strings existing tests match on.
+    //   - Δsig(B): a reparsed type's signature changed but its member set and base/interface list
+    //     did not -> resolved through RDeps(B) instead of re-enriching everything.
+    //   - Δusing(F): a reparsed file's using-directive hash changed (Phase 0a) -> resolved through
+    //     RDeps(F's types) (F's own types are already in SEED via the normal reparsed-file path).
+    // The precise set returned here is EXTRA beyond SEED; the caller (SyntaxIncrementalSemanticPhase)
+    // unions it with SEED and applies the collapse-to-full threshold once SEED is known.
+    static (bool RequiresFullReEnrich, IReadOnlySet<string> PreciseExtraTypeIds, string? LogSuffix) ClassifyInvalidation(
         SyntaxCacheManifest existing,
         IReadOnlyDictionary<string, SyntaxCacheFileEntry> existingByPath,
         IReadOnlyList<FileScanEntry> scannedFiles,
@@ -117,9 +144,13 @@ internal static class SyntaxIncrementalCollector
         var scannedByRelative = scannedFiles.ToDictionary(f => f.RelativePath, f => f, StringComparer.Ordinal);
 
         if (scannedFiles.Any(f => !existingByPath.ContainsKey(f.RelativePath)))
-            return LogFullReEnrich(log, "a source file was added");
+            return (LogFullReEnrich(log, "a source file was added"), EmptyTypeIdSet, null);
         if (existing.Files.Any(e => !scannedByRelative.ContainsKey(e.RelativePath)))
-            return LogFullReEnrich(log, "a source file was deleted");
+            return (LogFullReEnrich(log, "a source file was deleted"), EmptyTypeIdSet, null);
+
+        var sigChangedTypeIds = new List<string>();
+        var usingChangedFileTypeIds = new List<string>();
+        var usingChangedFileCount = 0;
 
         foreach (var file in scannedFiles)
         {
@@ -128,23 +159,42 @@ internal static class SyntaxIncrementalCollector
             if (!existingByPath.TryGetValue(file.RelativePath, out var oldEntry)
                 || !rawTypesByFile.TryGetValue(file.AbsolutePath, out var newRawTypes))
                 continue;
-            if (StructuralChangeDetector.FileStructureChanged(oldEntry.RawTypes, newRawTypes))
-                return LogFullReEnrich(log, $"declaration shape changed in {file.RelativePath}");
+
+            var delta = StructuralChangeDetector.ClassifyFileTypeDelta(oldEntry.RawTypes, newRawTypes);
+            if (delta.RequiresFull)
+                return (LogFullReEnrich(log, $"{delta.FullReason} in {file.RelativePath}"), EmptyTypeIdSet, null);
+            sigChangedTypeIds.AddRange(delta.SigChangedTypeIds);
+
             // A per-file using retarget (e.g. an alias pointing at a different type) can shift
-            // what an unqualified name in this file resolves to without touching any
-            // declaration shape FileStructureChanged looks at, so it must independently force
-            // a full re-enrich rather than falling through to the body-only fast path.
+            // what an unqualified name in this file resolves to without touching any declaration
+            // shape ClassifyFileTypeDelta looks at. F's own types are already SEED (reparsed);
+            // Δusing(F)'s extra contribution is RDeps(F's types), resolved below.
             if (currentUsingsHashByFile.TryGetValue(file.AbsolutePath, out var newUsingsHash)
                 && !string.Equals(oldEntry.UsingsHash, newUsingsHash, StringComparison.Ordinal))
-                return LogFullReEnrich(log, $"using directives changed in {file.RelativePath}");
+            {
+                usingChangedFileCount++;
+                usingChangedFileTypeIds.AddRange(newRawTypes.Select(TypeIdentity.GetTypeId));
+            }
         }
 
         var cachedGlobalUsings = existing.GlobalUsingsHashesByAssembly
             ?? new Dictionary<string, string>(StringComparer.Ordinal);
         if (GlobalUsingsChanged(cachedGlobalUsings, currentGlobalUsingsHashes))
-            return LogFullReEnrich(log, "the global using set changed");
+            return (LogFullReEnrich(log, "the global using set changed"), EmptyTypeIdSet, null);
 
-        return false;
+        if (sigChangedTypeIds.Count == 0 && usingChangedFileCount == 0)
+            return (false, EmptyTypeIdSet, null);
+
+        // RDeps is built from the OLD (cached) manifest's UsedTypes: invalidation asks who
+        // resolved B's PREVIOUS surface, since that is exactly whose cached enrichment is now
+        // possibly stale.
+        var rdeps = ReverseDependencyIndex.Build(existing.Files);
+        var precise = new HashSet<string>(StringComparer.Ordinal);
+        precise.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, sigChangedTypeIds));
+        precise.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, usingChangedFileTypeIds));
+
+        var suffix = $"(rdi: sig={sigChangedTypeIds.Count} using={usingChangedFileCount})";
+        return (false, precise, suffix);
     }
 
     static bool LogFullReEnrich(IAnalysisLogSink log, string reason)
@@ -255,7 +305,8 @@ internal static class SyntaxIncrementalCollector
         string projectRoot,
         SyntaxIncrementalCollectResult collect,
         IReadOnlyList<TypeMetrics> enrichedMetrics,
-        IReadOnlyList<TypeNodeInfo> resolvedTypes)
+        IReadOnlyList<TypeNodeInfo> resolvedTypes,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? usedTypesByTypeId = null)
     {
         var metricsByTypeId = enrichedMetrics.ToDictionary(
             m => TypeIdentity.GetTypeId(m),
@@ -276,7 +327,8 @@ internal static class SyntaxIncrementalCollector
                 enrichedByFile[filePath] = list;
             }
 
-            list.Add(new SyntaxCacheEnrichedType(typeId, metrics));
+            var usedTypes = usedTypesByTypeId?.GetValueOrDefault(typeId) ?? [];
+            list.Add(new SyntaxCacheEnrichedType(typeId, metrics, usedTypes));
         }
 
         var files = new List<SyntaxCacheFileEntry>();

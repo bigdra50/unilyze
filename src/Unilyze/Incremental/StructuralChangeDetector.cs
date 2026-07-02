@@ -58,4 +58,75 @@ internal static class StructuralChangeDetector
         builder.AppendJoin('␞', values.OrderBy(v => v, StringComparer.Ordinal));
         builder.Append('␟');
     }
+
+    // Per-TypeId delta classification (design doc §4.3): refines the binary FileStructureChanged
+    // verdict into "which types in this file changed, and how". Member add/remove, base/interface
+    // change, and type add/delete within the file all still demand the full-fallback (RequiresFull
+    // = true) — only a signature change that leaves the member SET and base/interface list intact
+    // (a pure signature modify: parameter/return type, modifiers, attributes, generic constraints)
+    // downgrades to Δsig, which the caller resolves through RDeps(B) instead of re-enriching
+    // everything. Operates on raw (syntax-level) TypeNodeInfo only — no SemanticModel involved.
+    public readonly record struct FileTypeDeltaResult(
+        bool RequiresFull,
+        string? FullReason,
+        IReadOnlyList<string> SigChangedTypeIds);
+
+    public static FileTypeDeltaResult ClassifyFileTypeDelta(
+        IReadOnlyList<TypeNodeInfo> previous,
+        IReadOnlyList<TypeNodeInfo> current)
+    {
+        var previousGroups = previous.GroupBy(TypeIdentity.GetTypeId, StringComparer.Ordinal).ToList();
+        var currentGroups = current.GroupBy(TypeIdentity.GetTypeId, StringComparer.Ordinal).ToList();
+
+        // Defensive: two declarations sharing a TypeId within one file's raw types shouldn't
+        // happen (partial types normally span files), but if it does there is no sound way to
+        // pair "before" with "after" per-declaration, so fall back rather than guess.
+        if (previousGroups.Any(g => g.Count() > 1) || currentGroups.Any(g => g.Count() > 1))
+            return new FileTypeDeltaResult(true, "multiple declarations share a TypeId in this file", []);
+
+        var previousByTypeId = previousGroups.ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+        var currentByTypeId = currentGroups.ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        if (previousByTypeId.Keys.Any(id => !currentByTypeId.ContainsKey(id)))
+            return new FileTypeDeltaResult(true, "a type was removed", []);
+        if (currentByTypeId.Keys.Any(id => !previousByTypeId.ContainsKey(id)))
+            return new FileTypeDeltaResult(true, "a type was added", []);
+
+        var sigChanged = new List<string>();
+        foreach (var (typeId, before) in previousByTypeId)
+        {
+            var after = currentByTypeId[typeId];
+            if (TypeStructureSignature(before) == TypeStructureSignature(after))
+                continue; // body-only for this type: no declaration-shape change at all
+
+            if (MemberSetChanged(before, after))
+                return new FileTypeDeltaResult(true, "a member was added or removed", []);
+            if (BaseOrInterfacesChanged(before, after))
+                return new FileTypeDeltaResult(true, "base type or interfaces changed", []);
+            if (!before.ConstructorParams.SequenceEqual(after.ConstructorParams, StringComparer.Ordinal))
+                return new FileTypeDeltaResult(true, "a member was added or removed", []);
+
+            sigChanged.Add(typeId);
+        }
+
+        return new FileTypeDeltaResult(false, null, sigChanged);
+    }
+
+    // Multiset (not set) comparison of (Name|MemberKind) — an overload add/remove changes the
+    // multiset even though a same-named/same-kind member remains, so it correctly counts as a
+    // member-set change (design doc §4.3: "オーバーロード追加・削除はメンバー集合変化とみなす").
+    static bool MemberSetChanged(TypeNodeInfo before, TypeNodeInfo after)
+    {
+        var beforeKeys = before.Members.Select(MemberSetKey).OrderBy(k => k, StringComparer.Ordinal);
+        var afterKeys = after.Members.Select(MemberSetKey).OrderBy(k => k, StringComparer.Ordinal);
+        return !beforeKeys.SequenceEqual(afterKeys, StringComparer.Ordinal);
+    }
+
+    static string MemberSetKey(MemberInfo member) => $"{member.Name}|{member.MemberKind}";
+
+    static bool BaseOrInterfacesChanged(TypeNodeInfo before, TypeNodeInfo after) =>
+        !string.Equals(before.BaseType, after.BaseType, StringComparison.Ordinal)
+        || !string.Equals(before.EnumBaseType, after.EnumBaseType, StringComparison.Ordinal)
+        || !before.Interfaces.OrderBy(i => i, StringComparer.Ordinal)
+            .SequenceEqual(after.Interfaces.OrderBy(i => i, StringComparer.Ordinal), StringComparer.Ordinal);
 }
