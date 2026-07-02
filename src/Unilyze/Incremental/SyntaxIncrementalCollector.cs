@@ -78,11 +78,13 @@ internal static class SyntaxIncrementalCollector
         var globalUsingsHashes = isSemantic
             ? ComputeGlobalUsingsHashes(scannedFiles, syntaxTrees)
             : new Dictionary<string, string>(StringComparer.Ordinal);
+        var usingsHashByFile = ComputeUsingsHashByFile(scannedFiles, syntaxTrees, reparsedFiles, existingByPath);
 
         // The body-only fast path is only sound at a semantic level once a cache exists; the
         // cold/no-cache path reparses everything (so SEED already covers every type).
         var requiresFullReEnrich = isSemantic && existing is not null && HasStructuralChange(
-            existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes, log);
+            existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes,
+            usingsHashByFile, log);
 
         var manifestDraft = new SyntaxCacheManifest(
             SyntaxCacheFingerprint.SchemaVersion,
@@ -98,7 +100,8 @@ internal static class SyntaxIncrementalCollector
             cachedEnrichment,
             reparsedFiles,
             manifestDraft,
-            requiresFullReEnrich);
+            requiresFullReEnrich,
+            usingsHashByFile);
     }
 
     static bool HasStructuralChange(
@@ -108,6 +111,7 @@ internal static class SyntaxIncrementalCollector
         IReadOnlySet<string> reparsedFiles,
         IReadOnlyDictionary<string, IReadOnlyList<TypeNodeInfo>> rawTypesByFile,
         IReadOnlyDictionary<string, string> currentGlobalUsingsHashes,
+        IReadOnlyDictionary<string, string> currentUsingsHashByFile,
         IAnalysisLogSink log)
     {
         var scannedByRelative = scannedFiles.ToDictionary(f => f.RelativePath, f => f, StringComparer.Ordinal);
@@ -126,6 +130,13 @@ internal static class SyntaxIncrementalCollector
                 continue;
             if (StructuralChangeDetector.FileStructureChanged(oldEntry.RawTypes, newRawTypes))
                 return LogFullReEnrich(log, $"declaration shape changed in {file.RelativePath}");
+            // A per-file using retarget (e.g. an alias pointing at a different type) can shift
+            // what an unqualified name in this file resolves to without touching any
+            // declaration shape FileStructureChanged looks at, so it must independently force
+            // a full re-enrich rather than falling through to the body-only fast path.
+            if (currentUsingsHashByFile.TryGetValue(file.AbsolutePath, out var newUsingsHash)
+                && !string.Equals(oldEntry.UsingsHash, newUsingsHash, StringComparison.Ordinal))
+                return LogFullReEnrich(log, $"using directives changed in {file.RelativePath}");
         }
 
         var cachedGlobalUsings = existing.GlobalUsingsHashesByAssembly
@@ -194,6 +205,52 @@ internal static class SyntaxIncrementalCollector
     static string NormalizeUsingDirective(UsingDirectiveSyntax directive) =>
         string.Join(' ', directive.ToString().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
 
+    // Per-file using-directive hash keyed by absolute path: reuses the cached value for files
+    // that were not reparsed this generation, and recomputes from the fresh tree otherwise.
+    // `global using` directives are excluded — they are already covered project-wide by
+    // ComputeGlobalUsingsHashes/GlobalUsingsChanged, so including them here would only produce
+    // a duplicate (and differently-worded) full-re-enrich reason for the same root cause.
+    static Dictionary<string, string> ComputeUsingsHashByFile(
+        IReadOnlyList<FileScanEntry> scannedFiles,
+        IReadOnlyList<SyntaxTree> syntaxTrees,
+        IReadOnlySet<string> reparsedFiles,
+        IReadOnlyDictionary<string, SyntaxCacheFileEntry> existingByPath)
+    {
+        var treeByPath = syntaxTrees.ToDictionary(t => Path.GetFullPath(t.FilePath), t => t, StringComparer.Ordinal);
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var entry in scannedFiles)
+        {
+            if (reparsedFiles.Contains(entry.AbsolutePath) && treeByPath.TryGetValue(entry.AbsolutePath, out var tree))
+            {
+                result[entry.AbsolutePath] = ComputeFileUsingsHash(tree);
+                continue;
+            }
+
+            result[entry.AbsolutePath] = existingByPath.TryGetValue(entry.RelativePath, out var cached)
+                ? cached.UsingsHash
+                : SyntaxCacheFingerprint.HashStrings([]);
+        }
+
+        return result;
+    }
+
+    // Order-insensitive, whitespace-insensitive hash of a file's non-global using directives,
+    // including ones nested inside a namespace block (not just the ones directly under the
+    // compilation unit).
+    internal static string ComputeFileUsingsHash(SyntaxTree tree)
+    {
+        if (tree.GetRoot() is not CompilationUnitSyntax root)
+            return SyntaxCacheFingerprint.HashStrings([]);
+
+        var usings = root.DescendantNodes()
+            .OfType<UsingDirectiveSyntax>()
+            .Where(u => !u.GlobalKeyword.IsKind(SyntaxKind.GlobalKeyword))
+            .Select(NormalizeUsingDirective)
+            .OrderBy(u => u, StringComparer.Ordinal);
+        return SyntaxCacheFingerprint.HashStrings(usings);
+    }
+
     public static SyntaxCacheManifest BuildManifest(
         string projectRoot,
         SyntaxIncrementalCollectResult collect,
@@ -229,12 +286,14 @@ internal static class SyntaxIncrementalCollector
             var relativePath = Path.GetRelativePath(projectRoot, absolutePath).Replace('\\', '/');
             var hash = SyntaxCacheFingerprint.HashFileContent(absolutePath);
             enrichedByFile.TryGetValue(Path.GetFullPath(absolutePath), out var enrichedTypes);
+            var usingsHash = collect.UsingsHashByFile?.GetValueOrDefault(absolutePath) ?? string.Empty;
             files.Add(new SyntaxCacheFileEntry(
                 relativePath,
                 hash,
                 assembly,
                 rawTypes,
-                enrichedTypes ?? []));
+                enrichedTypes ?? [],
+                usingsHash));
         }
 
         return collect.ManifestDraft with { Files = files };

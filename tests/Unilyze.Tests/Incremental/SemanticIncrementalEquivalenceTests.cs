@@ -35,6 +35,9 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     [InlineData("base-class-change")]
     [InlineData("global-using-add")]
     [InlineData("global-using-modify")]
+    [InlineData("alias-retarget")]
+    [InlineData("using-retarget")]
+    [InlineData("using-reorder")]
     [InlineData("add")]
     [InlineData("delete")]
     [InlineData("comment-touch")]
@@ -73,6 +76,50 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.Contains("[incremental] full re-enrich:", stderr);
     }
 
+    // Regression coverage for the pre-#222-merge correctness hole (design doc §2): an alias
+    // retarget in AliasHost.cs changes AliasX's real base chain without touching AliasX's
+    // declaration signature (base type text is still "A" either way), so
+    // StructuralChangeDetector alone classifies this body-only. AliasDependent.cs (unchanged,
+    // cached) walks AliasX's base chain for DIT — if the using change is not independently
+    // detected, its cached DIT goes stale and full/incremental diverge.
+    [Fact]
+    public void AliasRetarget_ForcesFullReEnrich()
+    {
+        Analyze(incremental: true); // seed cache
+        ApplyMutation("alias-retarget");
+        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("[incremental] full re-enrich: using directives changed in AliasHost.cs", stderr);
+    }
+
+    // Same hazard as AliasRetarget_ForcesFullReEnrich, but for a plain `using Ns;` retarget that
+    // changes which same-named type an unqualified base-type reference resolves to.
+    [Fact]
+    public void PlainUsingRetarget_ForcesFullReEnrich()
+    {
+        Analyze(incremental: true); // seed cache
+        ApplyMutation("using-retarget");
+        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("[incremental] full re-enrich: using directives changed in PlainHost.cs", stderr);
+    }
+
+    // Reordering/whitespace-only edits to a file's usings must not be classified as a using
+    // change (the hash is order-insensitive and whitespace-normalized) — confirms the fix does
+    // not regress the body-only fast path for the common "goimports/usort ran" edit.
+    [Fact]
+    public void UsingReorder_StaysOnBodyOnlyFastPath()
+    {
+        Analyze(incremental: true); // seed cache
+        ApplyMutation("using-reorder");
+        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+
+        Assert.Equal(0, exitCode);
+        Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
+    }
+
     void WriteInitialProject()
     {
         File.WriteAllText(Path.Combine(_projectRoot, "App.csproj"), """
@@ -98,6 +145,64 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
             {
                 public int Seed() => 7;
             }
+            """);
+
+        // Alias-retarget fixture (design doc §2): AliasHost.cs aliases A to a shallow base
+        // (Bar); AliasDependent.cs (never touched by the alias-retarget mutation) inherits
+        // AliasHost's AliasX and so its cached DIT depends on AliasX's real base chain.
+        File.WriteAllText(Path.Combine(_projectRoot, "AliasBases.cs"), """
+            namespace Sample.Ns1
+            {
+                public class Bar { }
+            }
+
+            namespace Sample.Ns2
+            {
+                public class QuxBase { }
+
+                public class Qux : QuxBase { }
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "AliasHost.cs"), """
+            using A = Sample.Ns1.Bar;
+
+            namespace Sample;
+
+            public class AliasX : A { }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "AliasDependent.cs"), """
+            namespace Sample;
+
+            public class AliasG : AliasX { }
+            """);
+
+        // Plain-using-retarget fixture: same hazard, but via an unqualified name (PlainBase)
+        // that resolves to a different namespace's type depending on which using is in scope.
+        File.WriteAllText(Path.Combine(_projectRoot, "PlainBases.cs"), """
+            namespace Sample.NsP1
+            {
+                public class PlainBase { }
+            }
+
+            namespace Sample.NsP2
+            {
+                public class PlainBaseRoot { }
+
+                public class PlainBase : PlainBaseRoot { }
+            }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "PlainHost.cs"), """
+            using System;
+            using Sample.NsP1;
+
+            namespace Sample;
+
+            public class PlainY : PlainBase { }
+            """);
+        File.WriteAllText(Path.Combine(_projectRoot, "PlainDependent.cs"), """
+            namespace Sample;
+
+            public class PlainH : PlainY { }
             """);
     }
 
@@ -148,6 +253,42 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
                 Analyze(incremental: true); // re-seed so the modify (below) compares against a stored set
                 File.WriteAllText(Path.Combine(_projectRoot, "GlobalUsings.cs"),
                     "global using System.Text;\nglobal using System.Linq;\n");
+                break;
+            case "alias-retarget":
+                // Retarget alias A from Ns1.Bar (DIT depth 1) to Ns2.Qux (DIT depth 2).
+                // AliasX's declaration signature (base type text "A") is unchanged, so this is
+                // only visible as a per-file using-directive change in AliasHost.cs.
+                File.WriteAllText(Path.Combine(_projectRoot, "AliasHost.cs"), """
+                    using A = Sample.Ns2.Qux;
+
+                    namespace Sample;
+
+                    public class AliasX : A { }
+                    """);
+                break;
+            case "using-retarget":
+                // Retarget the unqualified PlainBase resolution from NsP1 (DIT depth 0) to
+                // NsP2 (DIT depth 1) by swapping which namespace is imported.
+                File.WriteAllText(Path.Combine(_projectRoot, "PlainHost.cs"), """
+                    using System;
+                    using Sample.NsP2;
+
+                    namespace Sample;
+
+                    public class PlainY : PlainBase { }
+                    """);
+                break;
+            case "using-reorder":
+                // Same usings as the seeded fixture, just reordered and with extra whitespace —
+                // must normalize/sort to the same hash as the original, so this stays body-only.
+                File.WriteAllText(Path.Combine(_projectRoot, "PlainHost.cs"), """
+                    using   Sample.NsP1;
+                    using System;
+
+                    namespace Sample;
+
+                    public class PlainY : PlainBase { }
+                    """);
                 break;
             case "add":
                 File.WriteAllText(Path.Combine(_projectRoot, "Added.cs"), """

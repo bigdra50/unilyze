@@ -12,7 +12,10 @@ internal static class SyntaxCacheFingerprint
 {
     // v2: manifest gained per-assembly global-using hashes and the fingerprint folds in the
     // resolved reference set / TFM / analysis level for semantic-incremental keying.
-    public const int SchemaVersion = 2;
+    // v3: each file entry gained a per-file (non-global) using-directive hash, closing the hole
+    // where a using retarget (e.g. an alias pointing at a different type) was invisible to
+    // HasStructuralChange and fell through to the body-only fast path.
+    public const int SchemaVersion = 3;
 
     public static string ComputeGlobalFingerprint(
         PipelineDiscoverState discover,
