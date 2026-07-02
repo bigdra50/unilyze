@@ -37,7 +37,7 @@ Review the generated `tests/fixtures/golden/expected.json` diff.
 Do not regenerate the corpus automatically in CI.
 
 When measured values or metric definitions change, follow the [Metric Compatibility Policy](docs/metrics.md#metric-compatibility-policy), including the required `metricsVersion` update where applicable.
-Add a `CHANGELOG.md` entry under `[Unreleased]` whose text starts with `[metrics]`.
+Add a `changelog.d/<id>.<category>.md` fragment whose text starts with `**[metrics]**` (see [changelog.d/README.md](changelog.d/README.md)).
 
 Further details are in [Golden corpus (metrics compatibility)](README.dev.md#golden-corpus-metrics-compatibility).
 
@@ -46,3 +46,5 @@ Further details are in [Golden corpus (metrics compatibility)](README.dev.md#gol
 Keep each pull request focused on one logical change.
 Describe the observed behavior, the intended behavior, and the validation performed.
 Complete every applicable item in the pull request template.
+
+Add a [changelog.d/](changelog.d/README.md) fragment for every user-facing change (`changelog.d/<PR-number>.<category>.md`); the `changelog-guard` CI check fails a PR that touches `src/` without one. If the change has no user-facing effect, add the `no-changelog` label instead of a fragment.
