@@ -60,16 +60,27 @@ internal static class StructuralChangeDetector
     }
 
     // Per-TypeId delta classification (design doc §4.3): refines the binary FileStructureChanged
-    // verdict into "which types in this file changed, and how". Member add/remove, base/interface
-    // change, and type add/delete within the file all still demand the full-fallback (RequiresFull
-    // = true) — only a signature change that leaves the member SET and base/interface list intact
-    // (a pure signature modify: parameter/return type, modifiers, attributes, generic constraints)
-    // downgrades to Δsig, which the caller resolves through RDeps(B) instead of re-enriching
-    // everything. Operates on raw (syntax-level) TypeNodeInfo only — no SemanticModel involved.
+    // verdict into "which types in this file changed, and how". Type add/delete within the file
+    // (and the defensive multiple-declarations-per-TypeId case) still demand the full-fallback
+    // (RequiresFull = true). Everything else on an EXISTING type resolves to one of three precise
+    // delta classes, resolved by the caller through RDeps/InhDesc instead of re-enriching
+    // everything:
+    //   - Δsig: member SET and base/interface list both intact (a pure signature modify —
+    //     parameter/return type, modifiers, attributes, generic constraints);
+    //   - Δmembers: the member SET changed (add/remove/overload add-or-remove) or the primary-
+    //     constructor parameter list changed (treated as a member-set change per design doc §4.3
+    //     Phase B: "ConstructorParams change ... downgraded to Δmembers");
+    //   - Δbase: the base type or interface list changed.
+    // A type can be BOTH Δmembers and Δbase in the same generation (e.g. a member added AND the
+    // base type changed) — both lists get the TypeId, and the caller's union of their
+    // invalidation sets is still sound (Δbase's is already a superset of Δmembers's for the same
+    // B). Operates on raw (syntax-level) TypeNodeInfo only — no SemanticModel involved.
     public readonly record struct FileTypeDeltaResult(
         bool RequiresFull,
         string? FullReason,
-        IReadOnlyList<string> SigChangedTypeIds);
+        IReadOnlyList<string> SigChangedTypeIds,
+        IReadOnlyList<string> MembersChangedTypeIds,
+        IReadOnlyList<string> BaseChangedTypeIds);
 
     public static FileTypeDeltaResult ClassifyFileTypeDelta(
         IReadOnlyList<TypeNodeInfo> previous,
@@ -82,34 +93,53 @@ internal static class StructuralChangeDetector
         // happen (partial types normally span files), but if it does there is no sound way to
         // pair "before" with "after" per-declaration, so fall back rather than guess.
         if (previousGroups.Any(g => g.Count() > 1) || currentGroups.Any(g => g.Count() > 1))
-            return new FileTypeDeltaResult(true, "multiple declarations share a TypeId in this file", []);
+            return new FileTypeDeltaResult(true, "multiple declarations share a TypeId in this file", [], [], []);
 
         var previousByTypeId = previousGroups.ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
         var currentByTypeId = currentGroups.ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
 
         if (previousByTypeId.Keys.Any(id => !currentByTypeId.ContainsKey(id)))
-            return new FileTypeDeltaResult(true, "a type was removed", []);
+            return new FileTypeDeltaResult(true, "a type was removed", [], [], []);
         if (currentByTypeId.Keys.Any(id => !previousByTypeId.ContainsKey(id)))
-            return new FileTypeDeltaResult(true, "a type was added", []);
+            return new FileTypeDeltaResult(true, "a type was added", [], [], []);
 
         var sigChanged = new List<string>();
+        var membersChanged = new List<string>();
+        var baseChanged = new List<string>();
         foreach (var (typeId, before) in previousByTypeId)
         {
             var after = currentByTypeId[typeId];
             if (TypeStructureSignature(before) == TypeStructureSignature(after))
                 continue; // body-only for this type: no declaration-shape change at all
 
-            if (MemberSetChanged(before, after))
-                return new FileTypeDeltaResult(true, "a member was added or removed", []);
-            if (BaseOrInterfacesChanged(before, after))
-                return new FileTypeDeltaResult(true, "base type or interfaces changed", []);
-            if (!before.ConstructorParams.SequenceEqual(after.ConstructorParams, StringComparer.Ordinal))
-                return new FileTypeDeltaResult(true, "a member was added or removed", []);
+            var memberSetChanged = MemberSetChanged(before, after)
+                || !before.ConstructorParams.SequenceEqual(after.ConstructorParams, StringComparer.Ordinal);
+            var baseOrIfaceChanged = BaseOrInterfacesChanged(before, after);
 
-            sigChanged.Add(typeId);
+            if (memberSetChanged)
+            {
+                // Extension methods are `this`-first-parameter methods declared inside a static
+                // class; the design doc's precise Δmembers rule additionally invalidates
+                // RDeps(P ∪ InhDesc(P)) for the receiver type P when the changed member is an
+                // extension method. ParameterInfo (the raw syntax-level parameter model) carries
+                // no `this`-modifier flag, so that case can't be distinguished syntactically here
+                // without widening the raw parser model. Conservative deviation (documented in
+                // the design doc / PR description): any member-set change on a static class stays
+                // a full re-enrich rather than guessing whether it touched an extension method.
+                if (IsStaticClass(after))
+                    return new FileTypeDeltaResult(
+                        true, "a static class's member set changed (possible extension method)", [], [], []);
+                membersChanged.Add(typeId);
+            }
+
+            if (baseOrIfaceChanged)
+                baseChanged.Add(typeId);
+
+            if (!memberSetChanged && !baseOrIfaceChanged)
+                sigChanged.Add(typeId);
         }
 
-        return new FileTypeDeltaResult(false, null, sigChanged);
+        return new FileTypeDeltaResult(false, null, sigChanged, membersChanged, baseChanged);
     }
 
     // Multiset (not set) comparison of (Name|MemberKind) — an overload add/remove changes the
@@ -129,4 +159,9 @@ internal static class StructuralChangeDetector
         || !string.Equals(before.EnumBaseType, after.EnumBaseType, StringComparison.Ordinal)
         || !before.Interfaces.OrderBy(i => i, StringComparer.Ordinal)
             .SequenceEqual(after.Interfaces.OrderBy(i => i, StringComparer.Ordinal), StringComparer.Ordinal);
+
+    // C# static classes cannot declare a base type (other than object) or implement interfaces,
+    // so this never overlaps with a Δbase classification.
+    static bool IsStaticClass(TypeNodeInfo type) =>
+        type.Kind == "class" && type.Modifiers.Contains("static");
 }

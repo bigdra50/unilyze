@@ -213,6 +213,11 @@ Each phase is independently shippable and equivalence-gated. Phase order is risk
   - Gate: mutation harness extended with the debate's hazard list (operator add, implicit-conversion
     capture, foreach/await/deconstruct pattern member add, collection-initializer Add capture, indexer
     add, interface default member add, hiding via new derived member) — all green full==incremental.
+  - 📝 STARTED 2026-07-03: InhDesc(B) closure built from the per-generation declaration graph +
+    RDeps(B ∪ InhDesc(B)) resolution landed for Δmembers/Δbase. Extension-method `this`-param
+    capture (RDeps(P ∪ InhDesc(P))) is NOT implemented — raw ParameterInfo carries no `this`
+    modifier, so a static class's member-set change stays a conservative full fallback instead
+    (documented deviation in `StructuralChangeDetector.ClassifyFileTypeDelta`).
 - Phase C — optional refinements (decide later, data-driven)
   - Name-intersection index to soften the Δadd/Δdel full fallback.
   - `BaseTypeResolver`/`TypeRoleStamper` per-type reuse for unchanged types; share the per-generation
@@ -302,6 +307,7 @@ provenance). Positions that shaped this document:
 1. Scope check: is CI warm-cache (`analyze --incremental` at semantic level for badges/diff) a real
    product goal? It is the second leg of the justification (G2); if it is not wanted, Phase B's
    value case weakens and stopping after Phase 0+A is reasonable.
+   RESOLVED 2026-07-03: CI warm-cache is confirmed as a product goal; Phase B started.
 2. RESOLVED 2026-07-02: §5 const/default/enum-value carve-out verified during Phase A review — no
    detector reads foreign constant values (see §5).
 3. Collapse threshold default (60%) and whether the reason string should surface in the serve UI

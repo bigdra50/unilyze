@@ -42,6 +42,19 @@ internal static class ServeRunner
             port = parsedPort;
         }
 
+        int? verifyIncrementalEveryN = null;
+        var verifyStr = opts.GetValueOrDefault("--verify-incremental");
+        if (verifyStr != null)
+        {
+            if (!int.TryParse(verifyStr, out var parsedVerify) || parsedVerify < 1)
+            {
+                Console.Error.WriteLine(
+                    $"Invalid --verify-incremental: '{verifyStr}'. Expected a positive integer.");
+                return 1;
+            }
+            verifyIncrementalEveryN = parsedVerify;
+        }
+
         var path = opts.GetValueOrDefault("-p") ?? opts.GetValueOrDefault("--path") ?? ".";
         var options = new ServeOptions(
             Path: path,
@@ -54,7 +67,8 @@ internal static class ServeRunner
             Assembly: opts.GetValueOrDefault("-a") ?? opts.GetValueOrDefault("--assembly"),
             ResolveNuget: opts.ContainsKey("--resolve-nuget"),
             IncludeGenerated: opts.ContainsKey("--include-generated"),
-            TargetFramework: opts.GetValueOrDefault("--tfm"));
+            TargetFramework: opts.GetValueOrDefault("--tfm"),
+            VerifyIncrementalEveryN: verifyIncrementalEveryN);
 
         try
         {
@@ -93,6 +107,9 @@ internal static class ServeRunner
                   --resolve-nuget  Resolve NuGet compile-time assemblies
                   --include-generated  Include generated sources in compilation
                   --tfm          Target framework for NuGet/generated-source resolution
+                  --verify-incremental <N>  Every N generations, run a full analysis alongside
+                                 the incremental one and log any divergence to stderr (off by
+                                 default; roughly doubles cost on the sampled generations)
               -h, --help         Show this help
 
             Exit codes:

@@ -94,6 +94,117 @@ public sealed class SyntaxIncrementalSemanticPhaseTests
         Assert.Empty(log.InfoMessages);
     }
 
+    // ---- ResolvePreciseMembersAndBase (design doc §4.3 Phase B): turns the collector's raw
+    // Δmembers(B)/Δbase(B) classification into invalidation TypeIds using InhDesc(B), the
+    // transitive inheritance/interface-implementation closure built from the CURRENT
+    // generation's declaration graph (`deps`). ----
+
+    [Fact]
+    public void ResolvePreciseMembersAndBase_MembersChanged_ResolvesRDepsOfBAndDescendants()
+    {
+        var allTypes = BuildTypes(5); // T0..T4
+        var b = TypeIdentity.GetTypeId(allTypes[0]);
+        var d = TypeIdentity.GetTypeId(allTypes[1]); // D : B
+        var caller = TypeIdentity.GetTypeId(allTypes[2]); // caller used D (not B directly)
+        var deps = new List<TypeDependency> { new(d, b, DependencyKind.Inheritance, d, b) };
+        var rdeps = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
+        {
+            [d] = [caller],
+        };
+        var collect = BuildDeltaCollect(allTypes, membersChanged: [b], baseChanged: [], rdeps: rdeps);
+
+        var resolved = SyntaxIncrementalSemanticPhase.ResolvePreciseMembersAndBase(collect, deps);
+
+        Assert.Equal(new HashSet<string> { caller }, resolved.PreciseExtraReEnrichTypeIds);
+    }
+
+    [Fact]
+    public void ResolvePreciseMembersAndBase_BaseChanged_ResolvesInhDescPlusRDeps()
+    {
+        var allTypes = BuildTypes(5); // T0..T4
+        var b = TypeIdentity.GetTypeId(allTypes[0]);
+        var d = TypeIdentity.GetTypeId(allTypes[1]); // D : B
+        var caller = TypeIdentity.GetTypeId(allTypes[2]); // caller used B directly
+        var deps = new List<TypeDependency> { new(d, b, DependencyKind.Inheritance, d, b) };
+        var rdeps = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
+        {
+            [b] = [caller],
+        };
+        var collect = BuildDeltaCollect(allTypes, membersChanged: [], baseChanged: [b], rdeps: rdeps);
+
+        var resolved = SyntaxIncrementalSemanticPhase.ResolvePreciseMembersAndBase(collect, deps);
+
+        // InhDesc(B) = {D} (re-enriched directly: DIT/inherited-binding may have shifted) union
+        // RDeps(B ∪ {D}) = RDeps(B) ∪ RDeps(D) = {caller} ∪ {} = {caller}.
+        Assert.Equal(new HashSet<string> { d, caller }, resolved.PreciseExtraReEnrichTypeIds);
+    }
+
+    [Fact]
+    public void ResolvePreciseMembersAndBase_UnionsWithExistingSigUsingExtras()
+    {
+        var allTypes = BuildTypes(5);
+        var b = TypeIdentity.GetTypeId(allTypes[0]);
+        var caller = TypeIdentity.GetTypeId(allTypes[2]);
+        var preExisting = TypeIdentity.GetTypeId(allTypes[3]); // e.g. already resolved via Δsig
+        var deps = new List<TypeDependency>();
+        var rdeps = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
+        {
+            [b] = [caller],
+        };
+        var collect = BuildDeltaCollect(allTypes, membersChanged: [b], baseChanged: [], rdeps: rdeps)
+            with
+        { PreciseExtraReEnrichTypeIds = new HashSet<string>(StringComparer.Ordinal) { preExisting } };
+
+        var resolved = SyntaxIncrementalSemanticPhase.ResolvePreciseMembersAndBase(collect, deps);
+
+        Assert.Equal(new HashSet<string> { preExisting, caller }, resolved.PreciseExtraReEnrichTypeIds);
+    }
+
+    [Fact]
+    public void ResolvePreciseMembersAndBase_RequiresFull_ReturnsInputUnchanged()
+    {
+        var allTypes = BuildTypes(3);
+        var b = TypeIdentity.GetTypeId(allTypes[0]);
+        var collect = BuildDeltaCollect(allTypes, membersChanged: [b], baseChanged: [], rdeps: null)
+            with
+        { RequiresFullReEnrich = true };
+
+        var resolved = SyntaxIncrementalSemanticPhase.ResolvePreciseMembersAndBase(collect, []);
+
+        Assert.Same(collect, resolved);
+    }
+
+    [Fact]
+    public void ResolvePreciseMembersAndBase_NoDeltas_ReturnsInputUnchanged()
+    {
+        var allTypes = BuildTypes(3);
+        var collect = BuildDeltaCollect(allTypes, membersChanged: [], baseChanged: [], rdeps: null);
+
+        var resolved = SyntaxIncrementalSemanticPhase.ResolvePreciseMembersAndBase(collect, []);
+
+        Assert.Same(collect, resolved);
+    }
+
+    static SyntaxIncrementalCollectResult BuildDeltaCollect(
+        List<TypeNodeInfo> allTypes,
+        IReadOnlyList<string> membersChanged,
+        IReadOnlyList<string> baseChanged,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? rdeps) =>
+        new(
+            Types: allTypes,
+            SyntaxTrees: [],
+            RawTypesByFile: new Dictionary<string, IReadOnlyList<TypeNodeInfo>>(StringComparer.Ordinal),
+            CachedEnrichmentByTypeId: new Dictionary<string, SyntaxCacheEnrichedType>(StringComparer.Ordinal),
+            ReparsedFiles: new HashSet<string>(StringComparer.Ordinal),
+            ManifestDraft: SampleManifestDraft(),
+            RequiresFullReEnrich: false,
+            UsingsHashByFile: null,
+            PreciseExtraReEnrichTypeIds: new HashSet<string>(StringComparer.Ordinal),
+            PreciseLogSuffix: "(rdi: sig=0 members=0 base=0 using=0)",
+            MembersChangedTypeIds: membersChanged,
+            BaseChangedTypeIds: baseChanged,
+            Rdeps: rdeps);
+
     static List<TypeNodeInfo> BuildTypes(int count) =>
         Enumerable.Range(0, count)
             .Select(i => new TypeNodeInfo(

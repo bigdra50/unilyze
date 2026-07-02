@@ -19,4 +19,10 @@ internal sealed record ServeOptions(
     string? Assembly,
     bool ResolveNuget,
     bool IncludeGenerated,
-    string? TargetFramework);
+    string? TargetFramework,
+    // Shadow verification (design doc §7.3, tasks/reverse-dependency-index-design.md): every N
+    // SnapshotBuilder.Build() calls, additionally run a full (non-incremental) analysis and diff
+    // it against the incremental result, logging any divergence. Null (the CLI default) disables
+    // it — the extra full run roughly doubles analysis cost on the sampled generations, so this
+    // stays strictly opt-in.
+    int? VerifyIncrementalEveryN = null);

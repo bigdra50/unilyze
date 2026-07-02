@@ -85,17 +85,24 @@ internal static class SyntaxIncrementalCollector
         bool requiresFullReEnrich;
         IReadOnlySet<string> preciseExtraReEnrichTypeIds;
         string? preciseLogSuffix;
+        IReadOnlyList<string> membersChangedTypeIds;
+        IReadOnlyList<string> baseChangedTypeIds;
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? rdeps;
         if (isSemantic && existing is not null)
         {
-            (requiresFullReEnrich, preciseExtraReEnrichTypeIds, preciseLogSuffix) = ClassifyInvalidation(
-                existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes,
-                usingsHashByFile, log);
+            (requiresFullReEnrich, preciseExtraReEnrichTypeIds, preciseLogSuffix,
+                membersChangedTypeIds, baseChangedTypeIds, rdeps) = ClassifyInvalidation(
+                    existing, existingByPath, scannedFiles, reparsedFiles, rawTypesByFile, globalUsingsHashes,
+                    usingsHashByFile, log);
         }
         else
         {
             requiresFullReEnrich = false;
             preciseExtraReEnrichTypeIds = EmptyTypeIdSet;
             preciseLogSuffix = null;
+            membersChangedTypeIds = [];
+            baseChangedTypeIds = [];
+            rdeps = null;
         }
 
         var manifestDraft = new SyntaxCacheManifest(
@@ -115,23 +122,41 @@ internal static class SyntaxIncrementalCollector
             requiresFullReEnrich,
             usingsHashByFile,
             preciseExtraReEnrichTypeIds,
-            preciseLogSuffix);
+            preciseLogSuffix,
+            membersChangedTypeIds,
+            baseChangedTypeIds,
+            rdeps);
     }
 
     static readonly IReadOnlySet<string> EmptyTypeIdSet = new HashSet<string>(StringComparer.Ordinal);
 
     // Per-generation invalidation classification (design doc §4.3). Replaces the old binary
-    // "any structural change -> full" verdict with three outcomes:
-    //   - full fallback (file add/delete, member add/remove, base/interface change, type
-    //     add/delete within a file, global using change) — unchanged from v1, still logged via
-    //     LogFullReEnrich with the same reason strings existing tests match on.
+    // "any structural change -> full" verdict with five outcomes:
+    //   - full fallback (file add/delete, type add/delete within a file, a static class's member
+    //     set changed, global using change) — logged via LogFullReEnrich with the same reason
+    //     strings existing tests match on.
     //   - Δsig(B): a reparsed type's signature changed but its member set and base/interface list
     //     did not -> resolved through RDeps(B) instead of re-enriching everything.
     //   - Δusing(F): a reparsed file's using-directive hash changed (Phase 0a) -> resolved through
     //     RDeps(F's types) (F's own types are already in SEED via the normal reparsed-file path).
-    // The precise set returned here is EXTRA beyond SEED; the caller (SyntaxIncrementalSemanticPhase)
-    // unions it with SEED and applies the collapse-to-full threshold once SEED is known.
-    static (bool RequiresFullReEnrich, IReadOnlySet<string> PreciseExtraTypeIds, string? LogSuffix) ClassifyInvalidation(
+    //   - Δmembers(B) / Δbase(B) (Phase B, design doc §4.3): a reparsed type's member set or
+    //     base/interface list changed. Both need InhDesc(B) — the transitive
+    //     inheritance/interface-implementation descendant closure — which is only available from
+    //     the CURRENT generation's declaration graph (`deps`, built later in
+    //     SyntaxIncrementalSemanticPhase.Run). So this method returns the raw TypeId
+    //     classification (MembersChangedTypeIds/BaseChangedTypeIds) plus the RDeps map built here
+    //     from the OLD manifest, and leaves the actual closure + RDeps resolution for those two
+    //     classes to the caller.
+    // The (already-resolved) Δsig/Δusing precise set returned here is EXTRA beyond SEED; the
+    // caller unions the Δmembers/Δbase contribution into it, then unions the total with SEED and
+    // applies the collapse-to-full threshold once SEED is known.
+    static (
+        bool RequiresFullReEnrich,
+        IReadOnlySet<string> PreciseExtraTypeIds,
+        string? LogSuffix,
+        IReadOnlyList<string> MembersChangedTypeIds,
+        IReadOnlyList<string> BaseChangedTypeIds,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? Rdeps) ClassifyInvalidation(
         SyntaxCacheManifest existing,
         IReadOnlyDictionary<string, SyntaxCacheFileEntry> existingByPath,
         IReadOnlyList<FileScanEntry> scannedFiles,
@@ -144,11 +169,13 @@ internal static class SyntaxIncrementalCollector
         var scannedByRelative = scannedFiles.ToDictionary(f => f.RelativePath, f => f, StringComparer.Ordinal);
 
         if (scannedFiles.Any(f => !existingByPath.ContainsKey(f.RelativePath)))
-            return (LogFullReEnrich(log, "a source file was added"), EmptyTypeIdSet, null);
+            return FullReEnrich(log, "a source file was added");
         if (existing.Files.Any(e => !scannedByRelative.ContainsKey(e.RelativePath)))
-            return (LogFullReEnrich(log, "a source file was deleted"), EmptyTypeIdSet, null);
+            return FullReEnrich(log, "a source file was deleted");
 
         var sigChangedTypeIds = new List<string>();
+        var membersChangedTypeIds = new List<string>();
+        var baseChangedTypeIds = new List<string>();
         var usingChangedFileTypeIds = new List<string>();
         var usingChangedFileCount = 0;
 
@@ -162,8 +189,10 @@ internal static class SyntaxIncrementalCollector
 
             var delta = StructuralChangeDetector.ClassifyFileTypeDelta(oldEntry.RawTypes, newRawTypes);
             if (delta.RequiresFull)
-                return (LogFullReEnrich(log, $"{delta.FullReason} in {file.RelativePath}"), EmptyTypeIdSet, null);
+                return FullReEnrich(log, $"{delta.FullReason} in {file.RelativePath}");
             sigChangedTypeIds.AddRange(delta.SigChangedTypeIds);
+            membersChangedTypeIds.AddRange(delta.MembersChangedTypeIds);
+            baseChangedTypeIds.AddRange(delta.BaseChangedTypeIds);
 
             // A per-file using retarget (e.g. an alias pointing at a different type) can shift
             // what an unqualified name in this file resolves to without touching any declaration
@@ -180,27 +209,36 @@ internal static class SyntaxIncrementalCollector
         var cachedGlobalUsings = existing.GlobalUsingsHashesByAssembly
             ?? new Dictionary<string, string>(StringComparer.Ordinal);
         if (GlobalUsingsChanged(cachedGlobalUsings, currentGlobalUsingsHashes))
-            return (LogFullReEnrich(log, "the global using set changed"), EmptyTypeIdSet, null);
+            return FullReEnrich(log, "the global using set changed");
 
-        if (sigChangedTypeIds.Count == 0 && usingChangedFileCount == 0)
-            return (false, EmptyTypeIdSet, null);
+        if (sigChangedTypeIds.Count == 0 && usingChangedFileCount == 0
+            && membersChangedTypeIds.Count == 0 && baseChangedTypeIds.Count == 0)
+            return (false, EmptyTypeIdSet, null, [], [], null);
 
         // RDeps is built from the OLD (cached) manifest's UsedTypes: invalidation asks who
         // resolved B's PREVIOUS surface, since that is exactly whose cached enrichment is now
-        // possibly stale.
+        // possibly stale. Shared by Δsig/Δusing (resolved here) and Δmembers/Δbase (resolved by
+        // the caller once InhDesc is available).
         var rdeps = ReverseDependencyIndex.Build(existing.Files);
         var precise = new HashSet<string>(StringComparer.Ordinal);
         precise.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, sigChangedTypeIds));
         precise.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, usingChangedFileTypeIds));
 
-        var suffix = $"(rdi: sig={sigChangedTypeIds.Count} using={usingChangedFileCount})";
-        return (false, precise, suffix);
+        var suffix = $"(rdi: sig={sigChangedTypeIds.Count} members={membersChangedTypeIds.Count} "
+            + $"base={baseChangedTypeIds.Count} using={usingChangedFileCount})";
+        return (false, precise, suffix, membersChangedTypeIds, baseChangedTypeIds, rdeps);
     }
 
-    static bool LogFullReEnrich(IAnalysisLogSink log, string reason)
+    static (
+        bool RequiresFullReEnrich,
+        IReadOnlySet<string> PreciseExtraTypeIds,
+        string? LogSuffix,
+        IReadOnlyList<string> MembersChangedTypeIds,
+        IReadOnlyList<string> BaseChangedTypeIds,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? Rdeps) FullReEnrich(IAnalysisLogSink log, string reason)
     {
         log.Info($"[incremental] full re-enrich: {reason}");
-        return true;
+        return (true, EmptyTypeIdSet, null, [], [], null);
     }
 
     static bool GlobalUsingsChanged(

@@ -34,6 +34,8 @@ internal static class SyntaxIncrementalSemanticPhase
         var baseMetrics = CodeHealthCalculator.ComputeTypeMetrics(allTypes);
         var couplingMap = CouplingMetricsCalculator.Calculate(deps, allTypes);
 
+        collect = ResolvePreciseMembersAndBase(collect, deps);
+
         var config = options.EffectiveAnalysisConfig;
         var (typesToReEnrich, reEnrichLogSuffix) = DetermineTypesToReEnrich(allTypes, collect, options.EffectiveLog);
         var logSuffix = reEnrichLogSuffix is null ? "" : $" {reEnrichLogSuffix}";
@@ -140,6 +142,56 @@ internal static class SyntaxIncrementalSemanticPhase
             kvp => Path.GetFullPath(kvp.Key),
             kvp => kvp.Value.FirstOrDefault()?.Assembly ?? "Assembly-CSharp",
             StringComparer.Ordinal);
+
+    // Phase B (design doc §4.3, §6): resolves the raw Δmembers(B)/Δbase(B) classification the
+    // collector returned into the actual invalidation TypeIds, using InhDesc(B) — the transitive
+    // inheritance/interface-implementation descendant closure — built from THIS generation's
+    // declaration graph (`deps`, just rebuilt full above). This is the one place that closure is
+    // available: the collector runs before `deps` exists, so it can only classify WHICH types
+    // changed, not resolve who is affected.
+    //   Δmembers(B) -> RDeps(B ∪ InhDesc(B))
+    //   Δbase(B)    -> InhDesc(B) ∪ RDeps(B ∪ InhDesc(B))
+    // Both union into the already-Δsig/Δusing-resolved PreciseExtraReEnrichTypeIds the collector
+    // returned; PreciseLogSuffix already carries the correct sig/members/base/using counts (they
+    // only need the classified TypeId COUNT, not the resolved closure), so it is left untouched.
+    // No-op (returns `collect` unchanged) when there is nothing to resolve: a full-fallback
+    // generation, a body-only generation, or a cold/no-cache generation all leave
+    // MembersChangedTypeIds/BaseChangedTypeIds empty.
+    //
+    // internal (not private), matching DetermineTypesToReEnrich below, so the Δmembers/Δbase +
+    // InhDesc resolution has direct unit-test coverage without spinning up a real CLI analysis.
+    internal static SyntaxIncrementalCollectResult ResolvePreciseMembersAndBase(
+        SyntaxIncrementalCollectResult collect, IReadOnlyList<TypeDependency> deps)
+    {
+        if (collect.RequiresFullReEnrich)
+            return collect;
+
+        var membersChanged = collect.MembersChangedTypeIds;
+        var baseChanged = collect.BaseChangedTypeIds;
+        if (membersChanged is not { Count: > 0 } && baseChanged is not { Count: > 0 })
+            return collect;
+
+        var rdeps = collect.Rdeps ?? new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var childrenByParent = InheritanceDescendantIndex.Build(deps);
+        var extra = new HashSet<string>(StringComparer.Ordinal);
+        if (collect.PreciseExtraReEnrichTypeIds is { } existingExtra)
+            extra.UnionWith(existingExtra);
+
+        foreach (var b in membersChanged ?? [])
+        {
+            var closure = InheritanceDescendantIndex.DescendantsOf(childrenByParent, b);
+            extra.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, closure.Append(b)));
+        }
+
+        foreach (var b in baseChanged ?? [])
+        {
+            var closure = InheritanceDescendantIndex.DescendantsOf(childrenByParent, b);
+            extra.UnionWith(closure); // InhDesc(B) itself: DIT/inherited-binding may have shifted
+            extra.UnionWith(ReverseDependencyIndex.ResolveMany(rdeps, closure.Append(b)));
+        }
+
+        return collect with { PreciseExtraReEnrichTypeIds = extra };
+    }
 
     // Fraction of all types above which the precise (RDI) invalidation set collapses to a full
     // re-enrich: bookkeeping a near-total re-enrich set is pure overhead once it stops being a
