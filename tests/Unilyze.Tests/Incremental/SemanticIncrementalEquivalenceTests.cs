@@ -1,4 +1,3 @@
-using System.Text.Json.Nodes;
 using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests.Incremental;
@@ -12,9 +11,6 @@ namespace Unilyze.Tests.Incremental;
 public sealed class SemanticIncrementalEquivalenceTests : IDisposable
 {
     readonly string _projectRoot;
-    static readonly string CurrentTargetFramework = ResolveCurrentTargetFramework();
-    static readonly string DotnetHostPath = ResolveDotnetHostPath();
-    static readonly string AppDllPath = ResolveAppDllPath();
 
     public SemanticIncrementalEquivalenceTests()
     {
@@ -49,7 +45,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         ApplyMutation(mutation);
         var incremental = Analyze(incremental: true);
         var full = Analyze(incremental: false);
-        Assert.Equal(Normalize(full), Normalize(incremental));
+        Assert.Equal(IncrementalCliHelper.Normalize(full), IncrementalCliHelper.Normalize(incremental));
     }
 
     [Fact]
@@ -57,7 +53,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("body-only"); // edits Delta's method body only
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
         Assert.Contains("[incremental] re-enrich types: 1/", stderr);
@@ -70,7 +66,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("signature-change"); // changes Delta's public surface
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
         Assert.Contains("[incremental] full re-enrich:", stderr);
@@ -87,7 +83,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("alias-retarget");
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
         Assert.Contains("[incremental] full re-enrich: using directives changed in AliasHost.cs", stderr);
@@ -100,7 +96,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("using-retarget");
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
         Assert.Contains("[incremental] full re-enrich: using directives changed in PlainHost.cs", stderr);
@@ -114,7 +110,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     {
         Analyze(incremental: true); // seed cache
         ApplyMutation("using-reorder");
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
@@ -327,74 +323,8 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         var args = new List<string> { "-p", _projectRoot, "--level", "core", "-f", "json" };
         if (incremental)
             args.Add("--incremental");
-        var (exitCode, stdout, _) = Run(args.ToArray());
+        var (exitCode, stdout, _) = IncrementalCliHelper.Run(args.ToArray());
         Assert.Equal(0, exitCode);
         return stdout;
-    }
-
-    static string Normalize(string json)
-    {
-        var root = JsonNode.Parse(json)?.AsObject()
-            ?? throw new InvalidOperationException("Invalid JSON");
-        root.Remove("analyzedAt");
-        root.Remove("toolVersion");
-
-        var sourceTable = root["sourceTable"]?.AsArray();
-        if (sourceTable is not null)
-        {
-            var pathByIndex = new Dictionary<int, string>();
-            for (var i = 0; i < sourceTable.Count; i++)
-                pathByIndex[i] = sourceTable[i]?.GetValue<string>() ?? "";
-
-            void ResolveFileRef(JsonNode? node)
-            {
-                if (node is JsonObject obj && obj.ContainsKey("fileRef"))
-                {
-                    var idx = obj["fileRef"]?.GetValue<int>() ?? 0;
-                    obj["fileRef"] = pathByIndex.GetValueOrDefault(idx, "");
-                }
-            }
-
-            if (root["types"]?.AsArray() is { } types)
-                foreach (var type in types)
-                {
-                    if (type?["declarations"]?.AsArray() is { } decls)
-                        foreach (var d in decls) ResolveFileRef(d);
-                    if (type?["members"]?.AsArray() is { } members)
-                        foreach (var m in members)
-                            if (m?["location"] is { } loc) ResolveFileRef(loc);
-                }
-        }
-
-        return root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-    }
-
-    static (int ExitCode, string StdOut, string StdErr) Run(params string[] args)
-    {
-        var psi = new System.Diagnostics.ProcessStartInfo { FileName = DotnetHostPath };
-        psi.ArgumentList.Add(AppDllPath);
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-        return TestProcessRunner.Run(psi, 120_000);
-    }
-
-    static string ResolveCurrentTargetFramework() =>
-        Path.GetFileName(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar))!;
-
-    static string ResolveDotnetHostPath() =>
-        Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
-
-    static string ResolveAppDllPath()
-    {
-        var path = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Unilyze", "bin", "Release", CurrentTargetFramework, "Unilyze.dll"));
-        if (!File.Exists(path))
-        {
-            path = Path.GetFullPath(Path.Combine(
-                AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-                "src", "Unilyze", "bin", "Debug", CurrentTargetFramework, "Unilyze.dll"));
-        }
-        return path;
     }
 }

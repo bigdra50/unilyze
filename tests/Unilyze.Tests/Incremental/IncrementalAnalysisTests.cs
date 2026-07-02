@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Unilyze.Tests.Helpers;
 
 namespace Unilyze.Tests.Incremental;
@@ -8,9 +6,6 @@ namespace Unilyze.Tests.Incremental;
 public sealed class IncrementalAnalysisTests : IDisposable
 {
     readonly string _projectRoot;
-    static readonly string CurrentTargetFramework = ResolveCurrentTargetFramework();
-    static readonly string DotnetHostPath = ResolveDotnetHostPath();
-    static readonly string AppDllPath = ResolveAppDllPath();
 
     public IncrementalAnalysisTests()
     {
@@ -32,7 +27,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
         Analyze(fullIncremental: true); // cold cache build
         var warm = Analyze(fullIncremental: true);
 
-        Assert.Equal(Normalize(baseline), Normalize(warm));
+        Assert.Equal(IncrementalCliHelper.Normalize(baseline), IncrementalCliHelper.Normalize(warm));
     }
 
     [Fact]
@@ -45,7 +40,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
     [Fact]
     public void IncrementalWithInput_IsUsageError()
     {
-        var (exitCode, _, stderr) = Run("-i", "missing.json", "--incremental");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-i", "missing.json", "--incremental");
         Assert.Equal(1, exitCode);
         Assert.Contains("--incremental cannot be combined", stderr);
     }
@@ -53,7 +48,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
     [Fact]
     public void IncrementalAtSemanticLevel_BuildsCacheWithoutWarning()
     {
-        var (exitCode, _, stderr) = Run("-p", _projectRoot, "--incremental", "-f", "json");
+        var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--incremental", "-f", "json");
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("syntax-level analysis only", stderr);
         Assert.True(Directory.Exists(SyntaxCacheStore.GetCacheDirectory(_projectRoot)));
@@ -73,7 +68,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
         ApplyMutation(mutation);
         var incremental = Analyze(fullIncremental: true);
         var full = Analyze(fullIncremental: false);
-        Assert.Equal(Normalize(full), Normalize(incremental));
+        Assert.Equal(IncrementalCliHelper.Normalize(full), IncrementalCliHelper.Normalize(incremental));
     }
 
     [Fact]
@@ -83,12 +78,12 @@ public sealed class IncrementalAnalysisTests : IDisposable
 
         var psi = new ProcessStartInfo
         {
-            FileName = DotnetHostPath,
+            FileName = IncrementalCliHelper.DotnetHostPath,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
         };
-        psi.ArgumentList.Add(AppDllPath);
+        psi.ArgumentList.Add(IncrementalCliHelper.AppDllPath);
         psi.ArgumentList.Add("-p");
         psi.ArgumentList.Add(_projectRoot);
         psi.ArgumentList.Add("--level");
@@ -115,7 +110,7 @@ public sealed class IncrementalAnalysisTests : IDisposable
 
         var full = Analyze(fullIncremental: false);
         var warm = Analyze(fullIncremental: true);
-        Assert.Equal(Normalize(full), Normalize(warm));
+        Assert.Equal(IncrementalCliHelper.Normalize(full), IncrementalCliHelper.Normalize(warm));
     }
 
     static async Task<(string StdOut, string StdErr)> WaitForExit(
@@ -163,11 +158,11 @@ public sealed class IncrementalAnalysisTests : IDisposable
         {
             "-p", repoRoot, "--level", "syntax", "-f", "json", "--incremental"
         };
-        var (coldExitCode, _, coldStderr) = Run(args);
+        var (coldExitCode, _, coldStderr) = IncrementalCliHelper.Run(args);
         Assert.True(coldExitCode == 0,
             $"Cold incremental analysis exited with code {coldExitCode}. stderr:{Environment.NewLine}{coldStderr}");
 
-        var (warmExitCode, _, warmStderr) = Run(args);
+        var (warmExitCode, _, warmStderr) = IncrementalCliHelper.Run(args);
         Assert.True(warmExitCode == 0,
             $"Warm incremental analysis exited with code {warmExitCode}. stderr:{Environment.NewLine}{warmStderr}");
         Assert.Contains("[incremental] cache hit:", warmStderr);
@@ -269,81 +264,8 @@ public sealed class IncrementalAnalysisTests : IDisposable
         var args = new List<string> { "-p", _projectRoot, "--level", "syntax", "-f", "json" };
         if (fullIncremental)
             args.Add("--incremental");
-        var (exitCode, stdout, stderr) = Run(args.ToArray());
+        var (exitCode, stdout, stderr) = IncrementalCliHelper.Run(args.ToArray());
         Assert.Equal(0, exitCode);
         return stdout;
-    }
-
-    static string Normalize(string json)
-    {
-        var root = JsonNode.Parse(json)?.AsObject()
-            ?? throw new InvalidOperationException("Invalid JSON");
-        root.Remove("analyzedAt");
-        root.Remove("toolVersion");
-
-        var sourceTable = root["sourceTable"]?.AsArray();
-        if (sourceTable is not null)
-        {
-            var pathByIndex = new Dictionary<int, string>();
-            for (var i = 0; i < sourceTable.Count; i++)
-                pathByIndex[i] = sourceTable[i]?.GetValue<string>() ?? "";
-
-            void ResolveFileRef(JsonNode? node)
-            {
-                if (node is JsonObject obj && obj.ContainsKey("fileRef"))
-                {
-                    var idx = obj["fileRef"]?.GetValue<int>() ?? 0;
-                    obj["fileRef"] = pathByIndex.GetValueOrDefault(idx, "");
-                }
-            }
-
-            if (root["types"]?.AsArray() is { } types)
-                foreach (var type in types)
-                {
-                    if (type?["declarations"]?.AsArray() is { } decls)
-                        foreach (var d in decls) ResolveFileRef(d);
-                    if (type?["members"]?.AsArray() is { } members)
-                        foreach (var m in members)
-                            if (m?["location"] is { } loc) ResolveFileRef(loc);
-                }
-        }
-
-        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
-    }
-
-    static (int ExitCode, string StdOut, string StdErr) Run(params string[] args)
-    {
-        var psi = new ProcessStartInfo
-        {
-            FileName = DotnetHostPath,
-        };
-        psi.ArgumentList.Add(AppDllPath);
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-
-        return TestProcessRunner.Run(psi, 120_000);
-    }
-
-    static string ResolveCurrentTargetFramework()
-    {
-        var tfm = Path.GetFileName(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar));
-        return tfm!;
-    }
-
-    static string ResolveDotnetHostPath() =>
-        Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
-
-    static string ResolveAppDllPath()
-    {
-        var path = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-            "src", "Unilyze", "bin", "Release", CurrentTargetFramework, "Unilyze.dll"));
-        if (!File.Exists(path))
-        {
-            path = Path.GetFullPath(Path.Combine(
-                AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-                "src", "Unilyze", "bin", "Debug", CurrentTargetFramework, "Unilyze.dll"));
-        }
-        return path;
     }
 }
