@@ -1,6 +1,8 @@
+using Unilyze.Config;
 using Unilyze.DI;
 using Unilyze.Metrics;
 using Unilyze.Pipeline;
+using System.Collections.Concurrent;
 using Microsoft.CodeAnalysis;
 
 namespace Unilyze.Incremental;
@@ -11,7 +13,8 @@ internal static class SyntaxIncrementalSemanticPhase
         List<TypeNodeInfo> Types,
         List<TypeDependency> Dependencies,
         List<TypeMetrics> TypeMetrics,
-        IReadOnlyDictionary<string, CouplingInfo> CouplingMap)
+        IReadOnlyDictionary<string, CouplingInfo> CouplingMap,
+        IReadOnlyDictionary<string, IReadOnlyList<string>> UsedTypesByTypeId)
         Run(
             List<TypeNodeInfo> allTypes,
             List<SyntaxTree> allSyntaxTrees,
@@ -36,6 +39,7 @@ internal static class SyntaxIncrementalSemanticPhase
         options.EffectiveLog.Info(
             $"[incremental] re-enrich types: {typesToReEnrich.Count}/{allTypes.Count}");
         var metricsByTypeId = new Dictionary<string, TypeMetrics>(StringComparer.Ordinal);
+        var usedTypesByTypeId = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
 
         var reEnrichBaseMetrics = new List<TypeMetrics>();
         for (var i = 0; i < baseMetrics.Count; i++)
@@ -49,7 +53,10 @@ internal static class SyntaxIncrementalSemanticPhase
             }
 
             if (collect.CachedEnrichmentByTypeId.TryGetValue(typeId, out var cached))
+            {
                 metricsByTypeId[typeId] = cached.Metrics;
+                usedTypesByTypeId[typeId] = cached.UsedTypes;
+            }
             else
                 reEnrichBaseMetrics.Add(metrics);
         }
@@ -64,6 +71,13 @@ internal static class SyntaxIncrementalSemanticPhase
                 metricsByTypeId[TypeIdentity.GetTypeId(metrics)] = SyntaxCacheMetrics.StripCouplingFields(metrics);
         }
 
+        var reEnrichTypeIds = new HashSet<string>(
+            reEnrichBaseMetrics.Select(TypeIdentity.GetTypeId), StringComparer.Ordinal);
+        var recordedUsedTypes = RecordUsedTypes(
+            allTypes, allSyntaxTrees, compilationResult, collect, reEnrichTypeIds, options);
+        foreach (var (typeId, usedTypes) in recordedUsedTypes)
+            usedTypesByTypeId[typeId] = usedTypes;
+
         var finalMetrics = new List<TypeMetrics>(baseMetrics.Count);
         foreach (var metrics in baseMetrics)
         {
@@ -74,8 +88,57 @@ internal static class SyntaxIncrementalSemanticPhase
         }
 
         allTypes = TypeRoleStamper.ApplyRoles(allTypes, allSyntaxTrees, compilationResult).ToList();
-        return (allTypes, deps, finalMetrics, couplingMap);
+        return (allTypes, deps, finalMetrics, couplingMap, usedTypesByTypeId);
     }
+
+    // UsageRecorder pass (design doc §4.1-4.2): runs only for types being re-enriched anyway
+    // (they already pay per-node SemanticModel walks in CBO/RFC/boxing/closure), one dedicated
+    // IOperation walk per type. Cache-hit types carry over their manifest UsedTypes above instead
+    // of re-recording. Record-only — nothing downstream reads UsedTypesByTypeId yet.
+    static IReadOnlyDictionary<string, IReadOnlyList<string>> RecordUsedTypes(
+        IReadOnlyList<TypeNodeInfo> allTypes,
+        IReadOnlyList<SyntaxTree> allSyntaxTrees,
+        CompilationResult compilationResult,
+        SyntaxIncrementalCollectResult collect,
+        IReadOnlySet<string> reEnrichTypeIds,
+        AnalysisBuildOptions options)
+    {
+        if (compilationResult.Compilation is null)
+            return new Dictionary<string, IReadOnlyList<string>>();
+
+        var treeByPath = SyntaxLookups.BuildTreeLookup(compilationResult, allSyntaxTrees);
+        var typeDeclLookup = SyntaxLookups.BuildTypeDeclLookup(allTypes, treeByPath);
+        var assemblyByFilePath = BuildAssemblyByFilePath(collect.RawTypesByFile);
+
+        var targets = reEnrichTypeIds
+            .Where(typeDeclLookup.ContainsKey)
+            .Select(typeId => (TypeId: typeId, Decl: typeDeclLookup[typeId]))
+            .ToList();
+
+        var modelCache = new ConcurrentDictionary<SyntaxTree, SemanticModel>();
+        var results = new ConcurrentDictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var parallelOptions = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = UnilyzeConfig.ResolveMaxParallelism(options.EffectiveMaxParallelism)
+        };
+        Parallel.ForEach(targets, parallelOptions, target =>
+        {
+            var model = modelCache.GetOrAdd(
+                target.Decl.SyntaxTree,
+                static (t, c) => c.GetSemanticModel(t),
+                compilationResult.Compilation);
+            results[target.TypeId] = UsageRecorder.Record(target.Decl, model, assemblyByFilePath);
+        });
+
+        return results;
+    }
+
+    static Dictionary<string, string> BuildAssemblyByFilePath(
+        IReadOnlyDictionary<string, IReadOnlyList<TypeNodeInfo>> rawTypesByFile) =>
+        rawTypesByFile.ToDictionary(
+            kvp => Path.GetFullPath(kvp.Key),
+            kvp => kvp.Value.FirstOrDefault()?.Assembly ?? "Assembly-CSharp",
+            StringComparer.Ordinal);
 
     static HashSet<string> DetermineTypesToReEnrich(
         IReadOnlyList<TypeNodeInfo> allTypes,

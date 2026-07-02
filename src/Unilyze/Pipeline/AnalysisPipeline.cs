@@ -78,9 +78,11 @@ internal static class AnalysisPipeline
         List<TypeDependency> deps;
         List<TypeMetrics> typeMetrics;
         IReadOnlyDictionary<string, CouplingInfo> couplingMap;
+        IReadOnlyDictionary<string, IReadOnlyList<string>> usedTypesByTypeId =
+            new Dictionary<string, IReadOnlyList<string>>();
         if (options.UseIncrementalCache && SyntaxIncrementalState.Current is { } collect)
         {
-            (resolvedTypes, deps, typeMetrics, couplingMap) = SyntaxIncrementalSemanticPhase.Run(
+            (resolvedTypes, deps, typeMetrics, couplingMap, usedTypesByTypeId) = SyntaxIncrementalSemanticPhase.Run(
                 allTypes, allSyntaxTrees, compile.CompilationResult, options, collect, discover);
         }
         else
@@ -99,7 +101,7 @@ internal static class AnalysisPipeline
         if (options.UseIncrementalCache && SyntaxIncrementalState.Current is { } incrementalCollect)
         {
             var manifest = SyntaxIncrementalCollector.BuildManifest(
-                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes);
+                discover.ProjectRoot, incrementalCollect, finalMetrics, resolvedTypes, usedTypesByTypeId);
             SyntaxCacheStore.Save(discover.ProjectRoot, manifest);
         }
 

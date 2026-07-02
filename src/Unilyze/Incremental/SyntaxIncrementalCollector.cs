@@ -255,7 +255,8 @@ internal static class SyntaxIncrementalCollector
         string projectRoot,
         SyntaxIncrementalCollectResult collect,
         IReadOnlyList<TypeMetrics> enrichedMetrics,
-        IReadOnlyList<TypeNodeInfo> resolvedTypes)
+        IReadOnlyList<TypeNodeInfo> resolvedTypes,
+        IReadOnlyDictionary<string, IReadOnlyList<string>>? usedTypesByTypeId = null)
     {
         var metricsByTypeId = enrichedMetrics.ToDictionary(
             m => TypeIdentity.GetTypeId(m),
@@ -276,7 +277,8 @@ internal static class SyntaxIncrementalCollector
                 enrichedByFile[filePath] = list;
             }
 
-            list.Add(new SyntaxCacheEnrichedType(typeId, metrics));
+            var usedTypes = usedTypesByTypeId?.GetValueOrDefault(typeId) ?? [];
+            list.Add(new SyntaxCacheEnrichedType(typeId, metrics, usedTypes));
         }
 
         var files = new List<SyntaxCacheFileEntry>();

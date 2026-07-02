@@ -32,6 +32,27 @@ public sealed class SyntaxCacheStoreTests : IDisposable
         Assert.Equal("Foo.cs", loaded.Files[0].RelativePath);
     }
 
+    // UsedTypes(T) round-trip (design doc §4.2): the recorded set must survive a save/reload
+    // cycle intact, ordinal-sorted, since Phase A2's RDeps inversion reads it back from disk.
+    [Fact]
+    public void SaveAndLoad_RoundTripsUsedTypes()
+    {
+        var metrics = new TypeMetrics("Foo", "Sample", "Asm", 10, 1, 0, 0, 0, 0, 0, 0, 100, []);
+        var enriched = new SyntaxCacheEnrichedType(
+            "Asm::Sample.Foo", metrics, ["Asm::Sample.Bar", "Asm::Sample.Baz"]);
+        var manifest = SampleManifest("used-types") with
+        {
+            Files = [new SyntaxCacheFileEntry("Foo.cs", "hash", "Asm", [], [enriched])]
+        };
+
+        SyntaxCacheStore.Save(_projectRoot, manifest);
+        var loaded = SyntaxCacheStore.TryLoad(_projectRoot, "used-types");
+
+        Assert.NotNull(loaded);
+        var loadedEnriched = Assert.Single(loaded!.Files[0].EnrichedTypes);
+        Assert.Equal(["Asm::Sample.Bar", "Asm::Sample.Baz"], loadedEnriched.UsedTypes);
+    }
+
     [Fact]
     public void TryLoad_ReturnsNullWhenFingerprintMismatch()
     {

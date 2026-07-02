@@ -15,7 +15,10 @@ internal static class SyntaxCacheFingerprint
     // v3: each file entry gained a per-file (non-global) using-directive hash, closing the hole
     // where a using retarget (e.g. an alias pointing at a different type) was invisible to
     // HasStructuralChange and fell through to the body-only fast path.
-    public const int SchemaVersion = 3;
+    // v4: each enriched type gained UsedTypes(T) (design doc §4.1/§4.2) — the in-source TypeIds
+    // T's enrichment resolved, recorded via UsageRecorder for RDeps inversion in Phase A2.
+    // Recording only in this schema version; invalidation is unchanged.
+    public const int SchemaVersion = 4;
 
     public static string ComputeGlobalFingerprint(
         PipelineDiscoverState discover,

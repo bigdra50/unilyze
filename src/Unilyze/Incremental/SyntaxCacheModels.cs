@@ -27,7 +27,13 @@ internal sealed record SyntaxCacheFileEntry(
 
 internal sealed record SyntaxCacheEnrichedType(
     string TypeId,
-    TypeMetrics Metrics);
+    TypeMetrics Metrics,
+    // UsedTypes(T) (design doc §4.1): TypeIds this type's enrichment actually resolved (base
+    // chain, interfaces, member signature types, attribute/constraint types, file using-static/
+    // alias targets, and every bound symbol's containing type from one IOperation walk per
+    // member body). Ordinal-sorted for stable manifest diffs. Recording only — Phase A2 inverts
+    // this into RDeps(B) for precise invalidation; nothing consumes it yet.
+    IReadOnlyList<string> UsedTypes);
 
 internal sealed record SyntaxIncrementalCollectResult(
     List<TypeNodeInfo> Types,
