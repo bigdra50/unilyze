@@ -56,10 +56,35 @@ internal sealed record SyntaxIncrementalCollectResult(
     // RDeps(B) for each signature-changed B, and RDeps(F's types) for each using-changed file F.
     // Ignored when RequiresFullReEnrich is true. Empty (not null) when nothing beyond SEED is
     // needed, i.e. the ordinary body-only fast path.
+    //
+    // Phase B (design doc §6): SyntaxIncrementalSemanticPhase.Run unions in the Δmembers/Δbase
+    // contribution — resolved from MembersChangedTypeIds/BaseChangedTypeIds + Rdeps below, closed
+    // over InhDesc(B) built from the CURRENT generation's declaration graph — before
+    // DetermineTypesToReEnrich consumes this field, so the collapse-threshold logic sees the
+    // FULL precise set regardless of which delta class contributed it.
     IReadOnlySet<string>? PreciseExtraReEnrichTypeIds = null,
     // Diagnostic suffix appended to the "[incremental] re-enrich types: n/m" log line when the
-    // precise path contributed anything beyond SEED, e.g. "(rdi: sig=1 using=0)". Null otherwise.
-    string? PreciseLogSuffix = null);
+    // precise path contributed anything beyond SEED, e.g. "(rdi: sig=1 members=0 base=0 using=0)".
+    // Null otherwise. Built once by the collector (all four counts are known immediately from
+    // classification — only the RESOLVED extra set for members/base needs the later InhDesc
+    // closure), so this field never needs to be recomputed downstream.
+    string? PreciseLogSuffix = null,
+    // Δmembers(B) raw classification (design doc §4.3 Phase B): TypeIds whose member set (or
+    // primary-constructor parameter list) changed, per StructuralChangeDetector.ClassifyFileTypeDelta.
+    // Unresolved — SyntaxIncrementalSemanticPhase.Run still needs InhDesc(B) (from the fresh
+    // declaration graph) to turn this into RDeps(B ∪ InhDesc(B)). Empty when the precise path
+    // didn't classify any member-set changes this generation.
+    IReadOnlyList<string>? MembersChangedTypeIds = null,
+    // Δbase(B) raw classification (design doc §4.3 Phase B): TypeIds whose base type or interface
+    // list changed. Unresolved for the same reason as MembersChangedTypeIds — the final
+    // invalidation set is InhDesc(B) ∪ RDeps(B ∪ InhDesc(B)).
+    IReadOnlyList<string>? BaseChangedTypeIds = null,
+    // RDeps built from the OLD (cached) manifest — design doc §4.3: "RDeps must always be built
+    // from the manifest as it stood BEFORE this generation's edits", since invalidation asks who
+    // resolved B's PREVIOUS surface. Carried forward so SyntaxIncrementalSemanticPhase.Run can
+    // resolve Δmembers/Δbase without re-loading the manifest or rebuilding this map a second time.
+    // Null when the precise path never engaged (body-only generation, cold path, or full fallback).
+    IReadOnlyDictionary<string, IReadOnlyList<string>>? Rdeps = null);
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

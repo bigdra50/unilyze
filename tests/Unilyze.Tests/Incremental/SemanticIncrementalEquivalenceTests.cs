@@ -66,7 +66,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
     public void SignatureChange_ForcesFullReEnrich()
     {
         Analyze(incremental: true); // seed cache
-        ApplyMutation("signature-change"); // changes Delta's public surface
+        ApplyMutation("signature-change"); // adds a whole new type to Delta.cs (Δadd, still full)
         var (exitCode, _, stderr) = IncrementalCliHelper.Run("-p", _projectRoot, "--level", "core", "-f", "json", "--incremental");
 
         Assert.Equal(0, exitCode);
@@ -89,7 +89,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
         Assert.Contains("[incremental] re-enrich types: 2/", stderr);
-        Assert.Contains("(rdi: sig=1 using=0)", stderr);
+        Assert.Contains("(rdi: sig=1 members=0 base=0 using=0)", stderr);
     }
 
     // Regression coverage for the pre-#222-merge correctness hole (design doc §2): an alias
@@ -115,7 +115,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
         Assert.Contains("[incremental] re-enrich types:", stderr);
-        Assert.Contains("(rdi: sig=0 using=1)", stderr);
+        Assert.Contains("(rdi: sig=0 members=0 base=0 using=1)", stderr);
     }
 
     // Same hazard as AliasRetarget_ReEnrichesPreciseRDepsSet, but for a plain `using Ns;` retarget
@@ -131,7 +131,7 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("[incremental] full re-enrich:", stderr);
         Assert.Contains("[incremental] re-enrich types:", stderr);
-        Assert.Contains("(rdi: sig=0 using=1)", stderr);
+        Assert.Contains("(rdi: sig=0 members=0 base=0 using=1)", stderr);
     }
 
     // Reordering/whitespace-only edits to a file's usings must not be classified as a using
@@ -269,14 +269,20 @@ public sealed class SemanticIncrementalEquivalenceTests : IDisposable
                     """);
                 break;
             case "signature-change":
+                // Phase B (design doc §4.3) turned member add/remove and base/interface changes
+                // into precise Δmembers/Δbase deltas, so this mutation now targets the one
+                // remaining Δadd/Δdel(type) full fallback: adding a whole new type to an
+                // existing, previously-cached file. Delta itself is left untouched so Gamma's
+                // body-caller hazard (Helper(2) + Seed()) stays valid.
                 File.WriteAllText(Path.Combine(_projectRoot, "Delta.cs"), """
                     namespace Sample;
 
                     public class Delta
                     {
-                        public long Seed() => 7;
-                        public int Extra() => 1;
+                        public int Seed() => 7;
                     }
+
+                    public class DeltaSidecar { }
                     """);
                 break;
             case "member-signature-modify":
