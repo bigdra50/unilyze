@@ -63,7 +63,8 @@ Walk(assemblyData);
 void Walk(CodeAnalysisMetricData data)
 {
     if (data.Symbol is INamedTypeSymbol type &&
-        type.TypeKind is TypeKind.Class or TypeKind.Struct or TypeKind.Interface)
+        type.TypeKind is TypeKind.Class or TypeKind.Struct or TypeKind.Interface &&
+        !IsSourceGenerated(type))
     {
         var members = data.Children
             .Select(c => new MemberReport(
@@ -124,6 +125,17 @@ List<MethodConstructs> CountExtendedConstructs(INamedTypeSymbol type)
 
 static bool IsBooleanType(ExpressionSyntax expression, SemanticModel model) =>
     model.GetTypeInfo(expression).Type?.SpecialType == SpecialType.System_Boolean;
+
+// Roslyn Workspaces 5.x runs source generators inside MSBuildWorkspace (4.x did not), so the
+// compilation now contains generator output — e.g. the [GeneratedRegex] generator's Runner /
+// RunnerFactory nested types. unilyze deliberately analyzes only on-disk, non-generated sources,
+// so the official side must drop generated types for the residual identity to hold.
+static bool IsSourceGenerated(INamedTypeSymbol type) =>
+    type.DeclaringSyntaxReferences.Length > 0
+    && type.DeclaringSyntaxReferences.All(r =>
+        r.SyntaxTree.FilePath is not { Length: > 0 } path
+        || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)
+        || path.Replace('\\', '/').Contains("/generated/", StringComparison.OrdinalIgnoreCase));
 
 var report = types
     .Where(t => !t.Name.StartsWith("<", StringComparison.Ordinal))
