@@ -13,6 +13,8 @@ updates:
       - "/scripts/crossval"
     schedule:
       interval: "weekly"
+    labels:
+      - "no-changelog"
     groups:
       nuget:
         patterns: ["*"]
@@ -21,6 +23,8 @@ updates:
     directory: "/scripts/viewer-screenshots"
     schedule:
       interval: "weekly"
+    labels:
+      - "no-changelog"
     groups:
       npm:
         patterns: ["*"]
@@ -29,6 +33,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - "no-changelog"
     groups:
       actions:
         patterns: ["*"]
