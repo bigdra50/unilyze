@@ -64,3 +64,26 @@ local-enrichment reuse with full aggregation):
 - Keep parsed syntax trees and loaded `MetadataReference`s warm in-process across serve generations
   (today each generation reparses unchanged files and rebuilds the compilation).
 - Incremental global aggregation (rank/cycles), as #216 itself notes for a later issue.
+
+## Track-2 rerun — Unity corpus (wallhackar), RDI Phase A+B (2026-07-07)
+
+Measured at the v0.6.0 code line (RDI Phase 0+A+B merged) on the wallhackar corpus — 1,994 types,
+1,095 scanned files, 33 assemblies — with `analyze -p <copy> --level core -f json`, median of 5,
+Release net10.0, Apple silicon. Edit target: a first-party type with 5 recorded dependents
+(`Assets/RemoteScanner/Scripts/Meshing/MeshCreator.cs`).
+
+| case | median | vs full | re-enrich |
+| --- | --- | --- | --- |
+| full (non-incremental) | 14757 ms | 100 % | — |
+| warm body-only edit | 11380 ms | 77.1 % | 1/1994 |
+| warm member add | 12415 ms | 84.1 % | 6/1994 `(rdi: members=1)` |
+| warm signature modify | 11374 ms | 77.1 % | 6/1994 `(rdi: sig=1)` |
+
+Zero full-re-enrich fallbacks across every warm run — all structural edits took the precise
+(RDI) path. Work elision is the headline result: structural edits that re-enriched 1994/1994
+under the v1 binary classifier now re-enrich 6/1994 (the edited type plus its recorded
+dependents). The remaining wall-clock gap to full (only ~15–23 % saved) is bounded by the
+known full-every-generation floor — `BaseTypeResolver`, `TypeRoleStamper`, dependency-graph
+build, DI analysis, and aggregation — i.e. the Phase C candidates in
+`tasks/reverse-dependency-index-design.md` §6; the `SemanticEnricher` slice itself is now
+~0.3 % of types on a structural edit. Phase C is where the next order of magnitude lives.
