@@ -9620,7 +9620,7 @@
       "level": "Type"
     }
   ],
-  "metricsVersion": 4,
+  "metricsVersion": 5,
   "projectKind": "unity",
   "energyPressure": 3.5,
   "schemaVersion": 1,

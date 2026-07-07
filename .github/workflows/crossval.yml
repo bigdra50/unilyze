@@ -6,6 +6,13 @@ on:
       - main
     tags:
       - v*
+  # Dependency bumps broke this workflow twice on main (#234, #235) because it never ran on
+  # PRs; run it there too, scoped to the paths that can actually affect the comparison.
+  pull_request:
+    paths:
+      - "src/**"
+      - "scripts/crossval/**"
+      - ".github/workflows/crossval.yml"
 
 jobs:
   crossval:
