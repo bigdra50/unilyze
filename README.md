@@ -155,19 +155,17 @@ unilyze resolves an analysis level based on which Unity DLLs it can locate. Pin 
 
 ### Incremental analysis
 
-`--incremental` speeds up **syntax-level** runs by caching per-file parse and enrich results under `<project>/.unilyze/cache/syntax/v1/`. Only changed files are re-parsed on warm runs; cross-file aggregates (dependencies, coupling, cycles) are always recomputed so JSON output matches a full run (`metricsVersion` unchanged).
+`--incremental` caches per-type analysis results under `<project>/.unilyze/cache/syntax/v1/` and works at **every** analysis level. Warm syntax-level runs re-parse only changed files. Warm semantic runs (core/full/complete) additionally reuse per-type enrichment (LCOM/CBO/DIT/RFC + code smells) with reverse-dependency-index (RDI) invalidation: a body-only edit re-enriches just the edited types; a signature, using-directive, member, or base/interface-list change re-enriches the changed types plus their recorded dependents (and inheritance descendants where bindings can shift); type or file adds/deletes and global-using changes conservatively re-enrich everything. Cross-file aggregates (dependencies, coupling, cycles, rank) are always recomputed in full, so warm output is byte-identical to a full run.
 
 ```bash
-unilyze -p . --level syntax --incremental -f json -o result.json
+unilyze -p . --incremental -f json -o result.json   # any analysis level
 ```
 
 Requirements and limits:
 
-- Must be combined with `--level syntax`. Other levels print a one-line stderr warning and run the normal full pipeline with no cache I/O.
 - Cannot be used with `-i/--input`.
-- Cache invalidates when `toolVersion`, `metricsVersion`, preprocessor defines, thresholds/profile/rules, exclude dirs, or assembly layout change.
-- Semantic-level incremental analysis (core/full/complete) is intentionally deferred: metrics such as DIT, boxing, and CBO depend on cross-file symbol resolution, so sound invalidation needs a dependency-closure design.
-- CI: persist `.unilyze/cache/` with `actions/cache` keyed on lockfiles and `.unilyze.json` when using `--level syntax --incremental`.
+- Cache invalidates when `toolVersion`, `metricsVersion`, preprocessor defines, thresholds/profile/rules, exclude dirs, assembly layout, resolved references, target framework, or analysis level change.
+- CI: persist `.unilyze/cache/` with `actions/cache` keyed on lockfiles and `.unilyze.json` to reuse warm analysis across runs.
 
 The cache directory includes `.unilyze/cache/.gitignore` containing `*` (auto-created).
 
