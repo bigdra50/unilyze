@@ -1,1 +1,0 @@
-**[metrics]** `metricsVersion` is now 5, pairing the overload-CycCC correction ([#223](https://github.com/bigdra50/unilyze/pull/223)) with the increment the Metric Compatibility Policy requires; warm incremental caches from earlier versions invalidate automatically
