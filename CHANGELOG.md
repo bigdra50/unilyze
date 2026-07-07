@@ -11,14 +11,21 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-07
+
 ### Changed
 
 - `unilyze serve` re-analyzes warm edits incrementally at the resolved semantic level: a source edit re-enriches only the changed types, while a structural change (signature / type-set / global-using change, or a file add/delete) re-enriches everything. The dependency graph and global aggregation are always rebuilt full, so the live snapshot is byte-identical to a full analysis. `--incremental` now accelerates every analysis level, not just `--level syntax` ([#216](https://github.com/bigdra50/unilyze/issues/216))
+- `unilyze serve`'s incremental analysis now invalidates precisely on signature and using-directive changes: a reverse dependency index (RDeps) inverted from each type's recorded resolved usage (one IOperation walk per re-enriched type) re-enriches only the changed type and its actual dependents, instead of every type. Member add/remove, base/interface changes, type/file add/delete, and global-using changes keep the conservative full re-enrich; a collapse threshold falls back to full when precision stops paying. A structural edit on the self-corpus re-enriches 2/14 types instead of 14/14 ([#224](https://github.com/bigdra50/unilyze/pull/224))
+- The Roslyn analysis engine is upgraded from 4.12 to 5.3 (`Microsoft.CodeAnalysis.CSharp` / `Workspaces`), picking up parser support for the newest C# language versions. Measured metrics are unchanged on the golden corpus ([#230](https://github.com/bigdra50/unilyze/pull/230))
+- **[metrics]** `metricsVersion` is now 5, pairing the overload-CycCC correction ([#223](https://github.com/bigdra50/unilyze/pull/223)) with the increment the Metric Compatibility Policy requires; warm incremental caches from earlier versions invalidate automatically
+- `unilyze serve`'s incremental analysis now invalidates precisely on member add/remove and base/interface-list changes too: adding or removing a member re-enriches only the changed type and the types that resolved it or its inheritance/interface-implementation descendants (RDeps(B ∪ InhDesc(B))), and a base/interface-list change additionally re-enriches those descendants directly. A member-set change on a static class (where an added/removed member could be an extension method) still falls back to a full re-enrich, as do type/file add/delete and global-using changes. An optional `serve --verify-incremental <N>` shadow-verification mode runs a full analysis alongside the incremental one every N generations and logs any divergence, for dogfooding the invalidation rules without paying the cost on every edit.
 
 ### Fixed
 
 - **[metrics]** Semantic cyclomatic-complexity recalculation now binds each overloaded method to its own declaration instead of the first match by name; a complex overload's CycCC no longer collapses to a simpler overload's value. Affects `cyclomaticComplexity` / `maxCyclomaticComplexity` / `averageCyclomaticComplexity` for any type with overloaded methods ([#223](https://github.com/bigdra50/unilyze/pull/223))
 - `badge` no longer runs a redundant full project analysis per invocation; `BadgeRunner.Run` computed and discarded a second `AnalysisPipeline.Build`, so every badge run analyzed the project twice. Badge output is unchanged ([#223](https://github.com/bigdra50/unilyze/pull/223))
+
 ## [0.5.3] - 2026-06-16
 
 ### Added
