@@ -41,11 +41,11 @@ Add to `~/.claude/statusline.sh` (Unity projects only):
 
 ```bash
 if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; then
-    unilyze statusline -p "$PROJECT_DIR" --background-refresh
+    unilyze statusline -p "$PROJECT_DIR"
 fi
 ```
 
-`--background-refresh` never blocks on analysis: it returns cached output immediately and refreshes stale or missing caches in a detached background process. On first run with an empty cache, you may see one blank line until the background refresh completes.
+`statusline` never blocks on analysis: it prints the cached line immediately and refreshes a stale or missing cache in a detached background process. On first run with an empty cache it prints nothing (the segment is hidden); the next render shows the segment once the background analysis finishes. Concurrent invocations are serialized by a lock so only one refresh runs at a time.
 
 ## Caching
 
@@ -63,7 +63,7 @@ The `statusline` subcommand reads `.unilyze.json` and global config automaticall
 | `--baseline` | Suppress known smells from a baseline file in counts |
 | `--codehealth-v1` | Display legacy CodeHealth v1 during the one-release migration window |
 | `--show-mi` | Append the reference Maintainability Index metric |
-| `--background-refresh` | Non-blocking refresh (recommended for status bars) |
+| `--background-refresh` | Accepted for compatibility; non-blocking refresh is now the default |
 | `--verbose` / `--quiet` | Stderr diagnostics |
 
 See also the [agent integration tutorial](./tutorials/agent-integration.md) for snapshot conventions used alongside statusline workflows.

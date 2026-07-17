@@ -109,8 +109,8 @@ internal static class CliArgValidation
 
     static readonly HashSet<string> StatuslineBooleanOptions = new(StringComparer.Ordinal)
     {
-        "-h", "--help", "--verbose", "--quiet", "--background-refresh", "--incremental", "--codehealth-v1",
-        "--show-mi",
+        "-h", "--help", "--verbose", "--quiet", "--background-refresh", "--refresh-now", "--incremental",
+        "--codehealth-v1", "--show-mi",
     };
 
     static readonly HashSet<string> BadgeValueOptions = new(StringComparer.Ordinal)

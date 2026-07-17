@@ -17,10 +17,14 @@ internal static class StatuslineRunner
     const string CachePrefix = "unilyze-sl-";
     const int DefaultRefreshSeconds = 60;
 
+    // A refresh lock older than this is assumed abandoned (crashed holder) and reclaimable.
+    // Comfortably above a normal cold analysis (~a few seconds) so a live refresh is never stolen.
+    const int LockStaleSeconds = 120;
+
     sealed record StatuslineRequest(
         bool Verbose,
         bool Quiet,
-        bool BackgroundRefresh,
+        bool RefreshNow,
         bool Incremental,
         bool UseCodeHealthV1,
         bool ShowMi,
@@ -51,9 +55,11 @@ internal static class StatuslineRunner
 
         var paths = CreateCachePaths(fullPath, request.UseCodeHealthV1, request.ShowMi);
 
-        return request.BackgroundRefresh
-            ? RunBackgroundRefresh(fullPath, request, paths.TxtPath)
-            : RunForeground(fullPath, request, paths);
+        // Default is stale-while-revalidate: never block a foreground caller on analysis.
+        // The detached child re-enters here with --refresh-now to run the synchronous path.
+        return request.RefreshNow
+            ? RunRefreshNow(fullPath, request, paths)
+            : RunStaleWhileRevalidate(fullPath, request, paths);
     }
 
     static bool TryParseRequest(string[] args, out StatuslineRequest request)
@@ -62,7 +68,9 @@ internal static class StatuslineRunner
 
         var verbose = opts.ContainsKey("--verbose");
         var quiet = opts.ContainsKey("--quiet");
-        var backgroundRefresh = opts.ContainsKey("--background-refresh");
+        // --refresh-now is the internal synchronous entry point the detached child runs.
+        // --background-refresh is retained as an accepted no-op: non-blocking is now the default.
+        var refreshNow = opts.ContainsKey("--refresh-now");
         var incremental = opts.ContainsKey("--incremental");
         var useCodeHealthV1 = opts.ContainsKey("--codehealth-v1");
         var showMi = opts.ContainsKey("--show-mi");
@@ -89,7 +97,7 @@ internal static class StatuslineRunner
         request = new StatuslineRequest(
             verbose,
             quiet,
-            backgroundRefresh,
+            refreshNow,
             incremental,
             useCodeHealthV1,
             showMi,
@@ -130,44 +138,145 @@ internal static class StatuslineRunner
             Path.Combine(cacheDir, $"{CachePrefix}{cacheHash}.lock"));
     }
 
-    static int RunForeground(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
+    // Stale-while-revalidate: the default path. Serves the cache (any age) without
+    // ever running analysis in the foreground, and schedules a detached refresh when
+    // the cache is stale or missing. A tight-budget consumer (e.g. a status bar that
+    // kills children after ~250ms) always gets an immediate answer.
+    static int RunStaleWhileRevalidate(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
     {
-        if (TryServeFreshCache(paths.TxtPath, request.RefreshSeconds))
-            return 0;
+        var cacheExists = File.Exists(paths.TxtPath);
+        double? ageSeconds = cacheExists
+            ? (DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(paths.TxtPath))).TotalSeconds
+            : null;
 
-        FileStream? lockStream;
+        var action = StatuslineCacheDecision.Decide(cacheExists, ageSeconds, request.RefreshSeconds);
+        switch (action)
+        {
+            case StatuslineCacheAction.ServeFresh:
+                Console.Write(TryReadCache(paths.TxtPath));
+                return 0;
+
+            case StatuslineCacheAction.ServeStaleAndRefresh:
+                Console.Write(TryReadCache(paths.TxtPath));
+                TrySpawnBackgroundRefresh(fullPath, request);
+                return 0;
+
+            case StatuslineCacheAction.RefreshOnly:
+            default:
+                // No cache yet: print nothing (hidden segment) and warm it in the background.
+                TrySpawnBackgroundRefresh(fullPath, request);
+                return 0;
+        }
+    }
+
+    static string TryReadCache(string cacheTxtPath)
+    {
         try
         {
-            lockStream = new FileStream(paths.LockPath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+            return File.ReadAllText(cacheTxtPath);
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return ServeStaleCacheOr(1, paths.TxtPath);
+            // Cache vanished or was mid-rename; a status bar prefers empty over a crash.
+            return "";
         }
+    }
+
+    // Synchronous analysis path, run only by the detached refresh child (or an explicit
+    // --refresh-now caller). Holds a lock so concurrent invocations do not stampede,
+    // then atomically rewrites the cache.
+    static int RunRefreshNow(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
+    {
+        if (!TryAcquireRefreshLock(paths.LockPath, out var lockStream))
+            // Another refresh already owns the lock; nothing to do.
+            return 0;
 
         var log = request.CreateLogSink();
         try
         {
-            return RunAnalysisAndServe(fullPath, request, log, paths.TxtPath);
+            var built = BuildAnalysisResult(fullPath, request, log);
+            if (built is null)
+                return 1;
+
+            var formatted = FormatStatusline(
+                built.Value.Result,
+                built.Value.ExcludeBaselined,
+                request.UseCodeHealthV1,
+                request.ShowMi);
+            AtomicWriteCache(paths.TxtPath, formatted);
+            TryWriteStdout(formatted);
+            return 0;
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException or DirectoryNotFoundException or JsonException)
         {
             if (request.Verbose)
                 PrintVerboseException(ex);
-            return ServeStaleCacheOr(
-                1,
-                paths.TxtPath,
-                verboseNote: request.Verbose ? "Serving stale cache after analysis failure." : null);
+            return 1;
         }
         finally
         {
-            lockStream.Dispose();
-            TryDeleteLockFile(paths.LockPath);
+            ReleaseRefreshLock(lockStream, paths.LockPath);
         }
     }
 
-    static void TryDeleteLockFile(string lockPath)
+    // Acquires the refresh lock by creating the lock file exclusively (atomic across
+    // processes). A lock older than LockStaleSeconds is assumed abandoned and reclaimed.
+    static bool TryAcquireRefreshLock(string lockPath, out FileStream? lockStream)
     {
+        lockStream = null;
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            try
+            {
+                lockStream = new FileStream(lockPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+                var stamp = Encoding.UTF8.GetBytes($"{Environment.ProcessId} {DateTimeOffset.UtcNow:O}\n");
+                lockStream.Write(stamp, 0, stamp.Length);
+                lockStream.Flush();
+                return true;
+            }
+            catch (IOException)
+            {
+                // Lock exists. Reclaim it once if it is stale, otherwise give up.
+                if (attempt == 0 && TryReclaimStaleLock(lockPath))
+                    continue;
+                return false;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    static bool TryReclaimStaleLock(string lockPath)
+    {
+        try
+        {
+            var age = DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(lockPath));
+            if (age.TotalSeconds < LockStaleSeconds)
+                return false;
+            File.Delete(lockPath);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // A live holder keeps the file open on Windows; deletion fails -> not reclaimable.
+            return false;
+        }
+    }
+
+    static void ReleaseRefreshLock(FileStream? lockStream, string lockPath)
+    {
+        try
+        {
+            lockStream?.Dispose();
+        }
+        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+        {
+            // best-effort
+        }
+
         try
         {
             File.Delete(lockPath);
@@ -175,6 +284,38 @@ internal static class StatuslineRunner
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // best-effort cleanup
+        }
+    }
+
+    // Writes to a sibling temp file then renames over the target so a concurrent reader
+    // sees either the old or the new content, never a partial write. Same directory keeps
+    // the rename atomic (same volume).
+    static void AtomicWriteCache(string cacheTxtPath, string content)
+    {
+        var dir = Path.GetDirectoryName(cacheTxtPath) ?? Path.GetTempPath();
+        var tmp = Path.Combine(dir, $"{Path.GetFileName(cacheTxtPath)}.{Environment.ProcessId}.{Guid.NewGuid():N}.tmp");
+        File.WriteAllText(tmp, content);
+        try
+        {
+            File.Move(tmp, cacheTxtPath, overwrite: true);
+        }
+        catch
+        {
+            try { File.Delete(tmp); } catch { /* best-effort */ }
+            throw;
+        }
+    }
+
+    static void TryWriteStdout(string text)
+    {
+        try
+        {
+            Console.Write(text);
+        }
+        catch (IOException)
+        {
+            // Detached background child: the parent's pipe is already gone. The cache is
+            // written regardless, so a broken stdout is harmless.
         }
     }
 
@@ -201,46 +342,31 @@ internal static class StatuslineRunner
             Console.Error.WriteLine(ex.StackTrace);
     }
 
-    static int RunBackgroundRefresh(string fullPath, StatuslineRequest request, string cacheTxtPath)
-    {
-        if (TryServeFreshCache(cacheTxtPath, request.RefreshSeconds))
-            return 0;
-
-        if (File.Exists(cacheTxtPath))
-            Console.Write(File.ReadAllText(cacheTxtPath));
-
-        TrySpawnBackgroundRefresh(fullPath, request);
-        return 0;
-    }
-
     static void TrySpawnBackgroundRefresh(string fullPath, StatuslineRequest request)
     {
-        var childArgs = BuildBackgroundRefreshArgs(fullPath, request);
+        var childArgs = BuildRefreshNowArgs(fullPath, request);
         var (host, args) = ResolveSelfInvocation(childArgs);
 
         try
         {
-            var proc = StartDetachedProcess(host, args);
-            if (proc is null)
-                return;
-
-            DrainProcessInBackground(proc);
+            StartDetachedProcess(host, args);
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or PlatformNotSupportedException)
         {
-            // Best-effort background refresh; foreground caller must never block.
+            // Best-effort background refresh; foreground caller must never block or fail.
         }
     }
 
-    static List<string> BuildBackgroundRefreshArgs(string fullPath, StatuslineRequest request)
+    static List<string> BuildRefreshNowArgs(string fullPath, StatuslineRequest request)
     {
         var childArgs = new List<string>
         {
             "statusline",
+            "--refresh-now",
             "-p",
             fullPath,
-            "--refresh",
-            request.RefreshSeconds.ToString(),
+            // Keep the detached child's stderr silent; its stdout is discarded anyway.
+            "--quiet",
         };
 
         if (request.RequestedLevel is { } level)
@@ -267,59 +393,39 @@ internal static class StatuslineRunner
         return childArgs;
     }
 
-    static Process? StartDetachedProcess(string host, IReadOnlyList<string> args)
+    // Spawns the refresh child fully detached: its stdio is redirected to pipes we never
+    // read and never wait on, so (1) it does not inherit — and thus does not hold open —
+    // the consumer's stdout (which would make a status bar block until analysis finishes),
+    // and (2) it outlives this process. Works the same on Windows (no shell tricks).
+    static void StartDetachedProcess(string host, IReadOnlyList<string> args)
     {
         var psi = new ProcessStartInfo
         {
             FileName = host,
             UseShellExecute = false,
             CreateNoWindow = true,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
         foreach (var arg in args)
             psi.ArgumentList.Add(arg);
 
-        return Process.Start(psi);
-    }
+        var proc = Process.Start(psi);
+        if (proc is null)
+            return;
 
-    static void DrainProcessInBackground(Process proc)
-    {
-        _ = Task.Run(async () =>
+        // Close our end of stdin so the child sees EOF immediately, then walk away:
+        // no WaitForExit, no draining. The child writes ~one short line long after we
+        // exit; that write lands in a pipe nobody reads and is discarded.
+        try
         {
-            try
-            {
-                var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-                var stderrTask = proc.StandardError.ReadToEndAsync();
-
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-                try
-                {
-                    await proc.WaitForExitAsync(cts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    try
-                    {
-                        proc.Kill(entireProcessTree: true);
-                    }
-                    catch
-                    {
-                        // Best-effort termination for background process.
-                    }
-                }
-
-                await Task.WhenAll(stdoutTask, stderrTask);
-            }
-            catch
-            {
-                // Background drain: swallow all exceptions to avoid unobserved task faults.
-            }
-            finally
-            {
-                proc.Dispose();
-            }
-        });
+            proc.StandardInput.Close();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or ObjectDisposedException)
+        {
+            // best-effort
+        }
     }
 
     static (string Host, IReadOnlyList<string> Args) ResolveSelfInvocation(IReadOnlyList<string> args)
@@ -365,50 +471,6 @@ internal static class StatuslineRunner
             AnalysisLevel.Complete => "complete",
             _ => "complete",
         };
-
-    static bool TryServeFreshCache(string cacheTxtPath, int refreshSeconds)
-    {
-        if (!File.Exists(cacheTxtPath))
-            return false;
-
-        var cacheAge = DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(cacheTxtPath));
-        if (cacheAge.TotalSeconds >= refreshSeconds)
-            return false;
-
-        Console.Write(File.ReadAllText(cacheTxtPath));
-        return true;
-    }
-
-    static int ServeStaleCacheOr(int fallbackExit, string cacheTxtPath, string? verboseNote = null)
-    {
-        if (!File.Exists(cacheTxtPath))
-            return fallbackExit;
-
-        if (verboseNote is not null)
-            Console.Error.WriteLine(verboseNote);
-        Console.Write(File.ReadAllText(cacheTxtPath));
-        return 0;
-    }
-
-    static int RunAnalysisAndServe(
-        string fullPath,
-        StatuslineRequest request,
-        ConsoleAnalysisLogSink log,
-        string cacheTxtPath)
-    {
-        var built = BuildAnalysisResult(fullPath, request, log);
-        if (built is null)
-            return 1;
-
-        var formatted = FormatStatusline(
-            built.Value.Result,
-            built.Value.ExcludeBaselined,
-            request.UseCodeHealthV1,
-            request.ShowMi);
-        File.WriteAllText(cacheTxtPath, formatted);
-        Console.Write(formatted);
-        return 0;
-    }
 
     static (AnalysisResult Result, bool ExcludeBaselined)? BuildAnalysisResult(
         string fullPath,
@@ -480,9 +542,12 @@ internal static class StatuslineRunner
         """
         unilyze statusline - Output compact code health for status line display
 
+        Never blocks: it prints the cached line immediately (nothing on a cold cache)
+        and refreshes a stale or missing cache in a detached background process.
+
         Usage:
-          unilyze statusline                         Analyze current directory
-          unilyze statusline -p <path>               Analyze specified project
+          unilyze statusline                         Current directory (non-blocking)
+          unilyze statusline -p <path>               Specified project (non-blocking)
           unilyze statusline -p <path> --refresh 30  Custom cache interval (seconds)
         """;
 
@@ -500,8 +565,7 @@ internal static class StatuslineRunner
           --verbose      Print diagnostics (swallowed exceptions, stale-cache notes) to stderr
           --quiet        Suppress info lines on stderr (warnings still shown)
           --background-refresh
-                         Never block on analysis: return cached output immediately and refresh
-                         stale or missing caches in a detached background process
+                         Accepted for compatibility; non-blocking refresh is now the default
           -h, --help     Show this help
         """;
 
@@ -545,8 +609,9 @@ internal static class StatuslineRunner
         Cache:
           Formatted statusline output is cached in {{tempDir}}unilyze-sl-{hash}.txt
           Use --refresh to control cache lifetime (default: 60 seconds)
-          With --background-refresh, a missing cache prints nothing (one empty status line
-          render) and exits immediately while analysis runs in the background
+          A missing cache prints nothing (one empty status line render) and exits
+          immediately while analysis runs in the background; the next render shows it
+          A refresh lock ({{tempDir}}unilyze-sl-{hash}.lock) prevents concurrent refreshes
           Syntax-level parse cache (--incremental with --level syntax) is stored in
           <project>/.unilyze/cache/syntax/v1/ (auto-created; .gitignore contains *)
         """;
