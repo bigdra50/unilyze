@@ -325,7 +325,7 @@ public sealed class CliE2eTests : IDisposable
     public void Statusline_DotnetProject_ShowsNoSyntaxMarker()
     {
         WriteSimpleProject();
-        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain("[syntax]", stdout);
     }
@@ -334,7 +334,7 @@ public sealed class CliE2eTests : IDisposable
     public void Statusline_SyntaxPinnedProject_ShowsLevelMarker()
     {
         WriteSimpleProject();
-        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--level", "syntax");
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir, "--level", "syntax");
         Assert.Equal(0, exitCode);
         Assert.Contains("[syntax]", stdout);
     }
@@ -425,6 +425,92 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Statusline_Default_ColdStart_ReturnsEmptyQuicklyAndWarmsCacheInBackground()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.True(string.IsNullOrEmpty(stdout), $"Expected empty output on cold cache, got: {stdout}");
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        WaitForStatuslineCache(cachePath, output => output.Contains("CH:"));
+    }
+
+    [Fact]
+    public void Statusline_Default_StaleCache_PrintsStaleAndRefreshesInBackground()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        const string staleContent = "CH:STALE/1.0 0smells";
+        File.WriteAllText(cachePath, staleContent);
+        File.SetLastWriteTimeUtc(cachePath, DateTime.UtcNow.AddHours(-2));
+
+        var beforeMtime = File.GetLastWriteTimeUtc(cachePath);
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--refresh", "3600");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.Equal(staleContent, stdout);
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return, took {sw.Elapsed.TotalSeconds:F1}s");
+
+        var deadline = DateTime.UtcNow.AddSeconds(30);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (File.GetLastWriteTimeUtc(cachePath) > beforeMtime
+                && File.ReadAllText(cachePath) != staleContent)
+                return;
+            Thread.Sleep(250);
+        }
+
+        Assert.True(File.GetLastWriteTimeUtc(cachePath) > beforeMtime, "Expected background refresh to update cache mtime");
+        Assert.NotEqual(staleContent, File.ReadAllText(cachePath));
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
+    }
+
+    [Fact]
+    public void Statusline_Default_WarmCache_PrintsImmediately()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+
+        // Warm the cache synchronously via the internal refresh path.
+        var (warmExit, warmOutput, _) = Run("statusline", "--refresh-now", "-p", _tempDir);
+        Assert.Equal(0, warmExit);
+        Assert.Contains("CH:", warmOutput);
+
+        var sw = Stopwatch.StartNew();
+        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--refresh", "3600");
+        sw.Stop();
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("CH:", stdout);
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5), $"Expected immediate return from warm cache, took {sw.Elapsed.TotalSeconds:F1}s");
+    }
+
+    [Fact]
+    public void Statusline_RefreshNow_AnalyzesSynchronouslyAndWritesCache()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("CH:", stdout);
+        Assert.True(File.Exists(cachePath), $"Expected cache file at {cachePath}");
+        Assert.Contains("CH:", File.ReadAllText(cachePath));
+    }
+
+    [Fact]
     public void Statusline_VerboseNonexistentPath_NoCache_ExitsOneWithExceptionDetail()
     {
         var missingPath = Path.Combine(_tempDir, "does-not-exist");
@@ -449,7 +535,7 @@ public sealed class CliE2eTests : IDisposable
     public void Statusline_RedirectedStderr_EmitsNoPhaseProgress()
     {
         WriteSimpleProject();
-        var (exitCode, _, stderr) = Run("statusline", "-p", _tempDir, "--refresh", "0");
+        var (exitCode, _, stderr) = Run("statusline", "--refresh-now", "-p", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.DoesNotContain(" done ", stderr);
     }
@@ -821,7 +907,7 @@ public sealed class CliE2eTests : IDisposable
     public void Statusline_AnalyzesProject_OutputsFormattedLine()
     {
         WriteSimpleProject();
-        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir);
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir);
         Assert.Equal(0, exitCode);
         Assert.Contains("CH:", stdout);
         Assert.DoesNotContain("MI:", stdout);
@@ -831,7 +917,7 @@ public sealed class CliE2eTests : IDisposable
     public void Statusline_ShowMi_OutputsMaintainabilityIndex()
     {
         WriteSimpleProject();
-        var (exitCode, stdout, _) = Run("statusline", "-p", _tempDir, "--show-mi");
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir, "--show-mi");
         Assert.Equal(0, exitCode);
         Assert.Contains("MI:", stdout);
     }

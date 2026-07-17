@@ -269,7 +269,7 @@ Example output:
 
 ## Claude Code status line (optional)
 
-`unilyze statusline` emits a one-line summary for Claude Code's status bar. See [docs/statusline.md](../statusline.md) for the shell snippet and `--background-refresh` setup.
+`unilyze statusline` emits a one-line summary for Claude Code's status bar. It never blocks: the cached line prints immediately while a stale or missing cache refreshes in the background. See [docs/statusline.md](../statusline.md) for the shell snippet.
 
 ## Agent workflow summary
 

@@ -28,7 +28,7 @@ internal static class ProgramHelpers
     static bool IsBooleanOption(string option) =>
         option is "-h" or "--help" or "-v" or "--version" or "--no-open" or "--no-triage"
             or "--fail-on-regression" or "--fail-on-version-mismatch" or "--changed-only"
-            or "--verbose" or "--quiet" or "--background-refresh" or "--no-bot-filter"
+            or "--verbose" or "--quiet" or "--background-refresh" or "--refresh-now" or "--no-bot-filter"
             or "--include-api-surface" or "--include-third-party"
             or "--incremental" or "--resolve-nuget" or "--include-generated"
             or "--codehealth-v1" or "--show-mi";
