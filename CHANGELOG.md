@@ -11,6 +11,16 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-31
+
+### Changed
+
+- The Roslyn analysis engine is upgraded from 5.3 to 5.6 (`Microsoft.CodeAnalysis.CSharp`). Measured metrics are unchanged on the golden corpus ([#241](https://github.com/bigdra50/unilyze/pull/241))
+
+### Fixed
+
+- `unilyze statusline` no longer blocks on a cold or expired cache: it serves the cached line at any age instantly (or prints nothing when no cache exists yet) and refreshes in a detached background process with a stampede lock and an atomic cache rewrite. Consumers with tight render budgets previously killed the synchronous analysis before the cache was written, so the segment never appeared ([#242](https://github.com/bigdra50/unilyze/pull/242))
+
 ## [0.6.0] - 2026-07-07
 
 ### Changed
