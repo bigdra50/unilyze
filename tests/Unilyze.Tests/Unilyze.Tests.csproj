@@ -8,12 +8,12 @@
     <NoWarn>$(NoWarn);S1144;S125;S3885;S6966;S1481;S1244</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.29.0.143774"
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.33.0.1635"
                       GeneratePathProperty="true"
                       ExcludeAssets="analyzers" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Unilyze\Unilyze.csproj" />
