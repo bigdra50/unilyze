@@ -511,6 +511,72 @@ public sealed class CliE2eTests : IDisposable
     }
 
     [Fact]
+    public void Statusline_RefreshNow_LockHeldByLiveProcess_DeclinesEvenWhenTheLockIsOld()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+        var lockPath = ResolveStatuslineLockPath(cachePath);
+        WriteStatuslineLock(lockPath, Environment.ProcessId, CurrentProcessStartTime(), fileAge: TimeSpan.FromHours(2));
+
+        try
+        {
+            var (exitCode, stdout, stderr) = Run("statusline", "--refresh-now", "-p", _tempDir, "--verbose");
+
+            Assert.Equal(0, exitCode);
+            Assert.DoesNotContain("CH:", stdout);
+            Assert.Contains("refresh already running", stderr);
+            Assert.Contains(Environment.ProcessId.ToString(), stderr);
+            Assert.False(File.Exists(cachePath), "A live holder must keep the refresh from running");
+        }
+        finally
+        {
+            TryDeleteStatuslineCache(lockPath);
+        }
+    }
+
+    [Fact]
+    public void Statusline_RefreshNow_LockHeldByDeadProcess_ReclaimsEvenWhenTheLockIsFresh()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+        var lockPath = ResolveStatuslineLockPath(cachePath);
+        WriteStatuslineLock(lockPath, int.MaxValue, DateTimeOffset.UtcNow, fileAge: TimeSpan.Zero);
+
+        var (exitCode, stdout, _) = Run("statusline", "--refresh-now", "-p", _tempDir);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("CH:", stdout);
+        Assert.True(File.Exists(cachePath), $"Expected cache file at {cachePath}");
+        Assert.False(File.Exists(lockPath), "The reclaimed lock must be released after the refresh");
+    }
+
+    [Fact]
+    public void Statusline_Default_LockHeldByLiveProcess_DoesNotStartAnotherRefresh()
+    {
+        WriteSimpleProject();
+        var cachePath = ResolveStatuslineCachePath(_tempDir);
+        TryDeleteStatuslineCache(cachePath);
+        var lockPath = ResolveStatuslineLockPath(cachePath);
+        WriteStatuslineLock(lockPath, Environment.ProcessId, CurrentProcessStartTime(), fileAge: TimeSpan.Zero);
+
+        try
+        {
+            var (exitCode, stdout, stderr) = Run("statusline", "-p", _tempDir, "--verbose");
+
+            Assert.Equal(0, exitCode);
+            Assert.True(string.IsNullOrEmpty(stdout), $"Expected empty output on cold cache, got: {stdout}");
+            Assert.Contains("refresh already running", stderr);
+            Assert.Contains(Environment.ProcessId.ToString(), stderr);
+        }
+        finally
+        {
+            TryDeleteStatuslineCache(lockPath);
+        }
+    }
+
+    [Fact]
     public void Statusline_VerboseNonexistentPath_NoCache_ExitsOneWithExceptionDetail()
     {
         var missingPath = Path.Combine(_tempDir, "does-not-exist");
@@ -1974,6 +2040,23 @@ public sealed class CliE2eTests : IDisposable
         {
             // Best-effort cleanup for isolated E2E runs.
         }
+    }
+
+    private static string ResolveStatuslineLockPath(string cachePath) =>
+        Path.ChangeExtension(cachePath, ".lock");
+
+    // Same stamp the CLI writes ("<pid> <ISO-8601>"); fileAge backdates the mtime so the
+    // 0.6.1 age rule (reclaim after 120 s) would have treated the lock as abandoned.
+    private static void WriteStatuslineLock(string lockPath, int pid, DateTimeOffset acquiredAt, TimeSpan fileAge)
+    {
+        File.WriteAllText(lockPath, $"{pid} {acquiredAt:O}\n");
+        File.SetLastWriteTimeUtc(lockPath, DateTime.UtcNow - fileAge);
+    }
+
+    private static DateTimeOffset CurrentProcessStartTime()
+    {
+        using var current = Process.GetCurrentProcess();
+        return new DateTimeOffset(current.StartTime.ToUniversalTime());
     }
 
     private static void WaitForStatuslineCache(string cachePath, Func<string, bool> predicate)

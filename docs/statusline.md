@@ -45,7 +45,7 @@ if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; th
 fi
 ```
 
-`statusline` never blocks on analysis: it prints the cached line immediately and refreshes a stale or missing cache in a detached background process. On first run with an empty cache it prints nothing (the segment is hidden); the next render shows the segment once the background analysis finishes. Concurrent invocations are serialized by a lock so only one refresh runs at a time.
+`statusline` never blocks on analysis: it prints the cached line immediately and refreshes a stale or missing cache in a detached background process. On first run with an empty cache it prints nothing (the segment is hidden); the next render shows the segment once the background analysis finishes. Concurrent invocations are serialized by a lock that records the refreshing process: no second refresh starts while that process is alive, and a lock left behind by a process that died is reclaimed on the next render.
 
 ## Caching
 
