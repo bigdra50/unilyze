@@ -42,7 +42,9 @@ public sealed class NestedUnityProjectPathTests : IDisposable
         Assert.Equal("unity", result.ProjectKind);
         Assert.Equal(Path.GetFullPath(path), result.ProjectPath);
         var metrics = Assert.Single(result.TypeMetrics!);
-        Assert.Equal(Path.Combine("unity", "Assets", "Scripts", "Player.cs"), metrics.FilePath);
+        // The scan keeps the prefix as given, so "unity/" yields "unity/Assets\..." on
+        // Windows; the shape is what matters here, not the separator.
+        Assert.Equal("unity/Assets/Scripts/Player.cs", metrics.FilePath.Replace('\\', '/'));
     }
 
     [Fact]
