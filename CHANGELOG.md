@@ -11,6 +11,18 @@ Any changelog entry that changes a computed metric value **must** be prefixed wi
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-23
+
+### Changed
+
+- **[metrics]** `-p` pointed at a folder without a project marker (no `ProjectSettings/ProjectVersion.txt`, `.sln` or `.csproj`) now resolves to the single Unity project directly below it, so `-p <repo>` on a repository laid out as `repo/unity/` analyzes the Unity project with asmdef discovery and the Unity reference set, exactly as `-p <repo>/unity` does. A folder with several Unity projects below it, or with a marker of its own, is analyzed as before. The statusline cache is keyed by the resolved root, so both invocations share one cache ([#263](https://github.com/bigdra50/unilyze/issues/263))
+
+### Fixed
+
+- **[metrics]** csproj discovery analyzes each source file once when several projects share a directory. A non-SDK project that lists its sources (every csproj Unity generates, or an SDK project with `EnableDefaultCompileItems` off) is now analyzed from its `<Compile Include>` items instead of its whole directory, and a project whose listed sources are all missing or excluded is skipped; SDK-style projects that compile their directory and share it with others are analyzed once, under the first name, with a warning. Previously every csproj in a Unity project folder re-parsed the entire folder, so 41 generated projects meant 41 analyses of the same tree and every type reported 41 times ([#263](https://github.com/bigdra50/unilyze/issues/263))
+- **[metrics]** `Library`, `Temp`, `Logs` and `UserSettings` are now excluded for every Unity project found below the analyzed path, not only at the path itself. Analyzing a repository that keeps its Unity project in a subfolder (`repo/unity/`) previously parsed every package source under `unity/Library/PackageCache`. A directory named `Library` that has no `Assets` or `ProjectSettings` next to it is still analyzed ([#263](https://github.com/bigdra50/unilyze/issues/263))
+- `unilyze statusline` no longer starts a second background refresh while the first is still running. The refresh lock was treated as abandoned 120 seconds after it was written, so on a project whose analysis takes longer every later render reclaimed the lock and launched one more analysis beside the running ones; on a repository with a nested Unity project this stacked up to four analyses of 10–30 GB each. The lock now records the refreshing process and is reclaimed only when that process is gone ([#263](https://github.com/bigdra50/unilyze/issues/263))
+
 ## [0.6.1] - 2026-07-31
 
 ### Changed
