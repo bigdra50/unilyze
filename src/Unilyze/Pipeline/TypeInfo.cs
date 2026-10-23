@@ -94,16 +94,27 @@ internal static class TypeAnalyzer
         IReadOnlyList<string>? excludeDirectories = null, bool excludeGeneratedCode = true,
         bool applyAnyDepthExcludes = true, int? maxParallelism = null)
     {
-        var parseOptions = CSharpParseOptions.Default
-            .WithLanguageVersion(LanguageVersion.Latest);
-        if (preprocessorSymbols is { Count: > 0 })
-            parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
-
         var csFiles = Directory
             .EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
             .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
                 f, excludeDirectories, excludeGeneratedCode, directory, applyAnyDepthExcludes))
             .ToList();
+        return AnalyzeFilesWithTrees(csFiles, assemblyName, preprocessorSymbols, maxParallelism);
+    }
+
+    /// <summary>
+    /// Parses exactly the given files; the caller has applied the exclusion rules. Used for
+    /// an assembly whose project lists its sources (<see cref="Discovery.AsmdefInfo.SourceFiles"/>).
+    /// </summary>
+    public static AnalyzeDirectoryResult AnalyzeFilesWithTrees(
+        IReadOnlyList<string> csFiles, string assemblyName,
+        IReadOnlyList<string>? preprocessorSymbols = null, int? maxParallelism = null)
+    {
+        var parseOptions = CSharpParseOptions.Default
+            .WithLanguageVersion(LanguageVersion.Latest);
+        if (preprocessorSymbols is { Count: > 0 })
+            parseOptions = parseOptions.WithPreprocessorSymbols(preprocessorSymbols);
+
         var (rawTypeList, treeList) = ParseSourceFiles(
             csFiles, assemblyName, parseOptions, maxParallelism);
         return new AnalyzeDirectoryResult(ApplySyntaxPostProcessing(rawTypeList), treeList);

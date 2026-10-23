@@ -6,6 +6,10 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Unilyze.Pipeline;
 
+/// <param name="ScanRoot">
+/// The path file paths and finding ids are expressed against: the resolved root when
+/// <c>-p</c> pointed above a lone Unity project, otherwise <c>-p</c> itself.
+/// </param>
 internal sealed record PipelineDiscoverState(
     IReadOnlyList<AsmdefInfo> Targets,
     string ProjectRoot,
@@ -14,7 +18,8 @@ internal sealed record PipelineDiscoverState(
     IReadOnlyList<string> PreprocessorSymbols,
     ResolvedDlls ResolvedReferences,
     IReadOnlyList<string> CsprojFiles,
-    string? SelectedTargetFramework);
+    string? SelectedTargetFramework,
+    string ScanRoot);
 
 internal sealed record PipelineCompileState(
     CompilationResult CompilationResult,
@@ -26,7 +31,16 @@ internal static class AnalysisPipelineDiscovery
     {
         var projectRoot = ProgramHelpers.ResolveProjectRoot(options.Path);
         var projectKind = ProgramHelpers.ResolveProjectKind(projectRoot);
-        var assetsDir = ProgramHelpers.ResolveAssetsDir(options.Path);
+        // A -p above a lone Unity project resolves down into it; the asset scan, the recorded
+        // project path and the finding ids all follow, so the result matches -p <that project>.
+        // Otherwise the scan keeps the path as given (a relative -p yields relative file
+        // paths, and a -p inside Assets scopes the scan to that subtree).
+        var requestedRoot = Path.GetFullPath(options.Path);
+        var resolvedBelowRequest = DefaultExcludes.IsStrictSubdirectory(
+            Path.TrimEndingDirectorySeparator(projectRoot),
+            Path.TrimEndingDirectorySeparator(requestedRoot));
+        var scanRoot = resolvedBelowRequest ? projectRoot : requestedRoot;
+        var assetsDir = ProgramHelpers.ResolveAssetsDir(resolvedBelowRequest ? projectRoot : options.Path);
         var asmdefs = AsmdefInfo.Discover(
             assetsDir, options.ExcludeDirectories, options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes);
 
@@ -38,7 +52,8 @@ internal static class AnalysisPipelineDiscovery
         }
         else if (projectKind != "unity")
         {
-            var csprojAssemblies = CsprojAssemblyDiscovery.Discover(projectRoot, options.ExcludeDirectories);
+            var csprojAssemblies = CsprojAssemblyDiscovery.Discover(
+                projectRoot, options.ExcludeDirectories, options.ApplyAnyDepthExcludes, options.EffectiveLog);
             if (csprojAssemblies.Count > 0)
             {
                 var prefix = options.Prefix ?? ProgramHelpers.DetectCommonPrefix(csprojAssemblies);
@@ -69,7 +84,7 @@ internal static class AnalysisPipelineDiscovery
 
         return new PipelineDiscoverState(
             targets, projectRoot, projectKind, csprojInfo, preprocessorSymbols,
-            resolvedReferences, csprojFiles, selectedTfm);
+            resolvedReferences, csprojFiles, selectedTfm, scanRoot);
     }
 
     public static (List<TypeNodeInfo> Types, List<SyntaxTree> Trees) CollectTypes(
@@ -89,10 +104,17 @@ internal static class AnalysisPipelineDiscovery
         foreach (var asm in discover.Targets)
         {
             var merged = MergeExcludeDirectories(asm.ExcludeDirectories, options.ExcludeDirectories);
-            var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
-                asm.Directory, asm.Name, discover.PreprocessorSymbols, merged,
-                options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes,
-                options.EffectiveMaxParallelism);
+            var result = asm.SourceFiles is { } sourceFiles
+                ? TypeAnalyzer.AnalyzeFilesWithTrees(
+                    sourceFiles
+                        .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
+                            f, merged, options.ExcludeGeneratedCode, asm.Directory, options.ApplyAnyDepthExcludes))
+                        .ToList(),
+                    asm.Name, discover.PreprocessorSymbols, options.EffectiveMaxParallelism)
+                : TypeAnalyzer.AnalyzeDirectoryWithTrees(
+                    asm.Directory, asm.Name, discover.PreprocessorSymbols, merged,
+                    options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes,
+                    options.EffectiveMaxParallelism);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }

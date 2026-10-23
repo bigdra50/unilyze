@@ -45,7 +45,7 @@ if [[ -d "$PROJECT_DIR/Assets" ]] && [[ -d "$PROJECT_DIR/ProjectSettings" ]]; th
 fi
 ```
 
-`statusline` never blocks on analysis: it prints the cached line immediately and refreshes a stale or missing cache in a detached background process. On first run with an empty cache it prints nothing (the segment is hidden); the next render shows the segment once the background analysis finishes. Concurrent invocations are serialized by a lock so only one refresh runs at a time.
+`statusline` never blocks on analysis: it prints the cached line immediately and refreshes a stale or missing cache in a detached background process. On first run with an empty cache it prints nothing (the segment is hidden); the next render shows the segment once the background analysis finishes. Concurrent invocations are serialized by a lock that records the refreshing process: no second refresh starts while that process is alive, and a lock left behind by a process that died is reclaimed on the next render.
 
 ## Caching
 
@@ -57,7 +57,7 @@ The `statusline` subcommand reads `.unilyze.json` and global config automaticall
 
 | Flag | Purpose |
 |------|---------|
-| `-p, --path` | Project root (default: `.`) |
+| `-p, --path` | Project root (default: `.`). A folder without a project marker that holds one Unity project directly below it resolves to that project |
 | `--refresh` | Cache lifetime in seconds (default: 60) |
 | `--level` | Pin analysis level: `syntax`, `core`, `full`, `complete` |
 | `--baseline` | Suppress known smells from a baseline file in counts |

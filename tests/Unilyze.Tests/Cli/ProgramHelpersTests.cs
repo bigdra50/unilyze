@@ -396,4 +396,90 @@ public sealed class ProgramHelpersTests
         var path = Path.Combine(Path.GetTempPath(), "unilyze-report.html");
         Assert.Equal("file://" + Path.GetFullPath(path), ProgramHelpers.ResolveOpenTarget(path));
     }
+
+    // --- ResolveProjectRoot ---
+
+    [Fact]
+    public void ResolveProjectRoot_SingleUnityProjectDirectlyBelow_ResolvesToIt()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            WriteUnityProjectMarker(tempDir, "unity");
+            Directory.CreateDirectory(Path.Combine(tempDir, "docs"));
+
+            var resolved = ProgramHelpers.ResolveProjectRoot(tempDir);
+
+            Assert.Equal(Path.GetFullPath(Path.Combine(tempDir, "unity")), Path.GetFullPath(resolved));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void ResolveProjectRoot_SeveralUnityProjectsBelow_KeepsThePathItself()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            WriteUnityProjectMarker(tempDir, "client");
+            WriteUnityProjectMarker(tempDir, "server");
+
+            Assert.Equal(Path.GetFullPath(tempDir), Path.GetFullPath(ProgramHelpers.ResolveProjectRoot(tempDir)));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void ResolveProjectRoot_PathWithOwnSolution_IgnoresUnityProjectBelow()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "Tools.sln"), "");
+            WriteUnityProjectMarker(tempDir, "unity");
+
+            Assert.Equal(Path.GetFullPath(tempDir), Path.GetFullPath(ProgramHelpers.ResolveProjectRoot(tempDir)));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void ResolveProjectRoot_UnityProjectTwoLevelsBelow_IsNotDetected()
+    {
+        var tempDir = CreateTempDir();
+        try
+        {
+            WriteUnityProjectMarker(tempDir, Path.Combine("src", "unity"));
+
+            Assert.Equal(Path.GetFullPath(tempDir), Path.GetFullPath(ProgramHelpers.ResolveProjectRoot(tempDir)));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    static string CreateTempDir()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"unilyze-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        return tempDir;
+    }
+
+    static void WriteUnityProjectMarker(string root, string relativeProjectDir)
+    {
+        var projectDir = Path.Combine(root, relativeProjectDir);
+        Directory.CreateDirectory(Path.Combine(projectDir, "Assets"));
+        Directory.CreateDirectory(Path.Combine(projectDir, "ProjectSettings"));
+        File.WriteAllText(Path.Combine(projectDir, "ProjectSettings", "ProjectVersion.txt"), "m_EditorVersion: 6000.0.0f1");
+    }
 }

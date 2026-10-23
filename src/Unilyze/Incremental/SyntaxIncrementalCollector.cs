@@ -406,8 +406,10 @@ internal static class SyntaxIncrementalCollector
         {
             var mergedExcludes = AnalysisPipelineDiscovery.MergeExcludeDirectoriesPublic(
                 asm.ExcludeDirectories, options.ExcludeDirectories);
-            var csFiles = Directory
-                .EnumerateFiles(asm.Directory, "*.cs", SearchOption.AllDirectories)
+            // Same file source as the full path (CollectTypesFull), or the two diverge.
+            IEnumerable<string> candidates = asm.SourceFiles
+                ?? Directory.EnumerateFiles(asm.Directory, "*.cs", SearchOption.AllDirectories);
+            var csFiles = candidates
                 .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
                     f, mergedExcludes, options.ExcludeGeneratedCode, asm.Directory, options.ApplyAnyDepthExcludes));
 

@@ -2,12 +2,18 @@ using System.Text.Json;
 
 namespace Unilyze.Discovery;
 
+/// <param name="SourceFiles">
+/// The exact files this assembly compiles when its project lists them (see
+/// <see cref="CsprojInfo.CompileItems"/>). Null means every .cs under
+/// <paramref name="Directory"/> except <paramref name="ExcludeDirectories"/>.
+/// </param>
 internal sealed record AsmdefInfo(
     string Name,
     string Directory,
     IReadOnlyList<string> References,
     IReadOnlyList<string>? UnresolvedReferences = null,
-    IReadOnlyList<string>? ExcludeDirectories = null)
+    IReadOnlyList<string>? ExcludeDirectories = null,
+    IReadOnlyList<string>? SourceFiles = null)
 {
     public static IReadOnlyList<AsmdefInfo> Discover(
         string assetsDir,

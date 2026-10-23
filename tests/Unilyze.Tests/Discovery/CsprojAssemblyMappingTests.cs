@@ -42,6 +42,22 @@ public sealed class CsprojAssemblyMappingTests : IDisposable
             """);
     }
 
+    // The shape Unity generates: non-SDK, every csproj in the project folder, sources listed explicitly.
+    void WriteUnityStyleCsproj(string relativeDir, string name, params string[] compileIncludes)
+    {
+        var items = string.Join('\n', compileIncludes.Select(i => $"    <Compile Include=\"{i}\" />"));
+        WriteFile(Path.Combine(relativeDir, $"{name}.csproj"), $"""
+            <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+              <ItemGroup>
+            {items}
+              </ItemGroup>
+            </Project>
+            """);
+    }
+
+    string UnityPath(params string[] segments) =>
+        Path.Combine([_tempDir, "unity", .. segments]);
+
     [Fact]
     public void Discover_BuildsOneAssemblyPerCsprojWithProjectReferences()
     {
@@ -218,5 +234,105 @@ public sealed class CsprojAssemblyMappingTests : IDisposable
         var single = AnalysisPipeline.Build(_tempDir, prefix: null, assemblyFilter: "Other");
         Assert.Single(single.Assemblies);
         Assert.Equal("Other", single.Assemblies[0].Name);
+    }
+
+    [Fact]
+    public void Discover_UnityStyleCsprojsSharingOneDirectory_UseTheirExplicitCompileItems()
+    {
+        WriteFile("unity/Assets/Scripts/Player.cs", "namespace Game; public class Player { }");
+        WriteFile("unity/Assets/Scripts/Orphan.cs", "namespace Game; public class Orphan { }");
+        WriteFile("unity/Assets/Editor/Tool.cs", "namespace Game.Editor; public class Tool { }");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp", @"Assets\Scripts\Player.cs", @"Assets\Scripts\Deleted.cs");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp-Editor", @"Assets\Editor\Tool.cs");
+
+        var discovered = CsprojAssemblyDiscovery.Discover(_tempDir);
+
+        Assert.Equal(2, discovered.Count);
+        var runtime = Assert.Single(discovered, a => a.Name == "Assembly-CSharp");
+        var editor = Assert.Single(discovered, a => a.Name == "Assembly-CSharp-Editor");
+        Assert.Equal([UnityPath("Assets", "Scripts", "Player.cs")], runtime.SourceFiles);
+        Assert.Equal([UnityPath("Assets", "Editor", "Tool.cs")], editor.SourceFiles);
+    }
+
+    [Fact]
+    public void Discover_UnityStyleCsprojListingOnlyPackageCacheSources_IsDropped()
+    {
+        WriteFile("unity/Assets/Scripts/Player.cs", "namespace Game; public class Player { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Runtime/PkgType.cs", "namespace Pkg; public class PkgType { }");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp", @"Assets\Scripts\Player.cs");
+        WriteUnityStyleCsproj("unity", "Example.Pkg", @"Library\PackageCache\com.example.pkg\Runtime\PkgType.cs");
+
+        var discovered = CsprojAssemblyDiscovery.Discover(_tempDir);
+
+        Assert.Equal("Assembly-CSharp", Assert.Single(discovered).Name);
+    }
+
+    [Fact]
+    public void Discover_SdkCsprojsSharingOneDirectory_AnalyzeTheDirectoryOnce()
+    {
+        WriteFile("unity/Assets/Game.cs", "namespace Game; public class Player { }");
+        WriteCsproj("unity", "Assembly3");
+        WriteCsproj("unity", "Assembly1");
+        WriteCsproj("unity", "Assembly2");
+
+        var discovered = CsprojAssemblyDiscovery.Discover(_tempDir);
+
+        var owner = Assert.Single(discovered);
+        Assert.Equal("Assembly1", owner.Name);
+        Assert.Null(owner.SourceFiles);
+    }
+
+    [Fact]
+    public void Build_UnityStyleCsprojsInSubfolder_ReportEachTypeOnceAndSkipPackageCache()
+    {
+        WriteFile("unity/Assets/Scripts/Player.cs", "namespace Game; public class Player { }");
+        WriteFile("unity/Assets/Editor/Tool.cs", "namespace Game.Editor; public class Tool { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Runtime/PkgType.cs", "namespace Pkg; public class PkgType { }");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp", @"Assets\Scripts\Player.cs");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp-Editor", @"Assets\Editor\Tool.cs");
+        WriteUnityStyleCsproj("unity", "Example.Pkg", @"Library\PackageCache\com.example.pkg\Runtime\PkgType.cs");
+
+        var result = AnalysisPipeline.Build(_tempDir, null, null);
+
+        Assert.Equal(["Assembly-CSharp", "Assembly-CSharp-Editor"], result.Assemblies.Select(a => a.Name).OrderBy(n => n));
+        Assert.Equal(["Player", "Tool"], result.Types.Select(t => t.Name).OrderBy(n => n));
+    }
+
+    // Issue #263's reproduction: SDK-style csproj files side by side in a folder that has
+    // Assets and Library but no ProjectSettings.
+    [Fact]
+    public void Build_SdkCsprojsBesideAnAssetsFolder_ReportEachTypeOnceAndSkipPackageCache()
+    {
+        WriteFile("unity/Assets/Game.cs", "namespace Game { public sealed class Player { public int Hp; } }");
+        for (var i = 1; i <= 5; i++)
+            WriteFile($"unity/Library/PackageCache/com.example.pkg/Type{i}.cs", $"namespace Pkg {{ public sealed class Type{i} {{ public int Value{i}() => {i}; }} }}");
+        for (var i = 1; i <= 20; i++)
+            WriteCsproj("unity", $"Assembly{i}");
+
+        var result = AnalysisPipeline.Build(_tempDir, null, null);
+
+        Assert.Equal("Assembly1", Assert.Single(result.Assemblies).Name);
+        Assert.Equal("Player", Assert.Single(result.Types).Name);
+    }
+
+    [Fact]
+    public void Build_RepositoryWithOneUnityProjectBelow_AnalyzesThatProjectAsUnity()
+    {
+        WriteFile("unity/ProjectSettings/ProjectVersion.txt", "m_EditorVersion: 6000.0.0f1");
+        WriteFile("unity/Assets/Scripts/Player.cs", "namespace Game; public class Player { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Runtime/PkgType.cs", "namespace Pkg; public class PkgType { }");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp", @"Assets\Scripts\Player.cs");
+        WriteUnityStyleCsproj("unity", "Example.Pkg", @"Library\PackageCache\com.example.pkg\Runtime\PkgType.cs");
+        WriteFile("docs/Sample.cs", "namespace Docs; public class NotPartOfTheProject { }");
+
+        var result = AnalysisPipeline.Build(_tempDir, null, null);
+        var direct = AnalysisPipeline.Build(UnityPath(), null, null);
+
+        Assert.Equal("unity", result.ProjectKind);
+        Assert.Equal("Player", Assert.Single(result.Types).Name);
+        // Finding ids and relative file paths derive from ProjectPath, so the two
+        // invocations must agree on it for baselines and triage verdicts to match.
+        Assert.Equal(direct.ProjectPath, result.ProjectPath);
+        Assert.Equal(Path.GetFullPath(UnityPath()), result.ProjectPath);
     }
 }

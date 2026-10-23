@@ -131,6 +131,89 @@ public class CsprojParserTests : IDisposable
     }
 
     [Fact]
+    public void TryParse_NonSdkProject_ExposesExplicitCompileItemsAsAbsolutePaths()
+    {
+        var path = CreateTempFile("""
+            <?xml version="1.0" encoding="utf-8"?>
+            <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+              <ItemGroup>
+                <Compile Include="Assets\Scripts\Player.cs" />
+                <Compile Include="Assets\Scripts\Enemy.cs;Assets/Editor/Tool.cs" />
+                <Compile Remove="Assets\Scripts\Old.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        var dir = Path.GetDirectoryName(path)!;
+
+        var result = CsprojParser.TryParse(path);
+
+        Assert.NotNull(result);
+        Assert.Equal(
+            [
+                Path.Combine(dir, "Assets", "Scripts", "Player.cs"),
+                Path.Combine(dir, "Assets", "Scripts", "Enemy.cs"),
+                Path.Combine(dir, "Assets", "Editor", "Tool.cs"),
+            ],
+            result.CompileItems);
+    }
+
+    [Fact]
+    public void TryParse_SdkProjectWithAnExtraCompileInclude_KeepsDirectoryGlobbing()
+    {
+        var path = CreateTempFile("""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <ItemGroup>
+                <Compile Include="..\Shared\Extra.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var result = CsprojParser.TryParse(path);
+
+        Assert.NotNull(result);
+        Assert.Null(result.CompileItems);
+    }
+
+    [Fact]
+    public void TryParse_SdkProjectWithDefaultCompileItemsOff_ExposesExplicitCompileItems()
+    {
+        var path = CreateTempFile("""
+            <Project Sdk="Microsoft.NET.Sdk">
+              <PropertyGroup>
+                <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+              </PropertyGroup>
+              <ItemGroup>
+                <Compile Include="Only.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+        var dir = Path.GetDirectoryName(path)!;
+
+        var result = CsprojParser.TryParse(path);
+
+        Assert.NotNull(result);
+        Assert.Equal([Path.Combine(dir, "Only.cs")], result.CompileItems);
+    }
+
+    [Fact]
+    public void TryParse_NonSdkProjectWithWildcardCompileItems_KeepsDirectoryGlobbing()
+    {
+        var path = CreateTempFile("""
+            <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+              <ItemGroup>
+                <Compile Include="Explicit.cs" />
+                <Compile Include="**\*.cs" />
+              </ItemGroup>
+            </Project>
+            """);
+
+        var result = CsprojParser.TryParse(path);
+
+        Assert.NotNull(result);
+        Assert.Null(result.CompileItems);
+    }
+
+    [Fact]
     public void TryParse_MultipleDefineConstants_Deduplicated()
     {
         var path = CreateTempFile("""

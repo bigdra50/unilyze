@@ -191,12 +191,15 @@ internal static class ProgramHelpers
         var dir = Path.GetFullPath(path);
         for (var i = 0; i < 5; i++)
         {
-            if (File.Exists(Path.Combine(dir, "ProjectSettings", "ProjectVersion.txt")))
+            if (HasProjectMarker(dir))
                 return dir;
-            if (Directory.EnumerateFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Any())
-                return dir;
-            if (Directory.EnumerateFiles(dir, "*.csproj", SearchOption.TopDirectoryOnly).Any())
-                return dir;
+
+            // A repository that keeps its Unity project in a subfolder (repo/unity/) has no
+            // marker at the root; analyzing the root would fall back to the generated csproj
+            // files below and miss the Unity reference set.
+            if (i == 0 && UnityProjectLayout.TryFindSingleProjectBelow(dir, out var nested))
+                return nested;
+
             var parent = Directory.GetParent(dir)?.FullName;
             if (parent is null || parent == dir) break;
             dir = parent;
@@ -205,9 +208,14 @@ internal static class ProgramHelpers
         return Path.GetFullPath(path);
     }
 
+    static bool HasProjectMarker(string dir) =>
+        UnityProjectLayout.IsProjectRoot(dir)
+        || Directory.EnumerateFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Any()
+        || Directory.EnumerateFiles(dir, "*.csproj", SearchOption.TopDirectoryOnly).Any();
+
     public static string ResolveProjectKind(string projectRoot)
     {
-        if (File.Exists(Path.Combine(projectRoot, "ProjectSettings", "ProjectVersion.txt")))
+        if (UnityProjectLayout.IsProjectRoot(projectRoot))
             return "unity";
 
         if (CsprojParser.DiscoverCsprojFiles(projectRoot).Count > 0)

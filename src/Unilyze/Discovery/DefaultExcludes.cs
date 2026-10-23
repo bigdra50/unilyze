@@ -2,6 +2,9 @@ namespace Unilyze.Discovery;
 
 internal static class DefaultExcludes
 {
+    // Directories Unity creates next to Assets: package caches, build output, logs and user
+    // preferences, never project sources. Applied relative to the project root and, with
+    // any-depth excludes on, relative to every Unity project found below it (repo/unity/Library).
     public static readonly string[] DirectoryNames =
     [
         "Library",
@@ -58,15 +61,19 @@ internal static class DefaultExcludes
 
     public static bool IsUnderAnyDepthExcludedDirectory(string filePath, string enumerationRoot)
     {
-        var relativePath = Path.GetRelativePath(
-            Path.GetFullPath(enumerationRoot),
-            Path.GetFullPath(filePath));
+        var root = Path.GetFullPath(enumerationRoot);
+        var relativePath = Path.GetRelativePath(root, Path.GetFullPath(filePath));
+        var segments = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
-        foreach (var segment in relativePath.Split(
-                     Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+        var directory = root;
+        for (var i = 0; i < segments.Length - 1; i++)
         {
+            var segment = segments[i];
             if (AnyDepthDirectoryNames.Contains(segment, StringComparer.OrdinalIgnoreCase))
                 return true;
+            if (DirectoryNames.Contains(segment, StringComparer.OrdinalIgnoreCase) && UnityProjectLayout.LooksLikeProject(directory))
+                return true;
+            directory = Path.Combine(directory, segment);
         }
 
         return false;

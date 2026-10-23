@@ -162,6 +162,45 @@ public sealed class DefaultExcludesTests : IDisposable
     }
 
     [Fact]
+    public void AnalyzeDirectory_ExcludesUnityCacheDirectoriesUnderNestedUnityProject()
+    {
+        WriteFile("unity/ProjectSettings/ProjectVersion.txt", "m_EditorVersion: 6000.0.0f1");
+        WriteFile("unity/Assets/Game.cs", "public class Game { }");
+        WriteFile("unity/Assets/Library/InAssets.cs", "public class InAssets { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Pkg.cs", "public class Pkg { }");
+        WriteFile("unity/Temp/Scratch.cs", "public class Scratch { }");
+        WriteFile("unity/Logs/Logged.cs", "public class Logged { }");
+        WriteFile("unity/UserSettings/UserPref.cs", "public class UserPref { }");
+        WriteFile("src/Library/Plain.cs", "public class Plain { }");
+
+        var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(_tempDir, "Asm", applyAnyDepthExcludes: true);
+
+        Assert.Equal(["Game", "InAssets", "Plain"], result.Types.Select(t => t.Name).OrderBy(n => n));
+    }
+
+    [Fact]
+    public void AnalyzeDirectory_NestedProjectWithAssetsButNoProjectSettings_StillExcludesLibrary()
+    {
+        WriteFile("unity/Assets/Game.cs", "public class Game { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Pkg.cs", "public class Pkg { }");
+
+        var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(_tempDir, "Asm", applyAnyDepthExcludes: true);
+
+        Assert.Equal("Game", Assert.Single(result.Types).Name);
+    }
+
+    [Fact]
+    public void AnalyzeDirectory_DisableDefaultExcludes_KeepsNestedUnityLibrary()
+    {
+        WriteFile("unity/Assets/Game.cs", "public class Game { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Pkg.cs", "public class Pkg { }");
+
+        var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(_tempDir, "Asm", applyAnyDepthExcludes: false);
+
+        Assert.Equal(["Game", "Pkg"], result.Types.Select(t => t.Name).OrderBy(n => n));
+    }
+
+    [Fact]
     public void AnalyzeDirectory_AnyDepthExcludes_UsesRelativeSegmentsNotAbsolutePath()
     {
         var binParent = Path.Combine(Path.GetTempPath(), "Unilyze_binTrap_" + Path.GetRandomFileName(), "bin");

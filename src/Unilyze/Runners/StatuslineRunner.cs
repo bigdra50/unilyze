@@ -17,10 +17,6 @@ internal static class StatuslineRunner
     const string CachePrefix = "unilyze-sl-";
     const int DefaultRefreshSeconds = 60;
 
-    // A refresh lock older than this is assumed abandoned (crashed holder) and reclaimable.
-    // Comfortably above a normal cold analysis (~a few seconds) so a live refresh is never stolen.
-    const int LockStaleSeconds = 120;
-
     sealed record StatuslineRequest(
         bool Verbose,
         bool Quiet,
@@ -158,13 +154,13 @@ internal static class StatuslineRunner
 
             case StatuslineCacheAction.ServeStaleAndRefresh:
                 Console.Write(TryReadCache(paths.TxtPath));
-                TrySpawnBackgroundRefresh(fullPath, request);
+                TrySpawnBackgroundRefresh(fullPath, request, paths);
                 return 0;
 
             case StatuslineCacheAction.RefreshOnly:
             default:
                 // No cache yet: print nothing (hidden segment) and warm it in the background.
-                TrySpawnBackgroundRefresh(fullPath, request);
+                TrySpawnBackgroundRefresh(fullPath, request, paths);
                 return 0;
         }
     }
@@ -187,9 +183,13 @@ internal static class StatuslineRunner
     // then atomically rewrites the cache.
     static int RunRefreshNow(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
     {
-        if (!TryAcquireRefreshLock(paths.LockPath, out var lockStream))
-            // Another refresh already owns the lock; nothing to do.
+        if (!StatuslineRefreshLock.TryAcquire(paths.LockPath, out var lockStream))
+        {
+            // Another refresh already owns the lock and will write the cache; nothing to do.
+            if (request.Verbose)
+                PrintRefreshInProgress(paths.LockPath);
             return 0;
+        }
 
         var log = request.CreateLogSink();
         try
@@ -215,76 +215,17 @@ internal static class StatuslineRunner
         }
         finally
         {
-            ReleaseRefreshLock(lockStream, paths.LockPath);
+            StatuslineRefreshLock.Release(lockStream, paths.LockPath);
         }
     }
 
-    // Acquires the refresh lock by creating the lock file exclusively (atomic across
-    // processes). A lock older than LockStaleSeconds is assumed abandoned and reclaimed.
-    static bool TryAcquireRefreshLock(string lockPath, out FileStream? lockStream)
+    static void PrintRefreshInProgress(string lockPath)
     {
-        lockStream = null;
-        for (var attempt = 0; attempt < 2; attempt++)
-        {
-            try
-            {
-                lockStream = new FileStream(lockPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-                var stamp = Encoding.UTF8.GetBytes($"{Environment.ProcessId} {DateTimeOffset.UtcNow:O}\n");
-                lockStream.Write(stamp, 0, stamp.Length);
-                lockStream.Flush();
-                return true;
-            }
-            catch (IOException)
-            {
-                // Lock exists. Reclaim it once if it is stale, otherwise give up.
-                if (attempt == 0 && TryReclaimStaleLock(lockPath))
-                    continue;
-                return false;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    static bool TryReclaimStaleLock(string lockPath)
-    {
-        try
-        {
-            var age = DateTimeOffset.UtcNow - new DateTimeOffset(File.GetLastWriteTimeUtc(lockPath));
-            if (age.TotalSeconds < LockStaleSeconds)
-                return false;
-            File.Delete(lockPath);
-            return true;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // A live holder keeps the file open on Windows; deletion fails -> not reclaimable.
-            return false;
-        }
-    }
-
-    static void ReleaseRefreshLock(FileStream? lockStream, string lockPath)
-    {
-        try
-        {
-            lockStream?.Dispose();
-        }
-        catch (Exception ex) when (ex is IOException or ObjectDisposedException)
-        {
-            // best-effort
-        }
-
-        try
-        {
-            File.Delete(lockPath);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // best-effort cleanup
-        }
+        StatuslineRefreshLock.IsHeldByLiveProcess(lockPath, out var holder);
+        var owner = holder is null
+            ? "lock holder unknown"
+            : $"pid {holder.Pid}, since {holder.AcquiredAt:u}";
+        Console.Error.WriteLine($"statusline: refresh already running ({owner}); not starting another");
     }
 
     // Writes to a sibling temp file then renames over the target so a concurrent reader
@@ -342,8 +283,17 @@ internal static class StatuslineRunner
             Console.Error.WriteLine(ex.StackTrace);
     }
 
-    static void TrySpawnBackgroundRefresh(string fullPath, StatuslineRequest request)
+    static void TrySpawnBackgroundRefresh(string fullPath, StatuslineRequest request, StatuslineCachePaths paths)
     {
+        // The running refresh rewrites the cache when it finishes; a second child would only
+        // start, lose the lock and exit, and on every render until then.
+        if (StatuslineRefreshLock.IsHeldByLiveProcess(paths.LockPath, out _))
+        {
+            if (request.Verbose)
+                PrintRefreshInProgress(paths.LockPath);
+            return;
+        }
+
         var childArgs = BuildRefreshNowArgs(fullPath, request);
         var (host, args) = ResolveSelfInvocation(childArgs);
 
@@ -611,7 +561,9 @@ internal static class StatuslineRunner
           Use --refresh to control cache lifetime (default: 60 seconds)
           A missing cache prints nothing (one empty status line render) and exits
           immediately while analysis runs in the background; the next render shows it
-          A refresh lock ({{tempDir}}unilyze-sl-{hash}.lock) prevents concurrent refreshes
+          A refresh lock ({{tempDir}}unilyze-sl-{hash}.lock) records the refreshing process;
+          no second refresh starts while that process is alive, and a lock left behind by
+          a process that died is reclaimed on the next render
           Syntax-level parse cache (--incremental with --level syntax) is stored in
           <project>/.unilyze/cache/syntax/v1/ (auto-created; .gitignore contains *)
         """;

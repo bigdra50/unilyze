@@ -247,6 +247,7 @@ Usage:
 
 Options:
   -p, --path         Unity project root or Assets directory (default: .)
+                     A folder without a project marker that holds one Unity project directly below it resolves to that project
       --projects     Glob of project roots to analyze (repeatable; requires -o <dir> when multiple match)
   -i, --input        Use existing JSON instead of analyzing
   -o, --output       Output file path (format inferred from extension: .html, .json, .sarif)
