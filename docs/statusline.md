@@ -57,7 +57,7 @@ The `statusline` subcommand reads `.unilyze.json` and global config automaticall
 
 | Flag | Purpose |
 |------|---------|
-| `-p, --path` | Project root (default: `.`) |
+| `-p, --path` | Project root (default: `.`). A folder without a project marker that holds one Unity project directly below it resolves to that project |
 | `--refresh` | Cache lifetime in seconds (default: 60) |
 | `--level` | Pin analysis level: `syntax`, `core`, `full`, `complete` |
 | `--baseline` | Suppress known smells from a baseline file in counts |

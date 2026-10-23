@@ -314,4 +314,25 @@ public sealed class CsprojAssemblyMappingTests : IDisposable
         Assert.Equal("Assembly1", Assert.Single(result.Assemblies).Name);
         Assert.Equal("Player", Assert.Single(result.Types).Name);
     }
+
+    [Fact]
+    public void Build_RepositoryWithOneUnityProjectBelow_AnalyzesThatProjectAsUnity()
+    {
+        WriteFile("unity/ProjectSettings/ProjectVersion.txt", "m_EditorVersion: 6000.0.0f1");
+        WriteFile("unity/Assets/Scripts/Player.cs", "namespace Game; public class Player { }");
+        WriteFile("unity/Library/PackageCache/com.example.pkg/Runtime/PkgType.cs", "namespace Pkg; public class PkgType { }");
+        WriteUnityStyleCsproj("unity", "Assembly-CSharp", @"Assets\Scripts\Player.cs");
+        WriteUnityStyleCsproj("unity", "Example.Pkg", @"Library\PackageCache\com.example.pkg\Runtime\PkgType.cs");
+        WriteFile("docs/Sample.cs", "namespace Docs; public class NotPartOfTheProject { }");
+
+        var result = AnalysisPipeline.Build(_tempDir, null, null);
+        var direct = AnalysisPipeline.Build(UnityPath(), null, null);
+
+        Assert.Equal("unity", result.ProjectKind);
+        Assert.Equal("Player", Assert.Single(result.Types).Name);
+        // Finding ids and relative file paths derive from ProjectPath, so the two
+        // invocations must agree on it for baselines and triage verdicts to match.
+        Assert.Equal(direct.ProjectPath, result.ProjectPath);
+        Assert.Equal(Path.GetFullPath(UnityPath()), result.ProjectPath);
+    }
 }

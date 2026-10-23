@@ -122,7 +122,7 @@ internal static class AnalysisPipeline
             : null;
 
         var result = new AnalysisResult(
-            Path.GetFullPath(options.Path),
+            discover.ScanRoot,
             DateTimeOffset.UtcNow,
             assemblyInfos,
             typesWithFileRefs,
