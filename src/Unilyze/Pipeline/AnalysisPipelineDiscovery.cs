@@ -38,7 +38,8 @@ internal static class AnalysisPipelineDiscovery
         }
         else if (projectKind != "unity")
         {
-            var csprojAssemblies = CsprojAssemblyDiscovery.Discover(projectRoot, options.ExcludeDirectories);
+            var csprojAssemblies = CsprojAssemblyDiscovery.Discover(
+                projectRoot, options.ExcludeDirectories, options.ApplyAnyDepthExcludes, options.EffectiveLog);
             if (csprojAssemblies.Count > 0)
             {
                 var prefix = options.Prefix ?? ProgramHelpers.DetectCommonPrefix(csprojAssemblies);
@@ -89,10 +90,17 @@ internal static class AnalysisPipelineDiscovery
         foreach (var asm in discover.Targets)
         {
             var merged = MergeExcludeDirectories(asm.ExcludeDirectories, options.ExcludeDirectories);
-            var result = TypeAnalyzer.AnalyzeDirectoryWithTrees(
-                asm.Directory, asm.Name, discover.PreprocessorSymbols, merged,
-                options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes,
-                options.EffectiveMaxParallelism);
+            var result = asm.SourceFiles is { } sourceFiles
+                ? TypeAnalyzer.AnalyzeFilesWithTrees(
+                    sourceFiles
+                        .Where(f => !DefaultExcludes.ShouldExcludeSourceFile(
+                            f, merged, options.ExcludeGeneratedCode, asm.Directory, options.ApplyAnyDepthExcludes))
+                        .ToList(),
+                    asm.Name, discover.PreprocessorSymbols, options.EffectiveMaxParallelism)
+                : TypeAnalyzer.AnalyzeDirectoryWithTrees(
+                    asm.Directory, asm.Name, discover.PreprocessorSymbols, merged,
+                    options.ExcludeGeneratedCode, options.ApplyAnyDepthExcludes,
+                    options.EffectiveMaxParallelism);
             allTypes.AddRange(result.Types);
             allTrees.AddRange(result.SyntaxTrees);
         }

@@ -2,12 +2,19 @@ using System.Xml.Linq;
 
 namespace Unilyze.Discovery;
 
+/// <param name="CompileItems">
+/// The sources the project compiles when it lists them itself (absolute paths, document
+/// order): a non-SDK project such as the ones Unity generates, or an SDK project with
+/// default compile items switched off. Null when the project compiles its directory, so
+/// the caller keeps enumerating it.
+/// </param>
 internal sealed record CsprojInfo(
     IReadOnlyList<string> ReferencePaths,
     IReadOnlyList<string> ProjectReferences,
     IReadOnlyList<string> DefineConstants,
     string? LangVersion,
-    IReadOnlyList<string> TargetFrameworks);
+    IReadOnlyList<string> TargetFrameworks,
+    IReadOnlyList<string>? CompileItems = null);
 
 internal static class CsprojParser
 {
@@ -26,8 +33,9 @@ internal static class CsprojParser
             var defines = ExtractDefineConstants(doc, ns);
             var langVersion = ExtractLangVersion(doc, ns);
             var targetFrameworks = ExtractTargetFrameworks(doc, ns);
+            var compileItems = ExtractCompileItems(doc, ns, csprojDir);
 
-            return new CsprojInfo(references, projectRefs, defines, langVersion, targetFrameworks);
+            return new CsprojInfo(references, projectRefs, defines, langVersion, targetFrameworks, compileItems);
         }
         catch (Exception ex)
         {
@@ -81,6 +89,54 @@ internal static class CsprojParser
 
         return paths;
     }
+
+    // Wildcards and MSBuild properties are not expanded: a project using them is treated as
+    // directory-globbing, which is what the caller did for every project before.
+    static List<string>? ExtractCompileItems(XDocument doc, XNamespace ns, string csprojDir)
+    {
+        if (UsesDefaultCompileItems(doc, ns))
+            return null;
+
+        var items = new List<string>();
+        foreach (var compile in doc.Descendants(ns + "Compile"))
+        {
+            var include = compile.Attribute("Include")?.Value;
+            if (string.IsNullOrWhiteSpace(include))
+                continue;
+
+            foreach (var item in include.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (item.Contains('*') || item.Contains('?') || item.Contains("$("))
+                    return null;
+
+                items.Add(Path.GetFullPath(Path.Combine(csprojDir, item.Replace('\\', Path.DirectorySeparatorChar))));
+            }
+        }
+
+        return items.Count > 0 ? items : null;
+    }
+
+    // An SDK-style project compiles every .cs under its directory unless it opts out; an
+    // explicit <Compile Include> there only adds to that glob and must not replace it.
+    static bool UsesDefaultCompileItems(XDocument doc, XNamespace ns)
+    {
+        var root = doc.Root;
+        if (root is null)
+            return true;
+
+        var isSdkStyle = root.Attribute("Sdk") is not null
+            || root.Elements(ns + "Sdk").Any()
+            || root.Elements(ns + "Import").Any(import => import.Attribute("Sdk") is not null);
+        if (!isSdkStyle)
+            return false;
+
+        return !IsPropertyFalse(doc, ns, "EnableDefaultCompileItems")
+            && !IsPropertyFalse(doc, ns, "EnableDefaultItems");
+    }
+
+    static bool IsPropertyFalse(XDocument doc, XNamespace ns, string propertyName) =>
+        doc.Descendants(ns + propertyName)
+            .Any(property => string.Equals(property.Value.Trim(), "false", StringComparison.OrdinalIgnoreCase));
 
     static List<string> ExtractProjectReferences(XDocument doc, XNamespace ns)
     {
